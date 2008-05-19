@@ -1,0 +1,87 @@
+* {
+	font-family: sans-serif;
+	font-size: 8pt;
+}
+
+body {
+	margin: 0;
+	padding: 0;
+}
+
+th {
+	text-align: center;
+	background-color: #eee;
+}
+
+td.status {
+	text-align: center;
+}
+
+tr.okrow {
+	background-color: white;
+	color: black;
+}
+
+td.ok, #summary.ok{
+	background-color: #018F00;
+	color: white;
+}
+
+tr.failrow td {
+	background-color: #FFDFDF;
+}
+
+tr td.fail, #summary.fail {
+	background-color: red;
+	font-weight: bold;
+	color: white;
+}
+
+tr.oldrow td {
+	background-color: #DFE5FF;
+}
+
+tr td.old, #summary.old {
+	background-color: #5F7BFF;
+	color: white;
+}
+
+td.vfc {
+	text-align: center;
+}
+
+.generated {
+	color: #ccc;
+}
+
+#summary {
+	width: 100%;
+	text-align: center;
+	font-size: 16pt;
+}
+
+#details {
+	background-color: white;
+	color: #bbb;
+}
+
+.fail {
+	color: #F00;
+}
+
+.old {
+	color: #5F7BFF;
+}
+
+.ok {
+	color: #018F00;
+}
+
+.stale {
+	background-color: #FF7200;
+	color: white;
+}
+
+.monitor_name {
+	color: black;
+}

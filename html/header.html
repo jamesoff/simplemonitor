@@ -1,0 +1,46 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+	<head>
+		<title>_STATUS_ [_HOST_] monitor</title>
+		<link rel="stylesheet" type="text/css" href="style.css" />
+		<meta http-equiv="refresh" content="30" />
+		<script language="javascript" type="text/javascript">
+			function too_old() {
+				var summary_element = document.getElementById("summary");
+				summary_element.innerHTML = summary_element.innerHTML + " [STALE]";
+				summary_element.setAttribute("class", "stale");
+			}
+
+			function check_age() {
+				var generated = _TIMESTAMP_;
+				var now = Date.parse(new Date()) / 1000;
+				if ((now - generated) > 60) {
+					var summary_element = document.getElementById("summary");
+					summary_element.innerHTML = "[OLD] " + summary_element.innerHTML;
+					summary_element.setAttribute("class", "stale");
+				}
+			}
+
+			setTimeout("too_old();", 60000);
+			//setTimeout("check_age();", 5000);
+		</script>
+	</head>
+
+	<body onload="check_age();">
+		_COUNTS_
+		<span class="generated">Generated at _NOW_ by _HOST_.</span>
+	<table>
+		<tr>
+			<th>Monitor</th>
+			<th>Status</th>
+			<th>Host</th>
+			<th>Failed at</th>
+			<th>VFC</th>
+			<th>Downtime</th>
+			<th>Detail</th>
+			<th>Failures</th>
+			<th>Last Failure</th>
+			<th>Age</th>
+			</tr>
+

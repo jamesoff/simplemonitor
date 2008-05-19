@@ -1,0 +1,57 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+	<head>
+		<title>[ah10004] monitor</title>
+		<link rel="stylesheet" type="text/css" href="style.css" />
+		<meta http-equiv="refresh" content="30" />
+		<script language="javascript" type="text/javascript">
+			function too_old() {
+				var summary_element = document.getElementById("summary");
+				summary_element.innerHTML = summary_element.innerHTML + " [STALE]";
+				summary_element.setAttribute("class", "stale");
+			}
+
+			function check_age() {
+				var generated = 1207228294;
+				var now = Date.parse(new Date()) / 1000;
+				if ((now - generated) > 60) {
+					var summary_element = document.getElementById("summary");
+					summary_element.innerHTML = "[OLD] " + summary_element.innerHTML;
+					summary_element.setAttribute("class", "stale");
+				}
+			}
+
+			setTimeout("too_old();", 60000);
+			//setTimeout("check_age();", 5000);
+		</script>
+	</head>
+
+	<body onload="check_age();">
+		<div id="summary" class="fail">FAIL<div id="details"><span class="ok">0 OK</span> <span class="fail">1 FAIL</span> <span class="old">0 OLD</span> <span class="remote">0 remote</span></div></div>
+		<span class="generated">Generated at 2008-04-03 14:11:34 by ah10004.</span>
+	<table>
+		<tr>
+			<th>Monitor</th>
+			<th>Status</th>
+			<th>Host</th>
+			<th>Failed at</th>
+			<th>VFC</th>
+			<th>Downtime</th>
+			<th>Detail</th>
+			<th>Failures</th>
+			<th>Last Failure</th>
+			</tr>
+
+<tr class="failrow">
+            <td class="monitor_name">backup</td>
+            <td class="status fail">FAIL</td>
+            <td>ah10004</td>
+            <td>2008-04-03 14:11:34</td>
+            <td class="vfc">1</td><td>0+00:00:00</td><td>OK was reported 590558s ago &nbsp;</td><td>1</td>
+            <td>2008-04-03 14:11:34</td></tr>
+</table><br />
+<span class="generated">Generated at 2008-04-03 14:11:34 by ah10004.</span>
+</body>
+</html>
+

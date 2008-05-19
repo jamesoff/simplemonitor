@@ -1,0 +1,42 @@
+1.4:
+	* Fixed a problem where success alerts were always sent
+	* Many other small fixes
+
+	+ Added remote monitor/central reporting support
+	+ Added support for monitor defaults
+	+ Added HTML logger type to generate a status webpage
+	+ Added syslog alerter
+
+1.3:
+	+ Added -p option to write a pidfile
+	+ Added support for a HUP signal to close/reopen logfiles
+
+1.2:
+	* Refactored monitor/logger/alerter registration code
+	  These objects are now more self-loading and just need to be
+		passed a dict of their config options.
+	* Changed to using packages for monitors, loggers and alerters.
+	* Fixed bug where initial failure time was always the most recent
+	  failure time.
+	* Fixed a bug with the DiskSpace monitor which meant the free space
+	  on non-Windows platforms was incorrectly calculated.
+	* Changed the intention of the DiskSpace monitior on non-Windows
+	  platforms to measure the non-superuser free space.
+	* Fixed a bug which could mean the main loop ignored the interval
+	  if an error occurred during tests.
+	* Better support for the dry_run setting on alerters
+	* BulkSMS sender now limits messages to 160 chars (otherwise BulkSMS
+	  rejects them).
+	* Formatted times in alerts to not include microseconds
+
+	+ Monitors now know their own name
+	+ Alerters now have configurable time ranges for operation.
+	+ Alerters now have days of operation.
+	+ Alerters can hold alerts that occur out-of-hours and update you
+	  if the monitor is still failed when they become in-hours.
+	+ Email alerts for failure now include downtime (which will be 0 for
+	  an alert that fires immediately, but may be useful for alerters with
+		a limit).
+
+<= 1.1:
+	* Changes not tracked.

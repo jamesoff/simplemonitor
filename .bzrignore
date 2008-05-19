@@ -1,0 +1,4 @@
+./*.ini
+*.py[oc]
+.*.swp
+.svn
