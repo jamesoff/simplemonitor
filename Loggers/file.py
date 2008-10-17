@@ -83,7 +83,6 @@ class HTMLLogger(Logger):
         if not self.doing_batch:
             print "HTMLLogger.save_result2() called while not doing batch."
             return
-        print monitor
         if monitor.virtual_fail_count() == 0:
             status = True
         else:
@@ -209,7 +208,7 @@ class HTMLLogger(Logger):
         count_data = count_data + " class=\"%s\">%s" % (cls, cls.upper())
         self.count_data = count_data + "<div id=\"details\"><span class=\"ok\">%d OK</span> <span class=\"fail\">%d FAIL</span> <span class=\"old\">%d OLD</span> <span class=\"remote\">%d remote</span></div></div>" % (ok_count, fail_count, old_count, remote_count)
 
-        self.status = status
+        self.status = cls.upper()
 
         with open(os.path.join(self.folder, self.header), "r") as file_input:
             file_handle.writelines(self.parse_file(file_input))
