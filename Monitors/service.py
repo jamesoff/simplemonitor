@@ -160,6 +160,12 @@ class MonitorRC(Monitor):
             return False
         try:
             fh = os.popen("%s status" % self.script_path, "r")
+            try:
+                # We seem to have to read from the process object else
+                # Linux (Ubuntu at least) returns 256 instead!
+                fh.read()
+            except:
+                pass
             result = fh.close()
             if result == None:
                 result = 0
