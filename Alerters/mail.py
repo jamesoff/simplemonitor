@@ -45,7 +45,7 @@ class EMailAlerter(Alerter):
         #host = "on host %s" % self.hostname
         host = ""
         if monitor.is_remote():
-            host = "on %s " % monitor.running_on
+            host = " on %s " % monitor.running_on
         
         if type == "":
             return
