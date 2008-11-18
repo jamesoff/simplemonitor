@@ -305,6 +305,7 @@ def main():
     while loop:
         try:
             m.run_tests()
+            m.do_recovery()
             m.do_alerts()
             m.do_logs()
 

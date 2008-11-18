@@ -53,17 +53,33 @@ class EMailAlerter(Alerter):
             message = "From: %s\r\nTo: %s\r\nSubject: [%s] Monitor %s failed!" % (self.from_addr, self.to_addr, self.hostname, name)
             message = message + "\r\n\r\n"
             try:
-                message = message + "Monitor %s%s has failed.\nFailed at: %s\nDowntime: %d+%02d:%02d:%02d\nVirtual failure count: %d\nAdditional info: %s\nDescription: %s" % (name, host, self.format_datetime(monitor.first_failure_time()), days, hours, minutes, seconds, monitor.virtual_fail_count(), monitor.get_result(), monitor.describe())
+                message = message + """Monitor %s%s has failed.
+                Failed at: %s\nDowntime: %d+%02d:%02d:%02d
+                Virtual failure count: %d                
+                Additional info: %s
+                Description: %s""" % (
+                        name, 
+                        host, 
+                        self.format_datetime(monitor.first_failure_time()), 
+                        days, hours, minutes, seconds, 
+                        monitor.virtual_fail_count(), 
+                        monitor.get_result(), 
+                        monitor.describe())
+                if monitor.recover_info != "":
+                    message += "\nRecovery info: %s" % monitor.recover_info
             except:
                 message = message + "(unable to generate message!)"
+
         elif type == "success":
             message = "From: %s\r\nTo: %s\r\nSubject: [%s] Monitor %s succeeded" % (self.from_addr, self.to_addr, self.hostname, name)
             message = message + "\r\n\r\n"
             message = message + "Monitor %s%s is back up.\nOriginally failed at: %s\nDowntime: %d+%02d:%02d:%02d\nDescription: %s" % (name, host, self.format_datetime(monitor.first_failure_time()), days, hours, minutes, seconds, monitor.describe())
+
         elif type == "catchup":
             message = "From: %s\r\nTo: %s\r\nSubject: [%s] Monitor %s failed earlier!" % (self.from_addr, self.to_addr, self.hostname, name)
             message = message + "\r\n\r\n"
             message = message + "Monitor %s%s failed earlier while this alerter was out of hours.\nFailed at: %s\nVirtual failure count: %d\nAdditional info: %s\nDescription: %s" % (name, host, self.format_datetime(monitor.first_failure_time()), monitor.virtual_fail_count(), monitor.get_result(), monitor.describe())
+
         else:
             print "Unknown alert type %s" % type
             return

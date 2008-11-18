@@ -214,6 +214,10 @@ class SimpleMonitor:
         for key in self.alerters.keys():
             self.do_alert(self.alerters[key])
 
+    def do_recovery(self):
+        for key in self.monitors.keys():
+           self.monitors[key].attempt_recover()
+
     def do_logs(self):
         if self.need_hup:
             print "Processing HUP."
