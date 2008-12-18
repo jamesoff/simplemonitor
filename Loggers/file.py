@@ -101,7 +101,7 @@ class HTMLLogger(Logger):
         last_failure = monitor.last_failure
 
         try:
-            age = datetime.datetime.now() - monitor.last_update
+            age = datetime.datetime.utcnow() - monitor.last_update
             age = age.days * 3600 + age.seconds
             update = monitor.last_update
         except Exception, e: 
@@ -230,7 +230,7 @@ class HTMLLogger(Logger):
     def parse_file(self, file_handle):
         lines = []
         for line in file_handle:
-            line = line.replace("_NOW_", self.format_datetime(datetime.datetime.now()))
+            line = line.replace("_NOW_", self.format_datetime(datetime.datetime.utcnow()))
             line = line.replace("_HOST_", socket.gethostname())
             line = line.replace("_COUNTS_", self.count_data)
             line = line.replace("_TIMESTAMP_", str(int(time.time())))
