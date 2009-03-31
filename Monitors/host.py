@@ -29,6 +29,25 @@ class MonitorDiskSpace(Monitor):
             return int(s)
         return bytes
 
+    def _bytes_to_size_string(self, b):
+        """Convert a number in bytes to a sensible unit."""
+
+        kb = 1024
+        mb = kb * 1024
+        gb = mb * 1024
+        tb = gb * 1024
+
+        if b > tb:
+            return "%f.2TB" % (b / float(tb))
+        elif b > gb:
+            return "%f.2GB" % (b / float(gb))
+        elif b > mb:
+            return "%f.2MB" % (b / float(mb))
+        elif b > kb:
+            return "%f.2KB" % (b / float(kb))
+        else:
+            return str(b)
+
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
         if self.is_windows(allow_cygwin=False):
@@ -58,7 +77,7 @@ class MonitorDiskSpace(Monitor):
             return False
 
         if space <= self.limit:
-            self.record_fail("%d bytes available" % space)
+            self.record_fail("%s bytes available" % _bytes_to_size_string(space))
             return False
         else:
             self.record_success()
