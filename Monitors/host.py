@@ -140,3 +140,47 @@ class MonitorApcupsd(Monitor):
         return (self.path, )
 
 
+class MonitorPortAudit(Monitor):
+    """Check a host doesn't have outstanding security issues."""
+
+    type = "portaudit"
+    regexp = re.compile("(\d+) problem\(s\) in your installed packages found")
+    path = ""
+
+    def __init__(self, name, config_options):
+        Monitor.__init__(self, name, config_options)
+        if config_options.has_key("path"):
+            self.path = config_options["path"]
+
+    def describe(self):
+        return "Checking for insecure ports."
+
+    def get_params(self):
+        return (self.path, )
+
+    def run_test(self):
+        try:
+            # -X 1 tells portaudit to re-download db if one day out of date
+            if self.path == "":
+                self.path = "/usr/local/sbin/portaudit"
+            process_handle = os.popen("%s -a -X 1" % self.path)
+            for line in process_handle:
+                matches = self.regexp.match(line)
+                if matches:
+                    count = int(matches.group(1))
+                    # sanity check
+                    if count == 0:
+                        self.record_success()
+                        return True
+                    if count == 1:
+                        self.record_fail("1 problem")
+                    else:
+                        self.record_fail("%d problems" % count)
+                    return False
+            self.record_success()
+            return True
+        except Exception, e:
+            self.record_fail("Could not run portaudit: %s" % e)
+            return False
+
+
