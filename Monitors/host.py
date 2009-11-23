@@ -38,13 +38,13 @@ class MonitorDiskSpace(Monitor):
         tb = gb * 1024
 
         if b > tb:
-            return "%f.2TB" % (b / float(tb))
+            return "%0.2fTB" % (b / float(tb))
         elif b > gb:
-            return "%f.2GB" % (b / float(gb))
+            return "%0.2fGB" % (b / float(gb))
         elif b > mb:
-            return "%f.2MB" % (b / float(mb))
+            return "%0.2fMB" % (b / float(mb))
         elif b > kb:
-            return "%f.2KB" % (b / float(kb))
+            return "%0.2fKB" % (b / float(kb))
         else:
             return str(b)
 
@@ -77,10 +77,10 @@ class MonitorDiskSpace(Monitor):
             return False
 
         if space <= self.limit:
-            self.record_fail("%s bytes available" % _bytes_to_size_string(space))
+            self.record_fail("%s free" % self._bytes_to_size_string(space))
             return False
         else:
-            self.record_success()
+            self.record_success("%s free" % self._bytes_to_size_string(space))
             return True
 
     def describe(self):

@@ -227,7 +227,7 @@ class Monitor:
         self.tests_run += 1
         self.was_skipped = False
 
-    def record_success(self):
+    def record_success(self, message = ""):
         """Update internal state to show we had a success."""
         if self.error_count > 0:
             self.last_error_count = self.error_count
@@ -239,6 +239,7 @@ class Monitor:
         self.success_count += 1
         self.tests_run += 1
         self.was_skipped = False
+        self.last_result = message
 
     def record_skip(self, which_dep):
         """Record that we were skipped.

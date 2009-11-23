@@ -95,7 +95,7 @@ class HTMLLogger(Logger):
         else:
             fail_time = ""
             fail_count = 0 
-            fail_data = ""
+            fail_data = monitor.get_result()
             downtime = ""
         failures = monitor.failures
         last_failure = monitor.last_failure
