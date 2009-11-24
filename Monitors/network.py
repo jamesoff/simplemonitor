@@ -6,6 +6,7 @@ import urllib2
 import re
 import os
 import socket
+import datetime
 
 from monitor import Monitor
 
@@ -49,8 +50,12 @@ class MonitorHTTP(Monitor):
         # store the current default timeout (since it's global)
         original_timeout = socket.getdefaulttimeout()
         socket.setdefaulttimeout(5)
+        start_time = datetime.datetime.now()
+        end_time = None
         try:
             url_handle = urllib2.urlopen(self.url)
+            end_time = datetime.datetime.now()
+            load_time = end_time - start_time
             status = "200 OK"
             if hasattr(url_handle, "status"):
                 if url_handle.status != "":
@@ -60,7 +65,7 @@ class MonitorHTTP(Monitor):
                 socket.setdefaulttimeout(original_timeout)
                 return False
             if self.regexp == None:
-                self.record_success()
+                self.record_success("%s in %0.2fs" % (status, (load_time.seconds + (load_time.microseconds / 1000000.0))))
                 socket.setdefaulttimeout(original_timeout)
                 return True
             else:
