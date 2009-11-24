@@ -65,7 +65,7 @@ class MonitorHTTP(Monitor):
                 socket.setdefaulttimeout(original_timeout)
                 return False
             if self.regexp == None:
-                self.record_success("%s in %0.2fs" % (status, (load_time.seconds + (load_time.microseconds / 1000000.0))))
+                self.record_success("%s in %0.2fs" % (status, (load_time.seconds + (load_time.microseconds / 1000000.2))))
                 socket.setdefaulttimeout(original_timeout)
                 return True
             else:
@@ -154,6 +154,7 @@ class MonitorHost(Monitor):
     ping_command = ""
     ping_regexp = ""
     type = "host"
+    time_regexp = ""
 
     def __init__(self, name, config_options):
         """
@@ -165,9 +166,13 @@ class MonitorHost(Monitor):
         if self.is_windows(allow_cygwin=True):
             self.ping_command = "ping -n 1 -w 5000 %s"
             self.ping_regexp = "Reply from "
+            self.time_regexp = "Average = (?P<ms>\d+)ms"
         else:
             self.ping_command = "ping -c1 -t5 %s 2> /dev/null"
             self.ping_regexp = "bytes from"
+            #XXX this regexp is only for freebsd at the moment; not sure about other platforms
+            #XXX looks like Linux uses this format too
+            self.time_regexp = "min/avg/max/stddev = [\d.]+/(?P<ms>[\d.]+)/"
         try:
             host = config_options["host"]
         except:
@@ -178,16 +183,28 @@ class MonitorHost(Monitor):
 
     def run_test(self):
         r = re.compile(self.ping_regexp)
+        r2 = re.compile(self.time_regexp)
+        success = False
+        pingtime = 0.0
         try:
             process_handle = os.popen(self.ping_command % self.host)
             for line in process_handle:
                 matches = r.search(line)
                 if matches:
-                    self.record_success()
-                    return True
+                    success = True
+                else:
+                    matches = r2.search(line)
+                    if matches:
+                        pingtime = matches.group("ms")
         except Exception, e:
             self.record_fail(e)
             pass
+        if success:
+            if pingtime > 0:
+                self.record_success("%sms" % pingtime)
+            else:
+                self.record_success()
+            return True
         self.record_fail()
         return False
 

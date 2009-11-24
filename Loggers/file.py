@@ -189,13 +189,19 @@ class HTMLLogger(Logger):
             except:
                 output.write("<td>&nbsp;</td>")
             output.write("<td>%s &nbsp;</td>" % (self.batch_data[entry]["fail_data"]))
-            output.write("""<td>%s</td>
-            <td>%s</td>""" % (
-                self.batch_data[entry]["failures"],
-                self.format_datetime(self.batch_data[entry]["last_failure"])
+            if self.batch_data[entry]["failures"] == 0:
+                output.write("<td></td><td></td>")
+            else:
+                output.write("""<td>%s</td>
+                <td>%s</td>""" % (
+                    self.batch_data[entry]["failures"],
+                    self.format_datetime(self.batch_data[entry]["last_failure"])
+                    )
                 )
-            )
-            output.write("<td>%d</td>" % self.batch_data[entry]["age"])
+            if self.batch_data[entry]["host"] == my_host:
+                output.write("<td></td>")
+            else:
+                output.write("<td>%d</td>" % self.batch_data[entry]["age"])
             output.write("</tr>\n")
         count_data = "<div id=\"summary\""
         if old_count > 0:
