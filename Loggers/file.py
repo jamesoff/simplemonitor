@@ -95,13 +95,13 @@ class HTMLLogger(Logger):
         else:
             fail_time = ""
             fail_count = 0 
-            fail_data = ""
+            fail_data = monitor.get_result()
             downtime = ""
         failures = monitor.failures
         last_failure = monitor.last_failure
 
         try:
-            age = datetime.datetime.now() - monitor.last_update
+            age = datetime.datetime.utcnow() - monitor.last_update
             age = age.days * 3600 + age.seconds
             update = monitor.last_update
         except Exception, e: 
@@ -189,13 +189,19 @@ class HTMLLogger(Logger):
             except:
                 output.write("<td>&nbsp;</td>")
             output.write("<td>%s &nbsp;</td>" % (self.batch_data[entry]["fail_data"]))
-            output.write("""<td>%s</td>
-            <td>%s</td>""" % (
-                self.batch_data[entry]["failures"],
-                self.format_datetime(self.batch_data[entry]["last_failure"])
+            if self.batch_data[entry]["failures"] == 0:
+                output.write("<td></td><td></td>")
+            else:
+                output.write("""<td>%s</td>
+                <td>%s</td>""" % (
+                    self.batch_data[entry]["failures"],
+                    self.format_datetime(self.batch_data[entry]["last_failure"])
+                    )
                 )
-            )
-            output.write("<td>%d</td>" % self.batch_data[entry]["age"])
+            if self.batch_data[entry]["host"] == my_host:
+                output.write("<td></td>")
+            else:
+                output.write("<td>%d</td>" % self.batch_data[entry]["age"])
             output.write("</tr>\n")
         count_data = "<div id=\"summary\""
         if old_count > 0:
@@ -230,7 +236,7 @@ class HTMLLogger(Logger):
     def parse_file(self, file_handle):
         lines = []
         for line in file_handle:
-            line = line.replace("_NOW_", self.format_datetime(datetime.datetime.now()))
+            line = line.replace("_NOW_", self.format_datetime(datetime.datetime.utcnow()))
             line = line.replace("_HOST_", socket.gethostname())
             line = line.replace("_COUNTS_", self.count_data)
             line = line.replace("_TIMESTAMP_", str(int(time.time())))

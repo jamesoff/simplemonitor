@@ -101,12 +101,12 @@ class Monitor:
 
     def is_remote(self):
         """Check if we're running on this machine, or if we're a remote instance."""
-        print self.running_on, self.short_hostname()
+        #print self.running_on, self.short_hostname()
         if self.running_on == self.short_hostname():
-            print "false"
+            #print "false"
             return False
         else:
-            print "true"
+            #print "true"
             return True
 
     def run_test(self):
@@ -224,30 +224,31 @@ class Monitor:
     def record_fail(self, message = ""):
         """Update internal state to show that we had a failure."""
         self.error_count += 1
-        self.last_update = datetime.datetime.now()
+        self.last_update = datetime.datetime.utcnow()
         #self.was_error = self.is_error
         #self.is_error = True
         self.last_result = message
         if self.virtual_fail_count() == 1:
-            self.failed_at = datetime.datetime.now()
-            self.last_failure = datetime.datetime.now()
+            self.failed_at = datetime.datetime.utcnow()
+            self.last_failure = datetime.datetime.utcnow()
             self.failures += 1
         self.success_count = 0
         self.tests_run += 1
         self.was_skipped = False
 
-    def record_success(self):
+    def record_success(self, message = ""):
         """Update internal state to show we had a success."""
         if self.error_count > 0:
             self.last_error_count = self.error_count
         self.error_count = 0
-        self.last_update = datetime.datetime.now()
+        self.last_update = datetime.datetime.utcnow()
         #self.was_error = self.is_error
         #self.is_error = False
         self.last_result = ""
         self.success_count += 1
         self.tests_run += 1
         self.was_skipped = False
+        self.last_result = message
 
     def record_skip(self, which_dep):
         """Record that we were skipped.

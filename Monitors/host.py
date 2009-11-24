@@ -29,6 +29,25 @@ class MonitorDiskSpace(Monitor):
             return int(s)
         return bytes
 
+    def _bytes_to_size_string(self, b):
+        """Convert a number in bytes to a sensible unit."""
+
+        kb = 1024
+        mb = kb * 1024
+        gb = mb * 1024
+        tb = gb * 1024
+
+        if b > tb:
+            return "%0.2fTB" % (b / float(tb))
+        elif b > gb:
+            return "%0.2fGB" % (b / float(gb))
+        elif b > mb:
+            return "%0.2fMB" % (b / float(mb))
+        elif b > kb:
+            return "%0.2fKB" % (b / float(kb))
+        else:
+            return str(b)
+
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
         if self.is_windows(allow_cygwin=False):
@@ -58,10 +77,10 @@ class MonitorDiskSpace(Monitor):
             return False
 
         if space <= self.limit:
-            self.record_fail("%d bytes available" % space)
+            self.record_fail("%s free" % self._bytes_to_size_string(space))
             return False
         else:
-            self.record_success()
+            self.record_success("%s free" % self._bytes_to_size_string(space))
             return True
 
     def describe(self):
@@ -119,5 +138,49 @@ class MonitorApcupsd(Monitor):
 
     def get_params(self):
         return (self.path, )
+
+
+class MonitorPortAudit(Monitor):
+    """Check a host doesn't have outstanding security issues."""
+
+    type = "portaudit"
+    regexp = re.compile("(\d+) problem\(s\) in your installed packages found")
+    path = ""
+
+    def __init__(self, name, config_options):
+        Monitor.__init__(self, name, config_options)
+        if config_options.has_key("path"):
+            self.path = config_options["path"]
+
+    def describe(self):
+        return "Checking for insecure ports."
+
+    def get_params(self):
+        return (self.path, )
+
+    def run_test(self):
+        try:
+            # -X 1 tells portaudit to re-download db if one day out of date
+            if self.path == "":
+                self.path = "/usr/local/sbin/portaudit"
+            process_handle = os.popen("%s -a -X 1" % self.path)
+            for line in process_handle:
+                matches = self.regexp.match(line)
+                if matches:
+                    count = int(matches.group(1))
+                    # sanity check
+                    if count == 0:
+                        self.record_success()
+                        return True
+                    if count == 1:
+                        self.record_fail("1 problem")
+                    else:
+                        self.record_fail("%d problems" % count)
+                    return False
+            self.record_success()
+            return True
+        except Exception, e:
+            self.record_fail("Could not run portaudit: %s" % e)
+            return False
 
 
