@@ -85,3 +85,11 @@ td.vfc {
 .monitor_name {
 	color: black;
 }
+
+tr.okrow:hover td {
+	background-color: #A8FFA8;
+}
+
+tr.failrow td {
+	background-color: #ffe0e0;
+}
