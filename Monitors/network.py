@@ -72,7 +72,7 @@ class MonitorHTTP(Monitor):
                 for line in url_handle:
                     matches = self.regexp.search(line)
                     if matches:
-                        self.record_success()
+                        self.record_success("%s in %0.2fs" % (status, (load_time.seconds + (load_time.microseconds / 1000000.2))))
                         socket.setdefaulttimeout(original_timeout)
                         return True
                 self.record_fail("Got 200 OK but couldn't match /%s/ in page." % self.regexp_text)
