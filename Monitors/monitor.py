@@ -19,6 +19,7 @@ import datetime
 import urllib2
 import time
 import copy
+import subprocess
 
 try:
     import win32api
@@ -61,6 +62,9 @@ class Monitor:
 
     name = "unnamed"
 
+    recover_command = ""
+    recover_info = ""
+
     def __init__(self, name = "unnamed", config_options = {}):
         """What's that coming over the hill? Is a monitor?"""
         if config_options.has_key("depend"):
@@ -73,8 +77,13 @@ class Monitor:
             self.set_remote_alerting(int(config_options["remote_alert"]))
         if config_options.has_key("remote_alerts"):
             self.set_remote_alerting(int(config_options["remote_alerts"]))
+        if config_options.has_key("recover_command"):
+            self.set_recover_command(config_options["recover_command"])
         self.running_on = self.short_hostname()
         self.name = name
+    
+    def set_recover_command(self, command):
+        self.recover_command = command
 
     def short_hostname(self):
         """Get just our machine name.
@@ -317,6 +326,22 @@ class Monitor:
             return 0
         else:
             return self.last_error_count - self.tolerance
+
+    def attempt_recover(self):
+        if self.recover_command == "":
+            self.recover_info = ""
+            return
+        if not self.first_failure():
+            return
+
+        try:
+            p = subprocess.Popen(self.recover_command, shell = True)
+            result = p.wait()
+            self.recover_info = "Command executed and returned %d" % p.returncode
+        except Exception, e:
+            self.recover_info = "Unable to run command: %s" % e
+
+        return
 
 
 class MonitorFail(Monitor):
