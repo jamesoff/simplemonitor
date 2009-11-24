@@ -80,7 +80,11 @@ class MonitorHTTP(Monitor):
                 return False
         except urllib2.HTTPError, e:
             if e.code in self.allowed_codes:
-                self.record_success()
+                if end_time != None:
+                    load_time = end_time - start_time
+                    self.record_success("%s in %0.2fs" % (status, (load_time.seconds + (load_time.microseconds / 1000000.2))))
+                else:
+                    self.record_success("%s" % status)
                 socket.setdefaulttimeout(original_timeout)
                 return True
             self.record_fail("HTTP error while opening URL: %s" % e)
