@@ -109,6 +109,7 @@ class MonitorApcupsd(Monitor):
             self.path = config_options["path"]
 
     def run_test(self):
+        info = {}
         if self.path != "":
             executable = os.path.join(self.path, "apcaccess")
         else:
@@ -119,19 +120,36 @@ class MonitorApcupsd(Monitor):
         try:
             process_handle = os.popen(executable)
             for line in process_handle:
-                matches = self.regexp.match(line)
-                if matches:
-                    status = matches.group(1)
-                    status = status.strip()
-                    if status.startswith("ONLINE"):
-                        self.record_success()
-                        return True
-                    else:
-                        self.record_fail("UPS status is %s" % status)
-                        return False
+                if line.find(":") > -1:
+                    bits = line.split(":")
+                    info[bits[0].strip()] = bits[1].strip()
+
         except Exception, e:
             self.record_fail("Could not run %s: %s" % (executable, e))
             return False
+        if not info.has_key("STATUS"):
+            self.record_fail("Could not get UPS status")
+            return False
+
+        if not info["STATUS"] == "ONLINE":
+            if info.has_key("TIMELEFT"):
+                self.record_fail("%s: %s left" % (info["STATUS"], info["TIMELEFT"]))
+                return False
+            else:
+                self.record_fail(info["STATUS"])
+                return False
+
+        data = ""
+        if info.has_key("TIMELEFT"):
+            data = "%s left" % (info["TIMELEFT"])
+
+        if info.has_key("LOADPCT"):
+            if data != "":
+                data += "; "
+            data += "%s%% load" % info["LOADPCT"][0:4]
+
+        self.record_success(data)
+        return True
 
     def describe(self):
         return "Monitoring UPS to make sure it's ONLINE."
