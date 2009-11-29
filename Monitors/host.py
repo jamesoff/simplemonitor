@@ -202,3 +202,60 @@ class MonitorPortAudit(Monitor):
             return False
 
 
+
+class MonitorLoadAvg(Monitor):
+    """Check a host's load average isn't too high."""
+
+    type = "loadavg"
+    # which time field we're looking at: 0 = 1min, 1 = 5min, 2=15min
+    which = 1
+    max = 1.00
+
+    def __init__(self, name, config_options):
+        Monitor.__init__(self, name, config_options)
+        if self.is_windows(allow_cygwin=False):
+            raise RuntimeError("loadavg monitor does not support Windows")
+        if config_options.has_key("which"):
+            try:
+                which = int(config_options["which"])
+            except:
+                raise RuntimeError("value of 'which' is not an int")
+            if which < 0:
+                raise RuntimeError("value of 'which' is too low")
+            if which > 2:
+                raise RuntimeError("value of 'which' is too high")
+            self.which = which
+        if config_options.has_key("max"):
+            try:
+                max = float(config_options["max"])
+            except:
+                raise RuntimeError("value of 'max' is not a float")
+            if max <= 0:
+                raise RuntimeError("value of 'max' is too low")
+            self.max = max
+
+    def describe(self):
+        if self.which == 0:
+            return "Checking 1min loadavg is <= %0.2f" % self.max
+        elif self.which == 1:
+            return "Checking 5min loadavg is <= %0.2f" % self.max
+        else:
+            return "Checking 15min loadavg is <= %0.2f" % self.max
+
+    def run_test(self):
+        try:
+            loadavg = os.getloadavg()
+        except Exception, e:
+            self.record_fail("Exception getting loadavg: %s" % e)
+            return False
+
+        if loadavg[self.which] > self.max:
+            self.record_fail("%0.2f" % loadavg[self.which])
+            return False
+        else:
+            self.record_success("%0.2f" % loadavg[self.which])
+            return True
+
+    def get_params(self):
+        return (self.which, self.max)
+
