@@ -69,18 +69,20 @@ class MonitorDiskSpace(Monitor):
             if self.use_statvfs:
                 result = os.statvfs(self.partition)
                 space = result.f_bavail * result.f_frsize
+                percent = float(result.f_bavail) / float(result.f_blocks) * 100
             else:
                 result = win32api.GetDiskFreeSpaceEx(self.partition)
                 space = result[2]
+                percent = float(result[2]) / float(result[1]) * 100
         except Exception, e:
             self.record_fail("Couldn't get free disk space: %s" % e)
             return False
 
         if space <= self.limit:
-            self.record_fail("%s free" % self._bytes_to_size_string(space))
+            self.record_fail("%s free (%d%%)" % (self._bytes_to_size_string(space), percent))
             return False
         else:
-            self.record_success("%s free" % self._bytes_to_size_string(space))
+            self.record_success("%s free (%d%%)" % (self._bytes_to_size_string(space), percent))
             return True
 
     def describe(self):
