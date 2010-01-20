@@ -128,12 +128,15 @@ def load_monitors(m, filename, quiet):
         elif type == "loadavg":
             new_monitor = Monitors.host.MonitorLoadAvg(monitor, config_options)
 
+        elif type == "eximqueue":
+            new_monitor = Monitors.service.MonitorEximQueue(monitor, config_options)
+
         elif type == "fail":
             new_monitor = Monitors.monitor.MonitorFail(monitor, config_options)
 
         elif type == "null":
             new_monitor = Monitors.monitor.MonitorNull(monitor, config_options)
-        
+
         else:
             sys.stderr.write("Unknown type %s for monitor %s\n" % (type, monitor))
             continue

@@ -1,6 +1,7 @@
 import platform
 import re
 import os
+import subprocess
 
 from monitor import Monitor
 
@@ -185,4 +186,54 @@ class MonitorRC(Monitor):
     def describe(self):
         """Explains what this instance is checking."""
         return "Checks service %s is running" % self.script_path
+
+
+class MonitorEximQueue(Monitor):
+    """Make sure an exim queue isn't too big."""
+
+    type = "eximqueue"
+    max_length = 10
+    r = re.compile("(?P<count>\d+) matches out of (?P<total>\d+) messages")
+    path = "/usr/local/sbin"
+    
+    def __init__(self, name, config_options):
+        Monitor.__init__(self, name, config_options)
+        try:
+            self.max_length = int(config_options["max_length"])
+        except:
+            raise RuntimeError("Required configuration field 'max_length' missing or not an integer")
+        if not (self.max_length > 0):
+            raise RuntimeError("'max_length' must be >= 1")
+        if "path" in config_options:
+            self.path = config_options["path"]
+
+
+    def run_test(self):
+        try:
+            pipe = subprocess.Popen([os.path.join(self.path, "exiqgrep"), "-xc"], stdout=subprocess.PIPE).stdout
+            for line in pipe:
+                matches = self.r.match(line)
+                if matches:
+                    count = int(matches.group("count"))
+                    total = int(matches.group("total"))
+                    if count > self.max_length:
+                        self.record_fail("%d messages queued" % count)
+                        return False
+                    else:
+                        self.record_success("%d messages queued" % count)
+                        return True
+            self.record_fail("Error getting queue size")
+            return False
+        except Exception, e:
+            self.record_fail("Error running exiqgrep: %s" % e)
+            return False
+
+
+    def describe(self):
+        return "Checking the exim queue length is < %d" % self.max_length
+
+    def get_params(self):
+        return (self.max_length, )
+
+
 
