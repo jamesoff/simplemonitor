@@ -131,6 +131,9 @@ def load_monitors(m, filename, quiet):
         elif type == "eximqueue":
             new_monitor = Monitors.service.MonitorEximQueue(monitor, config_options)
 
+        elif type == "windowsdhcp":
+            new_monitor = Monitors.service.MonitorWindowsDHCPScope(monitor, config_options)
+
         elif type == "fail":
             new_monitor = Monitors.monitor.MonitorFail(monitor, config_options)
 

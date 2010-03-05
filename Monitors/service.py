@@ -236,4 +236,54 @@ class MonitorEximQueue(Monitor):
         return (self.max_length, )
 
 
+class MonitorWindowsDHCPScope(Monitor):
+    """Checks a Windows DHCP scope to make sure it has sufficient free IPs in the pool."""
+
+    # netsh dhcp server \\SERVER scope SCOPE show clients
+    # "No of Clients(version N): N in the Scope
+
+    type = "dhcpscope"
+    max_used = 0
+    scope = ""
+    server = ""
+    r = re.compile("No of Clients\(version \d+\): (?P<clients>\d+) in the Scope")
+
+    def __init__(self, name, config_options):
+        if not self.is_windows(True):
+            raise RuntimeError("DHCPScope monitor requires a Windows platform.")
+        Monitor.__init__(self, name, config_options)
+        try:
+            self.max_used = int(config_options["max_used"])
+        except:
+            raise RuntimeError("Required configuration field 'max_used' missing or not an integer")
+        if not (self.max_used > 0):
+            raise RuntimeError("max_used must be >= 1")
+        
+        try:
+            self.scope = config_options["scope"]
+        except:
+            raise RuntimeError("Required configuration field 'scope' missing")
+
+    def run_test(self):
+        try:
+            pipe = subprocess.Popen(["netsh", "dhcp", "server", "scope", self.scope, "show", "clients"], stdout=subprocess.PIPE).stdout
+            for line in pipe:
+                matches = self.r.match(line)
+                if matches:
+                    clients = int(matches.group("clients"))
+                    if clients > self.max_used:
+                        self.record_fail("%d clients in scope" % clients)
+                        return False
+                    else:
+                        self.record_success("%d clients in scope" % clients)
+                        return True
+            self.record_fail("Error getting client count: no match")
+            return False
+        except Exception, e:
+            print e
+            self.record_fail("Error getting client count: %s", e)
+            return False
+
+    def describe(self):
+        return "Checking the DHCP scope has fewer than %d leases" % self.max_used
 
