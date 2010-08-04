@@ -204,7 +204,6 @@ class MonitorPortAudit(Monitor):
             return False
 
 
-
 class MonitorLoadAvg(Monitor):
     """Check a host's load average isn't too high."""
 
@@ -260,4 +259,47 @@ class MonitorLoadAvg(Monitor):
 
     def get_params(self):
         return (self.which, self.max)
+
+
+class MonitorZap(Monitor):
+    """Checks a Zap channel to make sure it is ok"""
+
+    type = "zap"
+    span = 1
+    r = re.compile("^alarms=(?P<status>).+")
+
+    def __init__(self, name, config_options):
+        Monitor.__init__(self, name, config_options)
+        if config_options.has_key("span"):
+            try:
+                self.span = int(config_options["span"])
+            except:
+                raise RuntimeError("span parameter must be an integer")
+            if self.span < 1:
+                raise RuntimeError("span parameter must be > 0")
+
+    def run_test(self):
+        try:
+            pipe = subprocess.Popen(["ztscan", str(self.span)])
+            for line in pipe:
+                matches = self.r.match(line)
+                if matches:
+                    status = matches.group("status")
+                    if status != "OK":
+                        self.record_fail("status is %s" % status)
+                        return False
+                    else:
+                        self.record_success()
+                        return True
+            self.record_fail("Error getting status")
+            return False
+        except Exception, r:
+            self.record_fail("Error running ztscan: %s" % e)
+            return False
+           
+    def describe(self):
+        return "Checking status of zap span %d is OK" % self.span
+
+    def get_params(self):
+        return (self.span, )
 
