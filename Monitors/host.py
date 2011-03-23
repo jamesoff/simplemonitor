@@ -1,5 +1,6 @@
 import re
 import os
+import subprocess
 
 try:
     import win32api
@@ -280,7 +281,7 @@ class MonitorZap(Monitor):
 
     def run_test(self):
         try:
-            pipe = subprocess.Popen(["ztscan", str(self.span)])
+            pipe = subprocess.Popen(["ztscan", str(self.span)], stdout=subprocess.PIPE).stdout
             for line in pipe:
                 matches = self.r.match(line)
                 if matches:
@@ -293,7 +294,7 @@ class MonitorZap(Monitor):
                         return True
             self.record_fail("Error getting status")
             return False
-        except Exception, r:
+        except Exception, e:
             self.record_fail("Error running ztscan: %s" % e)
             return False
            

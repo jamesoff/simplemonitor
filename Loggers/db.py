@@ -40,6 +40,7 @@ class DBFullLogger(DBLogger):
             print "cannot send results, a dependency failed"
             return
         sql = "INSERT INTO results (result_id, monitor_host, monitor_name, monitor_type, monitor_params, monitor_result, timestamp, monitor_info) VALUES (null, ?, ?, ?, ?, ?, ?, ?)"
+
         c = self.db_handle.cursor()
 
         join_string = ":"
@@ -52,7 +53,11 @@ class DBFullLogger(DBLogger):
 
     def save_result2(self, name, monitor):
         """new interface."""
-        self.save_result(name, monitor.type, monitor.get_params(), monitor.get_result(), monitor.describe())
+        if monitor.test_success():
+            result = 1
+        else:
+            result = 0
+        self.save_result(name, monitor.type, monitor.get_params(), result, monitor.describe())
 
 
 class DBStatusLogger(DBLogger):
@@ -72,7 +77,11 @@ class DBStatusLogger(DBLogger):
 
     def save_result2(self, name, monitor):
         """new interface."""
-        self.save_result(name, monitor.type, monitor.get_params(), monitor.get_result(), monitor.describe())
+        if monitor.test_success():
+            result = 1
+        else:
+            result = 0
+        self.save_result(name, monitor.type, monitor.get_params(), result, monitor.describe())
 
 
 

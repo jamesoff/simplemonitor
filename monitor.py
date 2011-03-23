@@ -167,9 +167,9 @@ def load_loggers(m, config, quiet):
         type = config.get(logger, "type")
         config_options = get_config_dict(config, logger)
         if type == "db":
-            l = DBFullLogger(config_options)
+            l = Loggers.db.DBFullLogger(config_options)
         elif type == "dbstatus":
-            l = DBStatusLogger(config_options)
+            l = Loggers.db.DBStatusLogger(config_options)
         elif type == "logfile":
             l = Loggers.file.FileLogger(config_options)
         elif type == "html":
