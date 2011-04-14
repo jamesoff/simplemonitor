@@ -144,7 +144,7 @@ def load_monitors(m, filename, quiet):
             new_monitor = Monitors.monitor.MonitorNull(monitor, config_options)
 
         elif type == "filestat":
-            new_monitor = Monitors.monitor.MonitorFileStat(monitor, config_options)
+            new_monitor = Monitors.host.MonitorFileStat(monitor, config_options)
 
         else:
             sys.stderr.write("Unknown type %s for monitor %s\n" % (type, monitor))

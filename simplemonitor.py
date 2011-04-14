@@ -119,7 +119,7 @@ class SimpleMonitor:
                             print "Warning: %s" % monitor
                     else:
                         if verbose:
-                            print "Fail: %s" % monitor
+                            print "Fail: %s (%s)" % (monitor, self.monitors[monitor].last_result)
                     failed.append(monitor)
                 else:
                     if verbose and not not_run:

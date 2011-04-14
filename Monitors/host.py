@@ -1,6 +1,7 @@
 import re
 import os
 import subprocess
+import time
 
 try:
     import win32api
@@ -145,14 +146,14 @@ class MonitorFileStat(Monitor):
             raise RuntimeError("Maxage missing or not an integer (number of seconds)")
 
         try:
-            if (config_options.has_key("minsize"):
+            if (config_options.has_key("minsize")):
                 minsize = self._size_string_to_bytes(config_options["minsize"])
                 self.minsize = minsize
         except:
             raise RuntimeError("Minsize missing or not an integer (number of bytes")
 
         try:
-            filename = config_options["filename"])
+            filename = config_options["filename"]
         except:
             raise RuntimeError("Filename missing")
 
@@ -160,7 +161,7 @@ class MonitorFileStat(Monitor):
 
     def run_test(self):
         try:
-            statinfo = os.stat(filename)
+            statinfo = os.stat(self.filename)
         except Exception, e:
             self.record_fail("Unable to check file: %s" % e)
             return False
