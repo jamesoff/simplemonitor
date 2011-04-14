@@ -94,6 +94,105 @@ class MonitorDiskSpace(Monitor):
         return (self.limit, self.partition)
 
 
+class MonitorFileStat(Monitor):
+    """Make sure a file exists, isn't too old and/or isn't too small."""
+
+    type = "filestat"
+    maxage = -1
+    minsize = -1
+    filename = ""
+
+    def _size_string_to_bytes(self, s):
+        if s.endswith("G"):
+            gigs = int(s[:-1])
+            bytes = gigs * (1024**3)
+        elif s.endswith("M"):
+            megs = int(s[:-1])
+            bytes = megs * (1024**2)
+        elif s.endswith("K"):
+            kilos = int(s[:-1])
+            bytes = kilos * 1024
+        else:
+            return int(s)
+        return bytes
+
+    def _bytes_to_size_string(self, b):
+        """Convert a number in bytes to a sensible unit."""
+
+        kb = 1024
+        mb = kb * 1024
+        gb = mb * 1024
+        tb = gb * 1024
+
+        if b > tb:
+            return "%0.2fTiB" % (b / float(tb))
+        elif b > gb:
+            return "%0.2fGiB" % (b / float(gb))
+        elif b > mb:
+            return "%0.2fMiB" % (b / float(mb))
+        elif b > kb:
+            return "%0.2fKiB" % (b / float(kb))
+        else:
+            return str(b)
+
+    def __init__(self, name, config_options):
+        Monitor.__init__(self, name, config_options)
+        try:
+            if (config_options.has_key("maxage")):
+                maxage = int(config_options["maxage"])
+                self.maxage = maxage
+        except:
+            raise RuntimeError("Maxage missing or not an integer (number of seconds)")
+
+        try:
+            if (config_options.has_key("minsize"):
+                minsize = self._size_string_to_bytes(config_options["minsize"])
+                self.minsize = minsize
+        except:
+            raise RuntimeError("Minsize missing or not an integer (number of bytes")
+
+        try:
+            filename = config_options["filename"])
+        except:
+            raise RuntimeError("Filename missing")
+
+        self.filename = filename
+
+    def run_test(self):
+        try:
+            statinfo = os.stat(filename)
+        except Exception, e:
+            self.record_fail("Unable to check file: %s" % e)
+            return False
+
+        if (self.minsize >= 0):
+            if (statinfo.st_size < self.minsize): 
+                    self.record_fail("Size is %d, should be >= %d bytes" % (statinfo.st_size, self.minsize))
+                    return False
+
+        if (self.maxage >= 0):
+            now = time.time()
+            diff = now - statinfo.st_mtime
+            if (diff > self.maxage):
+                self.record_fail("Age is %d, should be < %d seconds" % (diff, self.maxage))
+                return False
+
+        self.record_success()
+        return True
+
+    def describe(self):
+        """Explains what we do"""
+        desc = "Checking %s exists" % self.filename
+        if (self.maxage >= 0):
+            desc = desc + " and is not older than %d seconds" % self.maxage
+        if (self.minsize >= 0):
+            desc = desc + " and is not smaller than %d bytes" % self.minsize
+        return desc
+
+    def get_params(self):
+        return (self.filename, self.minsize, self.maxage)
+
+
 class MonitorApcupsd(Monitor):
     """Monitor an APC UPS (with apcupsd) to make sure it's ONLINE.
     

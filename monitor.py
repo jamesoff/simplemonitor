@@ -143,6 +143,9 @@ def load_monitors(m, filename, quiet):
         elif type == "null":
             new_monitor = Monitors.monitor.MonitorNull(monitor, config_options)
 
+        elif type == "filestat":
+            new_monitor = Monitors.monitor.MonitorFileStat(monitor, config_options)
+
         else:
             sys.stderr.write("Unknown type %s for monitor %s\n" % (type, monitor))
             continue
