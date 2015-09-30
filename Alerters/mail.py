@@ -44,8 +44,7 @@ class EMailAlerter(Alerter):
         type = self.should_alert(monitor)
         (days, hours, minutes, seconds) = self.get_downtime(monitor)
 
-        #host = "on host %s" % self.hostname
-        host = ""
+        host = "on host %s" % self.hostname
         if monitor.is_remote():
             host = " on %s " % monitor.running_on
 
@@ -58,7 +57,8 @@ class EMailAlerter(Alerter):
         elif type == "failure":
             message['Subject'] = "[%s] Monitor %s Failed!" % ( self.hostname, name)
             body = """Monitor %s%s has failed.
-            Failed at: %s\nDowntime: %d+%02d:%02d:%02d
+            Failed at: %s
+            Downtime: %d+%02d:%02d:%02d
             Virtual failure count: %d
             Additional info: %s
             Description: %s""" % (
@@ -76,7 +76,7 @@ class EMailAlerter(Alerter):
                 body += "\nNo recovery info available"
 
         elif type == "success":
-            message['Subject'] = "[%s] Monitor %s succeeded" % (self.from_addr, self.to_addr, self.hostname, name)
+            message['Subject'] = "[%s] Monitor %s succeeded" % (self.hostname, name)
             body = "Monitor %s%s is back up.\nOriginally failed at: %s\nDowntime: %d+%02d:%02d:%02d\nDescription: %s" % (name, host, self.format_datetime(monitor.first_failure_time()), days, hours, minutes, seconds, monitor.describe())
 
         elif type == "catchup":
@@ -99,5 +99,4 @@ class EMailAlerter(Alerter):
                 self.available = False
         else:
             print "dry_run: would send email: %s" % message.as_string()
-
 
