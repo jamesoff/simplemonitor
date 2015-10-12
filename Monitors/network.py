@@ -91,7 +91,9 @@ class MonitorHTTP(Monitor):
             socket.setdefaulttimeout(original_timeout)
             return False
         except Exception, e:
-            self.record_fail("Exception while trying to open url: %s" % e)
+            #import traceback
+            #traceback.print_exc()
+            self.record_fail("Exception while trying to open url: %s" % (e))
             socket.setdefaulttimeout(original_timeout)
             return False
 
