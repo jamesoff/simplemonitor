@@ -1,4 +1,6 @@
 import smtplib
+from email.MIMEMultipart import MIMEMultipart
+from email.MIMEText import MIMEText
 
 from alerter import Alerter
 
@@ -42,57 +44,59 @@ class EMailAlerter(Alerter):
         type = self.should_alert(monitor)
         (days, hours, minutes, seconds) = self.get_downtime(monitor)
 
-        #host = "on host %s" % self.hostname
-        host = ""
+        host = "on host %s" % self.hostname
         if monitor.is_remote():
             host = " on %s " % monitor.running_on
-        
+
+        message = MIMEMultipart()
+        message['From'] = self.from_addr
+        message['To'] = self.to_addr
+
         if type == "":
             return
         elif type == "failure":
-            message = "From: %s\r\nTo: %s\r\nSubject: [%s] Monitor %s failed!" % (self.from_addr, self.to_addr, self.hostname, name)
-            message = message + "\r\n\r\n"
+            message['Subject'] = "[%s] Monitor %s Failed!" % ( self.hostname, name)
+            body = """Monitor %s%s has failed.
+            Failed at: %s
+            Downtime: %d+%02d:%02d:%02d
+            Virtual failure count: %d
+            Additional info: %s
+            Description: %s""" % (
+                    name,
+                    host,
+                    self.format_datetime(monitor.first_failure_time()),
+                    days, hours, minutes, seconds,
+                    monitor.virtual_fail_count(),
+                    monitor.get_result(),
+                    monitor.describe())
             try:
-                message = message + """Monitor %s%s has failed.
-                Failed at: %s\nDowntime: %d+%02d:%02d:%02d
-                Virtual failure count: %d                
-                Additional info: %s
-                Description: %s""" % (
-                        name, 
-                        host, 
-                        self.format_datetime(monitor.first_failure_time()), 
-                        days, hours, minutes, seconds, 
-                        monitor.virtual_fail_count(), 
-                        monitor.get_result(), 
-                        monitor.describe())
                 if monitor.recover_info != "":
-                    message += "\nRecovery info: %s" % monitor.recover_info
-            except:
-                message = message + "(unable to generate message!)"
+                    body += "\nRecovery info: %s" % monitor.recover_info
+            except AttributeError:
+                body += "\nNo recovery info available"
 
         elif type == "success":
-            message = "From: %s\r\nTo: %s\r\nSubject: [%s] Monitor %s succeeded" % (self.from_addr, self.to_addr, self.hostname, name)
-            message = message + "\r\n\r\n"
-            message = message + "Monitor %s%s is back up.\nOriginally failed at: %s\nDowntime: %d+%02d:%02d:%02d\nDescription: %s" % (name, host, self.format_datetime(monitor.first_failure_time()), days, hours, minutes, seconds, monitor.describe())
+            message['Subject'] = "[%s] Monitor %s succeeded" % (self.hostname, name)
+            body = "Monitor %s%s is back up.\nOriginally failed at: %s\nDowntime: %d+%02d:%02d:%02d\nDescription: %s" % (name, host, self.format_datetime(monitor.first_failure_time()), days, hours, minutes, seconds, monitor.describe())
 
         elif type == "catchup":
-            message = "From: %s\r\nTo: %s\r\nSubject: [%s] Monitor %s failed earlier!" % (self.from_addr, self.to_addr, self.hostname, name)
-            message = message + "\r\n\r\n"
-            message = message + "Monitor %s%s failed earlier while this alerter was out of hours.\nFailed at: %s\nVirtual failure count: %d\nAdditional info: %s\nDescription: %s" % (name, host, self.format_datetime(monitor.first_failure_time()), monitor.virtual_fail_count(), monitor.get_result(), monitor.describe())
+            message['Subject'] = "[%s] Monitor %s failed earlier!" % (self.from_addr, self.to_addr, self.hostname, name)
+            body = "Monitor %s%s failed earlier while this alerter was out of hours.\nFailed at: %s\nVirtual failure count: %d\nAdditional info: %s\nDescription: %s" % (name, host, self.format_datetime(monitor.first_failure_time()), monitor.virtual_fail_count(), monitor.get_result(), monitor.describe())
 
         else:
             print "Unknown alert type %s" % type
             return
 
+        message.attach(MIMEText(body,'plain'))
+
         if not self.dry_run:
             try:
                 server = smtplib.SMTP(self.mail_host)
-                server.sendmail(self.from_addr, self.to_addr, message)
+                server.sendmail(self.from_addr, self.to_addr, message.as_string())
                 server.quit()
             except Exception, e:
                 print "Couldn't send mail: %s", e
                 self.available = False
         else:
-            print "dry_run: would send email: %s" % message
-
+            print "dry_run: would send email: %s" % message.as_string()
 

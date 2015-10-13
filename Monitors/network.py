@@ -13,7 +13,7 @@ from monitor import Monitor
 
 class MonitorHTTP(Monitor):
     """Check an HTTP server is working right.
-    
+
     We can either check that we get a 200 OK back, or we can check for a regexp match in the page.
     """
 
@@ -30,7 +30,7 @@ class MonitorHTTP(Monitor):
             url = config_options["url"]
         except:
             raise RuntimeError("Required configuration fields missing")
-        
+
         if config_options.has_key("regexp"):
             regexp = config_options["regexp"]
         else:
@@ -91,7 +91,9 @@ class MonitorHTTP(Monitor):
             socket.setdefaulttimeout(original_timeout)
             return False
         except Exception, e:
-            self.record_fail("Exception while trying to open url: %s" % e)
+            #import traceback
+            #traceback.print_exc()
+            self.record_fail("Exception while trying to open url: %s" % (e))
             socket.setdefaulttimeout(original_timeout)
             return False
 
@@ -172,7 +174,11 @@ class MonitorHost(Monitor):
             self.ping_regexp = "Reply from "
             self.time_regexp = "Average = (?P<ms>\d+)ms"
         else:
-            self.ping_command = "ping -c1 -t5 %s 2> /dev/null"
+            try:
+                ping_ttl = config_options["ping_ttl"]
+            except:
+                ping_ttl = "5"
+            self.ping_command = "ping -c1 -t"+ ping_ttl + " %s 2> /dev/null"
             self.ping_regexp = "bytes from"
             #XXX this regexp is only for freebsd at the moment; not sure about other platforms
             #XXX looks like Linux uses this format too

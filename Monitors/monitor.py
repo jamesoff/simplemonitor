@@ -47,7 +47,7 @@ class Monitor:
 
     failures = 0
     last_failure = None
-    
+
     # this is the time we last received data into this monitor (if we're remote)
     last_update = None
 
@@ -81,7 +81,7 @@ class Monitor:
             self.set_recover_command(config_options["recover_command"])
         self.running_on = self.short_hostname()
         self.name = name
-    
+
     def set_recover_command(self, command):
         self.recover_command = command
 
@@ -126,7 +126,7 @@ class Monitor:
             return False
         else:
             return True
-        
+
     def first_failure(self):
         """Check if this is our first failure (past tolerance)."""
         if self.error_count == (self.tolerance + 1):
@@ -149,7 +149,7 @@ class Monitor:
         """Reset the monitor's dependency list back to default."""
         self.deps = copy.copy(self._dependencies)
 
-    def dependency_succeeded(self, dependency): 
+    def dependency_succeeded(self, dependency):
         """Remove a dependency from the current version of the list."""
         try:
             self.deps.remove(dependency)
@@ -167,7 +167,7 @@ class Monitor:
 
     def log_result(self, name, logger):
         """Save our latest result to the logger.
-        
+
         To be removed."""
         if self.error_count > self.tolerance:
             result = 0
@@ -183,7 +183,7 @@ class Monitor:
         """Send an alert when we first fail.
 
         Set first_only to False to generate mail every time.
-        
+
         To be removed."""
 
         if self.virtual_fail_count() == 1:
@@ -252,7 +252,7 @@ class Monitor:
 
     def record_skip(self, which_dep):
         """Record that we were skipped.
-        
+
         We pretend to have succeeded as we don't want notifications sent."""
         self.record_success()
         self.was_skipped = True
@@ -306,7 +306,7 @@ class Monitor:
 
     def should_run(self):
         """Check if we should run our tests.
-        
+
         We always run if the minimum gap is 0, or if we're currently failing.
         Otherwise, we run if the last time we ran was more than minimum_gap seconds ago.
         """
@@ -342,6 +342,10 @@ class Monitor:
             self.recover_info = "Unable to run command: %s" % e
 
         return
+
+    def post_config_setup(self):
+        """ any post config setup needed """
+        pass
 
 
 class MonitorFail(Monitor):

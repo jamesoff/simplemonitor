@@ -23,6 +23,7 @@ import Monitors.network
 import Monitors.service
 import Monitors.host
 import Monitors.file
+import Monitors.compound
 
 from simplemonitor import SimpleMonitor
 
@@ -57,7 +58,7 @@ def get_optional_int(config, monitor, key, default=0):
     if config.has_option(monitor, key):
         value = config.getint(monitor, key)
     else:
-        value = default 
+        value = default
     return value
 
 def get_tolerance(config, monitor):
@@ -84,7 +85,7 @@ def load_monitors(m, filename, quiet):
         default_config = {}
 
     myhostname = gethostname().lower()
-    
+
     for monitor in monitors:
         if config.has_option(monitor, "runon"):
             if myhostname != config.get(monitor, "runon").lower():
@@ -115,7 +116,7 @@ def load_monitors(m, filename, quiet):
 
         elif type == "apcupsd":
             new_monitor = Monitors.host.MonitorApcupsd(monitor, config_options)
-        
+
         elif type == "svc":
             new_monitor = Monitors.service.MonitorSvc(monitor, config_options)
 
@@ -146,6 +147,10 @@ def load_monitors(m, filename, quiet):
         elif type == "filestat":
             new_monitor = Monitors.host.MonitorFileStat(monitor, config_options)
 
+        elif type == "compound":
+            new_monitor = Monitors.compound.CompoundMonitor(monitor, config_options)
+            new_monitor.set_mon_refs(m)
+
         else:
             sys.stderr.write("Unknown type %s for monitor %s\n" % (type, monitor))
             continue
@@ -155,6 +160,9 @@ def load_monitors(m, filename, quiet):
         if not quiet:
             print "Adding %s monitor %s" % (type, monitor)
         m.add_monitor(monitor, new_monitor)
+
+    for i in m.monitors.keys():
+        m.monitors[i].post_config_setup()
 
     return m
 
@@ -241,7 +249,7 @@ def main():
         options.verbose = True
 
     if not options.quiet:
-        print "SimpleMonitor v%s" % VERSION 
+        print "SimpleMonitor v%s" % VERSION
         print "--> Loading main config from %s" % options.config
 
     config = ConfigParser()
