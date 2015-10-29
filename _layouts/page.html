@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-dark.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+
+	<title>{{ page.title }}</title>
+  </head>
+
+  <body>
+
+    <header>
+      <div class="container">
+        <h1>Simplemonitor</h1>
+        <h2>A Python-based network and host monitor</h2>
+
+		{% if page.show_downloads %}
+        <section id="downloads">
+          <a href="https://github.com/jamesoff/simplemonitor/zipball/master" class="btn">Download as .zip</a>
+          <a href="https://github.com/jamesoff/simplemonitor/tarball/master" class="btn">Download as .tar.gz</a>
+          <a href="https://github.com/jamesoff/simplemonitor" class="btn btn-github"><span class="icon"></span>View on GitHub</a>
+        </section>
+		{% endif %}
+      </div>
+    </header>
+
+    <div class="container">
+		{{ content }}
+    </div>
+  </body>
+</html>

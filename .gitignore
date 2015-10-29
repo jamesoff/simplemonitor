@@ -21,3 +21,4 @@ _monitor-export/
 venv/
 env/
 *.vscode
+*.swp
