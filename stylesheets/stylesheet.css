@@ -12,7 +12,7 @@ body {
 
 .container {
   width: 90%;
-  max-width: 600px;
+  max-width: 900px;
   margin: 0 auto;
 }
 
@@ -176,6 +176,12 @@ th {
 
 td {
   padding: 5px 10px;
+  vertical-align: top;
+  background-color: rgba(30, 30, 30, 0.9);
+}
+
+td p {
+  margin: 0;
 }
 
 hr {
@@ -244,4 +250,17 @@ a {
 
 .cf {
   zoom:1;
+}
+
+ul.menu {
+	list-style: none;
+	padding: 0;
+}
+
+ul.menu li:before {
+	content: none;
+}
+
+ul.menu li {
+	display: inline;
 }

@@ -2,6 +2,7 @@
 layout: page
 title: SimpleMonitor
 show_downloads: true
+order: 10
 ---
 
 SimpleMonitor is a Python script which monitors hosts and network connectivity. It is designed to be quick and easy to set up and lacks complex features that can make things like Nagios, OpenNMS and Zenoss overkill for a small business or home network. Remote monitor instances can send their results back to a central location.
@@ -58,9 +59,11 @@ If you want to hide all output except errors, use the -q option. If you want mor
 
 On non-Windows, SimpleMonitor runs very nicely under daemontools. You just need a run file a bit like this:
 
-    #!/bin/sh
-    
-    cd /usr/local/monitor && exec /usr/local/bin/python monitor.py -q
+{% highlight bash %}
+#!/bin/sh
+
+cd /usr/local/monitor && exec /usr/local/bin/python monitor.py -q
+{% endhighlight %}
 
 On Windows hosts, you’ll have to leave it running in a Command Prompt for now; I haven’t gotten round to making it run as a service.
 

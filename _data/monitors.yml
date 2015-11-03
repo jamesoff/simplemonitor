@@ -1,0 +1,69 @@
+- name: host
+  oneline: Pings a host (once per iteration) to see if it’s available. Multiplatform.
+  params:
+      - name: host
+        desc: The hostname to ping.
+        required: 'yes'
+- name: service
+  oneline: Checks a Windows service to make sure it’s running. Windows only.
+  params:
+      - name: service
+        desc: The short name of the service to monitor. This is the “Service name” on the General tab of the service properties (in the Services MMC snap-in).
+        required: 'yes'
+      - name: host
+        desc: The hostname to check the service on.
+        required: 'no'
+        default: localhost
+- name: tcp
+  oneline: Checks that a TCP port is open. Doesn’t care what happens after the connection is opened. Multiplatform.
+  params:
+      - name: host
+        desc: The name of the host to connect to.
+        required: 'yes'
+      - name: port
+        desc: The port to connect to. Integer only (no service names).
+        required: 'yes'
+- name: rc
+  oneline: Checks a FreeBSD-style service is running, by running its rc script (in /usr/local/etc/rc.d) with the `status` command. May work for other types of rc.d/init.d system. Not for Windows.
+  notes: The rc monitor does have additional options like which directory to look in, and the required return value, but currently they cannot be set from the configuration file.
+  params:
+      - name: service
+        desc: The name of the service to check. This is the name of the rc.d script in /usr/local/etc/rc.d/. Any trailing “.sh” is optional and will be added if needed.
+        required: 'yes'
+- name: svc
+  oneline: Checks a supervise service is running. Not for Windows.
+  params:
+      - name: path
+        desc: The path to the service’s directory (e.g. `/var/service/something`).
+        required: 'yes'
+- name: diskspace
+  oneline: Checks the free space on a partition is above a given limit. Multiplatform.
+  params:
+      - name: partition
+        desc: The partition to check for space on. On Windows, this is the drive letter (e.g. C:). On non-Windows, this is the mount point (e.g. /usr).
+        required: 'yes'
+      - name: limit
+        desc: The minimum amount of free space. Give a number in bytes, or suffix K, M or G for kilobytes, megabytes or gigabytes. Required, no default.
+        required: 'yes'
+- name: http
+  oneline: Attempts to fetch a URL and makes sure the HTTP return code is 200 OK. Can also look through the content of the page trying to match a regular expression. Multiplatform.
+  params:
+      - name: url
+        desc: The URL to open.
+        required: 'yes'
+      - name: regexp
+        desc: The regexp to look for in the page (only if the page loads with status `200 OK`). If the regexp does not match, the monitor reports a failure. See Python’s `re` module for syntax.
+        required: 'no'
+        default: 'none'
+      - name: allowed_codes
+        desc: A list of HTTP codes which are acceptable in addition to `200 OK`
+        required: 'no'
+- name: apcupds
+  oneline: Uses (an existing and correctly configured) apcupsd to check that a UPS is not running from batteries or having some other problem. Multiplatform.
+  params:
+      - name: path
+        desc: The path to the `apcaccess` binary. You should only need to specify this if you’ve installed apcupsd somewhere exotic.
+        required: 'no'
+        default: 'UNIX: $PATH; Windows: C:\apcupsd\bin'
+- name: fail
+  oneline: This monitor fails 5 times in a row and then succeeds once. Use for testing. Multiplatform.

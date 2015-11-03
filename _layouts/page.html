@@ -6,7 +6,7 @@
 
     <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
     <link rel="stylesheet" type="text/css" href="stylesheets/github-dark.css" media="screen">
-    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+    <link rel="stylesheet" type="text/css" href="stylesheets/syntax.css" media="screen">
 
 	<title>{{ page.title }}</title>
   </head>
@@ -25,6 +25,12 @@
           <a href="https://github.com/jamesoff/simplemonitor" class="btn btn-github"><span class="icon"></span>View on GitHub</a>
         </section>
 		{% endif %}
+		<ul class="menu">
+		{% assign ps = site.pages | sort: 'order' %}
+		{% for p in ps %}
+			<li><a href="{{p.url}}">{{p.title}}</a></li>
+		{% endfor %}
+		</ul>
       </div>
     </header>
 
