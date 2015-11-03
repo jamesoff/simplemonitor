@@ -28,7 +28,7 @@
 		<ul class="menu">
 		{% assign ps = site.pages | sort: 'order' %}
 		{% for p in ps %}
-			<li><a href="{{p.url}}">{{p.title}}</a></li>
+			<li><a href="{{site.baseurl}}{{p.url}}">{{p.title}}</a></li>
 		{% endfor %}
 		</ul>
       </div>
