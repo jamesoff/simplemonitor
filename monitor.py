@@ -30,7 +30,7 @@ import Alerters.bulksms
 import Alerters.syslogger
 
 
-VERSION = "1.5"
+VERSION = "1.6"
 
 
 def get_list(config, section, key, want_ints=False):
