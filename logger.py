@@ -1,6 +1,6 @@
-import os
-import datetime
+import sys
 import time
+
 
 class Logger:
     """Abstract class basis for loggers."""
@@ -56,4 +56,3 @@ class FileLogger(Logger):
 
         if not self.buffered:
             self.file_handle.flush()
-

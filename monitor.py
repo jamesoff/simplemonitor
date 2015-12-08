@@ -3,15 +3,9 @@
 
 from __future__ import with_statement
 
-import re
 import os
-import platform
 import sys
-import datetime
 import time
-import pickle
-import traceback
-import signal
 
 from ConfigParser import *
 from optparse import *
@@ -38,6 +32,7 @@ import Alerters.syslogger
 
 VERSION = "1.5"
 
+
 def get_list(config, section, key, want_ints=False):
     """Get a list of items back from a command-separated list."""
     if config.has_option(section, key):
@@ -49,10 +44,12 @@ def get_list(config, section, key, want_ints=False):
     else:
         return []
 
+
 def get_dependencies(config, monitor):
     """Convenience method to get the dependency list for a monitor.
     Used while parsing the config file."""
     return get_list(config, monitor, "depend")
+
 
 def get_optional_int(config, monitor, key, default=0):
     if config.has_option(monitor, key):
@@ -61,10 +58,12 @@ def get_optional_int(config, monitor, key, default=0):
         value = default
     return value
 
+
 def get_tolerance(config, monitor):
     """Convenience method to get the tolerance for a monitor.
     Used while parsing the config file."""
     return get_optional_int(config, monitor, "tolerance")
+
 
 def get_config_dict(config, monitor):
     options = config.items(monitor)
@@ -72,6 +71,7 @@ def get_config_dict(config, monitor):
     for (key, value) in options:
         ret[key] = value
     return ret
+
 
 def load_monitors(m, filename, quiet):
     """Load all the monitors from the config file and return a populated SimpleMonitor."""
@@ -154,7 +154,7 @@ def load_monitors(m, filename, quiet):
         else:
             sys.stderr.write("Unknown type %s for monitor %s\n" % (type, monitor))
             continue
-        if new_monitor == None:
+        if new_monitor is None:
             continue
 
         if not quiet:
@@ -165,6 +165,7 @@ def load_monitors(m, filename, quiet):
         m.monitors[i].post_config_setup()
 
     return m
+
 
 def load_loggers(m, config, quiet):
     """Load the loggers listed in the config object."""
@@ -190,7 +191,7 @@ def load_loggers(m, config, quiet):
         else:
             sys.stderr.write("Unknown logger type %s\n" % type)
             continue
-        if l == None:
+        if l is None:
             print "Creating logger %s failed!" % logger
             continue
         if not quiet:
@@ -198,6 +199,7 @@ def load_loggers(m, config, quiet):
         m.add_logger(logger, l)
         del(l)
     return m
+
 
 def load_alerters(m, config, quiet):
     """Load the alerters listed in the config object."""
@@ -224,6 +226,7 @@ def load_alerters(m, config, quiet):
         m.add_alerter(alerter, a)
         del(a)
     return m
+
 
 def main():
     """This is where it happens \o/"""
@@ -347,10 +350,8 @@ def main():
                 print "\n--> EJECT EJECT"
             loop = False
         except Exception, e:
-            fail_info = sys.exc_info()
+            sys.exc_info()
             sys.stderr.write("Caught unhandled exception during main loop: %s\n" % e)
-            #print fail_info
-            #print traceback.print_tb(fail_info[2])
         if loop and enable_remote:
             if not remote_listening_thread.isAlive():
                 print "Listener thread died :("
@@ -377,4 +378,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

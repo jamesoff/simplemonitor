@@ -4,6 +4,7 @@ from email.MIMEText import MIMEText
 
 from alerter import Alerter
 
+
 class EMailAlerter(Alerter):
     """Send email alerts using MTP to a mail server."""
 
@@ -23,7 +24,7 @@ class EMailAlerter(Alerter):
         if to_addr == "":
             raise RuntimeError("missing mail to address")
 
-        if config_options.has_key("port"):
+        if 'port' in config_options:
             try:
                 mail_port = int(config_options["port"])
             except:
@@ -55,20 +56,20 @@ class EMailAlerter(Alerter):
         if type == "":
             return
         elif type == "failure":
-            message['Subject'] = "[%s] Monitor %s Failed!" % ( self.hostname, name)
+            message['Subject'] = "[%s] Monitor %s Failed!" % (self.hostname, name)
             body = """Monitor %s%s has failed.
             Failed at: %s
             Downtime: %d+%02d:%02d:%02d
             Virtual failure count: %d
             Additional info: %s
             Description: %s""" % (
-                    name,
-                    host,
-                    self.format_datetime(monitor.first_failure_time()),
-                    days, hours, minutes, seconds,
-                    monitor.virtual_fail_count(),
-                    monitor.get_result(),
-                    monitor.describe())
+                name,
+                host,
+                self.format_datetime(monitor.first_failure_time()),
+                days, hours, minutes, seconds,
+                monitor.virtual_fail_count(),
+                monitor.get_result(),
+                monitor.describe())
             try:
                 if monitor.recover_info != "":
                     body += "\nRecovery info: %s" % monitor.recover_info
@@ -87,7 +88,7 @@ class EMailAlerter(Alerter):
             print "Unknown alert type %s" % type
             return
 
-        message.attach(MIMEText(body,'plain'))
+        message.attach(MIMEText(body, 'plain'))
 
         if not self.dry_run:
             try:
@@ -99,4 +100,3 @@ class EMailAlerter(Alerter):
                 self.available = False
         else:
             print "dry_run: would send email: %s" % message.as_string()
-

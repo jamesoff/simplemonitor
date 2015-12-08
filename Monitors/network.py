@@ -1,7 +1,6 @@
 
 """Network-related monitors for SimpleMonitor."""
 
-import urllib
 import urllib2
 import re
 import os
@@ -31,11 +30,11 @@ class MonitorHTTP(Monitor):
         except:
             raise RuntimeError("Required configuration fields missing")
 
-        if config_options.has_key("regexp"):
+        if 'regexp' in config_options:
             regexp = config_options["regexp"]
         else:
             regexp = ""
-        if config_options.has_key("allowed_codes"):
+        if 'allowed_codes' in config_options:
             allowed_codes = [int(x.strip()) for x in config_options["allowed_codes"].split(",")]
         else:
             allowed_codes = []
@@ -64,7 +63,7 @@ class MonitorHTTP(Monitor):
                 self.record_fail("Got status '%s' instead of 200 OK" % status)
                 socket.setdefaulttimeout(original_timeout)
                 return False
-            if self.regexp == None:
+            if self.regexp is None:
                 self.record_success("%s in %0.2fs" % (status, (load_time.seconds + (load_time.microseconds / 1000000.2))))
                 socket.setdefaulttimeout(original_timeout)
                 return True
@@ -80,7 +79,7 @@ class MonitorHTTP(Monitor):
                 return False
         except urllib2.HTTPError, e:
             if e.code in self.allowed_codes:
-                if end_time != None:
+                if end_time is not None:
                     load_time = end_time - start_time
                     self.record_success("%s in %0.2fs" % (status, (load_time.seconds + (load_time.microseconds / 1000000.2))))
                 else:
@@ -91,15 +90,13 @@ class MonitorHTTP(Monitor):
             socket.setdefaulttimeout(original_timeout)
             return False
         except Exception, e:
-            #import traceback
-            #traceback.print_exc()
             self.record_fail("Exception while trying to open url: %s" % (e))
             socket.setdefaulttimeout(original_timeout)
             return False
 
     def describe(self):
         """Explains what we do."""
-        if self.regexp == None:
+        if self.regexp is None:
             message = "Checking that accessing %s returns HTTP/200 OK" % self.url
         else:
             message = "Checking that accessing %s returns HTTP/200 OK and that /%s/ matches the page" % (self.url, self.regexp_text)
@@ -178,10 +175,10 @@ class MonitorHost(Monitor):
                 ping_ttl = config_options["ping_ttl"]
             except:
                 ping_ttl = "5"
-            self.ping_command = "ping -c1 -t"+ ping_ttl + " %s 2> /dev/null"
+            self.ping_command = "ping -c1 -t" + ping_ttl + " %s 2> /dev/null"
             self.ping_regexp = "bytes from"
-            #XXX this regexp is only for freebsd at the moment; not sure about other platforms
-            #XXX looks like Linux uses this format too
+            # TODO this regexp is only for freebsd at the moment; not sure about other platforms
+            # TODO looks like Linux uses this format too
             self.time_regexp = "min/avg/max/stddev = [\d.]+/(?P<ms>[\d.]+)/"
         try:
             host = config_options["host"]
@@ -224,4 +221,3 @@ class MonitorHost(Monitor):
 
     def get_params(self):
         return (self.host, )
-

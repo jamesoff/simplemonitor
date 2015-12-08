@@ -1,13 +1,13 @@
 import pickle
 import socket
-import StringIO
+
 
 class Sender:
-    
+
     host = ""
     port = 0
 
-    results = [] 
+    results = []
 
     def __init__(self, host, port):
         self.dependencies = []
@@ -26,7 +26,7 @@ class Sender:
 
     def add_result(self, monitor_name, monitor_type, monitor_params, monitor_result, monitor_info):
         self.results.append({
-            "monitor_name": monitor_name, 
+            "monitor_name": monitor_name,
             "monitor_type": monitor_type,
             "monitor_params": monitor_params,
             "monitor_result": monitor_result,
@@ -42,6 +42,7 @@ class Sender:
         except Exception, e:
             print e
         self.results = []
+
 
 def main():
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -60,10 +61,9 @@ def main():
         conn.close()
         result = pickle.loads(pickled)
         print result
-        
+
         data = ""
         print "Finished."
 
 if __name__ == "__main__":
     main()
-

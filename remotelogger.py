@@ -1,15 +1,14 @@
-import sqlite3
 import pickle
 import socket
-import StringIO
 from dblogger import *
 
+
 class Sender:
-    
+
     host = ""
     port = 0
 
-    results = [] 
+    results = []
 
     def __init__(self, host, port):
         self.dependencies = []
@@ -28,7 +27,7 @@ class Sender:
 
     def add_result(self, monitor_name, monitor_type, monitor_params, monitor_result, monitor_info):
         self.results.append({
-            "monitor_name": monitor_name, 
+            "monitor_name": monitor_name,
             "monitor_type": monitor_type,
             "monitor_params": monitor_params,
             "monitor_result": monitor_result,
@@ -45,8 +44,9 @@ class Sender:
             print e
         self.results = []
 
+
 def main():
-    #TODO: Config file
+    # TODO: Config file
     print "listening on 4321 for remote reports..."
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.bind(('', 4321))
@@ -70,9 +70,8 @@ def main():
             print "saving %s" % result[0]
             dblogger.save_result(row["monitor_name"], row["monitor_type"], row["monitor_params"], row["monitor_result"], row["monitor_info"], addr[0])
             statuslogger.save_result(row["monitor_name"], row["monitor_type"], row["monitor_params"], row["monitor_result"], row["monitor_info"], addr[0])
-        
+
         pickled = ""
 
 if __name__ == "__main__":
     main()
-

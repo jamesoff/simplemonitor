@@ -1,13 +1,13 @@
 import urllib
-import urllib2
 
 from alerter import Alerter
+
 
 class BulkSMSAlerter(Alerter):
     """Send SMS alerts using the BulkSMS service.
 
     Subscription required, see http://www.bulksms.co.uk"""
-    
+
     def __init__(self, config_options):
         Alerter.__init__(self, config_options)
 
@@ -18,7 +18,7 @@ class BulkSMSAlerter(Alerter):
         except:
             raise RuntimeError("Required configuration fields missing")
 
-        if config_options.has_key("sender"):
+        if 'sender' in config_options:
             sender = config_options["sender"]
             if len(sender) > 11:
                 print "warning: truncating SMS sender name to 11 chars"
@@ -49,11 +49,11 @@ class BulkSMSAlerter(Alerter):
         elif type == "catchup":
             (days, hours, minutes, seconds) = self.get_downtime(monitor)
             message = "catchup: %s failed on %s at %s (%d+%02d:%02d:%02d)\n%s" % (
-                    name, 
-                    monitor.running_on,
-                    self.format_datetime(monitor.first_failure_time()),
-                    days, hours, minutes, seconds, 
-                    monitor.get_result())
+                name,
+                monitor.running_on,
+                self.format_datetime(monitor.first_failure_time()),
+                days, hours, minutes, seconds,
+                monitor.get_result())
             if len(message) > 160:
                 print "Warning! Truncating SMS message to 160 chars."
                 message = message[:156] + "..."
@@ -62,11 +62,11 @@ class BulkSMSAlerter(Alerter):
         elif type == "failure":
             (days, hours, minutes, seconds) = self.get_downtime(monitor)
             message = "%s failed on %s at %s (%d+%02d:%02d:%02d)\n%s" % (
-                    name, 
-                    monitor.running_on,
-                    self.format_datetime(monitor.first_failure_time()),
-                    days, hours, minutes, seconds, 
-                    monitor.get_result())
+                name,
+                monitor.running_on,
+                self.format_datetime(monitor.first_failure_time()),
+                days, hours, minutes, seconds,
+                monitor.get_result())
             if len(message) > 160:
                 print "Warning! Truncating SMS message to 160 chars."
                 message = message[:156] + "..."
@@ -93,4 +93,3 @@ class BulkSMSAlerter(Alerter):
         else:
             print "dry_run: would send SMS: %s" % url
         return
-

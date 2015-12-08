@@ -27,14 +27,14 @@ class DBLogger(Logger):
         if "depend" in config_options:
             self.set_dependencies([x.strip() for x in config_options["depend"].split(",")])
 
-        self.db_handle = sqlite3.connect(db_path, isolation_level = None)
+        self.db_handle = sqlite3.connect(db_path, isolation_level=None)
         self.connected = True
 
 
 class DBFullLogger(DBLogger):
     """Logs results to a sqlite3 db."""
 
-    def save_result(self, monitor_name, monitor_type, monitor_params, monitor_result, monitor_info, hostname = ""):
+    def save_result(self, monitor_name, monitor_type, monitor_params, monitor_result, monitor_info, hostname=""):
         """Write to the database."""
         if not self.connected:
             print "cannot send results, a dependency failed"
@@ -82,6 +82,3 @@ class DBStatusLogger(DBLogger):
         else:
             result = 0
         self.save_result(name, monitor.type, monitor.get_params(), result, monitor.describe())
-
-
-

@@ -8,9 +8,11 @@ import tempfile
 import shutil
 import stat
 import cStringIO
+import sys
 
 
 from logger import Logger
+
 
 class FileLogger(Logger):
 
@@ -18,7 +20,7 @@ class FileLogger(Logger):
     only_failures = False
     buffered = True
 
-    def __init__(self, config_options = {}):
+    def __init__(self, config_options={}):
         Logger.__init__(self, config_options)
         if "filename" in config_options:
             try:
@@ -69,7 +71,7 @@ class HTMLLogger(Logger):
     filename = ""
     count_data = ""
 
-    def __init__(self, config_options = {}):
+    def __init__(self, config_options={}):
         Logger.__init__(self, config_options)
         try:
             self.filename = config_options["filename"]
@@ -77,7 +79,7 @@ class HTMLLogger(Logger):
             self.footer = config_options["footer"]
             self.folder = config_options["folder"]
         except Exception:
-            print "Missing required value for HTML Logger" 
+            print "Missing required value for HTML Logger"
 
     def save_result2(self, name, monitor):
         if not self.doing_batch:
@@ -94,7 +96,7 @@ class HTMLLogger(Logger):
             downtime = self.get_downtime(monitor)
         else:
             fail_time = ""
-            fail_count = 0 
+            fail_count = 0
             fail_data = monitor.get_result()
             downtime = ""
         failures = monitor.failures
@@ -104,24 +106,24 @@ class HTMLLogger(Logger):
             age = datetime.datetime.utcnow() - monitor.last_update
             age = age.days * 3600 + age.seconds
             update = monitor.last_update
-        except Exception, e: 
+        except Exception:
             age = 0
             update = ""
 
         data_line = {
-                "status": status,
-                "fail_time": fail_time,
-                "fail_count": fail_count,
-                "fail_data": fail_data,
-                "downtime": downtime, 
-                "age": age,
-                "update": update,
-                "host": monitor.running_on,
-                "failures": failures,
-                "last_failure": last_failure
-                }
+            "status": status,
+            "fail_time": fail_time,
+            "fail_count": fail_count,
+            "fail_data": fail_data,
+            "downtime": downtime,
+            "age": age,
+            "update": update,
+            "host": monitor.running_on,
+            "failures": failures,
+            "last_failure": last_failure
+        }
         self.batch_data[monitor.name] = data_line
-    
+
     def process_batch(self):
         """Save the HTML file."""
         ok_count = 0
@@ -174,11 +176,11 @@ class HTMLLogger(Logger):
             <td>%s</td>
             <td>%s</td>
             """ % (
-                monitor_name, 
-                status.lower(), status, 
+                monitor_name,
+                status.lower(), status,
                 self.batch_data[entry]["host"],
                 self.batch_data[entry]["fail_time"],
-                )
+            )
             )
             if self.batch_data[entry]["fail_count"] == 0:
                 output.write("<td class=\"vfc\">&nbsp;</td>")
@@ -196,7 +198,7 @@ class HTMLLogger(Logger):
                 <td>%s</td>""" % (
                     self.batch_data[entry]["failures"],
                     self.format_datetime(self.batch_data[entry]["last_failure"])
-                    )
+                )
                 )
             if self.batch_data[entry]["host"] == my_host:
                 output.write("<td></td>")
@@ -243,4 +245,3 @@ class HTMLLogger(Logger):
             line = line.replace("_STATUS_", self.status)
             lines.append(line)
         return lines
-

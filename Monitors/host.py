@@ -20,10 +20,10 @@ class MonitorDiskSpace(Monitor):
     def _size_string_to_bytes(self, s):
         if s.endswith("G"):
             gigs = int(s[:-1])
-            bytes = gigs * (1024**3)
+            bytes = gigs * (1024 ** 3)
         elif s.endswith("M"):
             megs = int(s[:-1])
-            bytes = megs * (1024**2)
+            bytes = megs * (1024 ** 2)
         elif s.endswith("K"):
             kilos = int(s[:-1])
             bytes = kilos * 1024
@@ -106,10 +106,10 @@ class MonitorFileStat(Monitor):
     def _size_string_to_bytes(self, s):
         if s.endswith("G"):
             gigs = int(s[:-1])
-            bytes = gigs * (1024**3)
+            bytes = gigs * (1024 ** 3)
         elif s.endswith("M"):
             megs = int(s[:-1])
-            bytes = megs * (1024**2)
+            bytes = megs * (1024 ** 2)
         elif s.endswith("K"):
             kilos = int(s[:-1])
             bytes = kilos * 1024
@@ -139,14 +139,14 @@ class MonitorFileStat(Monitor):
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
         try:
-            if (config_options.has_key("maxage")):
+            if 'maxage' in config_options:
                 maxage = int(config_options["maxage"])
                 self.maxage = maxage
         except:
             raise RuntimeError("Maxage missing or not an integer (number of seconds)")
 
         try:
-            if (config_options.has_key("minsize")):
+            if 'minsize' in config_options:
                 minsize = self._size_string_to_bytes(config_options["minsize"])
                 self.minsize = minsize
         except:
@@ -167,7 +167,7 @@ class MonitorFileStat(Monitor):
             return False
 
         if (self.minsize >= 0):
-            if (statinfo.st_size < self.minsize): 
+            if (statinfo.st_size < self.minsize):
                     self.record_fail("Size is %d, should be >= %d bytes" % (statinfo.st_size, self.minsize))
                     return False
 
@@ -196,7 +196,7 @@ class MonitorFileStat(Monitor):
 
 class MonitorApcupsd(Monitor):
     """Monitor an APC UPS (with apcupsd) to make sure it's ONLINE.
-    
+
     Note: You must have apcupsd successfully setup and working for this monitor
     to function.
     """
@@ -208,7 +208,7 @@ class MonitorApcupsd(Monitor):
 
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
-        if config_options.has_key("path"):
+        if 'path' in config_options:
             self.path = config_options["path"]
 
     def run_test(self):
@@ -230,12 +230,12 @@ class MonitorApcupsd(Monitor):
         except Exception, e:
             self.record_fail("Could not run %s: %s" % (executable, e))
             return False
-        if not info.has_key("STATUS"):
+        if 'STATUS' not in info:
             self.record_fail("Could not get UPS status")
             return False
 
         if not info["STATUS"] == "ONLINE":
-            if info.has_key("TIMELEFT"):
+            if 'TIMELEFT' in info:
                 self.record_fail("%s: %s left" % (info["STATUS"], info["TIMELEFT"]))
                 return False
             else:
@@ -243,10 +243,10 @@ class MonitorApcupsd(Monitor):
                 return False
 
         data = ""
-        if info.has_key("TIMELEFT"):
+        if 'TIMELEFT' in info:
             data = "%s left" % (info["TIMELEFT"])
 
-        if info.has_key("LOADPCT"):
+        if 'LOADPCT' in info:
             if data != "":
                 data += "; "
             data += "%s%% load" % info["LOADPCT"][0:4]
@@ -270,7 +270,7 @@ class MonitorPortAudit(Monitor):
 
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
-        if config_options.has_key("path"):
+        if 'path' in config_options:
             self.path = config_options["path"]
 
     def describe(self):
@@ -317,7 +317,7 @@ class MonitorLoadAvg(Monitor):
         Monitor.__init__(self, name, config_options)
         if self.is_windows(allow_cygwin=False):
             raise RuntimeError("loadavg monitor does not support Windows")
-        if config_options.has_key("which"):
+        if 'which' in config_options:
             try:
                 which = int(config_options["which"])
             except:
@@ -327,7 +327,7 @@ class MonitorLoadAvg(Monitor):
             if which > 2:
                 raise RuntimeError("value of 'which' is too high")
             self.which = which
-        if config_options.has_key("max"):
+        if 'max' in config_options:
             try:
                 max = float(config_options["max"])
             except:
@@ -371,7 +371,7 @@ class MonitorZap(Monitor):
 
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
-        if config_options.has_key("span"):
+        if 'span' in config_options:
             try:
                 self.span = int(config_options["span"])
             except:
@@ -397,10 +397,9 @@ class MonitorZap(Monitor):
         except Exception, e:
             self.record_fail("Error running ztscan: %s" % e)
             return False
-           
+
     def describe(self):
         return "Checking status of zap span %d is OK" % self.span
 
     def get_params(self):
         return (self.span, )
-

@@ -2,8 +2,10 @@ import platform
 import re
 import os
 import subprocess
+import sys
 
 from monitor import Monitor
+
 
 class MonitorSvc(Monitor):
     """Monitor a service handled by daemontools."""
@@ -24,7 +26,7 @@ class MonitorSvc(Monitor):
         try:
             fh = os.popen("svok %s" % self.path, "r")
             result = fh.close()
-            if result == None:
+            if result in None:
                 result = 0
             if result > 0:
                 self.record_fail("svok returned %d" % int(result))
@@ -47,7 +49,7 @@ class MonitorService(Monitor):
     """Monitor a Windows service"""
 
     service_name = ""
-    want_state= "RUNNING"
+    want_state = "RUNNING"
     host = "."
     type = "service"
 
@@ -57,12 +59,12 @@ class MonitorService(Monitor):
             service_name = config_options["service"]
         except:
             raise RuntimeError("Required configuration fields missing")
-        if config_options.has_key("state"):
-            want_state= config_options["state"]
+        if 'state' in config_options:
+            want_state = config_options["state"]
         else:
             want_state = "RUNNING"
 
-        if config_options.has_key("host"):
+        if 'host' in config_options:
             host = config_options["host"]
         else:
             host = "."
@@ -88,7 +90,7 @@ class MonitorService(Monitor):
                 # we need windows for sc
                 self.record_fail("Cannot check for Windows services while running on a non-Windows platform.")
                 return False
-                
+
             commandline = commandline % (self.host, self.service_name)
             process_handle = os.popen(commandline)
             for line in process_handle:
@@ -112,7 +114,7 @@ class MonitorService(Monitor):
 
 class MonitorRC(Monitor):
     """Monitor a service handled by an rc.d script.
-    
+
     This monitor checks the return code of /usr/local/etc/rc.d/<name>
     and reports failure if it's non-zero by default.
     """
@@ -128,11 +130,11 @@ class MonitorRC(Monitor):
             service_name = config_options["service"]
         except:
             raise RuntimeError("Required configuration fields missing")
-        if config_options.has_key("path"):
+        if 'path' in config_options:
             script_path = config_options["path"]
         else:
             script_path = "/usr/local/etc/rc.d/"
-        if config_options.has_key("return_code"):
+        if 'return_code' in config_options:
             want_return_code = int(config_options["return_code"])
         else:
             want_return_code = 0
@@ -168,7 +170,7 @@ class MonitorRC(Monitor):
             except:
                 pass
             result = fh.close()
-            if result == None:
+            if result is None:
                 result = 0
             if result != self.want_return_code:
                 self.record_fail()
@@ -195,7 +197,7 @@ class MonitorEximQueue(Monitor):
     max_length = 10
     r = re.compile("(?P<count>\d+) matches out of (?P<total>\d+) messages")
     path = "/usr/local/sbin"
-    
+
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
         try:
@@ -206,7 +208,6 @@ class MonitorEximQueue(Monitor):
             raise RuntimeError("'max_length' must be >= 1")
         if "path" in config_options:
             self.path = config_options["path"]
-
 
     def run_test(self):
         try:
@@ -233,7 +234,6 @@ class MonitorEximQueue(Monitor):
         except Exception, e:
             self.record_fail("Error running exiqgrep: %s" % e)
             return False
-
 
     def describe(self):
         return "Checking the exim queue length is < %d" % self.max_length
@@ -264,7 +264,7 @@ class MonitorWindowsDHCPScope(Monitor):
             raise RuntimeError("Required configuration field 'max_used' missing or not an integer")
         if not (self.max_used > 0):
             raise RuntimeError("max_used must be >= 1")
-        
+
         try:
             self.scope = config_options["scope"]
         except:
@@ -292,5 +292,3 @@ class MonitorWindowsDHCPScope(Monitor):
 
     def describe(self):
         return "Checking the DHCP scope has fewer than %d leases" % self.max_used
-
-

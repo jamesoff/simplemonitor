@@ -1,13 +1,6 @@
 
 """compound checks (logical and of failure of multiple probes) for SimpleMonitor."""
 
-import urllib
-import urllib2
-import re
-import os
-import socket
-import datetime
-
 from monitor import Monitor
 
 
@@ -21,7 +14,7 @@ class CompoundMonitor(Monitor):
 
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
-        monitors=[]
+        monitors = []
         try:
             monitors = [ele.strip() for ele in config_options["monitors"].split(",")]
         except:
@@ -41,7 +34,7 @@ class CompoundMonitor(Monitor):
         failcount = self.min_fail
         for i in self.monitors:
             if self.m[i].get_success_count() > 0 and self.m[i].tests_run > 0:
-                failcount -=1
+                failcount -= 1
         return (failcount > 0)
 
     def describe(self):
@@ -64,8 +57,7 @@ class CompoundMonitor(Monitor):
         for i in self.mt.monitors.keys():
             if i in self.monitors:
                 self.m[i] = self.mt.monitors[i]
-        #make sure we find all of our monitors or die during config
+        # make sure we find all of our monitors or die during config
         for i in self.monitors:
             if i not in self.m.keys():
                 raise RuntimeError("No such monitor %s in compound monitor" % i)
-

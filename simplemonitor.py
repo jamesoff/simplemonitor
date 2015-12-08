@@ -6,9 +6,10 @@ import datetime
 
 import Monitors.monitor
 
+
 class SimpleMonitor:
 
-    #TODO: move this outside into monitor.py?
+    # TODO: move this outside into monitor.py?
     #      could give better control over restarting the listener thread
     need_hup = False
     verbose = False
@@ -25,7 +26,7 @@ class SimpleMonitor:
 
         self.loggers = {}
         self.alerters = {}
-        
+
         try:
             signal.signal(signal.SIGHUP, self.hup_loggers)
         except:
@@ -69,11 +70,9 @@ class SimpleMonitor:
         new_joblist = []
         failed = []
 
-        finished = False
         not_run = False
 
         while len(joblist) > 0:
-            skipped = []
             new_joblist = []
             if debug:
                 print "\nStarting loop:", joblist
@@ -181,7 +180,7 @@ class SimpleMonitor:
         for key in self.monitors.keys():
             # Don't generate alerts for monitors which want it done remotely
             if self.monitors[key].remote_alerting:
-                #TODO: could potentially disable alerts by setting a monitor to remote alerting, but not having anywhere to send it!
+                # TODO: could potentially disable alerts by setting a monitor to remote alerting, but not having anywhere to send it!
                 if self.debug:
                     print "skipping alert for monitor %s as it wants remote alerting" % key
                 continue
@@ -216,7 +215,7 @@ class SimpleMonitor:
 
     def do_recovery(self):
         for key in self.monitors.keys():
-           self.monitors[key].attempt_recover()
+            self.monitors[key].attempt_recover()
 
     def do_logs(self):
         if self.need_hup:
@@ -233,4 +232,3 @@ class SimpleMonitor:
             if self.debug:
                 print "trying remote monitor %s" % monitor
             self.remote_monitors[monitor] = pickle.loads(data[monitor])
-            

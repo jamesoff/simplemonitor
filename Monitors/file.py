@@ -2,11 +2,11 @@
 """ File-based monitors for SimpleMonitor. """
 
 import os
-import sys
 import os.path
 import time
 
 from monitor import Monitor
+
 
 class MonitorBackup(Monitor):
     filename = os.path.join("C:\\", "Program Files", "VERITAS", "Backup Exec", "status.txt")
@@ -15,7 +15,7 @@ class MonitorBackup(Monitor):
         if not os.path.exists(self.filename):
             self.record_fail("Status file missing")
             return False
-        
+
         try:
             fh = open(self.filename, "r")
         except:
@@ -28,13 +28,13 @@ class MonitorBackup(Monitor):
         except:
             self.record_fail("Unable to read data from status file")
             return False
-        
+
         fh.close()
-        
+
         status = status.strip()
         timestamp = int(timestamp.strip())
 
-        if not status in ("ok", "running"):
+        if status not in ("ok", "running"):
             self.record_fail("Unknown status %s" % status)
             return False
 

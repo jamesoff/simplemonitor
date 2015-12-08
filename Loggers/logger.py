@@ -1,5 +1,5 @@
 import datetime
-import socket
+
 
 class Logger:
     """Abstract class basis for loggers."""
@@ -18,7 +18,7 @@ class Logger:
 
     def hup(self):
         """Close and reopen our log file, if supported.
-        
+
         This should be overridden where needed."""
         return
 
@@ -73,12 +73,12 @@ class Logger:
                 minutes = 0
             return (downtime.days, hours, minutes, seconds)
         except:
-            return (0,0,0,0)
+            return (0, 0, 0, 0)
 
     def format_datetime(self, dt):
         """Return an isoformat()-like datetime without the microseconds."""
-        if dt == None:
+        if dt is None:
             return ""
 
-        dt = dt.replace(microsecond = 0)
+        dt = dt.replace(microsecond=0)
         return dt.isoformat(" ")

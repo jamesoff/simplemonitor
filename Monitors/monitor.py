@@ -11,12 +11,9 @@ functions.
 """
 
 import socket
-import re
-import os
 import platform
 import sys
 import datetime
-import urllib2
 import time
 import copy
 import subprocess
@@ -65,19 +62,19 @@ class Monitor:
     recover_command = ""
     recover_info = ""
 
-    def __init__(self, name = "unnamed", config_options = {}):
+    def __init__(self, name="unnamed", config_options={}):
         """What's that coming over the hill? Is a monitor?"""
-        if config_options.has_key("depend"):
+        if 'depend' in config_options:
             self.set_dependencies([x.strip() for x in config_options["depend"].split(",")])
-        if config_options.has_key("urgent"):
+        if 'urgent' in config_options:
             self.set_urgency(int(config_options["urgent"]))
-        if config_options.has_key("tolerance"):
+        if 'tolerance' in config_options:
             self.set_tolerance(int(config_options["tolerance"]))
-        if config_options.has_key("remote_alert"):
+        if 'remote_alert' in config_options:
             self.set_remote_alerting(int(config_options["remote_alert"]))
-        if config_options.has_key("remote_alerts"):
+        if 'remote_alerts' in config_options:
             self.set_remote_alerting(int(config_options["remote_alerts"]))
-        if config_options.has_key("recover_command"):
+        if 'recover_command' in config_options:
             self.set_recover_command(config_options["recover_command"])
         self.running_on = self.short_hostname()
         self.name = name
@@ -101,12 +98,9 @@ class Monitor:
 
     def is_remote(self):
         """Check if we're running on this machine, or if we're a remote instance."""
-        #print self.running_on, self.short_hostname()
         if self.running_on == self.short_hostname():
-            #print "false"
             return False
         else:
-            #print "true"
             return True
 
     def run_test(self):
@@ -221,12 +215,10 @@ class Monitor:
         else:
             return False
 
-    def record_fail(self, message = ""):
+    def record_fail(self, message=""):
         """Update internal state to show that we had a failure."""
         self.error_count += 1
         self.last_update = datetime.datetime.utcnow()
-        #self.was_error = self.is_error
-        #self.is_error = True
         self.last_result = message
         if self.virtual_fail_count() == 1:
             self.failed_at = datetime.datetime.utcnow()
@@ -236,14 +228,12 @@ class Monitor:
         self.tests_run += 1
         self.was_skipped = False
 
-    def record_success(self, message = ""):
+    def record_success(self, message=""):
         """Update internal state to show we had a success."""
         if self.error_count > 0:
             self.last_error_count = self.error_count
         self.error_count = 0
         self.last_update = datetime.datetime.utcnow()
-        #self.was_error = self.is_error
-        #self.is_error = False
         self.last_result = ""
         self.success_count += 1
         self.tests_run += 1
@@ -335,8 +325,8 @@ class Monitor:
             return
 
         try:
-            p = subprocess.Popen(self.recover_command, shell = True)
-            result = p.wait()
+            p = subprocess.Popen(self.recover_command, shell=True)
+            p.wait()
             self.recover_info = "Command executed and returned %d" % p.returncode
         except Exception, e:
             self.recover_info = "Unable to run command: %s" % e
@@ -357,7 +347,7 @@ class MonitorFail(Monitor):
 
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
-        if config_options.has_key("interval"):
+        if 'interval' in config_options:
             self.interval = int(config_options["interval"])
         else:
             self.interval = 5
@@ -378,13 +368,6 @@ class MonitorFail(Monitor):
     def get_params(self):
         return (self.interval,)
 
-#class RemoteMonitor(Monitor):
-#    """Represent some remote monitor info."""
-#    host = ""
-#    last_update = None
-#
-#    def updated(self):
-#        self.last_update = datetime.datetime.now()
 
 class MonitorNull(Monitor):
     """A monitor which always passes."""
@@ -396,4 +379,3 @@ class MonitorNull(Monitor):
 
     def get_params(self):
         return ()
-

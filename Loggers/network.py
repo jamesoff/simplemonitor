@@ -4,13 +4,13 @@ import sys
 
 # From the docs:
 #  Threads interact strangely with interrupts: the KeyboardInterrupt exception
-#  will be received by an arbitrary thread. (When the signal module is 
+#  will be received by an arbitrary thread. (When the signal module is
 #  available, interrupts always go to the main thread.)
-import signal
 
 from threading import Thread
 
 from logger import Logger
+
 
 class NetworkLogger(Logger):
     """Send our results over the network to another instance."""
@@ -31,8 +31,8 @@ class NetworkLogger(Logger):
         if not self.doing_batch:
             print "NetworkLogger.save_result2() called while not doing batch."
             return
-        #id = "%s_%s" % (self.hostname, monitor.name)
-        #data_line = {
+        # id = "%s_%s" % (self.hostname, monitor.name)
+        # data_line = {
         #        "id": id,
         #        "name": self.hostname + "/" + monitor.name,
         #        "type": monitor.type,
@@ -43,15 +43,15 @@ class NetworkLogger(Logger):
         #        "just_recovered": monitor.all_better_now(),
         #        "urgent": monitor.is_urgent()
         #        }
-                
-        #self.batch_data[monitor.name] = data_line
+
+        # self.batch_data[monitor.name] = data_line
         self.batch_data[monitor.name] = pickle.dumps(monitor)
 
     def process_batch(self):
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.connect((self.host, self.port))
-            #TODO: some kind of passwordy thing
+            # TODO: some kind of passwordy thing
             p = pickle.dumps(self.batch_data)
             s.send(p)
         except Exception, e:
@@ -78,7 +78,7 @@ class Listener(Thread):
 
     def run(self):
         """The main body of our thread.
-        
+
         The loop here keeps going until we're killed by the main app.
         When the main app kills us (with join()), socket.listen throws socket.error.
         """
@@ -118,7 +118,7 @@ class Listener(Thread):
                 if self.running:
                     print "Socket error caught in thread: %s" % e
             except Exception, e:
-                #fail_info = sys.exc_info()
-                #print fail_info
-                #print traceback.print_tb(fail_info[2])
+                # fail_info = sys.exc_info()
+                # print fail_info
+                # print traceback.print_tb(fail_info[2])
                 sys.stderr.write("Listener thread caught exception %s" % e)
