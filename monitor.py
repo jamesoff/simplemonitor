@@ -28,6 +28,7 @@ import Loggers.network
 import Alerters.mail
 import Alerters.bulksms
 import Alerters.syslogger
+import Alerters.execute
 
 
 VERSION = "1.6"
@@ -217,6 +218,8 @@ def load_alerters(m, config, quiet):
             a = Alerters.bulksms.BulkSMSAlerter(config_options)
         elif type == "syslog":
             a = Alerters.syslogger.SyslogAlerter(config_options)
+        elif type == "execute":
+            a = Alerters.execute.ExecuteAlerter(config_options)
         else:
             sys.stderr.write("Unknown alerter type %s\n" % type)
             continue
