@@ -13,6 +13,7 @@ The types of alerter are:
 * email: Sends an email when a monitor fails. Sends an email when it succeeds again. Requires an SMTP server to talk to. Non-urgent (all monitors will trigger this alerter.)
 * bulksms: Sends an SMS alert when a monitor fails. Does not send an alert for when it succeeds again. Uses the [BulkSMS](http://www.bulksms.co.uk) service, which requires subscription. The messages are sent over HTTP on port 5567. (Urgent, so urgent=0 monitors will not trigger an SMS.)
 * syslog: Writes an entry to the syslog when something fails or succeeds. Not supported on Windows.
+* execute: Executes an arbitary command when something fails or recovers.
 
 ## Defining an alerter
 The section name should be the name of your alerter. This is the name you should give in the “alerters” setting in the reporting section of the main configuration. All alerters share these settings:
@@ -79,3 +80,24 @@ delay=1
 ## Syslog alerters
 Syslog alerters have no additional options.
 
+## Execute alerters
+
+| setting | description | required | default |
+|---|---|---|---|
+|fail_command|The command to execute when a monitor fails.|no| |
+|success_command|The command to execute when a monitor recovered.|no| |
+|catchup_command|THe command to execute when a previously-failed but not-alerted monitor enters a time peruid when it can alert. See the `delay` option above.|no| |
+
+You can use the string `fail_command` for catchup_command to make it use the value of fail_command.
+
+The following variables will be replaced in the string when the command is executed:
+
+* hostname: the host the monitor is running on
+* name: the monitor's name
+* days, hours, minutes, seconds: the monitor's downtime
+* failed_at: the date and time the monitor failed at
+* virtual_fail_count: the virtual fail count of the monitor
+* info: the additional information the monitor recorded about its status
+* description: a description of what the monitor is checking for
+
+You may need to quote parameters - e.g. `fail_command=say "Oh no, monitor {name} has failed at {failed_at}"`
