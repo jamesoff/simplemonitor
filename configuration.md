@@ -17,6 +17,7 @@ Section names are lowercase in square brackets. Settings are defined as key=valu
 | pidfile | gives a path to write a pidfile in. | no | |
 | remote | enables the listener for receiving data from remote instances. Set to 1 to enable. | no | 0 |
 | remote_port | gives the TCP port to listen on for data. | if `remote` is enabled | |
+| key | shared secret for validating data from remote instances. | if `remote` is enabled | |
 
 ## Reporting section
 *loggers* lists (comma-separated, no spaces) the names of the loggers you have defined. (You can define loggers and not add them to this setting.) Not required; no default.

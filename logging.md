@@ -51,10 +51,11 @@ The header and footer files do not necessarily need to be in the publicly access
 The supplied header file includes JavaScript to notify you if the page either doesn’t auto-refresh, or if SimpleMonitor has stopped updating it. This requires your machine running SimpleMonitor and the machine you are browsing from to agree on what the time is (timezone doesn’t matter)!
 
 ### network logger
-This logger is used to send status reports of all monitors to a remote instance. The remote instance must be configured to listen for connections.
+This logger is used to send status reports of all monitors to a remote instance. The remote instance must be configured to listen for connections. The *key* parameter is a shared secret used to generate a hash of the network traffic so the receiving instance knows to trust the data. (Note that the traffic is not encrypted, just given a hash.)
 
 | setting | description | required | default |
 |---|---|---|---|
 |host|the remote host to send to.|yes| |
 |port|the port on the remote host to connect to.|yes| |
+|key|shared secret to protect communications|yes| |
 
