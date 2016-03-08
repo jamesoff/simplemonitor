@@ -321,10 +321,16 @@ def main():
     if not options.quiet:
         print
 
+    try:
+        key = config.get("monitor", "key")
+    except:
+        key = None
+
     if enable_remote:
         if not options.quiet:
             print "--> Starting remote listener thread"
-        remote_listening_thread = Loggers.network.Listener(m, remote_port, options.verbose)
+        remote_listening_thread = Loggers.network.Listener(m, remote_port, options.verbose, key)
+        remote_listening_thread.daemon = True
         remote_listening_thread.start()
 
     if not options.quiet:

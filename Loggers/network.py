@@ -1,6 +1,7 @@
 import pickle
 import socket
 import sys
+import hmac
 
 # From the docs:
 #  Threads interact strangely with interrupts: the KeyboardInterrupt exception
@@ -24,6 +25,7 @@ class NetworkLogger(Logger):
             self.host = config_options["host"]
             self.port = int(config_options["port"])
             self.hostname = socket.gethostname()
+            self.key = config_options["key"]
         except:
             raise RuntimeError("missing config options for network monitor")
 
@@ -51,9 +53,10 @@ class NetworkLogger(Logger):
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.connect((self.host, self.port))
-            # TODO: some kind of passwordy thing
             p = pickle.dumps(self.batch_data)
-            s.send(p)
+            mac = hmac.new(self.key, p)
+            # print "My MAC is %s" % mac.hexdigest()
+            s.send("%s\n%s" % (mac.hexdigest(), p))
         except Exception, e:
             print "Failed to send data: %s" % e
         finally:
@@ -65,16 +68,19 @@ class Listener(Thread):
 
     Here seemed a reasonable place to put it."""
 
-    def __init__(self, simplemonitor, port, verbose=False):
+    def __init__(self, simplemonitor, port, verbose=False, key=None):
         """Set up the thread.
 
         simplemonitor is a SimpleMonitor object which we will put our results into.
         """
+        if key is None or key == "":
+            raise Exception("Network logger key is missing")
         Thread.__init__(self)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.bind(('', port))
         self.simplemonitor = simplemonitor
         self.verbose = verbose
+        self.key = key
 
     def run(self):
         """The main body of our thread.
@@ -98,6 +104,17 @@ class Listener(Thread):
                 conn.close()
                 if self.verbose:
                     print "--> Finished receiving from %s" % addr[0]
+                # compute our own HMAC and compare
+                bits = pickled.split("\n", 1)
+                their_digest = bits[0]
+                pickled = bits[1]
+                mac = hmac.new(self.key, pickled)
+                my_digest = mac.hexdigest()
+                if self.verbose:
+                    print "Computed my digest to be %s" % my_digest
+                    print "Remote digest is %s" % their_digest
+                if not hmac.compare_digest(their_digest, my_digest):
+                    raise Exception("Mismatched MAC for network logging data from %s\nMismatched key? Old version of SimpleMonitor?\n" % addr[0])
                 result = pickle.loads(pickled)
                 try:
                     self.simplemonitor.update_remote_monitor(result, addr[0])
