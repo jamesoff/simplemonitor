@@ -1,3 +1,7 @@
+1.6:
+	* Added DNS monitor
+	* Added Execute logger
+
 1.4:
 	* Fixed a problem where success alerts were always sent
 	* Many other small fixes
