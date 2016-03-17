@@ -6,6 +6,7 @@ import re
 import os
 import socket
 import datetime
+import subprocess
 
 from monitor import Monitor
 
@@ -221,3 +222,81 @@ class MonitorHost(Monitor):
 
     def get_params(self):
         return (self.host, )
+
+
+class MonitorDNS(Monitor):
+    """Monitor DNS server."""
+
+    type = 'dns'
+    path = ''
+    command = 'dig'
+
+    def __init__(self, name, config_options):
+        Monitor.__init__(self, name, config_options)
+        try:
+            self.path = config_options['record']
+        except:
+            raise RuntimeError("Required configuration fields missing")
+        if self.path == '':
+            raise RuntimeError("Required configuration fields missing")
+
+        if 'desired_val' in config_options:
+            self.desired_val = config_options['desired_val']
+        else:
+            self.desired_val = None
+
+        if 'server' in config_options:
+            self.server = config_options['server']
+        else:
+            self.server = None
+
+        self.params = [self.command]
+
+        if self.server:
+            self.params.append("@%s" % self.server)
+
+        if 'record_type' in config_options:
+            self.params.append('-t')
+            self.params.append(config_options['record_type'])
+            self.rectype = config_options['record_type']
+        else:
+            self.rectype = None
+
+        self.params.append(self.path)
+        self.params.append('+short')
+
+    def run_test(self):
+        try:
+            result = subprocess.Popen(self.params, stdout=subprocess.PIPE).communicate()[0]
+            result = result.strip()
+            if result is None or result == '':
+                self.record_fail("failed to resolve %s" % self.path)
+                return False
+            if self.desired_val and result != self.desired_val:
+                self.record_fail("resolved DNS record is unexpected: %s != %s" % (self.desired_val, result))
+                return False
+            self.record_success()
+            return True
+        except Exception, e:
+            self.record_fail("Exception while executing %s: %s" % (self.command, e))
+            return False
+
+    def describe(self):
+        if self.desired_val:
+            end_part = "resolves to %s" % self.desired_val
+        else:
+            end_part = "is resolvable"
+
+        if self.rectype:
+            mid_part = "%s record %s" % (self.rectype, self.path)
+        else:
+            mid_part = "record %s" % self.path
+
+        if self.server:
+            very_end_part = " at %s" % self.server
+        else:
+            very_end_part = ''
+        return "Checking that DNS %s %s%s" % (mid_part, end_part, very_end_part)
+
+    def get_params(self):
+        return (self.path, )
