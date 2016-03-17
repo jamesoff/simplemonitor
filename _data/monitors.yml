@@ -58,6 +58,29 @@
       - name: allowed_codes
         desc: A list of HTTP codes which are acceptable in addition to `200 OK`
         required: 'no'
+- name: dns
+  oneline: Attempts to resolve a DNS record, and optionally checks the result. Requires the DNS utility `dig` to be in the `$PATH`.
+  params:
+    - name: record
+      desc: The DNS name to resolve.
+      required: 'yes'
+    - name: record_type
+      desc: The type of the record.
+      required: 'no'
+      default: 'A'
+    - name: desired_val
+      desc: >
+        The expected value for the record to resolve to. For results with newlines (e.g. MX records), you should format them like:
+
+            desired_val: 10 a.mx.domain.com
+              20 b.mx.domain.com
+              30 c.mx.domain.com
+
+        Note the leading spaces on the continuation lines.
+      required: 'no'
+    - name: server
+      desc: The server to send the request to. If absent, the system default is used.
+      required: 'no'
 - name: apcupds
   oneline: Uses (an existing and correctly configured) apcupsd to check that a UPS is not running from batteries or having some other problem. Multiplatform.
   params:
