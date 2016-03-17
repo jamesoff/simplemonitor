@@ -245,7 +245,16 @@ class MonitorDNS(Monitor):
         else:
             self.desired_val = None
 
+        if 'server' in config_options:
+            self.server = config_options['server']
+        else:
+            self.server = None
+
         self.params = [self.command]
+
+        if self.server:
+            self.params.append("@%s" % self.server)
+
         if 'record_type' in config_options:
             self.params.append('-t')
             self.params.append(config_options['record_type'])
@@ -257,11 +266,9 @@ class MonitorDNS(Monitor):
         self.params.append('+short')
 
     def run_test(self):
-        print self.params
         try:
             result = subprocess.Popen(self.params, stdout=subprocess.PIPE).communicate()[0]
             result = result.strip()
-            print result
             if result is None or result == '':
                 self.record_fail("failed to resolve %s" % self.path)
                 return False
@@ -284,7 +291,12 @@ class MonitorDNS(Monitor):
             mid_part = "%s record %s" % (self.rectype, self.path)
         else:
             mid_part = "record %s" % self.path
-        return "Checking that DNS %s %s" % (mid_part, end_part)
+
+        if self.server:
+            very_end_part = " at %s" % self.server
+        else:
+            very_end_part = ''
+        return "Checking that DNS %s %s%s" % (mid_part, end_part, very_end_part)
 
     def get_params(self):
         return (self.path, )
