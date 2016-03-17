@@ -36,7 +36,7 @@ All monitor types share the following configuration options:
 <td>{{param.name}}</td>
 <td>{{param.desc | markdownify}}</td>
 <td>{{param.required}}</td>
-<td>{% if param.deafult != nil %}{{param.default | markdownify}}{% endif %}</td>
+<td>{% if param.default != nil %}{{param.default | markdownify}}{% endif %}</td>
 </tr>
 {% endfor %}
 </table>
