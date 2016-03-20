@@ -25,11 +25,18 @@
         required: 'yes'
 - name: rc
   oneline: Checks a FreeBSD-style service is running, by running its rc script (in /usr/local/etc/rc.d) with the `status` command. May work for other types of rc.d/init.d system. Not for Windows.
-  notes: The rc monitor does have additional options like which directory to look in, and the required return value, but currently they cannot be set from the configuration file.
   params:
       - name: service
         desc: The name of the service to check. This is the name of the rc.d script in /usr/local/etc/rc.d/. Any trailing “.sh” is optional and will be added if needed.
         required: 'yes'
+      - name: path
+        desc: The path of the folder containing the rc script
+        required: 'no'
+        default: /usr/local/etc/rc.d
+      - name: return_code
+        desc: The integer return code required from the script
+        required: 'no'
+        default: '0'
 - name: svc
   oneline: Checks a supervise service is running. Not for Windows.
   params:
