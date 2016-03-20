@@ -57,6 +57,15 @@ class SimpleMonitor:
         """Clear all the monitors' dependency info back to default."""
         [self.monitors[key].reset_dependencies() for key in self.monitors.keys()]
 
+    def verify_dependencies(self):
+        ok = True
+        for k in self.monitors.keys():
+            for dependency in self.monitors[k]._dependencies:
+                if dependency not in self.monitors.keys():
+                    print "Configuration error: dependency %s of monitor %s is not defined!" % (dependency, k)
+                    ok = False
+        return ok
+
     def set_verbosity(self, verbose, debug):
         self.verbose = verbose
         self.debug = debug

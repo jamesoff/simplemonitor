@@ -316,8 +316,11 @@ def main():
     except:
         enable_remote = False
 
+    if not m.verify_dependencies():
+        sys.exit(1)
+
     if options.test:
-        print "--> Exiting."
+        print "--> Config test complete. Exiting."
         sys.exit(0)
 
     if not options.quiet:
