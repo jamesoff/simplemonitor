@@ -4,6 +4,7 @@
 import urllib2
 import re
 import os
+import sys
 import socket
 import datetime
 import subprocess
@@ -167,20 +168,27 @@ class MonitorHost(Monitor):
         a machine in trouble anyway, so should probably count as a failure.
         """
         Monitor.__init__(self, name, config_options)
-        if self.is_windows(allow_cygwin=True):
-            self.ping_command = "ping -n 1 -w 5000 %s"
+        try:
+            ping_ttl = config_options["ping_ttl"]
+        except:
+            ping_ttl = "5"
+        ping_ms = ping_ttl * 1000
+        platform = sys.platform
+        if platform in ['win32', 'cygwin']:
+            self.ping_command = "ping -n 1 -w " + ping_ms + " %s"
             self.ping_regexp = "Reply from "
             self.time_regexp = "Average = (?P<ms>\d+)ms"
-        else:
-            try:
-                ping_ttl = config_options["ping_ttl"]
-            except:
-                ping_ttl = "5"
+        elif platform.startswith('freebsd') or platform.startswith('darwin'):
             self.ping_command = "ping -c1 -t" + ping_ttl + " %s 2> /dev/null"
             self.ping_regexp = "bytes from"
-            # TODO this regexp is only for freebsd at the moment; not sure about other platforms
-            # TODO looks like Linux uses this format too
             self.time_regexp = "min/avg/max/stddev = [\d.]+/(?P<ms>[\d.]+)/"
+        elif platform.startswith('linux'):
+            self.ping_command = "ping -c1 -W" + ping_ttl + " %s 2> /dev/null"
+            self.ping_regexp = "bytes from"
+            self.time_regexp = "min/avg/max/stddev = [\d.]+/(?P<ms>[\d.]+)/"
+        else:
+            RuntimeError("Don't know how to run ping on this platform, help!")
+
         try:
             host = config_options["host"]
         except:
