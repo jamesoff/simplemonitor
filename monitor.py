@@ -31,7 +31,7 @@ import Alerters.syslogger
 import Alerters.execute
 
 
-VERSION = "1.6"
+VERSION = "1.7"
 
 
 def get_list(config, section, key, want_ints=False):
