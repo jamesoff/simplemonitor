@@ -403,3 +403,76 @@ class MonitorZap(Monitor):
 
     def get_params(self):
         return (self.span, )
+
+
+class MonitorCommand(Monitor):
+    """Check the output of a command.
+
+    We can check for a regexp match in the ouput or give a max value and check the output is lower that this value.
+    """
+
+    command = ""
+    result_regexp = None
+    result_regexp_text = ""
+    result_max = None
+
+    type = "command"
+
+    def __init__(self, name, config_options):
+        Monitor.__init__(self, name, config_options)
+
+        self.result_regexp_text = ""
+        self.result_regexp = None
+        self.result_max = None
+
+        if 'result_regexp' in config_options:
+            self.result_regexp_text = config_options["result_regexp"]
+            self.result_regexp = re.compile(self.result_regexp_text)
+        elif 'result_max' in config_options:
+            self.result_max = int(config_options["result_max"])
+        else:
+            raise RuntimeError("Required configuration fields missing")
+
+        try:
+            command = config_options["command"].split(" ")
+        except:
+            raise RuntimeError("Required configuration fields missing")
+        if command == "":
+            raise RuntimeError("missing command")
+        self.command = command
+
+    def run_test(self):
+        try:
+            out = subprocess.check_output(self.command)
+            if self.result_regexp is not None:
+                matches = self.result_regexp.search(out)
+                if matches:
+                    self.record_success()
+                    return True
+                else:
+                    self.record_fail('could not match regexp in out')
+                    return False
+            elif self.result_max is not None:
+                outasinteger = int(out)
+                if outasinteger < self.result_max:
+                    self.record_success("%s < %s" % (outasinteger, self.result_max))
+                    return True
+                else:
+                    self.record_fail("%s >= %s" % (outasinteger, self.result_max))
+                    return True
+        except Exception, e:
+            self.record_fail(e)
+            return False
+
+        self.record_fail()
+        return False
+
+    def describe(self):
+        """Explains what this instance is checking"""
+        if self.result_regexp is not None:
+            return "checking a command %s match a regexp %s" % (" ".join(self.command), self.result_regexp_text)
+        else:
+            return "checking a command %s returns a value < %d" % (" ".join(self.command), self.result_max)
+
+    def get_params(self):
+        return (self.command, self.result_regexp_text)

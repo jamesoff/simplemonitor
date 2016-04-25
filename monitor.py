@@ -151,8 +151,12 @@ def load_monitors(m, filename, quiet):
         elif type == "compound":
             new_monitor = Monitors.compound.CompoundMonitor(monitor, config_options)
             new_monitor.set_mon_refs(m)
+
         elif type == 'dns':
             new_monitor = Monitors.network.MonitorDNS(monitor, config_options)
+
+        elif type == 'command':
+            new_monitor = Monitors.host.MonitorCommand(monitor, config_options)
 
         else:
             sys.stderr.write("Unknown type %s for monitor %s\n" % (type, monitor))
