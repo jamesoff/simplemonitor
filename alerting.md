@@ -24,6 +24,7 @@ The section name should be the name of your alerter. This is the name you should
 |depend|a list of monitors this alerter depends on. If any of them fail, no attempt will be made to send the alert. (For example, there’s no point trying to send an email alert to an external address if your route(s) to the Internet are down.)|no| |
 |limit|the number of times a monitor must fail before this alerter will fire. You can use this to escalate an alert to another email address if the problem is ongoing for too long, for example.|no|1|
 |dry_run|makes an alerter do everything except actually send the message. Instead it will print some information about what it would do. Use when you want to test your configuration without generating emails/SMSes. Set to 1 to enable.|no|0|
+|ooh_success|makes an alerter trigger its success action even if out-of-hours (0 or 1)|no|0|
 
 The *limit* uses the virtual fail count of a monitor, which means if a monitor has a tolerance of 3 and the alerter has a limit of 2, the monitor must fail 5 times before an alert is sent.
 
@@ -86,7 +87,7 @@ Syslog alerters have no additional options.
 |---|---|---|---|
 |fail_command|The command to execute when a monitor fails.|no| |
 |success_command|The command to execute when a monitor recovered.|no| |
-|catchup_command|THe command to execute when a previously-failed but not-alerted monitor enters a time peruid when it can alert. See the `delay` option above.|no| |
+|catchup_command|THe command to execute when a previously-failed but not-alerted monitor enters a time period when it can alert. See the `delay` option above.|no| |
 
 You can use the string `fail_command` for catchup_command to make it use the value of fail_command.
 
