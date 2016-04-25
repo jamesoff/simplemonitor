@@ -26,6 +26,7 @@ class Alerter:
     ooh_failures = []
     # subclasses should set this to true if they support catchup notifications for delays
     support_catchup = False
+    ooh_recovery = False
 
     def __init__(self, config_options={}):
         self.available = True
@@ -74,6 +75,9 @@ class Alerter:
         if 'dry_run' in config_options:
             if config_options["dry_run"] == "1":
                 self.dry_run = True
+        if 'ooh_recovery' in config_options:
+            if config_options['ooh_recovery'] == "1":
+                self.ooh_recovery = True
 
         if 'debug_times' in config_options:
             self.time_info = [
@@ -142,6 +146,11 @@ class Alerter:
                 self.ooh_failures.remove(monitor.name)
             except:
                 pass
+            if out_of_hours:
+                if self.ooh_recovery:
+                    return "success"
+                else:
+                    return ""
             return "success"
         else:
             return ""
