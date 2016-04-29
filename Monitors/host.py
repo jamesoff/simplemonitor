@@ -305,6 +305,49 @@ class MonitorPortAudit(Monitor):
             return False
 
 
+class MonitorPkgAudit(Monitor):
+    """Check a host doesn't have outstanding security issues."""
+
+    type = "pkgaudit"
+    regexp = re.compile("(\d+) problem\(s\) in the installed packages found")
+    path = ""
+
+    def __init__(self, name, config_options):
+        Monitor.__init__(self, name, config_options)
+        if 'path' in config_options:
+            self.path = config_options["path"]
+
+    def describe(self):
+        return "Checking for insecure packages."
+
+    def get_params(self):
+        return (self.path, )
+
+    def run_test(self):
+        try:
+            if self.path == "":
+                self.path = "/usr/local/sbin/pkg"
+            process_handle = os.popen("%s audit" % self.path)
+            for line in process_handle:
+                matches = self.regexp.match(line)
+                if matches:
+                    count = int(matches.group(1))
+                    # sanity check
+                    if count == 0:
+                        self.record_success()
+                        return True
+                    if count == 1:
+                        self.record_fail("1 problem")
+                    else:
+                        self.record_fail("%d problems" % count)
+                    return False
+            self.record_success()
+            return True
+        except Exception, e:
+            self.record_fail("Could not run pkg: %s" % e)
+            return False
+
+
 class MonitorLoadAvg(Monitor):
     """Check a host's load average isn't too high."""
 
