@@ -88,7 +88,7 @@
     - name: server
       desc: The server to send the request to. If absent, the system default is used.
       required: 'no'
-- name: apcupds
+- name: apcupsd
   oneline: Uses (an existing and correctly configured) apcupsd to check that a UPS is not running from batteries or having some other problem. Multiplatform.
   params:
       - name: path
@@ -97,3 +97,50 @@
         default: 'UNIX: $PATH; Windows: C:\apcupsd\bin'
 - name: fail
   oneline: This monitor fails 5 times in a row and then succeeds once. Use for testing. Multiplatform.
+- name: portaudit
+  oneline: Fails if `portaudit` reports any vulnerable ports installed.
+  params:
+    - name: path
+      desc: The path for for the portaudit binary.
+      required: 'no'
+      default: '/usr/local/sbin/portaudit'
+- name: pkgaudit
+  oneline: Fails if `pkg audit` reports any vulnerable packages installed.
+  params:
+    - name: path
+      desc: The path to the package binary.
+      required: 'no'
+      default: '/usr/local/sbin/pkg'
+- name: loadavg
+  oneline: Check the load average on the host.
+  params:
+    - name: which
+      desc: 'The load average to monitor: 0 = 1min, 1 = 5min, 2 = 15min'
+      required: 'no'
+      default: '1'
+    - name: max
+      desc: The maximum acceptable value for the given load average.
+      required: 'no'
+      default: '1.00'
+- name: command
+  oneline: 'Run a command and optionally verify the output. If the command exits non-zero, the monitor fails.'
+  params:
+    - name: command
+      desc: The command (and params) to execute
+      required: 'yes'
+    - name: result_regexp
+      desc: A regular expression against which the output of the command is matched.
+      required: 'no'
+    - name: result_max
+      desc: 'A maximum value for the command to output (on stdout)'
+      required: 'no'
+- name: compound
+  oneline: Combine (logical-and) multiple failures of other monitors for emergency escalation
+  params:
+    - name: monitors
+      desc: A comma-separated list of other monitors
+      required: 'yes'
+    - name: min_fail
+      desc: Number of monitors which should fail for this monitor to fail too
+      default: all
+      required: 'no'
