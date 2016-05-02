@@ -14,6 +14,7 @@ The types of alerter are:
 * bulksms: Sends an SMS alert when a monitor fails. Does not send an alert for when it succeeds again. Uses the [BulkSMS](http://www.bulksms.co.uk) service, which requires subscription. The messages are sent over HTTP on port 5567. (Urgent, so urgent=0 monitors will not trigger an SMS.)
 * syslog: Writes an entry to the syslog when something fails or succeeds. Not supported on Windows.
 * execute: Executes an arbitary command when something fails or recovers.
+* slack: Sends notifications to a Slack channel using a webhook.
 
 ## Defining an alerter
 The section name should be the name of your alerter. This is the name you should give in the “alerters” setting in the reporting section of the main configuration. All alerters share these settings:
@@ -102,3 +103,19 @@ The following variables will be replaced in the string when the command is execu
 * description: a description of what the monitor is checking for
 
 You may need to quote parameters - e.g. `fail_command=say "Oh no, monitor {name} has failed at {failed_at}"`
+
+## Slack alerters
+
+First, set up a webhook for this to use.
+
+1. Go to https://slack.com/apps/manage
+2. Add a new webhook
+3. Configure it to taste (channel, name, icon)
+4. Copy the webhook URL for your configuration below
+
+This alerter requires the `requests` library to be installed.  You can install it with `pip install -r requirements.txt`.
+
+| setting | description | required | default |
+|---|---|---|---|
+|url|The Slack webhook URL as configured on your account|yes| |
+
