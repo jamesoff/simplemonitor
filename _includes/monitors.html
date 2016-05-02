@@ -20,8 +20,9 @@ All monitor types share the following configuration options:
 |recover_command| A command to execute once when this monitor fails. It could, for example, restart a service if an HTTP check fails.|no| |
 
 {% for monitor in m %}
-## {{monitor.name}} <a name="{{monitor.name}}"></a>
+<a name="{{monitor.name}}"></a>
 
+## {{monitor.name}}
 {{monitor.oneline}}
 
 {% if monitor.params %}
