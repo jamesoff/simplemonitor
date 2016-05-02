@@ -17,6 +17,7 @@ All monitor types share the following configuration options:
 |urgent| If this monitor is urgent or not. Non-urgent monitors cannot trigger urgent alerters (e.g. the SMS alerter). Set to 0 to make a monitor non-urgent.|no|1|
 |gap| The number of seconds gap between polls for this monitor. Setting this lower than the global interval will have no effect. Use it to make a monitor poll only once an hour, for example.|no|0|
 |remote_alert| This monitor wants a remote host to handle alerting instead of the local host. Set to 1 to enable. This is a good candidate for putting in defaults if you want to use remote alerting for all your monitors.|no|0|
+|recover_command| A command to execute once when this monitor fails. It could, for example, restart a service if an HTTP check fails.|no| |
 
 {% for monitor in m %}
 ## {{monitor.name}} <a name="{{monitor.name}}"></a>
