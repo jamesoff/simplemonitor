@@ -19,14 +19,14 @@ class MonitorSvc(Monitor):
             self.path = config_options["path"]
         except:
             raise RuntimeError("Required configuration fields missing")
+        self.params = " ".split("svok %s" % self.path)
 
     def run_test(self):
         if self.path == "":
             return
         try:
-            fh = os.popen("svok %s" % self.path, "r")
-            result = fh.close()
-            if result in None:
+            result = subprocess.call(self.params)
+            if result is None:
                 result = 0
             if result > 0:
                 self.record_fail("svok returned %d" % int(result))
