@@ -11,13 +11,20 @@ SimpleMonitor is a Python script which monitors hosts and network connectivity. 
 
 * Ping monitoring (is a host pingable?)
 * TCP monitoring (is a host listening on a TCP port?)
-* Service monitoring (is a Windows service running?)
-* ‘rc’ monitoring (is a FreeBSD service running?) This monitor can probably be used for non-FreeBSD rc scripts, but I haven’t tested it.
-* Disk space monitoring
-* daemontools service monitoring
 * HTTP monitoring (is a URL fetchable without error? Optionally, does the page content it match a regular expression?)
+* DNS record monitoring
+* Service monitoring: FreeBSD 'rc' (and potenially others), Windows services, daemontools service
+* Disk space monitoring
+* File existence, age and time
+* FreeBSD portaudit (and pkg audit)
+* Load average monitoring
+* Exim queue size monitoring
+* Windows DHCP scope (available IPs)
 * APC UPS monitoring (requires apcupsd to be installed and configured)
-* Adding more monitor types is quite simple if you are able to code in Python.
+* Running an arbitary command and checking the output
+* A monitor which is a compond of a number of the above
+
+Adding more monitor types is quite simple if you are able to code in Python.
 
 ### Logging and alerting options are:
 
@@ -28,6 +35,8 @@ SimpleMonitor is a Python script which monitors hosts and network connectivity. 
 * Sending a text message via BulkSMS (subscription required)
 * Writing an HTML status page.
 * Writing an entry to the syslog (non-Windows only)
+* Posting notifications to Slack
+
 Again, adding more logging/alerting methods is simply a case of writing some Python.
 
 ### SimpleMonitor also features:
