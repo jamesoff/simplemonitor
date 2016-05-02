@@ -219,7 +219,7 @@ class Monitor:
         """Update internal state to show that we had a failure."""
         self.error_count += 1
         self.last_update = datetime.datetime.utcnow()
-        self.last_result = message
+        self.last_result = str(message)
         if self.virtual_fail_count() == 1:
             self.failed_at = datetime.datetime.utcnow()
             self.last_failure = datetime.datetime.utcnow()

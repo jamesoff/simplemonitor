@@ -1,6 +1,7 @@
 1.7:
 	* Teach the host (ping) monitor to use command line options better on
 	  different operating systems
+	* Add Slack alerter
 
 1.6:
 	* Added DNS monitor
