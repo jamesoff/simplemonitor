@@ -115,6 +115,8 @@ First, set up a webhook for this to use.
 
 This alerter requires the `requests` library to be installed.  You can install it with `pip install -r requirements.txt`.
 
+*DO NOT COMMIT YOUR WEBHOOK URL TO A PUBLIC REPO*
+
 | setting | description | required | default |
 |---|---|---|---|
 |url|The Slack webhook URL as configured on your account|yes| |
