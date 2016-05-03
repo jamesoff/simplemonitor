@@ -81,8 +81,8 @@ class Alerter:
 
         if 'debug_times' in config_options:
             self.time_info = [
-                (datetime.datetime.now() - datetime.timedelta(minutes=1)).time(),
-                (datetime.datetime.now() + datetime.timedelta(minutes=1)).time()
+                (datetime.datetime.utcnow() - datetime.timedelta(minutes=1)).time(),
+                (datetime.datetime.utcnow() + datetime.timedelta(minutes=1)).time()
             ]
             print "debug: set times for alerter to", self.time_info
 
@@ -161,7 +161,7 @@ class Alerter:
 
     def get_downtime(self, monitor):
         try:
-            downtime = datetime.datetime.now() - monitor.first_failure_time()
+            downtime = datetime.datetime.utcnow() - monitor.first_failure_time()
             seconds = downtime.seconds
             if seconds > 3600:
                 hours = seconds / 3600

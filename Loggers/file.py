@@ -238,7 +238,7 @@ class HTMLLogger(Logger):
     def parse_file(self, file_handle):
         lines = []
         for line in file_handle:
-            line = line.replace("_NOW_", self.format_datetime(datetime.datetime.utcnow()))
+            line = line.replace("_NOW_", self.format_datetime(datetime.datetime.now()))
             line = line.replace("_HOST_", socket.gethostname())
             line = line.replace("_COUNTS_", self.count_data)
             line = line.replace("_TIMESTAMP_", str(int(time.time())))
