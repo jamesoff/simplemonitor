@@ -221,15 +221,21 @@ class MonitorApcupsd(Monitor):
             else:
                 executable = "apcaccess"
         try:
-            process_handle = os.popen(executable)
-            for line in process_handle:
-                if line.find(":") > -1:
-                    bits = line.split(":")
-                    info[bits[0].strip()] = bits[1].strip()
-
-        except Exception, e:
-            self.record_fail("Could not run %s: %s" % (executable, e))
+            output = subprocess.check_output(executable)
+        except subprocess.CalledProcessError, e:
+            output = e.output
+        except OSError, e:
+            self.record_fail("Could not run %s: %s", (executable, e))
             return False
+        except OSError, e:
+            self.record_fail("Error while getting UPS info: %s", e)
+            return False
+
+        for line in output:
+            if line.find(":") > -1:
+                bits = line.split(":")
+                info[bits[0].strip()] = bits[1].strip()
+
         if 'STATUS' not in info:
             self.record_fail("Could not get UPS status")
             return False
