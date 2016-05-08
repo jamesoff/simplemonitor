@@ -290,8 +290,18 @@ class MonitorPortAudit(Monitor):
             # -X 1 tells portaudit to re-download db if one day out of date
             if self.path == "":
                 self.path = "/usr/local/sbin/portaudit"
-            process_handle = os.popen("%s -a -X 1" % self.path)
-            for line in process_handle:
+            try:
+                output = subprocess.call([self.path, '-a', '-X', '1'])
+            except subprocess.CalledProcessError, e:
+                output = e.output
+            except OSError, e:
+                self.record_fail("Error running %s: %s", (self.path, e))
+                return False
+            except Exception, e:
+                self.record_fail("Error running portaudit: %s", e)
+                return False
+
+            for line in output:
                 matches = self.regexp.match(line)
                 if matches:
                     count = int(matches.group(1))
