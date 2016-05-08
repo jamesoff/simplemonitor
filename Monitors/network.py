@@ -53,6 +53,7 @@ class MonitorHTTP(Monitor):
         socket.setdefaulttimeout(5)
         start_time = datetime.datetime.now()
         end_time = None
+        status = None
         try:
             url_handle = urllib2.urlopen(self.url)
             end_time = datetime.datetime.now()
@@ -80,7 +81,9 @@ class MonitorHTTP(Monitor):
                 socket.setdefaulttimeout(original_timeout)
                 return False
         except urllib2.HTTPError, e:
+            status = "%s %s" % (e.code, e.reason)
             if e.code in self.allowed_codes:
+                print status
                 if end_time is not None:
                     load_time = end_time - start_time
                     self.record_success("%s in %0.2fs" % (status, (load_time.seconds + (load_time.microseconds / 1000000.2))))
