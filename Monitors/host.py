@@ -343,8 +343,18 @@ class MonitorPkgAudit(Monitor):
         try:
             if self.path == "":
                 self.path = "/usr/local/sbin/pkg"
-            process_handle = os.popen("%s audit" % self.path)
-            for line in process_handle:
+            try:
+                output = subprocess.check_output([self.path, 'audit'])
+            except subprocess.CalledProcessError, e:
+                output = e.output
+            except OSError, e:
+                self.record_fail("Failed to run %s audit: %s", (self.path, e))
+                return False
+            except Exception, e:
+                self.record_fail("Error running pkg audit: %s", e)
+                return False
+
+            for line in output:
                 matches = self.regexp.match(line)
                 if matches:
                     count = int(matches.group(1))
