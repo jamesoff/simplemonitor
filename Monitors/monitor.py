@@ -326,7 +326,7 @@ class Monitor:
             return
 
         try:
-            p = subprocess.Popen(self.recover_command, shell=True)
+            p = subprocess.Popen(self.recover_command.split(' '))
             p.wait()
             self.recover_info = "Command executed and returned %d" % p.returncode
         except Exception, e:
