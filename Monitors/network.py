@@ -1,7 +1,7 @@
 
 """Network-related monitors for SimpleMonitor."""
 
-import urllib2
+import urllib2, httplib
 import re
 import os
 import sys
@@ -11,6 +11,22 @@ import subprocess
 
 from monitor import Monitor
 
+# coded by Kalys Osmonov
+# source: http://www.osmonov.com/2009/04/client-certificates-with-urllib2.html
+class HTTPSClientAuthHandler(urllib2.HTTPSHandler):
+    def __init__(self, key, cert):
+        urllib2.HTTPSHandler.__init__(self)
+        self.key = key
+        self.cert = cert
+
+    def https_open(self, req):
+        # Rather than pass in a reference to a connection class, we pass in
+        # a reference to a function which, for all intents and purposes,
+        # will behave as a constructor
+        return self.do_open(self.getConnection, req)
+
+    def getConnection(self, host, timeout=300):
+        return httplib.HTTPSConnection(host, key_file=self.key, cert_file=self.cert)
 
 class MonitorHTTP(Monitor):
     """Check an HTTP server is working right.
@@ -24,6 +40,10 @@ class MonitorHTTP(Monitor):
     allowed_codes = []
 
     type = "http"
+    
+    # optionnal - for HTTPS client authentication only
+    certfile = None
+    keyfile = None
 
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
@@ -41,11 +61,27 @@ class MonitorHTTP(Monitor):
         else:
             allowed_codes = []
 
+        # optionnal - for HTTPS client authentication only
+        # in this case, certfile is required
+        if 'certfile' in config_options:
+            certfile = config_options["certfile"]
+            # if keyfile not given, it is assumed key is in certfile
+            if 'keyfile' in config_options:
+                keyfile = config_options["keyfile"]
+            else: 
+                # default: key
+                keyfile = certfile
+            
+
         self.url = url
         if regexp != "":
             self.regexp = re.compile(regexp)
             self.regexp_text = regexp
         self.allowed_codes = allowed_codes
+        
+        self.certfile = certfile
+        self.keyfile = keyfile
+        
 
     def run_test(self):
         # store the current default timeout (since it's global)
@@ -55,7 +91,12 @@ class MonitorHTTP(Monitor):
         end_time = None
         status = None
         try:
-            url_handle = urllib2.urlopen(self.url)
+            if self.certfile is None: # general case
+                url_handle = urllib2.urlopen(self.url)
+            else: # HTTPS with client authentication
+                opener = urllib2.build_opener(HTTPSClientAuthHandler(self.keyfile,self.certfile) )
+                url_handle = opener.open(self.url)
+            
             end_time = datetime.datetime.now()
             load_time = end_time - start_time
             status = "200 OK"
