@@ -6,7 +6,7 @@ from alerter import Alerter
 
 
 class EMailAlerter(Alerter):
-    """Send email alerts using MTP to a mail server."""
+    """Send email alerts using SMTP to a mail server."""
 
     def __init__(self, config_options):
         Alerter.__init__(self, config_options)
@@ -45,9 +45,10 @@ class EMailAlerter(Alerter):
         type = self.should_alert(monitor)
         (days, hours, minutes, seconds) = self.get_downtime(monitor)
 
-        host = "on host %s" % self.hostname
         if monitor.is_remote():
             host = " on %s " % monitor.running_on
+        else:
+            host = " on host %s" % self.hostname
 
         message = MIMEMultipart()
         message['From'] = self.from_addr
