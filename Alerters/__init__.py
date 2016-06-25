@@ -1,2 +1,2 @@
-__all__ = ["alerter", "mail", "bulksms"]
+__all__ = ["alerter", "mail", "ses", "bulksms"]
 
