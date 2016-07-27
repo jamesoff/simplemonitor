@@ -68,20 +68,17 @@ class MonitorHTTP(Monitor):
             # if keyfile not given, it is assumed key is in certfile
             if 'keyfile' in config_options:
                 keyfile = config_options["keyfile"]
-            else: 
+            else:
                 # default: key
                 keyfile = certfile
-            
+            self.certfile = certfile
+            self.keyfile = keyfile
 
         self.url = url
         if regexp != "":
             self.regexp = re.compile(regexp)
             self.regexp_text = regexp
         self.allowed_codes = allowed_codes
-        
-        self.certfile = certfile
-        self.keyfile = keyfile
-        
 
     def run_test(self):
         # store the current default timeout (since it's global)
