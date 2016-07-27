@@ -1,7 +1,8 @@
 
 """Network-related monitors for SimpleMonitor."""
 
-import urllib2, httplib
+import urllib2
+import httplib
 import re
 import os
 import sys
@@ -10,6 +11,7 @@ import datetime
 import subprocess
 
 from monitor import Monitor
+
 
 # coded by Kalys Osmonov
 # source: http://www.osmonov.com/2009/04/client-certificates-with-urllib2.html
@@ -28,6 +30,7 @@ class HTTPSClientAuthHandler(urllib2.HTTPSHandler):
     def getConnection(self, host, timeout=300):
         return httplib.HTTPSConnection(host, key_file=self.key, cert_file=self.cert)
 
+
 class MonitorHTTP(Monitor):
     """Check an HTTP server is working right.
 
@@ -40,7 +43,7 @@ class MonitorHTTP(Monitor):
     allowed_codes = []
 
     type = "http"
-    
+
     # optionnal - for HTTPS client authentication only
     certfile = None
     keyfile = None
@@ -88,12 +91,13 @@ class MonitorHTTP(Monitor):
         end_time = None
         status = None
         try:
-            if self.certfile is None: # general case
+            if self.certfile is None:
                 url_handle = urllib2.urlopen(self.url)
-            else: # HTTPS with client authentication
-                opener = urllib2.build_opener(HTTPSClientAuthHandler(self.keyfile,self.certfile) )
+            else:
+                # HTTPS with client authentication
+                opener = urllib2.build_opener(HTTPSClientAuthHandler(self.keyfile, self.certfile))
                 url_handle = opener.open(self.url)
-            
+
             end_time = datetime.datetime.now()
             load_time = end_time - start_time
             status = "200 OK"
