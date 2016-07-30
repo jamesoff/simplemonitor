@@ -3,8 +3,7 @@ import signal
 import copy
 import pickle
 import datetime
-
-import Monitors.monitor
+import time
 
 
 class SimpleMonitor:
@@ -113,7 +112,10 @@ class SimpleMonitor:
                 try:
                     if self.monitors[monitor].should_run():
                         not_run = False
+                        start_time = time.time()
                         self.monitors[monitor].run_test()
+                        end_time = time.time()
+                        self.monitors[monitor].last_run_duration = end_time - start_time
                     else:
                         not_run = True
                         if verbose:
