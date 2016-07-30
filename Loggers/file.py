@@ -19,6 +19,7 @@ class FileLogger(Logger):
     filename = ""
     only_failures = False
     buffered = True
+    dateformat = None
 
     def __init__(self, config_options={}):
         Logger.__init__(self, config_options)
@@ -39,15 +40,32 @@ class FileLogger(Logger):
             if config_options["buffered"] == "0":
                 self.buffered = False
 
+        if "dateformat" in config_options:
+            self.dateformat = config_options['dateformat']
+
     def save_result2(self, name, monitor):
         if self.only_failures and monitor.virtual_fail_count() == 0:
             return
 
+        dateformat = 'timestamp'
+        if self.dateformat == 'iso8601':
+            dateformat = 'iso8601'
+
+        if dateformat == 'timestamp':
+            datestring = str(int(time.time()))
+        elif dateformat == 'iso8601':
+            datestring = self.format_datetime(datetime.datetime.now())
         try:
             if monitor.virtual_fail_count() > 0:
-                self.file_handle.write("%d %s: failed since %s; VFC=%d (%s)" % (int(time.time()), name, monitor.first_failure_time().isoformat(), monitor.virtual_fail_count(), monitor.get_result()))
+                self.file_handle.write("%s %s: failed since %s; VFC=%d (%s)" % (
+                    datestring,
+                    name,
+                    self.format_datetime(monitor.first_failure_time()),
+                    monitor.virtual_fail_count(),
+                    monitor.get_result()
+                ))
             else:
-                self.file_handle.write("%d %s: ok" % (int(time.time()), name))
+                self.file_handle.write("%s %s: ok" % (datestring, name))
             self.file_handle.write("\n")
 
             if not self.buffered:
