@@ -57,15 +57,20 @@ class FileLogger(Logger):
             datestring = self.format_datetime(datetime.datetime.now())
         try:
             if monitor.virtual_fail_count() > 0:
-                self.file_handle.write("%s %s: failed since %s; VFC=%d (%s)" % (
+                self.file_handle.write("%s %s: failed since %s; VFC=%d (%s) (%0.3fs)" % (
                     datestring,
                     name,
                     self.format_datetime(monitor.first_failure_time()),
                     monitor.virtual_fail_count(),
-                    monitor.get_result()
+                    monitor.get_result(),
+                    monitor.last_run_duration
                 ))
             else:
-                self.file_handle.write("%s %s: ok" % (datestring, name))
+                self.file_handle.write("%s %s: ok (%0.3fs)" % (
+                    datestring,
+                    name,
+                    monitor.last_run_duration
+                ))
             self.file_handle.write("\n")
 
             if not self.buffered:
