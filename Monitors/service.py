@@ -83,21 +83,19 @@ class MonitorService(Monitor):
         r = re.compile("STATE +: [0-9]+ +%s" % self.want_state)
         try:
             if platform.system() == "CYGWIN_NT-6.0":
-                commandline = 'sc \\\\\\\\%s query %s'
+                host = '\\\\\\\\' + self.host
             elif platform.system() in ["Microsoft", "Windows"]:
-                commandline = 'sc \\\\%s query %s'
+                host = '\\\\' + self.host
             else:
                 # we need windows for sc
                 self.record_fail("Cannot check for Windows services while running on a non-Windows platform.")
                 return False
 
-            commandline = commandline % (self.host, self.service_name)
-            process_handle = os.popen(commandline)
-            for line in process_handle:
-                matches = r.search(line)
-                if matches:
-                    self.record_success()
-                    return True
+            output = str(subprocess.check_output(['sc', host, 'query', self.service_name]))
+            matches = r.search(output)
+            if matches:
+                self.record_success()
+                return True
         except Exception, e:
             sys.stderr.write("%s\n" % e)
             pass
