@@ -450,8 +450,8 @@ class MonitorZap(Monitor):
 
     def run_test(self):
         try:
-            pipe = subprocess.Popen(["ztscan", str(self.span)], stdout=subprocess.PIPE).stdout
-            for line in pipe:
+            output = subprocess.check_output(["ztscan", str(self.span)])
+            for line in output:
                 matches = self.r.match(line)
                 if matches:
                     status = matches.group("status")
