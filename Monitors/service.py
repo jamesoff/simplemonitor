@@ -216,7 +216,7 @@ class MonitorEximQueue(Monitor):
                 matches = self.r.match(line)
                 if matches:
                     count = int(matches.group("count"))
-                    total = int(matches.group("total"))
+                    # total = int(matches.group("total"))
                     if count > self.max_length:
                         if count == 1:
                             self.record_fail("%d message queued" % count)
@@ -272,17 +272,16 @@ class MonitorWindowsDHCPScope(Monitor):
 
     def run_test(self):
         try:
-            pipe = subprocess.Popen(["netsh", "dhcp", "server", "scope", self.scope, "show", "clients"], stdout=subprocess.PIPE).stdout
-            for line in pipe:
-                matches = self.r.match(line)
-                if matches:
-                    clients = int(matches.group("clients"))
-                    if clients > self.max_used:
-                        self.record_fail("%d clients in scope" % clients)
-                        return False
-                    else:
-                        self.record_success("%d clients in scope" % clients)
-                        return True
+            output = str(subprocess.check_output(["netsh", "dhcp", "server", "scope", self.scope, "show", "clients"]))
+            matches = self.r.search(line)
+            if matches:
+                clients = int(matches.group("clients"))
+                if clients > self.max_used:
+                    self.record_fail("%d clients in scope" % clients)
+                    return False
+                else:
+                    self.record_success("%d clients in scope" % clients)
+                    return True
             self.record_fail("Error getting client count: no match")
             return False
         except Exception, e:
