@@ -160,25 +160,19 @@ class MonitorRC(Monitor):
             self.is_error = True
             return False
         try:
-            fh = os.popen("%s status" % self.script_path, "r")
-            try:
-                # We seem to have to read from the process object else
-                # Linux (Ubuntu at least) returns 256 instead!
-                fh.read()
-            except:
-                pass
-            result = fh.close()
-            if result is None:
-                result = 0
-            if result != self.want_return_code:
-                self.record_fail()
-                return False
-            else:
+            returncode = subprocess.check_call([self.script_path, 'status'])
+            if returncode == self.want_return_code:
+                self.record_success()
+                return True
+        except subprocess.CalledProcessError, e:
+            if e.returncode == self.want_return_code:
                 self.record_success()
                 return True
         except Exception, e:
             self.record_fail("Exception while executing script: %s" % e)
             return False
+        self.record_fail("Return code: %d (wanted %d)" % (returncode, self.want_return_code))
+        return False
 
     def get_params(self):
         return (self.service_name, self.want_return_code)
