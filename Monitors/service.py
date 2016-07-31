@@ -211,8 +211,8 @@ class MonitorEximQueue(Monitor):
 
     def run_test(self):
         try:
-            pipe = subprocess.Popen([os.path.join(self.path, "exiqgrep"), "-xc"], stdout=subprocess.PIPE).stdout
-            for line in pipe:
+            output = subprocess.check_output([os.path.join(self.path, "exiqgrep"), "-xc"])
+            for line in output:
                 matches = self.r.match(line)
                 if matches:
                     count = int(matches.group("count"))
