@@ -92,8 +92,12 @@ class TestHostMonitors(unittest.TestCase):
         config_options = {'partition': 'moo', 'limit': '1'}
         m = Monitors.host.MonitorDiskSpace('test', config_options)
         m.run_test()
-        self.assertFalse(m.test_success())
-        print m.last_result 
+        self.assertFalse(m.test_success(), 'Monitor did not fail')
+        self.assertRegexpMatches(
+            m.last_result,
+            "Couldn't get free disk space",
+            'Monitor did not report error correctly'
+        )
 
 if __name__ == '__main__':
     unittest.main()
