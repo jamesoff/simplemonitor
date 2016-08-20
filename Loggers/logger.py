@@ -80,5 +80,8 @@ class Logger:
         if dt is None:
             return ""
 
-        dt = dt.replace(microsecond=0)
-        return dt.isoformat(" ")
+        if isinstance(dt, datetime.datetime):
+            dt = dt.replace(microsecond=0)
+            return dt.isoformat(' ')
+        else:
+            return dt

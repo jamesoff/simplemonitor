@@ -36,6 +36,7 @@ class Monitor:
     success_count = 0
     tests_run = 0
     last_error_count = 0
+    last_run_duration = 0
 
     minimum_gap = 0
     last_run = 0
