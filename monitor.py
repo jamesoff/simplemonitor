@@ -31,6 +31,7 @@ import Alerters.bulksms
 import Alerters.syslogger
 import Alerters.execute
 import Alerters.slack
+import Alerters.pushover
 
 
 VERSION = "1.7"
@@ -235,6 +236,8 @@ def load_alerters(m, config, quiet):
             a = Alerters.execute.ExecuteAlerter(config_options)
         elif type == "slack":
             a = Alerters.slack.SlackAlerter(config_options)
+        elif type == "pushover":
+            a = Alerters.pushover.PushoverAlerter(config_options)
         else:
             sys.stderr.write("Unknown alerter type %s\n" % type)
             continue
