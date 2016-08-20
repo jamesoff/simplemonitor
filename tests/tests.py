@@ -94,3 +94,6 @@ class TestHostMonitors(unittest.TestCase):
         m.run_test()
         self.assertFalse(m.test_success())
         print m.last_result 
+
+if __name__ == '__main__':
+    unittest.main()
