@@ -32,6 +32,22 @@ class EMailAlerter(Alerter):
         else:
             mail_port = 25
 
+        self.username = None
+        self.password = None
+        if 'username' in config_options:
+            self.username = config_options['username']
+        if 'password' in config_options:
+            self.password = config_options['password']
+
+        if 'ssl' in config_options:
+            if config_options['ssl'] == 'starttls':
+                self.ssl = 'starttls'
+            elif config_options['ssl'] == 'yes':
+                print 'Warning: ssl=yes for email alerter is untested'
+                self.ssl = 'yes'
+        else:
+            self.ssl = None
+
         self.mail_host = mail_host
         self.mail_port = mail_port
         self.from_addr = from_addr
@@ -93,11 +109,20 @@ class EMailAlerter(Alerter):
 
         if not self.dry_run:
             try:
-                server = smtplib.SMTP(self.mail_host)
+                if self.ssl is None or self.ssl == 'starttls':
+                    server = smtplib.SMTP(self.mail_host, self.mail_port)
+                elif self.ssl == 'yes':
+                    server = smtplib.SMTP_SSL(self.mail_host, self.mail_port)
+
+                if self.ssl == 'starttls':
+                    server.starttls()
+
+                if self.username is not None:
+                    server.login(self.username, self.password)
                 server.sendmail(self.from_addr, self.to_addr, message.as_string())
                 server.quit()
             except Exception, e:
-                print "Couldn't send mail: %s", e
+                print "Couldn't send mail:", e
                 self.available = False
         else:
             print "dry_run: would send email: %s" % message.as_string()
