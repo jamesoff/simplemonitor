@@ -15,20 +15,24 @@ from monitor import Monitor
 
 # coded by Kalys Osmonov
 # source: http://www.osmonov.com/2009/04/client-certificates-with-urllib2.html
-class HTTPSClientAuthHandler(urllib2.HTTPSHandler):
-    def __init__(self, key, cert):
-        urllib2.HTTPSHandler.__init__(self)
-        self.key = key
-        self.cert = cert
+try:
+    class HTTPSClientAuthHandler(urllib2.HTTPSHandler):
+        def __init__(self, key, cert):
+            urllib2.HTTPSHandler.__init__(self)
+            self.key = key
+            self.cert = cert
 
-    def https_open(self, req):
-        # Rather than pass in a reference to a connection class, we pass in
-        # a reference to a function which, for all intents and purposes,
-        # will behave as a constructor
-        return self.do_open(self.getConnection, req)
+        def https_open(self, req):
+            # Rather than pass in a reference to a connection class, we pass in
+            # a reference to a function which, for all intents and purposes,
+            # will behave as a constructor
+            return self.do_open(self.getConnection, req)
 
-    def getConnection(self, host, timeout=300):
-        return httplib.HTTPSConnection(host, key_file=self.key, cert_file=self.cert)
+        def getConnection(self, host, timeout=300):
+            return httplib.HTTPSConnection(host, key_file=self.key, cert_file=self.cert)
+    https_handler_available = True
+except AttributeError as e:
+    https_handler_available = False
 
 
 class MonitorHTTP(Monitor):
@@ -76,6 +80,10 @@ class MonitorHTTP(Monitor):
                 keyfile = certfile
             self.certfile = certfile
             self.keyfile = keyfile
+            if not https_handler_available:
+                print "Warning: HTTPS client options specified but urllib2.HTTPSHandler is not available!"
+                print "Are you missing SSL support?"
+                raise RuntimeError('Cannot continue without SSL support')
 
         self.url = url
         if regexp != "":
