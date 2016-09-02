@@ -12,6 +12,7 @@ class Alerter:
     hostname = gethostname()
     available = False
     limit = 1
+    repeat = 0
 
     days = range(0, 7)
     times_type = "always"
@@ -34,6 +35,8 @@ class Alerter:
             self.set_dependencies([x.strip() for x in config_options["depend"].split(",")])
         if 'limit' in config_options:
             self.limit = int(config_options["limit"])
+        if 'repeat' in config_options:
+            self.repeat = int(config_options["repeat"])
         if 'times_type' in config_options:
             times_type = config_options["times_type"]
             if times_type == "always":
@@ -133,8 +136,8 @@ class Alerter:
                             return "catchup"
                         else:
                             return "failure"
-            if monitor.virtual_fail_count() == self.limit:
-                # This is the first time we've failed
+            if monitor.virtual_fail_count() == self.limit or (self.repeat and (monitor.virtual_fail_count() % self.limit == 0)):
+                # This is the first time or nth time we've failed
                 if out_of_hours:
                     if monitor.name not in self.ooh_failures:
                         self.ooh_failures.append(monitor.name)
