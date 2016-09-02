@@ -77,6 +77,8 @@ class Monitor:
             self.set_remote_alerting(int(config_options["remote_alerts"]))
         if 'recover_command' in config_options:
             self.set_recover_command(config_options["recover_command"])
+        if 'gap' in config_options:
+            self.set_gap(config_options["gap"])
         self.running_on = self.short_hostname()
         self.name = name
 
@@ -194,8 +196,8 @@ class Monitor:
 
     def set_gap(self, gap):
         """Set our minimum gap."""
-        if gap >= 0:
-            self.minimum_gap = gap
+        if int(gap) >= 0:
+            self.minimum_gap = int(gap)
 
     def describe(self):
         """Explain what this monitor does.
@@ -301,13 +303,18 @@ class Monitor:
         We always run if the minimum gap is 0, or if we're currently failing.
         Otherwise, we run if the last time we ran was more than minimum_gap seconds ago.
         """
+        now = int(time.time())
         if self.minimum_gap == 0:
+            self.last_run = now
             return True
         if self.error_count > 0:
+            self.last_run = now
             return True
-        now = int(time.time())
+        if self.last_run == 0:
+            self.last_run = now
+            return True
         gap = now - self.last_run
-        if gap > self.minimum_gap:
+        if gap >= self.minimum_gap:
             self.last_run = now
             return True
         return False
