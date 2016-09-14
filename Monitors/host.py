@@ -473,8 +473,8 @@ class MonitorCommand(Monitor):
             self.result_regexp = re.compile(self.result_regexp_text)
         elif 'result_max' in config_options:
             self.result_max = int(config_options["result_max"])
-        else:
-            raise RuntimeError("Required configuration fields missing")
+        # else:
+        #    raise RuntimeError("Required configuration fields missing")
 
         try:
             command = config_options["command"].split(" ")
@@ -502,7 +502,9 @@ class MonitorCommand(Monitor):
                     return True
                 else:
                     self.record_fail("%s >= %s" % (outasinteger, self.result_max))
-                    return True
+                    return False
+            self.record_success()
+            return True
         except Exception, e:
             self.record_fail(e)
             return False
@@ -513,9 +515,12 @@ class MonitorCommand(Monitor):
     def describe(self):
         """Explains what this instance is checking"""
         if self.result_regexp is not None:
-            return "checking a command %s match a regexp %s" % (" ".join(self.command), self.result_regexp_text)
+            return "checking command \"%s\" match a regexp %s" % (" ".join(self.command), self.result_regexp_text)
+        elif self.result_max is not None:
+            return "checking command \"%s\" returns a value < %d" % (" ".join(self.command), self.result_max)
         else:
-            return "checking a command %s returns a value < %d" % (" ".join(self.command), self.result_max)
+            return "checking command \"%s\" failed" % " ".join(self.command)
 
     def get_params(self):
-        return (self.command, self.result_regexp_text)
+        # return (self.command, self.result_regexp_text)
+        return (self.command, )
