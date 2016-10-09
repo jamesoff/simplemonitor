@@ -63,7 +63,14 @@ class BulkSMSAlerter(Alerter):
                 print "Warning! Truncating SMS message to 160 chars."
                 message = message[:156] + "..."
             url = "https://{}/eapi/submission/send_sms/2/2.0".format(self.api_host)
-            params = urllib.urlencode({'username' : self.username, 'password' : self.password, 'message' : message, 'msisdn' : self.target, 'sender' : self.sender, 'repliable' : '0'})
+            params = urllib.urlencode({
+                'username': self.username,
+                'password': self.password,
+                'message': message,
+                'msisdn': self.target,
+                'sender': self.sender,
+                'repliable': '0'
+            })
         elif type == "failure":
             (days, hours, minutes, seconds) = self.get_downtime(monitor)
             message = "%s failed on %s at %s (%d+%02d:%02d:%02d)\n%s" % (
@@ -76,7 +83,14 @@ class BulkSMSAlerter(Alerter):
                 print "Warning! Truncating SMS message to 160 chars."
                 message = message[:156] + "..."
             url = "https://{}/eapi/submission/send_sms/2/2.0".format(self.api_host)
-            params = urllib.urlencode({'username' : self.username, 'password' : self.password, 'message' : message, 'msisdn' : self.target, 'sender' : self.sender, 'repliable' : '0'})
+            params = urllib.urlencode({
+                'username': self.username,
+                'password': self.password,
+                'message': message,
+                'msisdn': self.target,
+                'sender': self.sender,
+                'repliable': '0'
+            })
         else:
             # we don't handle other types of message
             pass
