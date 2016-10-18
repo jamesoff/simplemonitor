@@ -1,11 +1,11 @@
-
+# coding=utf-8
 """ File-based monitors for SimpleMonitor. """
 
 import os
 import os.path
 import time
 
-from monitor import Monitor
+from Monitors.monitor import Monitor
 
 
 class MonitorBackup(Monitor):
@@ -44,7 +44,7 @@ class MonitorBackup(Monitor):
             return False
 
         gap = now - timestamp
-        print timestamp, now, gap
+        print(timestamp, now, gap)
         if status == "ok":
             if gap > (3600 * 24):
                 self.record_fail("OK was reported %ds ago" % gap)

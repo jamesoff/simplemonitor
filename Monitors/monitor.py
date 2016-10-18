@@ -1,4 +1,4 @@
-
+# coding=utf-8
 """A collection of monitors for the SimpleMonitor application.
 
 The Monitor class contains the monitor-independent logic for handling results etc.
@@ -172,7 +172,7 @@ class Monitor:
             result = 1
         try:
             logger.save_result2(name, self)
-        except Exception, e:
+        except Exception as e:
             sys.stderr.write("%s\n" % e)
             logger.save_result(name, self.type, self.get_params(), result, self.last_result)
 
@@ -336,7 +336,7 @@ class Monitor:
             p = subprocess.Popen(self.recover_command, shell=True)
             p.wait()
             self.recover_info = "Command executed and returned %d" % p.returncode
-        except Exception, e:
+        except Exception as e:
             self.recover_info = "Unable to run command: %s" % e
 
         return
@@ -362,7 +362,7 @@ class MonitorFail(Monitor):
 
     def run_test(self):
         """Always fails."""
-        print "error_count = %d, interval = %d --> %d" % (self.error_count, self.interval, self.error_count % self.interval)
+        print("error_count = %d, interval = %d --> %d" % (self.error_count, self.interval, self.error_count % self.interval))
         if (self.interval == 0) or (self.error_count == 0) or (self.error_count % self.interval != 0):
             self.record_fail("This monitor always fails.")
             return False

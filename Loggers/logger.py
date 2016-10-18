@@ -1,7 +1,8 @@
+# coding=utf-8
 import datetime
 
 
-class Logger:
+class Logger(object):
     """Abstract class basis for loggers."""
 
     dependencies = []

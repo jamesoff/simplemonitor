@@ -1,7 +1,10 @@
-import urllib
-
-from alerter import Alerter
-
+# coding=utf-8
+from Alerters.alerter import Alerter
+try:
+    from urllib import quote, quote_plus, urlopen
+except ImportError: # Py3
+    from urllib.parse import quote, quote_plus
+    from urllib.request import urlopen
 
 class BulkSMSAlerter(Alerter):
     """Send SMS alerts using the BulkSMS service.
@@ -21,7 +24,7 @@ class BulkSMSAlerter(Alerter):
         if 'sender' in config_options:
             sender = config_options["sender"]
             if len(sender) > 11:
-                print "warning: truncating SMS sender name to 11 chars"
+                print("warning: truncating SMS sender name to 11 chars")
                 sender = sender[:11]
         else:
             sender = "SmplMntr"
@@ -29,7 +32,7 @@ class BulkSMSAlerter(Alerter):
         self.username = username
         self.password = password
         self.target = target
-        self.sender = urllib.quote(sender)
+        self.sender = quote(sender)
 
         self.support_catchup = True
 
@@ -39,14 +42,14 @@ class BulkSMSAlerter(Alerter):
         if not monitor.is_urgent():
             return
 
-        type = self.should_alert(monitor)
+        type_ = self.should_alert(monitor)
         message = ""
         url = ""
 
         (days, hours, minutes, seconds) = self.get_downtime(monitor)
-        if type == "":
+        if type_ == "":
             return
-        elif type == "catchup":
+        elif type_ == "catchup":
             (days, hours, minutes, seconds) = self.get_downtime(monitor)
             message = "catchup: %s failed on %s at %s (%d+%02d:%02d:%02d)\n%s" % (
                 name,
@@ -55,11 +58,11 @@ class BulkSMSAlerter(Alerter):
                 days, hours, minutes, seconds,
                 monitor.get_result())
             if len(message) > 160:
-                print "Warning! Truncating SMS message to 160 chars."
+                print("Warning! Truncating SMS message to 160 chars.")
                 message = message[:156] + "..."
-            message = urllib.quote_plus(message)
+            message = quote_plus(message)
             url = "http://www.bulksms.co.uk:5567/eapi/submission/send_sms/2/2.0?username=%s&password=%s&message=%s&msisdn=%s&sender=%s" % (self.username, self.password, message, self.target, self.sender)
-        elif type == "failure":
+        elif type_ == "failure":
             (days, hours, minutes, seconds) = self.get_downtime(monitor)
             message = "%s failed on %s at %s (%d+%02d:%02d:%02d)\n%s" % (
                 name,
@@ -68,9 +71,9 @@ class BulkSMSAlerter(Alerter):
                 days, hours, minutes, seconds,
                 monitor.get_result())
             if len(message) > 160:
-                print "Warning! Truncating SMS message to 160 chars."
+                print("Warning! Truncating SMS message to 160 chars.")
                 message = message[:156] + "..."
-            message = urllib.quote_plus(message)
+            message = quote_plus(message)
             url = "http://www.bulksms.co.uk:5567/eapi/submission/send_sms/2/2.0?username=%s&password=%s&message=%s&msisdn=%s&sender=%s" % (self.username, self.password, message, self.target, self.sender)
         else:
             # we don't handle other types of message
@@ -81,15 +84,15 @@ class BulkSMSAlerter(Alerter):
 
         if not self.dry_run:
             try:
-                handle = urllib.urlopen(url)
+                handle = urlopen(url)
                 s = handle.read()
                 if not s.startswith("0"):
-                    print "Unable to send SMS: %s (%s)" % (s.split("|")[0], s.split("|")[1])
+                    print("Unable to send SMS: %s (%s)" % (s.split("|")[0], s.split("|")[1]))
                     self.available = False
                 handle.close()
             except:
-                print "SMS sending failed"
+                print("SMS sending failed")
                 self.available = False
         else:
-            print "dry_run: would send SMS: %s" % url
+            print("dry_run: would send SMS: %s" % url)
         return

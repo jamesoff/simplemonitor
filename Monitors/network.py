@@ -1,8 +1,6 @@
-
+# coding=utf-8
 """Network-related monitors for SimpleMonitor."""
 
-import urllib2
-import httplib
 import re
 import os
 import sys
@@ -10,15 +8,26 @@ import socket
 import datetime
 import subprocess
 
-from monitor import Monitor
+from Monitors.monitor import Monitor
+
+try:
+    from urllib2 import HTTPSHandler, urlopen, build_opener, HTTPError
+except ImportError: # PY3
+    from urllib.request import HTTPSHandler, urlopen, build_opener
+    from urllib.error import HTTPError
+
+try:
+    from httplib import HTTPSConnection
+except ImportError: # PY3
+    from http.client import HTTPSConnection
 
 
 # coded by Kalys Osmonov
 # source: http://www.osmonov.com/2009/04/client-certificates-with-urllib2.html
 try:
-    class HTTPSClientAuthHandler(urllib2.HTTPSHandler):
+    class HTTPSClientAuthHandler(HTTPSHandler):
         def __init__(self, key, cert):
-            urllib2.HTTPSHandler.__init__(self)
+            super(HTTPSHandler, self).__init__()
             self.key = key
             self.cert = cert
 
@@ -29,7 +38,7 @@ try:
             return self.do_open(self.getConnection, req)
 
         def getConnection(self, host, timeout=300):
-            return httplib.HTTPSConnection(host, key_file=self.key, cert_file=self.cert)
+            return HTTPSConnection(host, key_file=self.key, cert_file=self.cert)
     https_handler_available = True
 except AttributeError as e:
     https_handler_available = False
@@ -81,8 +90,8 @@ class MonitorHTTP(Monitor):
             self.certfile = certfile
             self.keyfile = keyfile
             if not https_handler_available:
-                print "Warning: HTTPS client options specified but urllib2.HTTPSHandler is not available!"
-                print "Are you missing SSL support?"
+                print("Warning: HTTPS client options specified but urllib2.HTTPSHandler is not available!")
+                print("Are you missing SSL support?")
                 raise RuntimeError('Cannot continue without SSL support')
 
         self.url = url
@@ -100,10 +109,10 @@ class MonitorHTTP(Monitor):
         status = None
         try:
             if self.certfile is None:
-                url_handle = urllib2.urlopen(self.url)
+                url_handle = urlopen(self.url)
             else:
                 # HTTPS with client authentication
-                opener = urllib2.build_opener(HTTPSClientAuthHandler(self.keyfile, self.certfile))
+                opener = build_opener(HTTPSClientAuthHandler(self.keyfile, self.certfile))
                 url_handle = opener.open(self.url)
 
             end_time = datetime.datetime.now()
@@ -130,10 +139,10 @@ class MonitorHTTP(Monitor):
                 self.record_fail("Got 200 OK but couldn't match /%s/ in page." % self.regexp_text)
                 socket.setdefaulttimeout(original_timeout)
                 return False
-        except urllib2.HTTPError, e:
+        except HTTPError as e:
             status = "%s %s" % (e.code, e.reason)
             if e.code in self.allowed_codes:
-                print status
+                print(status)
                 if end_time is not None:
                     load_time = end_time - start_time
                     self.record_success("%s in %0.2fs" % (status, (load_time.seconds + (load_time.microseconds / 1000000.2))))
@@ -144,7 +153,7 @@ class MonitorHTTP(Monitor):
             self.record_fail("HTTP error while opening URL: %s" % e)
             socket.setdefaulttimeout(original_timeout)
             return False
-        except Exception, e:
+        except Exception as e:
             self.record_fail("Exception while trying to open url: %s" % (e))
             socket.setdefaulttimeout(original_timeout)
             return False
@@ -265,7 +274,7 @@ class MonitorHost(Monitor):
                     matches = r2.search(line)
                     if matches:
                         pingtime = matches.group("ms")
-        except Exception, e:
+        except Exception as e:
             self.record_fail(e)
             pass
         if success:
@@ -338,7 +347,7 @@ class MonitorDNS(Monitor):
                 return False
             self.record_success()
             return True
-        except Exception, e:
+        except Exception as e:
             self.record_fail("Exception while executing %s: %s" % (self.command, e))
             return False
 

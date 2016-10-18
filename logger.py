@@ -1,3 +1,4 @@
+# coding=utf-8
 import sys
 import time
 
@@ -36,10 +37,11 @@ class FileLogger(Logger):
     buffered = True
 
     def __init__(self, filename, only_failures=False, buffered=True):
+        super(Logger, self).__init__()
         try:
             self.file_handle = open(filename, "w+")
         except:
-            print "Couldn't open %s for appending." % filename
+            print("Couldn't open %s for appending." % filename)
             sys.exit(1)
         self.only_failures = only_failures
         self.buffered = buffered

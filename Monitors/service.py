@@ -1,10 +1,11 @@
+# coding=utf-8
 import platform
 import re
 import os
 import subprocess
 import sys
 
-from monitor import Monitor
+from Monitors.monitor import Monitor
 
 
 class MonitorSvc(Monitor):
@@ -34,7 +35,7 @@ class MonitorSvc(Monitor):
             else:
                 self.record_success()
                 return True
-        except Exception, e:
+        except Exception as e:
             self.record_fail("Exception while executing svok: %s" % e)
             return False
 
@@ -98,7 +99,7 @@ class MonitorService(Monitor):
                 if matches:
                     self.record_success()
                     return True
-        except Exception, e:
+        except Exception as e:
             sys.stderr.write("%s\n" % e)
             pass
         self.record_fail()
@@ -178,7 +179,7 @@ class MonitorRC(Monitor):
             else:
                 self.record_success()
                 return True
-        except Exception, e:
+        except Exception as e:
             self.record_fail("Exception while executing script: %s" % e)
             return False
 
@@ -231,7 +232,7 @@ class MonitorEximQueue(Monitor):
                         return True
             self.record_fail("Error getting queue size")
             return False
-        except Exception, e:
+        except Exception as e:
             self.record_fail("Error running exiqgrep: %s" % e)
             return False
 
@@ -285,8 +286,8 @@ class MonitorWindowsDHCPScope(Monitor):
                         return True
             self.record_fail("Error getting client count: no match")
             return False
-        except Exception, e:
-            print e
+        except Exception as e:
+            print(e)
             self.record_fail("Error getting client count: %s", e)
             return False
 

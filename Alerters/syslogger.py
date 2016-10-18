@@ -1,9 +1,10 @@
+# coding=utf-8
 try:
     import syslog
-except:
+except ImportError:
     pass
 
-from alerter import Alerter
+from Alerters.alerter import Alerter
 
 
 class SyslogAlerter(Alerter):

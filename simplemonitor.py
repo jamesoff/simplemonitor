@@ -1,3 +1,4 @@
+# coding=utf-8
 import sys
 import signal
 import copy
@@ -37,7 +38,7 @@ class SimpleMonitor:
         We set a variable to say we want to do this later (so it's done at the right time)."""
 
         self.need_hup = True
-        print "We get signal."
+        print("We get signal.")
 
     def add_monitor(self, name, monitor):
         self.monitors[name] = monitor
@@ -61,7 +62,7 @@ class SimpleMonitor:
         for k in self.monitors.keys():
             for dependency in self.monitors[k]._dependencies:
                 if dependency not in self.monitors.keys():
-                    print "Configuration error: dependency %s of monitor %s is not defined!" % (dependency, k)
+                    print("Configuration error: dependency %s of monitor %s is not defined!" % (dependency, k))
                     ok = False
         return ok
 
@@ -83,30 +84,30 @@ class SimpleMonitor:
         while len(joblist) > 0:
             new_joblist = []
             if debug:
-                print "\nStarting loop:", joblist
+                print("\nStarting loop:", joblist)
             for monitor in joblist:
                 if debug:
-                    print "Trying: %s" % monitor
+                    print("Trying: %s" % monitor)
                 if len(self.monitors[monitor].get_dependencies()) > 0:
                     # this monitor has outstanding deps, put it on the new joblist for next loop
                     new_joblist.append(monitor)
                     if debug:
-                        print "added %s to new joblist, is now" % monitor, new_joblist
+                        print("added %s to new joblist, is now" % monitor, new_joblist)
                     for dep in self.monitors[monitor].get_dependencies():
                         if debug:
-                            print "  considering %s's dependency %s" % (monitor, dep), failed
+                            print("  considering %s's dependency %s" % (monitor, dep), failed)
                         if dep in failed:
                             # oh wait, actually one of its deps failed, so we'll never be able to run it
                             if verbose:
-                                print "Doesn't look like %s worked, skipping %s" % (dep, monitor)
+                                print("Doesn't look like %s worked, skipping %s" % (dep, monitor))
                             failed.append(monitor)
                             self.monitors[monitor].record_skip(dep)
                             try:
                                 new_joblist.remove(monitor)
                             except:
-                                print "Exception caught while trying to remove monitor %s with failed deps from new joblist." % monitor
+                                print("Exception caught while trying to remove monitor %s with failed deps from new joblist." % monitor)
                                 if debug:
-                                    print "new_joblist is currently", new_joblist
+                                    print("new_joblist is currently", new_joblist)
                             break
                     continue
                 try:
@@ -119,26 +120,26 @@ class SimpleMonitor:
                     else:
                         not_run = True
                         if verbose:
-                            print "Not run: %s" % monitor
-                except Exception, e:
+                            print("Not run: %s" % monitor)
+                except Exception as e:
                     if verbose:
                         sys.stderr.write("Monitor %s threw exception during run_test(): %s\n" % (monitor, e))
                 if self.monitors[monitor].get_error_count() > 0:
                     if self.monitors[monitor].virtual_fail_count() == 0:
                         if verbose:
-                            print "Warning: %s" % monitor
+                            print("Warning: %s" % monitor)
                     else:
                         if verbose:
-                            print "Fail: %s (%s)" % (monitor, self.monitors[monitor].last_result)
+                            print("Fail: %s (%s)" % (monitor, self.monitors[monitor].last_result))
                     failed.append(monitor)
                 else:
                     if verbose and not not_run:
-                        print "Passed: %s" % monitor
+                        print("Passed: %s" % monitor)
                     for monitor2 in joblist:
                         self.monitors[monitor2].dependency_succeeded(monitor)
             joblist = copy.copy(new_joblist)
         if verbose:
-            print
+            print("")
 
     def _print_pretty_results(self, keys):
         """Private function used by pretty_results.
@@ -146,30 +147,30 @@ class SimpleMonitor:
         for service in keys:
             reason = self.monitors[service].get_result()
             if reason == "":
-                print service
+                print(service)
             else:
-                print "%s (%s)" % (service, reason)
+                print("%s (%s)" % (service, reason))
 
     def pretty_results(self):
         """Display the current state of our monitors in a human-readable fashion."""
         if len(self.warning + self.failed + self.still_failing + self.skipped):
-            print
-            print datetime.datetime.now().isoformat()
+            print("")
+            print(datetime.datetime.now().isoformat())
 
         if len(self.warning):
-            print "--> Warnings:"
+            print("--> Warnings:")
             self._print_pretty_results(self.warning)
 
         if len(self.failed):
-            print "--> New failures:"
+            print("--> New failures:")
             self._print_pretty_results(self.failed)
 
         if len(self.still_failing):
-            print "--> Still failing:"
+            print("--> Still failing:")
             self._print_pretty_results(self.still_failing)
 
         if len(self.skipped):
-            print "--> Skipped due to failed dependencies:"
+            print("--> Skipped due to failed dependencies:")
             self._print_pretty_results(self.skipped)
 
     def log_result(self, logger):
@@ -182,7 +183,7 @@ class SimpleMonitor:
             for key in self.remote_monitors.keys():
                 self.remote_monitors[key].log_result(key, logger)
         except:
-            print "exception while logging remote monitors"
+            print("exception while logging remote monitors")
         logger.end_batch()
 
     def do_alert(self, alerter):
@@ -193,22 +194,22 @@ class SimpleMonitor:
             if self.monitors[key].remote_alerting:
                 # TODO: could potentially disable alerts by setting a monitor to remote alerting, but not having anywhere to send it!
                 if self.debug:
-                    print "skipping alert for monitor %s as it wants remote alerting" % key
+                    print("skipping alert for monitor %s as it wants remote alerting" % key)
                 continue
             try:
                 alerter.send_alert(key, self.monitors[key])
-            except Exception, e:
-                print "exception caught while alerting for %s: %s" % (key, e)
+            except Exception as e:
+                print("exception caught while alerting for %s: %s" % (key, e))
         for key in self.remote_monitors.keys():
             try:
                 if self.remote_monitors[key].remote_alerting:
                     alerter.send_alert(key, self.remote_monitors[key])
                 else:
                     if self.debug:
-                        print "not alerting for monitor %s as it doesn't want remote alerts" % key
+                        print("not alerting for monitor %s as it doesn't want remote alerts" % key)
                     continue
-            except Exception, e:
-                print "exception caught while alerting for %s: %s" % (key, e)
+            except Exception as e:
+                print("exception caught while alerting for %s: %s" % (key, e))
 
     def count_monitors(self):
         """Gets the number of monitors we have defined."""
@@ -230,7 +231,7 @@ class SimpleMonitor:
 
     def do_logs(self):
         if self.need_hup:
-            print "Processing HUP."
+            print("Processing HUP.")
             for logger in self.loggers:
                 self.loggers[logger].hup()
             self.need_hup = False
@@ -241,5 +242,5 @@ class SimpleMonitor:
     def update_remote_monitor(self, data, hostname):
         for monitor in data.keys():
             if self.debug:
-                print "trying remote monitor %s" % monitor
+                print("trying remote monitor %s" % monitor)
             self.remote_monitors[monitor] = pickle.loads(data[monitor])

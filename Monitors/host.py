@@ -9,7 +9,7 @@ try:
 except:
     win32_available = False
 
-from monitor import Monitor
+from Monitors.monitor import Monitor
 
 
 class MonitorDiskSpace(Monitor):
@@ -76,7 +76,7 @@ class MonitorDiskSpace(Monitor):
                 result = win32api.GetDiskFreeSpaceEx(self.partition)
                 space = result[2]
                 percent = float(result[2]) / float(result[1]) * 100
-        except Exception, e:
+        except Exception as e:
             self.record_fail("Couldn't get free disk space: %s" % e)
             return False
 
@@ -162,7 +162,7 @@ class MonitorFileStat(Monitor):
     def run_test(self):
         try:
             statinfo = os.stat(self.filename)
-        except Exception, e:
+        except Exception as e:
             self.record_fail("Unable to check file: %s" % e)
             return False
 
@@ -227,7 +227,7 @@ class MonitorApcupsd(Monitor):
                     bits = line.split(":")
                     info[bits[0].strip()] = bits[1].strip()
 
-        except Exception, e:
+        except Exception as e:
             self.record_fail("Could not run %s: %s" % (executable, e))
             return False
         if 'STATUS' not in info:
@@ -300,7 +300,7 @@ class MonitorPortAudit(Monitor):
                     return False
             self.record_success()
             return True
-        except Exception, e:
+        except Exception as e:
             self.record_fail("Could not run portaudit: %s" % e)
             return False
 
@@ -343,7 +343,7 @@ class MonitorPkgAudit(Monitor):
                     return False
             self.record_success()
             return True
-        except Exception, e:
+        except Exception as e:
             self.record_fail("Could not run pkg: %s" % e)
             return False
 
@@ -390,7 +390,7 @@ class MonitorLoadAvg(Monitor):
     def run_test(self):
         try:
             loadavg = os.getloadavg()
-        except Exception, e:
+        except Exception as e:
             self.record_fail("Exception getting loadavg: %s" % e)
             return False
 
@@ -437,7 +437,7 @@ class MonitorZap(Monitor):
                         return True
             self.record_fail("Error getting status")
             return False
-        except Exception, e:
+        except Exception as e:
             self.record_fail("Error running ztscan: %s" % e)
             return False
 
@@ -503,7 +503,7 @@ class MonitorCommand(Monitor):
                 else:
                     self.record_fail("%s >= %s" % (outasinteger, self.result_max))
                     return True
-        except Exception, e:
+        except Exception as e:
             self.record_fail(e)
             return False
 

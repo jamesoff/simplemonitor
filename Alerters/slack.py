@@ -1,10 +1,10 @@
 try:
     import requests
     requests_available = True
-except:
+except ImportError:
     requests_available = False
 
-from alerter import Alerter
+from Alerters.alerter import Alerter
 
 
 class SlackAlerter(Alerter):
@@ -12,7 +12,7 @@ class SlackAlerter(Alerter):
 
     def __init__(self, config_options):
         if not requests_available:
-            print "Requests package is not available, cannot use SlackAlerter."
+            print("Requests package is not available, cannot use SlackAlerter.")
             return
 
         Alerter.__init__(self, config_options)
@@ -121,19 +121,19 @@ class SlackAlerter(Alerter):
             message_json['attachments'][0]['fields'] = fields
 
         else:
-            print "Unknown alert type %s" % type
+            print("Unknown alert type %s" % type)
             return
 
         if not self.dry_run:
             try:
                 r = requests.post(self.url, json=message_json)
                 if not r.status_code == 200:
-                    print "POST to slack webhook failed"
-                    print r
-            except Exception, e:
-                print "Failed to post to slack webhook"
-                print e
-                print message_json
+                    print("POST to slack webhook failed")
+                    print(r)
+            except Exception as e:
+                print("Failed to post to slack webhook")
+                print(e)
+                print(message_json)
                 self.available = False
         else:
-            print "dry_run: would send slack: %s" % message_json.__repr__()
+            print("dry_run: would send slack: %s" % message_json.__repr__())
