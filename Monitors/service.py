@@ -168,6 +168,7 @@ class MonitorRC(Monitor):
             if e.returncode == self.want_return_code:
                 self.record_success()
                 return True
+            returncode = -1
         except Exception, e:
             self.record_fail("Exception while executing script: %s" % e)
             return False
