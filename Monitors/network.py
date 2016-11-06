@@ -4,7 +4,6 @@
 import urllib2
 import httplib
 import re
-import os
 import sys
 import socket
 import datetime
@@ -232,11 +231,11 @@ class MonitorHost(Monitor):
             self.ping_regexp = "Reply from "
             self.time_regexp = "Average = (?P<ms>\d+)ms"
         elif platform.startswith('freebsd') or platform.startswith('darwin'):
-            self.ping_command = "ping -c1 -t" + ping_ttl + " %s 2> /dev/null"
+            self.ping_command = "ping -c1 -t" + ping_ttl + " %s"
             self.ping_regexp = "bytes from"
             self.time_regexp = "min/avg/max/stddev = [\d.]+/(?P<ms>[\d.]+)/"
         elif platform.startswith('linux'):
-            self.ping_command = "ping -c1 -W" + ping_ttl + " %s 2> /dev/null"
+            self.ping_command = "ping -c1 -W" + ping_ttl + " %s"
             self.ping_regexp = "bytes from"
             self.time_regexp = "min/avg/max/stddev = [\d.]+/(?P<ms>[\d.]+)/"
         else:
@@ -256,8 +255,9 @@ class MonitorHost(Monitor):
         success = False
         pingtime = 0.0
         try:
-            process_handle = os.popen(self.ping_command % self.host)
-            for line in process_handle:
+            cmd = (self.ping_command % self.host).split(' ')
+            output = subprocess.check_output(cmd)
+            for line in str(output).split("\n"):
                 matches = r.search(line)
                 if matches:
                     success = True
@@ -328,7 +328,7 @@ class MonitorDNS(Monitor):
 
     def run_test(self):
         try:
-            result = subprocess.Popen(self.params, stdout=subprocess.PIPE).communicate()[0]
+            result = subprocess.check_output(self.params)
             result = result.strip()
             if result is None or result == '':
                 self.record_fail("failed to resolve %s" % self.path)

@@ -1,3 +1,6 @@
 *.pyc
 _site
 build/*
+tags
+.ropeproject
+.bundle

@@ -83,21 +83,19 @@ class MonitorService(Monitor):
         r = re.compile("STATE +: [0-9]+ +%s" % self.want_state)
         try:
             if platform.system() == "CYGWIN_NT-6.0":
-                commandline = 'sc \\\\\\\\%s query %s'
+                host = '\\\\\\\\' + self.host
             elif platform.system() in ["Microsoft", "Windows"]:
-                commandline = 'sc \\\\%s query %s'
+                host = '\\\\' + self.host
             else:
                 # we need windows for sc
                 self.record_fail("Cannot check for Windows services while running on a non-Windows platform.")
                 return False
 
-            commandline = commandline % (self.host, self.service_name)
-            process_handle = os.popen(commandline)
-            for line in process_handle:
-                matches = r.search(line)
-                if matches:
-                    self.record_success()
-                    return True
+            output = str(subprocess.check_output(['sc', host, 'query', self.service_name]))
+            matches = r.search(output)
+            if matches:
+                self.record_success()
+                return True
         except Exception, e:
             sys.stderr.write("%s\n" % e)
             pass
@@ -162,25 +160,20 @@ class MonitorRC(Monitor):
             self.is_error = True
             return False
         try:
-            fh = os.popen("%s status" % self.script_path, "r")
-            try:
-                # We seem to have to read from the process object else
-                # Linux (Ubuntu at least) returns 256 instead!
-                fh.read()
-            except:
-                pass
-            result = fh.close()
-            if result is None:
-                result = 0
-            if result != self.want_return_code:
-                self.record_fail()
-                return False
-            else:
+            returncode = subprocess.check_call([self.script_path, 'status'])
+            if returncode == self.want_return_code:
                 self.record_success()
                 return True
+        except subprocess.CalledProcessError, e:
+            if e.returncode == self.want_return_code:
+                self.record_success()
+                return True
+            returncode = -1
         except Exception, e:
             self.record_fail("Exception while executing script: %s" % e)
             return False
+        self.record_fail("Return code: %d (wanted %d)" % (returncode, self.want_return_code))
+        return False
 
     def get_params(self):
         return (self.service_name, self.want_return_code)
@@ -211,12 +204,12 @@ class MonitorEximQueue(Monitor):
 
     def run_test(self):
         try:
-            pipe = subprocess.Popen([os.path.join(self.path, "exiqgrep"), "-xc"], stdout=subprocess.PIPE).stdout
-            for line in pipe:
+            output = subprocess.check_output([os.path.join(self.path, "exiqgrep"), "-xc"])
+            for line in output:
                 matches = self.r.match(line)
                 if matches:
                     count = int(matches.group("count"))
-                    total = int(matches.group("total"))
+                    # total = int(matches.group("total"))
                     if count > self.max_length:
                         if count == 1:
                             self.record_fail("%d message queued" % count)
@@ -272,17 +265,16 @@ class MonitorWindowsDHCPScope(Monitor):
 
     def run_test(self):
         try:
-            pipe = subprocess.Popen(["netsh", "dhcp", "server", "scope", self.scope, "show", "clients"], stdout=subprocess.PIPE).stdout
-            for line in pipe:
-                matches = self.r.match(line)
-                if matches:
-                    clients = int(matches.group("clients"))
-                    if clients > self.max_used:
-                        self.record_fail("%d clients in scope" % clients)
-                        return False
-                    else:
-                        self.record_success("%d clients in scope" % clients)
-                        return True
+            output = str(subprocess.check_output(["netsh", "dhcp", "server", "scope", self.scope, "show", "clients"]))
+            matches = self.r.search(output)
+            if matches:
+                clients = int(matches.group("clients"))
+                if clients > self.max_used:
+                    self.record_fail("%d clients in scope" % clients)
+                    return False
+                else:
+                    self.record_success("%d clients in scope" % clients)
+                    return True
             self.record_fail("Error getting client count: no match")
             return False
         except Exception, e:

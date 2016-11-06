@@ -221,15 +221,21 @@ class MonitorApcupsd(Monitor):
             else:
                 executable = "apcaccess"
         try:
-            process_handle = os.popen(executable)
-            for line in process_handle:
-                if line.find(":") > -1:
-                    bits = line.split(":")
-                    info[bits[0].strip()] = bits[1].strip()
-
-        except Exception, e:
-            self.record_fail("Could not run %s: %s" % (executable, e))
+            output = subprocess.check_output(executable)
+        except subprocess.CalledProcessError, e:
+            output = e.output
+        except OSError, e:
+            self.record_fail("Could not run %s: %s", (executable, e))
             return False
+        except OSError, e:
+            self.record_fail("Error while getting UPS info: %s", e)
+            return False
+
+        for line in output:
+            if line.find(":") > -1:
+                bits = line.split(":")
+                info[bits[0].strip()] = bits[1].strip()
+
         if 'STATUS' not in info:
             self.record_fail("Could not get UPS status")
             return False
@@ -284,8 +290,18 @@ class MonitorPortAudit(Monitor):
             # -X 1 tells portaudit to re-download db if one day out of date
             if self.path == "":
                 self.path = "/usr/local/sbin/portaudit"
-            process_handle = os.popen("%s -a -X 1" % self.path)
-            for line in process_handle:
+            try:
+                output = subprocess.call([self.path, '-a', '-X', '1'])
+            except subprocess.CalledProcessError, e:
+                output = e.output
+            except OSError, e:
+                self.record_fail("Error running %s: %s", (self.path, e))
+                return False
+            except Exception, e:
+                self.record_fail("Error running portaudit: %s", e)
+                return False
+
+            for line in output:
                 matches = self.regexp.match(line)
                 if matches:
                     count = int(matches.group(1))
@@ -327,8 +343,18 @@ class MonitorPkgAudit(Monitor):
         try:
             if self.path == "":
                 self.path = "/usr/local/sbin/pkg"
-            process_handle = os.popen("%s audit" % self.path)
-            for line in process_handle:
+            try:
+                output = subprocess.check_output([self.path, 'audit'])
+            except subprocess.CalledProcessError, e:
+                output = e.output
+            except OSError, e:
+                self.record_fail("Failed to run %s audit: %s", (self.path, e))
+                return False
+            except Exception, e:
+                self.record_fail("Error running pkg audit: %s", e)
+                return False
+
+            for line in output:
                 matches = self.regexp.match(line)
                 if matches:
                     count = int(matches.group(1))
@@ -424,8 +450,8 @@ class MonitorZap(Monitor):
 
     def run_test(self):
         try:
-            pipe = subprocess.Popen(["ztscan", str(self.span)], stdout=subprocess.PIPE).stdout
-            for line in pipe:
+            output = subprocess.check_output(["ztscan", str(self.span)])
+            for line in output:
                 matches = self.r.match(line)
                 if matches:
                     status = matches.group("status")
