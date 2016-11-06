@@ -266,7 +266,7 @@ class MonitorWindowsDHCPScope(Monitor):
     def run_test(self):
         try:
             output = str(subprocess.check_output(["netsh", "dhcp", "server", "scope", self.scope, "show", "clients"]))
-            matches = self.r.search(line)
+            matches = self.r.search(output)
             if matches:
                 clients = int(matches.group("clients"))
                 if clients > self.max_used:
