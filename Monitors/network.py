@@ -267,7 +267,7 @@ class MonitorHost(Monitor):
                         pingtime = matches.group("ms")
         except Exception, e:
             self.record_fail(e)
-            pass
+            return False
         if success:
             if pingtime > 0:
                 self.record_success("%sms" % pingtime)
