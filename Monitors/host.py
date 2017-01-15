@@ -2,6 +2,7 @@ import re
 import os
 import subprocess
 import time
+import shlex
 
 try:
     import win32api
@@ -501,10 +502,11 @@ class MonitorCommand(Monitor):
             self.result_max = int(config_options["result_max"])
 
         try:
-            command = config_options["command"].split(" ")
+            # command = config_options["command"].split(" ")
+            command = shlex.split(config_options["command"])
         except:
-            raise RuntimeError("Required configuration fields missing")
-        if command == "":
+            raise RuntimeError("Required configuration fields missing or invalid")
+        if command is None or len(command) == 0:
             raise RuntimeError("missing command")
         self.command = command
 
