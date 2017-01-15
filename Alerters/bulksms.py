@@ -26,10 +26,15 @@ class BulkSMSAlerter(Alerter):
         else:
             sender = "SmplMntr"
 
+        api_host = 'www.bulksms.co.uk'
+        if 'api_host' in config_options:
+            api_host = config_options['api_host']
+
         self.username = username
         self.password = password
         self.target = target
-        self.sender = urllib.quote(sender)
+        self.sender = sender
+        self.api_host = api_host
 
         self.support_catchup = True
 
@@ -57,8 +62,15 @@ class BulkSMSAlerter(Alerter):
             if len(message) > 160:
                 print "Warning! Truncating SMS message to 160 chars."
                 message = message[:156] + "..."
-            message = urllib.quote_plus(message)
-            url = "http://www.bulksms.co.uk:5567/eapi/submission/send_sms/2/2.0?username=%s&password=%s&message=%s&msisdn=%s&sender=%s" % (self.username, self.password, message, self.target, self.sender)
+            url = "https://{}/eapi/submission/send_sms/2/2.0".format(self.api_host)
+            params = urllib.urlencode({
+                'username': self.username,
+                'password': self.password,
+                'message': message,
+                'msisdn': self.target,
+                'sender': self.sender,
+                'repliable': '0'
+            })
         elif type == "failure":
             (days, hours, minutes, seconds) = self.get_downtime(monitor)
             message = "%s failed on %s at %s (%d+%02d:%02d:%02d)\n%s" % (
@@ -70,8 +82,15 @@ class BulkSMSAlerter(Alerter):
             if len(message) > 160:
                 print "Warning! Truncating SMS message to 160 chars."
                 message = message[:156] + "..."
-            message = urllib.quote_plus(message)
-            url = "http://www.bulksms.co.uk:5567/eapi/submission/send_sms/2/2.0?username=%s&password=%s&message=%s&msisdn=%s&sender=%s" % (self.username, self.password, message, self.target, self.sender)
+            url = "https://{}/eapi/submission/send_sms/2/2.0".format(self.api_host)
+            params = urllib.urlencode({
+                'username': self.username,
+                'password': self.password,
+                'message': message,
+                'msisdn': self.target,
+                'sender': self.sender,
+                'repliable': '0'
+            })
         else:
             # we don't handle other types of message
             pass
@@ -81,14 +100,18 @@ class BulkSMSAlerter(Alerter):
 
         if not self.dry_run:
             try:
-                handle = urllib.urlopen(url)
+                handle = urllib.urlopen(url, params)
                 s = handle.read()
                 if not s.startswith("0"):
                     print "Unable to send SMS: %s (%s)" % (s.split("|")[0], s.split("|")[1])
+                    print "URL: %s, PARAMS: %s" % (url, params)
                     self.available = False
                 handle.close()
-            except:
+            except Exception as e:
                 print "SMS sending failed"
+                print e
+                print url
+                print params
                 self.available = False
         else:
             print "dry_run: would send SMS: %s" % url
