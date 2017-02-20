@@ -1,7 +1,23 @@
 1.7:
+	+ Add Slack alerter
+	+ Add Command monitor
+	+ Add pkg audit monitor
+	+ Add SSL client auth
+	+ Add Amazon SES alerter
+	+ Add a sample upstart script
+	+ Add support for Pushover
+	+ Add support for alerters to repeat
+	+ Support username/password and SSL support for SMTP
+	* Use subprocess everywhere
+	* Honour SMTP port in configuration
+	* Honour gap configuration option
+	* Use HTTPS for BulkSMS API
+	* Date format for logfile is configurable
+	* Use UTC everywhere for times; should fix monitors which have been down -1 hours
 	* Teach the host (ping) monitor to use command line options better on
 	  different operating systems
-	* Add Slack alerter
+	* Verify dependencies exist
+	* Stop alerters from firing success notifications out-of-hours
 
 1.6:
 	* Added DNS monitor
