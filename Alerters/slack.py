@@ -10,6 +10,8 @@ from alerter import Alerter
 class SlackAlerter(Alerter):
     """Send alerts to a Slack webhook."""
 
+    channel = None
+
     def __init__(self, config_options):
         if not requests_available:
             print "Requests package is not available, cannot use SlackAlerter."
@@ -34,6 +36,9 @@ class SlackAlerter(Alerter):
 
     def send_alert(self, name, monitor):
         """Send the message."""
+
+        if self.channel is None:
+            return
 
         type = self.should_alert(monitor)
         (days, hours, minutes, seconds) = self.get_downtime(monitor)
