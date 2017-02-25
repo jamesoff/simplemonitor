@@ -90,6 +90,9 @@ class MonitorHTTP(Monitor):
             self.regexp_text = regexp
         self.allowed_codes = allowed_codes
 
+        self.username = config_options.get('username')
+        self.password = config_options.get('password')
+
     def run_test(self):
         # store the current default timeout (since it's global)
         original_timeout = socket.getdefaulttimeout()
@@ -99,7 +102,14 @@ class MonitorHTTP(Monitor):
         status = None
         try:
             if self.certfile is None:
-                url_handle = urllib2.urlopen(self.url)
+                if self.username is None:
+                    url_handle = urllib2.urlopen(self.url)
+                else:
+                    password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
+                    password_mgr.add_password(None, self.url, self.username, self.password)
+                    handler = urllib2.HTTPBasicAuthHandler(password_mgr)
+                    opener = urllib2.build_opener(handler)
+                    url_handle = opener.open(self.url)
             else:
                 # HTTPS with client authentication
                 opener = urllib2.build_opener(HTTPSClientAuthHandler(self.keyfile, self.certfile))
