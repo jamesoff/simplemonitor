@@ -55,6 +55,7 @@ Again, adding more logging/alerting methods is simply a case of writing some Pyt
 ## Getting started
 
 * Download the code
+* Install dependencies: `pip install -r requirements.txt`
 * Write your configuration files
 * Run the code
 
