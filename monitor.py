@@ -277,8 +277,22 @@ def main():
         print "--> Loading main config from %s" % options.config
 
     config = ConfigParser()
-    config.read(options.config)
-    interval = config.getint("monitor", "interval")
+    if not os.path.exists(options.config):
+        print '--> Configuration file "%s" does not exist!' % options.config
+        sys.exit(1)
+    try:
+        config.read(options.config)
+    except Exception as e:
+        print '--> Unable to read configuration file "%s"' % options.config
+        print 'The config parser reported:'
+        print e
+        sys.exit(1)
+
+    try:
+        interval = config.getint("monitor", "interval")
+    except NoOptionError:
+        print '--> Missing [monitor] section from config file, or missing the "interval" setting in it'
+        sys.exit(1)
 
     pidfile = ""
     try:
