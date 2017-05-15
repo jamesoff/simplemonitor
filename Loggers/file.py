@@ -26,7 +26,7 @@ class FileLogger(Logger):
         if "filename" in config_options:
             try:
                 self.filename = config_options["filename"]
-                self.file_handle = open(self.filename, "w+")
+                self.file_handle = open(self.filename, "a+")
             except Exception, e:
                 raise RuntimeError("Couldn't open log file %s for appending: %s" % (self.filename, e))
         else:
@@ -82,7 +82,7 @@ class FileLogger(Logger):
         """Close and reopen log file."""
         self.file_handle.close()
         try:
-            self.file_handle = open(self.filename, "w+")
+            self.file_handle = open(self.filename, "a+")
         except Exception, e:
             raise RuntimeError("Couldn't reopen log file %s after HUP: %s" % (self.filename, e))
 
