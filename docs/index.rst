@@ -3,9 +3,18 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+
 SimpleMonitor
 =============
 SimpleMonitor is a Python script which monitors hosts and network connectivity. It is designed to be quick and easy to set up and lacks complex features that can make things like Nagios, OpenNMS and Zenoss overkill for a small business or home network. Remote monitor instances can send their results back to a central location.
+
+.. toctree::
+
+   getting-started.rst
+   configuration.rst
+   monitors.rst
+   alerters.rst
+   loggers.rst
 
 SimpleMonitor supports:
 
@@ -54,44 +63,7 @@ Other features
 * Alert catchup: …and also to alert you to a monitor which failed when they were unable to tell you. (For example, I don’t want to be woken up overnight by an SMS, but if something’s still broken I’d like an SMS at 7am as I’m getting up.)
 * Remote monitors: An instance running on a remote machine can send its results back to a central instance for logging and alerting.
 
-Getting started
----------------
-
-* Download the code
-* Write your configuration files
-* Run the code
-
-Running SimpleMonitor
----------------------
-
-* ``python monitor.py``
-
-That was easy.
-
-If you want to hide all output except errors, use the -q option. If you want more verbose blah about what’s happening, use -v.
-
-On non-Windows, SimpleMonitor runs very nicely under daemontools. You just need a run file a bit like this:
-
-.. code:: bash
-
-    #!/bin/sh
-
-    cd /usr/local/monitor && exec /usr/local/bin/python monitor.py -q
-
-On Windows hosts, you’ll have to leave it running in a Command Prompt for now; I haven’t gotten round to making it run as a service.
-
-For help on (the scarce) command line options, run ``python monitor.py -h``.
-
 Licence
 -------
 
 SimpleMonitor is released under the BSD licence.
-
-
-Installation
-------------
-
-::
-
-  pip install simplemonitor
-
