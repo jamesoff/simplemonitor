@@ -278,7 +278,7 @@ class MonitorResult(object):
         self.result = None
         self.first_failure_time = None
         self.last_run_duration = None
-        self.ok = False
+        self.status = "Fail"
         self.dependencies = []
 
     def json_representation(self):
@@ -320,7 +320,10 @@ class JsonLogger(Logger):
         result.virtual_fail_count = monitor.virtual_fail_count()
         result.last_run_duration = monitor.last_run_duration
         result.result = monitor.get_result()
-        result.ok = monitor.virtual_fail_count() <= 0
+        if monitor.was_skipped:
+            result.status = "Skipped"
+        elif monitor.virtual_fail_count() <= 0:
+            result.status = "OK"
         result.dependencies = monitor.get_dependencies()
 
         self.batch_data[name] = result
