@@ -201,6 +201,8 @@ def load_loggers(m, config, quiet):
             l = Loggers.file.HTMLLogger(config_options)
         elif type == "network":
             l = Loggers.network.NetworkLogger(config_options)
+        elif type == "json":
+            l = Loggers.file.JsonLogger(config_options)
         else:
             sys.stderr.write("Unknown logger type %s\n" % type)
             continue
