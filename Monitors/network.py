@@ -3,6 +3,7 @@
 
 import urllib2
 import httplib
+import ssl
 import re
 import sys
 import socket
@@ -16,10 +17,11 @@ from monitor import Monitor
 # source: http://www.osmonov.com/2009/04/client-certificates-with-urllib2.html
 try:
     class HTTPSClientAuthHandler(urllib2.HTTPSHandler):
-        def __init__(self, key, cert):
+        def __init__(self, key, cert, context=None):
             urllib2.HTTPSHandler.__init__(self)
             self.key = key
             self.cert = cert
+            self.context = context
 
         def https_open(self, req):
             # Rather than pass in a reference to a connection class, we pass in
@@ -28,7 +30,8 @@ try:
             return self.do_open(self.getConnection, req)
 
         def getConnection(self, host, timeout=300):
-            return httplib.HTTPSConnection(host, key_file=self.key, cert_file=self.cert)
+                return httplib.HTTPSConnection(host, key_file=self.key, cert_file=self.cert, context=self.context)
+
     https_handler_available = True
 except AttributeError as e:
     https_handler_available = False
@@ -84,6 +87,12 @@ class MonitorHTTP(Monitor):
                 print "Are you missing SSL support?"
                 raise RuntimeError('Cannot continue without SSL support')
 
+        # optional - for HTTPS hostname verification (self signed certificates)
+        if 'verify_hostname' in config_options:
+            self.verify_hostname = config_options["verify_hostname"]
+        else:
+            self.verify_hostname = False
+
         self.url = url
         if regexp != "":
             self.regexp = re.compile(regexp)
@@ -100,19 +109,22 @@ class MonitorHTTP(Monitor):
         start_time = datetime.datetime.now()
         end_time = None
         status = None
+        context = None
+        if self.verify_hostname:
+            context = ssl._create_unverified_context()
         try:
             if self.certfile is None:
                 if self.username is None:
-                    url_handle = urllib2.urlopen(self.url)
+                    url_handle = urllib2.urlopen(self.url, context=context)
                 else:
                     password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
                     password_mgr.add_password(None, self.url, self.username, self.password)
                     handler = urllib2.HTTPBasicAuthHandler(password_mgr)
                     opener = urllib2.build_opener(handler)
-                    url_handle = opener.open(self.url)
+                    url_handle = opener.open(self.url, context=context)
             else:
                 # HTTPS with client authentication
-                opener = urllib2.build_opener(HTTPSClientAuthHandler(self.keyfile, self.certfile))
+                opener = urllib2.build_opener(HTTPSClientAuthHandler(self.keyfile, self.certfile, context))
                 url_handle = opener.open(self.url)
 
             end_time = datetime.datetime.now()
