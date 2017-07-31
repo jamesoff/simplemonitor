@@ -320,7 +320,7 @@ class JsonLogger(Logger):
         result.virtual_fail_count = monitor.virtual_fail_count()
         result.last_run_duration = monitor.last_run_duration
         result.result = monitor.get_result()
-        if monitor.was_skipped:
+        if hasattr(monitor, "was_skipped") and monitor.was_skipped:
             result.status = "Skipped"
         elif monitor.virtual_fail_count() <= 0:
             result.status = "OK"
