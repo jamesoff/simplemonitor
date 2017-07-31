@@ -88,10 +88,10 @@ class MonitorHTTP(Monitor):
                 raise RuntimeError('Cannot continue without SSL support')
 
         # optional - for HTTPS hostname verification (self signed certificates)
+        self.verify_hostname = True
         if 'verify_hostname' in config_options:
-            self.verify_hostname = config_options["verify_hostname"]
-        else:
-            self.verify_hostname = False
+            if config_options["verify_hostname"].lower() == "false":
+                self.verify_hostname = False
 
         self.url = url
         if regexp != "":
@@ -110,7 +110,7 @@ class MonitorHTTP(Monitor):
         end_time = None
         status = None
         context = None
-        if self.verify_hostname:
+        if not self.verify_hostname:
             context = ssl._create_unverified_context()
         try:
             if self.certfile is None:
