@@ -262,6 +262,7 @@ def main():
     parser.add_option("-N", "--no-network", dest="no_network", default=False, action="store_true", help="Disable network listening socket")
     parser.add_option("-d", "--debug", dest="debug", default=False, action="store_true", help="Enable debug output")
     parser.add_option("-f", "--config", dest="config", default="monitor.ini", help="configuration file")
+    parser.add_option("-H", "--no-heartbeat", action="store_true", dest="no_heartbeat", default=False, help="Omit printing the '.' character when running checks")
 
     (options, args) = parser.parse_args()
 
@@ -384,7 +385,7 @@ def main():
             m.do_alerts()
             m.do_logs()
 
-            if not options.quiet and not options.verbose:
+            if not options.quiet and not options.verbose and not options.no_heartbeat:
                 heartbeat += 1
                 if heartbeat == 2:
                     sys.stdout.write(".")
