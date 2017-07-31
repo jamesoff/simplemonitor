@@ -324,7 +324,7 @@ class JsonLogger(Logger):
             result.status = "Skipped"
         elif monitor.virtual_fail_count() <= 0:
             result.status = "OK"
-        result.dependencies = monitor.get_dependencies()
+        result.dependencies = monitor._dependencies
 
         self.batch_data[name] = result
 
