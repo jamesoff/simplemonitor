@@ -154,7 +154,6 @@ class MonitorHTTP(Monitor):
         except urllib2.HTTPError, e:
             status = "%s %s" % (e.code, e.reason)
             if e.code in self.allowed_codes:
-                print status
                 if end_time is not None:
                     load_time = end_time - start_time
                     self.record_success("%s in %0.2fs" % (status, (load_time.seconds + (load_time.microseconds / 1000000.2))))
