@@ -65,6 +65,10 @@
       - name: allowed_codes
         desc: A list of HTTP codes which are acceptable in addition to `200 OK`
         required: 'no'
+      - name: verify_hostname
+        desc: If set to false, no SSL hostname verification will be made. Use with the https protocol and self-signed certificates.
+        required: 'no'
+        default: 'True'
 - name: dns
   oneline: Attempts to resolve a DNS record, and optionally checks the result. Requires the DNS utility `dig` to be in the `$PATH`.
   params:

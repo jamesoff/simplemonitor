@@ -13,6 +13,7 @@ The types of loggers are:
 * logfile: Records a logfile of the result of every monitor, or only the monitors which failed. Each line is preceeded by the current UNIX timestamp.
 * html: Writes an HTML file showing the status of all monitors (including remote ones).
 * network: Sends status of all monitors to a remote host.
+* json: Writes a JSON file describing the state of all the monitors
 
 ## Defining a logger
 
@@ -58,4 +59,10 @@ This logger is used to send status reports of all monitors to a remote instance.
 |host|the remote host to send to.|yes| |
 |port|the port on the remote host to connect to.|yes| |
 |key|shared secret to protect communications|yes| |
+
+### json logger
+
+| setting | description | required | default |
+|---|---|---|---|
+|filename|the path of the JSON file to write.|yes| |
 
