@@ -9,6 +9,7 @@ import shutil
 import stat
 import cStringIO
 import sys
+import json
 
 
 from logger import Logger
@@ -268,3 +269,74 @@ class HTMLLogger(Logger):
             line = line.replace("_STATUS_", self.status)
             lines.append(line)
         return lines
+
+
+class MonitorResult(object):
+
+    def __init__(self):
+        self.virtual_fail_count = 0
+        self.result = None
+        self.first_failure_time = None
+        self.last_run_duration = None
+        self.status = "Fail"
+        self.dependencies = []
+
+    def json_representation(self):
+        return self.__dict__
+
+
+class MonitorJsonPayload(object):
+    def __init__(self):
+        self.generated = None
+        self.monitors = {}
+
+    def json_representation(self):
+        return self.__dict__
+
+
+class PayloadEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if hasattr(obj, 'json_representation'):
+            return obj.json_representation()
+        else:
+            return json.JSONEncoder.default(self, obj.__dict__)
+
+
+class JsonLogger(Logger):
+
+    filename = ""
+    supports_batch = True
+
+    def __init__(self, config_options={}):
+        Logger.__init__(self, config_options)
+        if "filename" in config_options:
+                self.filename = config_options["filename"]
+        else:
+            raise RuntimeError("Missing filename for json filename")
+
+    def save_result2(self, name, monitor):
+        result = MonitorResult()
+        result.first_failure_time = self.format_datetime(monitor.first_failure_time())
+        result.virtual_fail_count = monitor.virtual_fail_count()
+        result.last_run_duration = monitor.last_run_duration
+        result.result = monitor.get_result()
+        if hasattr(monitor, "was_skipped") and monitor.was_skipped:
+            result.status = "Skipped"
+        elif monitor.virtual_fail_count() <= 0:
+            result.status = "OK"
+        result.dependencies = monitor._dependencies
+
+        self.batch_data[name] = result
+
+    def process_batch(self):
+        payload = MonitorJsonPayload()
+        payload.generated = self.format_datetime(datetime.datetime.now())
+        payload.monitors = self.batch_data
+
+        with open(self.filename, 'w') as outfile:
+            json.dump(payload, outfile,
+                      indent=4,
+                      separators=(',', ':'),
+                      ensure_ascii=False,
+                      cls=PayloadEncoder)
+        self.batch_data = {}
