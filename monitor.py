@@ -7,10 +7,9 @@ import os
 import sys
 import time
 
-from ConfigParser import *
+from envconfig import EnvironmentAwareConfigParser
 from optparse import *
 from socket import gethostname
-
 
 import Monitors.monitor
 import Monitors.network
@@ -79,7 +78,7 @@ def get_config_dict(config, monitor):
 
 def load_monitors(m, filename, quiet):
     """Load all the monitors from the config file and return a populated SimpleMonitor."""
-    config = ConfigParser()
+    config = EnvironmentAwareConfigParser()
     config.read(filename)
     monitors = config.sections()
     if "defaults" in monitors:
@@ -279,7 +278,7 @@ def main():
         print "SimpleMonitor v%s" % VERSION
         print "--> Loading main config from %s" % options.config
 
-    config = ConfigParser()
+    config = EnvironmentAwareConfigParser()
     if not os.path.exists(options.config):
         print '--> Configuration file "%s" does not exist!' % options.config
         sys.exit(1)

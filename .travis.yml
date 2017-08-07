@@ -5,4 +5,5 @@ python:
     - "2.7"
 script:
     - python monitor.py -t -f tests/monitor.ini
+    - TEST_VALUE=myenv python monitor.py -t -f tests/monitor-env.ini
 
