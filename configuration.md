@@ -8,6 +8,8 @@ The main configuration lives in monitor.ini in the same directory as the code.
 
 Section names are lowercase in square brackets. Settings are defined as key=value. Lines can be commented with #.
 
+Section names and option values (but not option names) support environment variable injection. To include the value of an environment variable, use `%env:VARIABLE%`, which will inject the value of `$VARIABLE`. You can use this to e.g. share a common configuration file across multiple hosts, but have each host name its monitors differently.
+
 ## Monitor section
 
 | setting | description | required | default |
