@@ -5,6 +5,8 @@ import pickle
 import datetime
 import time
 
+from concurrent.futures import ThreadPoolExecutor
+
 
 class SimpleMonitor:
 
@@ -22,6 +24,7 @@ class SimpleMonitor:
         self.skipped = []
         self.warning = []
         self.remote_monitors = {}
+        self.max_workers = None
 
         self.loggers = {}
         self.alerters = {}
@@ -69,6 +72,12 @@ class SimpleMonitor:
         self.verbose = verbose
         self.debug = debug
 
+    def set_max_workers(self, count):
+        if count > 0:
+            self.max_workers = count
+        else:
+            self.max_workers = None
+
     def run_tests(self):
         self.reset_monitors()
         verbose = self.verbose
@@ -81,64 +90,69 @@ class SimpleMonitor:
         not_run = False
 
         while len(joblist) > 0:
-            new_joblist = []
-            if debug:
-                print "\nStarting loop:", joblist
-            for monitor in joblist:
+            with ThreadPoolExecutor(self.max_workers) as executor:
+                new_joblist = []
                 if debug:
-                    print "Trying: %s" % monitor
-                if len(self.monitors[monitor].get_dependencies()) > 0:
-                    # this monitor has outstanding deps, put it on the new joblist for next loop
-                    new_joblist.append(monitor)
+                    print "\nStarting loop:", joblist
+                for monitor in joblist:
                     if debug:
-                        print "added %s to new joblist, is now" % monitor, new_joblist
-                    for dep in self.monitors[monitor].get_dependencies():
+                        print "Trying: %s" % monitor
+                    if len(self.monitors[monitor].get_dependencies()) > 0:
+                        # this monitor has outstanding deps, put it on the new joblist for next loop
+                        new_joblist.append(monitor)
                         if debug:
-                            print "  considering %s's dependency %s" % (monitor, dep), failed
-                        if dep in failed:
-                            # oh wait, actually one of its deps failed, so we'll never be able to run it
-                            if verbose:
-                                print "Doesn't look like %s worked, skipping %s" % (dep, monitor)
-                            failed.append(monitor)
-                            self.monitors[monitor].record_skip(dep)
-                            try:
-                                new_joblist.remove(monitor)
-                            except:
-                                print "Exception caught while trying to remove monitor %s with failed deps from new joblist." % monitor
-                                if debug:
-                                    print "new_joblist is currently", new_joblist
-                            break
-                    continue
-                try:
-                    if self.monitors[monitor].should_run():
-                        not_run = False
-                        start_time = time.time()
-                        self.monitors[monitor].run_test()
-                        end_time = time.time()
-                        self.monitors[monitor].last_run_duration = end_time - start_time
-                    else:
-                        not_run = True
-                        if verbose:
-                            print "Not run: %s" % monitor
-                except Exception, e:
-                    if verbose:
-                        sys.stderr.write("Monitor %s threw exception during run_test(): %s\n" % (monitor, e))
-                if self.monitors[monitor].get_error_count() > 0:
-                    if self.monitors[monitor].virtual_fail_count() == 0:
-                        if verbose:
-                            print "Warning: %s" % monitor
-                    else:
-                        if verbose:
-                            print "Fail: %s (%s)" % (monitor, self.monitors[monitor].last_result)
-                    failed.append(monitor)
-                else:
-                    if verbose and not not_run:
-                        print "Passed: %s" % monitor
-                    for monitor2 in joblist:
-                        self.monitors[monitor2].dependency_succeeded(monitor)
+                            print "added %s to new joblist, is now" % monitor, new_joblist
+                        for dep in self.monitors[monitor].get_dependencies():
+                            if debug:
+                                print "  considering %s's dependency %s" % (monitor, dep), failed
+                            if dep in failed:
+                                # oh wait, actually one of its deps failed, so we'll never be able to run it
+                                if verbose:
+                                    print "Doesn't look like %s worked, skipping %s" % (dep, monitor)
+                                failed.append(monitor)
+                                self.monitors[monitor].record_skip(dep)
+                                try:
+                                    new_joblist.remove(monitor)
+                                except:
+                                    print "Exception caught while trying to remove monitor %s with failed deps from new joblist." % monitor
+                                    if debug:
+                                        print "new_joblist is currently", new_joblist
+                                break
+                        continue
+
+                    executor.submit(self.run_in_thread, failed, joblist, monitor, not_run, verbose)
             joblist = copy.copy(new_joblist)
-        if verbose:
-            print
+            if verbose:
+                print
+
+    def run_in_thread(self, failed, joblist, monitor, not_run, verbose):
+        try:
+            if self.monitors[monitor].should_run():
+                not_run = False
+                start_time = time.time()
+                self.monitors[monitor].run_test()
+                end_time = time.time()
+                self.monitors[monitor].last_run_duration = end_time - start_time
+            else:
+                not_run = True
+                if verbose:
+                    print "Not run: %s" % monitor
+        except Exception, e:
+            if verbose:
+                sys.stderr.write("Monitor %s threw exception during run_test(): %s\n" % (monitor, e))
+        if self.monitors[monitor].get_error_count() > 0:
+            if self.monitors[monitor].virtual_fail_count() == 0:
+                if verbose:
+                    print "Warning: %s" % monitor
+            else:
+                if verbose:
+                    print "Fail: %s (%s)" % (monitor, self.monitors[monitor].last_result)
+            failed.append(monitor)
+        else:
+            if verbose and not not_run:
+                print "Passed: %s" % monitor
+            for monitor2 in joblist:
+                self.monitors[monitor2].dependency_succeeded(monitor)
 
     def _print_pretty_results(self, keys):
         """Private function used by pretty_results.

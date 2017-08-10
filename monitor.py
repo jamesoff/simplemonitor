@@ -364,6 +364,16 @@ def main():
     except:
         key = None
 
+    try:
+        # get the maximum of thread workers.
+        max_workers = config.get("monitor", "max_workers")
+        max_workers = int(max_workers)
+    except:
+        # if unspecified, the thread pool executor creates (cpu_count * 5) workers.
+        max_workers = None
+
+    m.set_max_workers(max_workers)
+
     if enable_remote:
         if not options.quiet:
             print "--> Starting remote listener thread"
