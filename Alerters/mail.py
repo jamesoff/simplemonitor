@@ -110,9 +110,9 @@ class EMailAlerter(Alerter):
         if not self.dry_run:
             try:
                 if self.ssl is None or self.ssl == 'starttls':
-                    server = smtplib.SMTP(self.mail_host, self.mail_port)
+                    server = smtplib.SMTP(self.mail_host, self.mail_port, timeout=5.0)
                 elif self.ssl == 'yes':
-                    server = smtplib.SMTP_SSL(self.mail_host, self.mail_port)
+                    server = smtplib.SMTP_SSL(self.mail_host, self.mail_port, timeout=5.0)
 
                 if self.ssl == 'starttls':
                     server.starttls()
