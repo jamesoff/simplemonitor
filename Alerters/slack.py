@@ -15,6 +15,7 @@ class SlackAlerter(Alerter):
     def __init__(self, config_options):
         if not requests_available:
             print "Requests package is not available, cannot use SlackAlerter."
+            print "Try: pip install -r requirements.txt"
             return
 
         Alerter.__init__(self, config_options)
