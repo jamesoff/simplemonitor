@@ -43,6 +43,13 @@ command
   Run a command and optionally verify the output. If the command exits non-zero, reports failure.
 compound
   Combine (logical-and) multiple failures of other monitors for emergency escalation.
+filestat
+  Make sure a file exists, and isn't too old or small
+eximqueue
+  Make sure an exim queue isn't too big
+dhcpscope
+  Check a Windows DHCP scope does not have too many clients
+
 
 
 Common configuration
@@ -334,5 +341,197 @@ Attempts to resolve a DNS record, and optionally check the result. Requires that
 
   *Default*: none (use the system resolver configuration)
 
+apcupsd
+~~~~~~~
 
+Uses an existing and correctly configured ``apcupsd`` to check a UPS is not running on batteries or reporting some other problem.
+
+*Platforms*: all
+
+``path``
+
+  The path to find the apcupsd binary.
+
+  *Required*: no
+
+  *Default*: SimpleMonitor looks in ``$PATH`` (Linux) or ``C:\apcupsd\bin``
+
+fail
+~~~~
+
+This monitor fails 5 times in a row and then succeeds once. Useful for testing how your configuration and logging/alerting will work.
+
+portaudit
+~~~~~~~~~
+
+Runs ``portaudit`` and fails if vulnerable ports are installed. (For recent FreeBSD, see pkgaudit.)
+
+*Platforms*: FreeBSD
+
+``path``
+
+  The path to the portaudit binary.
+
+  *Required*: no
+
+  *Default*: ``/usr/local/sbin/portaudit``
+
+pkgaudit
+~~~~~~~~
+
+Runs ``pkg audit`` and fails if vulnerable ports are installed. (For older FreeBSD, see portaudit.)
+
+*Platforms*: FreeBSD
+
+``path``
+
+  The path to the pkgaudit binary.
+
+  *Required*: no
+
+  *Default*: ``/usr/local/sbin/pkg``
+
+loadavg
+~~~~~~~
+
+Checks the load average on the host.
+
+*Platforms*: Linux/BSD
+
+``which``
+
+  Which field to check. 0 = 1min, 1 = 5min, 2 = 15min
+
+  *Required*: no
+
+  *Default*: 1 (5min average)
+
+``max``:
+
+  The maximum allowed load average.
+
+  *Required*: no
+
+  *Default*: 1.00
+
+command
+~~~~~~~
+
+Runs a command and optionally verifies the output.
+
+*Platforms*: all
+
+``command``
+
+  The full command to execute, including parameters
+
+``result_regexp``
+
+  The regular expression to match against the output of the command. If the regular expression does not match, the monitor fails. If this setting is given, ``result_max`` is ignored.
+
+  *Required*: no
+
+  *Default*: none
+
+``result_max``
+
+  The maximum allowable return value of the command. This setting is ignored if ``result_regexp`` is given.
+
+  *Required*: no
+
+  *Default*: none
+
+compound
+~~~~~~~~
+
+Examines other monitors, and fails if all of them have failed. Use for e.g. emergency escalation.
+
+*Platforms*: all
+
+``monitors``
+
+  Comma-separated list of monitor names to check.
+
+  *Required*: yes
+
+``min_fail``
+
+  The minimum number of failed monitors to trigger this monitor to report failure.
+
+  *Required*: no
+
+  *Default*: auto-configures to the number of monitors in the list
+
+filestat
+~~~~~~~~
+
+Make sure a file exists, and isn't too old or small.
+
+*Platforms*: all
+
+``filename``
+
+  The file to check
+
+  *Required*: yes
+
+``minsize``
+
+  The minimum acceptable size for the file, in bytes. You can put ``G``, ``M``, or ``K`` at the end of the value for gibibytes, mibibytes or kibibytes.
+
+  *Required*: no
+
+``maxage``
+
+  The maximum acceptable age for the file (since modification) in seconds.
+
+  *Required*: no
+
+eximqueue
+~~~~~~~~~
+
+.. note::
+
+   This monitor has not been tested recently.
+
+Runs :program:`exiqgrep` to make sure the exim queue isn't too big.
+
+*Platforms*: Linux/BSD
+
+``max_length``
+
+  The maximum number of messages before alerting.
+
+  *Required*: yes
+
+``path``
+
+  The directory containing the :program:`exiqgrep` binary.
+
+  *Required*: no
+
+  *Default*: /usr/local/bin
+
+dhcpscope
+~~~~~~~~~
+
+.. note::
+
+   This monitor has not been tested recently.
+
+Checks a Windows DHCP scope does not have too many clients.
+
+*Platforms*: Windows
+
+``max_used``
+
+  The maximum number of IPs to be allocated out of the pool before alerting.
+
+  *Required*: yes
+
+``scope``
+
+  The name of the scope.
+
+  *Required*: yes
 
