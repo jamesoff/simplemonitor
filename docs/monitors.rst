@@ -51,7 +51,6 @@ dhcpscope
   Check a Windows DHCP scope does not have too many clients
 
 
-
 Common configuration
 --------------------
 
@@ -139,7 +138,7 @@ All monitor types share the following configuration options:
 Monitor configuration
 ---------------------
 
-Host
+host
 ~~~~
 
 Ping a host. Succeeds if the host responds within 5 seconds.
@@ -160,7 +159,7 @@ Ping a host. Succeeds if the host responds within 5 seconds.
 
   *Default*: 5
 
-Service
+service
 ~~~~~~~
 
 Check a Windows service is in the desired state.
