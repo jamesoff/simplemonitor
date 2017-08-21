@@ -6,6 +6,7 @@ import datetime
 import time
 
 from concurrent.futures import ThreadPoolExecutor
+import concurrent.futures
 
 
 class SimpleMonitor:
@@ -89,6 +90,7 @@ class SimpleMonitor:
 
         not_run = False
 
+        fs = []
         while len(joblist) > 0:
             with ThreadPoolExecutor(self.max_workers) as executor:
                 new_joblist = []
@@ -119,11 +121,12 @@ class SimpleMonitor:
                                         print "new_joblist is currently", new_joblist
                                 break
                         continue
-
-                    executor.submit(self.run_in_thread, failed, joblist, monitor, not_run, verbose)
+                    fs.append(executor.submit(self.run_in_thread, failed, joblist, monitor, not_run, verbose))
+                concurrent.futures.wait(fs)
+                fs = []
             joblist = copy.copy(new_joblist)
             if verbose:
-                print
+                print("")
 
     def run_in_thread(self, failed, joblist, monitor, not_run, verbose):
         try:
