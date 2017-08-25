@@ -99,13 +99,12 @@ class MonitorHTTP(Monitor):
             self.regexp_text = regexp
         self.allowed_codes = allowed_codes
 
+        self.request_timeout = int(config_options.get('timeout')) if 'timeout' in config_options else 5
+
         self.username = config_options.get('username')
         self.password = config_options.get('password')
 
     def run_test(self):
-        # store the current default timeout (since it's global)
-        original_timeout = socket.getdefaulttimeout()
-        socket.setdefaulttimeout(5)
         start_time = datetime.datetime.now()
         end_time = None
         status = None
@@ -115,17 +114,17 @@ class MonitorHTTP(Monitor):
         try:
             if self.certfile is None:
                 if self.username is None:
-                    url_handle = urllib2.urlopen(self.url, context=context)
+                    url_handle = urllib2.urlopen(self.url, context=context, timeout=self.request_timeout)
                 else:
                     password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
                     password_mgr.add_password(None, self.url, self.username, self.password)
                     handler = urllib2.HTTPBasicAuthHandler(password_mgr)
                     opener = urllib2.build_opener(handler)
-                    url_handle = opener.open(self.url, context=context)
+                    url_handle = opener.open(self.url, context=context, timeout=self.request_timeout)
             else:
                 # HTTPS with client authentication
                 opener = urllib2.build_opener(HTTPSClientAuthHandler(self.keyfile, self.certfile, context))
-                url_handle = opener.open(self.url)
+                url_handle = opener.open(self.url, timeout=self.request_timeout)
 
             end_time = datetime.datetime.now()
             load_time = end_time - start_time
@@ -135,21 +134,17 @@ class MonitorHTTP(Monitor):
                     status = url_handle.status
             if status != "200 OK":
                 self.record_fail("Got status '%s' instead of 200 OK" % status)
-                socket.setdefaulttimeout(original_timeout)
                 return False
             if self.regexp is None:
                 self.record_success("%s in %0.2fs" % (status, (load_time.seconds + (load_time.microseconds / 1000000.2))))
-                socket.setdefaulttimeout(original_timeout)
                 return True
             else:
                 for line in url_handle:
                     matches = self.regexp.search(line)
                     if matches:
                         self.record_success("%s in %0.2fs" % (status, (load_time.seconds + (load_time.microseconds / 1000000.2))))
-                        socket.setdefaulttimeout(original_timeout)
                         return True
                 self.record_fail("Got 200 OK but couldn't match /%s/ in page." % self.regexp_text)
-                socket.setdefaulttimeout(original_timeout)
                 return False
         except urllib2.HTTPError, e:
             status = "%s %s" % (e.code, e.reason)
@@ -159,14 +154,11 @@ class MonitorHTTP(Monitor):
                     self.record_success("%s in %0.2fs" % (status, (load_time.seconds + (load_time.microseconds / 1000000.2))))
                 else:
                     self.record_success("%s" % status)
-                socket.setdefaulttimeout(original_timeout)
                 return True
             self.record_fail("HTTP error while opening URL: %s" % e)
-            socket.setdefaulttimeout(original_timeout)
             return False
         except Exception, e:
             self.record_fail("Exception while trying to open url: %s" % (e))
-            socket.setdefaulttimeout(original_timeout)
             return False
 
     def describe(self):
