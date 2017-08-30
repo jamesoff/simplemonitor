@@ -118,6 +118,7 @@ class SimpleMonitor:
                         self.monitors[monitor].last_run_duration = end_time - start_time
                     else:
                         not_run = True
+                        self.monitors[monitor].record_skip(None)
                         if verbose:
                             print "Not run: %s" % monitor
                 except Exception, e:

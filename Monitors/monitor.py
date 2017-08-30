@@ -247,9 +247,14 @@ class Monitor:
         """Record that we were skipped.
 
         We pretend to have succeeded as we don't want notifications sent."""
-        self.record_success()
-        self.was_skipped = True
-        self.skip_dep = which_dep
+        if which_dep is not None:
+            # we were skipped because of a dependency
+            self.record_success()
+            self.was_skipped = True
+            self.skip_dep = which_dep
+        else:
+            # we were skipped because of the gap value
+            self.was_skipped = True
 
     def skipped(self):
         if self.was_skipped:
@@ -271,7 +276,7 @@ class Monitor:
         except:
             pass
 
-        if self.last_error_count >= self.tolerance and self.success_count == 1:
+        if self.last_error_count >= self.tolerance and self.success_count == 1 and not self.was_skipped:
             return True
         else:
             return False
