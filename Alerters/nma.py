@@ -34,6 +34,9 @@ class NMAAlerter(Alerter):
     def send_alert(self, name, monitor):
         """Send an alert."""
 
+        if not monitor.is_urgent():
+            return
+
         type = self.should_alert(monitor)
         message = ""
         url = ""
