@@ -1,4 +1,4 @@
 [localhost]
 type=host
-host=localhots
+host=localhost
 tolerance=2
