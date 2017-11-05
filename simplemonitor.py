@@ -189,6 +189,8 @@ class SimpleMonitor:
         """Use the given alerter object to send an alert, if needed."""
         alerter.check_dependencies(self.failed + self.still_failing + self.skipped)
         for key in self.monitors.keys():
+            if self.debug:
+                print "{} -> {}".format(self.monitors[key].name, self.monitors[key].group)
             # Don't generate alerts for monitors which want it done remotely
             if self.monitors[key].remote_alerting:
                 # TODO: could potentially disable alerts by setting a monitor to remote alerting, but not having anywhere to send it!
@@ -197,8 +199,19 @@ class SimpleMonitor:
                 continue
             try:
                 # Disable notifications for hosts that have it disabled
-                if self.monitors[key].notify:
-                    alerter.send_alert(key, self.monitors[key])
+                if self.monitors[key].group in alerter.groups:
+                    if self.debug:
+                        print " - Running for: {} ({})".format(self.monitors[key].group, alerter.groups)
+                    if self.monitors[key].notify:
+                        if self.debug:
+                            print "  - Notifying: {}".format(alerter.name)
+                        alerter.send_alert(key, self.monitors[key])
+                    else:
+                        if self.debug:
+                            print "  - Skipping alert: Monitor Disabled"
+                else:
+                    if self.debug:
+                        print " - Skipping: {} ({})".format(self.monitors[key].group, alerter.name)
             except Exception, e:
                 print "exception caught while alerting for %s: %s" % (key, e)
         for key in self.remote_monitors.keys():
