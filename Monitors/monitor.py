@@ -42,6 +42,7 @@ class Monitor:
     last_run = 0
 
     urgent = 1
+    notify = True
 
     failures = 0
     last_failure = None
@@ -69,6 +70,8 @@ class Monitor:
             self.set_dependencies([x.strip() for x in config_options["depend"].split(",")])
         if 'urgent' in config_options:
             self.set_urgency(int(config_options["urgent"]))
+        if 'notify' in config_options:
+            self.set_notify(config_options["notify"])
         if 'tolerance' in config_options:
             self.set_tolerance(int(config_options["tolerance"]))
         if 'remote_alert' in config_options:
@@ -81,6 +84,8 @@ class Monitor:
             self.set_gap(config_options["gap"])
         self.running_on = self.short_hostname()
         self.name = name
+        # Populate the notify flag for every host
+        self.notify = self.notify
 
     def set_recover_command(self, command):
         self.recover_command = command
@@ -293,6 +298,10 @@ class Monitor:
         """Check if this monitor needs urgent alerts (e.g. SMS)."""
         return self.urgent
 
+    def is_notify(self):
+        """Check if this monitor has notifications enabled"""
+        return self.notify
+
     def set_urgency(self, urgency):
         """Record if this monitor needs urgent alerts."""
         if urgency == 1:
@@ -301,6 +310,10 @@ class Monitor:
             urgency = False
 
         self.urgent = urgency
+
+    def set_notify(self, notify):
+        """Record if this monitor needs notifications."""
+        self.notify = True if (notify == 1 or notify.lower() == 'true' or notify == True) else False
 
     def should_run(self):
         """Check if we should run our tests.
