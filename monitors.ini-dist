@@ -1,0 +1,4 @@
+[localhost]
+type=host
+host=localhots
+tolerance=2
