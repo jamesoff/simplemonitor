@@ -5,7 +5,6 @@ import pickle
 import datetime
 import time
 
-
 class SimpleMonitor:
 
     # TODO: move this outside into monitor.py?
@@ -197,7 +196,9 @@ class SimpleMonitor:
                     print "skipping alert for monitor %s as it wants remote alerting" % key
                 continue
             try:
-                alerter.send_alert(key, self.monitors[key])
+                # Disable notifications for hosts that have it disabled
+                if self.monitors[key].notify:
+                    alerter.send_alert(key, self.monitors[key])
             except Exception, e:
                 print "exception caught while alerting for %s: %s" % (key, e)
         for key in self.remote_monitors.keys():
