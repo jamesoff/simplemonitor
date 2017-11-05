@@ -6,5 +6,7 @@ tags
 .bundle
 .idea/
 monitor.ini
+config.ini
 monitors.ini
 monitor.json
+monitor.db
