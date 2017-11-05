@@ -43,6 +43,7 @@ class Monitor:
 
     urgent = 1
     notify = True
+    group = 'default'
 
     failures = 0
     last_failure = None
@@ -72,6 +73,8 @@ class Monitor:
             self.set_urgency(int(config_options["urgent"]))
         if 'notify' in config_options:
             self.set_notify(config_options["notify"])
+        if 'group' in config_options:
+            self.set_group(config_options["group"])
         if 'tolerance' in config_options:
             self.set_tolerance(int(config_options["tolerance"]))
         if 'remote_alert' in config_options:
@@ -314,6 +317,10 @@ class Monitor:
     def set_notify(self, notify):
         """Record if this monitor needs notifications."""
         self.notify = True if (notify == 1 or notify.lower() == 'true' or notify == True) else False
+
+    def set_group(self, group):
+        """Record if this monitor has a group."""
+        self.group = group
 
     def should_run(self):
         """Check if we should run our tests.
