@@ -1,7 +1,12 @@
 import os
 import re
 
-from ConfigParser import ConfigParser
+import sys
+if sys.version_info.major == 2:
+    from ConfigParser import ConfigParser
+else:
+    from configparser import ConfigParser
+
 
 class EnvironmentAwareConfigParser(ConfigParser):
     """A subclass of ConfigParser which allows %env:VAR% interpolation via the
@@ -26,7 +31,6 @@ class EnvironmentAwareConfigParser(ConfigParser):
                 self.remove_section(original_section)
         return result
 
-
     def get(self, *args, **kwargs):
         result = ConfigParser.get(self, *args, **kwargs)
         matches = self.r.search(result)
@@ -36,5 +40,3 @@ class EnvironmentAwareConfigParser(ConfigParser):
                 result = result.replace(matches.group(0), os.environ[env_key])
             matches = self.r.search(result)
         return result
-
-

@@ -3,7 +3,7 @@ try:
 except:
     pass
 
-from alerter import Alerter
+from .alerter import Alerter
 
 
 class SyslogAlerter(Alerter):

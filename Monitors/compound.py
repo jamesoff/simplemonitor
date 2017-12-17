@@ -1,7 +1,7 @@
 
 """compound checks (logical and of failure of multiple probes) for SimpleMonitor."""
 
-from monitor import Monitor
+from .monitor import Monitor
 
 
 class CompoundMonitor(Monitor):
@@ -56,12 +56,12 @@ class CompoundMonitor(Monitor):
         if self.m != -1:
             return
         self.m = {}
-        for i in self.mt.monitors.keys():
+        for i in list(self.mt.monitors.keys()):
             if i in self.monitors:
                 self.m[i] = self.mt.monitors[i]
         # make sure we find all of our monitors or die during config
         for i in self.monitors:
-            if i not in self.m.keys():
+            if i not in list(self.m.keys()):
                 raise RuntimeError("No such monitor %s in compound monitor" % i)
 
     def virtual_fail_count(self):

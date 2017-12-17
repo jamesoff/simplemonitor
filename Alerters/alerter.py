@@ -14,7 +14,7 @@ class Alerter:
     limit = 1
     repeat = 0
 
-    days = range(0, 7)
+    days = list(range(0, 7))
     times_type = "always"
     time_info = [None, None]
 
@@ -50,8 +50,8 @@ class Alerter:
                         datetime.time(
                             int(config_options["time_upper"].split(":")[0]),
                             int(config_options["time_upper"].split(":")[1]))]
-                except Exception, e:
-                    print e
+                except Exception as e:
+                    print(e)
                     raise RuntimeError("error processing time limit definition")
                 self.time_info = time_info
                 self.times_type = "only"
@@ -87,7 +87,7 @@ class Alerter:
                 (datetime.datetime.utcnow() - datetime.timedelta(minutes=1)).time(),
                 (datetime.datetime.utcnow() + datetime.timedelta(minutes=1)).time()
             ]
-            print "debug: set times for alerter to", self.time_info
+            print(("debug: set times for alerter to", self.time_info))
 
     def format_datetime(self, dt):
         """Return an isoformat()-like datetime without the microseconds."""
@@ -123,7 +123,7 @@ class Alerter:
 
         if monitor.virtual_fail_count() > 0:
             if self.debug:
-                print "alerter %s: monitor %s has failed" % (self.name, monitor.name)
+                print(("alerter %s: monitor %s has failed" % (self.name, monitor.name)))
             # Monitor has failed (not just first time)
             if self.delay_notification:
                 if not out_of_hours:
@@ -131,7 +131,7 @@ class Alerter:
                         try:
                             self.ooh_failures.remove(monitor.name)
                         except:
-                            print "Warning: Couldn't remove %s from OOH list; will maybe generate too many alerts." % monitor.name
+                            print(("Warning: Couldn't remove %s from OOH list; will maybe generate too many alerts." % monitor.name))
                         if self.support_catchup:
                             return "catchup"
                         else:
@@ -202,5 +202,5 @@ class Alerter:
             else:
                 return True
         else:
-            print "This should never happen! Unknown times_type in alerter."
+            print("This should never happen! Unknown times_type in alerter.")
             return True

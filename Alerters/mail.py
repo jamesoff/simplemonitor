@@ -2,7 +2,7 @@ import smtplib
 from email.MIMEMultipart import MIMEMultipart
 from email.MIMEText import MIMEText
 
-from alerter import Alerter
+from .alerter import Alerter
 
 
 class EMailAlerter(Alerter):
@@ -43,7 +43,7 @@ class EMailAlerter(Alerter):
             if config_options['ssl'] == 'starttls':
                 self.ssl = 'starttls'
             elif config_options['ssl'] == 'yes':
-                print 'Warning: ssl=yes for email alerter is untested'
+                print('Warning: ssl=yes for email alerter is untested')
                 self.ssl = 'yes'
         else:
             self.ssl = None
@@ -102,7 +102,7 @@ class EMailAlerter(Alerter):
             body = "Monitor %s%s failed earlier while this alerter was out of hours.\nFailed at: %s\nVirtual failure count: %d\nAdditional info: %s\nDescription: %s" % (name, host, self.format_datetime(monitor.first_failure_time()), monitor.virtual_fail_count(), monitor.get_result(), monitor.describe())
 
         else:
-            print "Unknown alert type %s" % type
+            print(("Unknown alert type %s" % type))
             return
 
         message.attach(MIMEText(body, 'plain'))
@@ -121,8 +121,8 @@ class EMailAlerter(Alerter):
                     server.login(self.username, self.password)
                 server.sendmail(self.from_addr, self.to_addr, message.as_string())
                 server.quit()
-            except Exception, e:
-                print "Couldn't send mail:", e
+            except Exception as e:
+                print(("Couldn't send mail:", e))
                 self.available = False
         else:
-            print "dry_run: would send email: %s" % message.as_string()
+            print(("dry_run: would send email: %s" % message.as_string()))
