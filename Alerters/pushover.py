@@ -1,4 +1,4 @@
-import http.client, urllib.request, urllib.parse, urllib.error
+import requests
 
 from .alerter import Alerter
 
@@ -21,21 +21,20 @@ class PushoverAlerter(Alerter):
 
         self.pushover_token = pushover_token
         self.pushover_user = pushover_user
-        
+
         self.support_catchup = True
 
     def send_pushover_notification(self, subject, body):
         """Send a push notification."""
-        
-        conn = http.client.HTTPSConnection("api.pushover.net:443")
-        conn.request("POST", "/1/messages.json",
-            urllib.parse.urlencode({
-                "token": self.pushover_token,
-                "user": self.pushover_user,
-                "title": subject,
-                "message": body,
-            }), { "Content-type": "application/x-www-form-urlencoded" })
-    
+
+        requests.post('api.pushover.net:443/1/messages.json',
+                      data={
+                          "token": self.pushover_token,
+                          "user": self.pushover_user,
+                          "title": subject,
+                          "message": body,
+                      })
+
     def send_alert(self, name, monitor):
         """Build up the content for the push notification."""
 
@@ -49,7 +48,7 @@ class PushoverAlerter(Alerter):
 
         subject = ""
         body = ""
-        
+
         if type == "":
             return
         elif type == "failure":
