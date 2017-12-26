@@ -262,6 +262,7 @@ def main():
     parser.add_option("-d", "--debug", dest="debug", default=False, action="store_true", help="Enable debug output")
     parser.add_option("-f", "--config", dest="config", default="monitor.ini", help="configuration file")
     parser.add_option("-H", "--no-heartbeat", action="store_true", dest="no_heartbeat", default=False, help="Omit printing the '.' character when running checks")
+    parser.add_option('-1', '--one-shot', action='store_true', dest='one_shot', default=False, help='Run the monitors once only, without alerting. Require monitors without "fail" in the name to succeed. Exit zero or non-zero accordingly.')
 
     (options, args) = parser.parse_args()
 
@@ -355,6 +356,9 @@ def main():
         print("--> Config test complete. Exiting.")
         sys.exit(0)
 
+    if options.one_shot:
+        print("--> One-shot mode: expecting monitors without 'fail' in the name to succeed,\n     and with to fail. Will exit zero or non-zero accordingly.")
+
     if not options.quiet:
         print()
 
@@ -403,6 +407,10 @@ def main():
                 print("Listener thread died :(")
                 remote_listening_thread = Loggers.network.Listener(m, remote_port, options.verbose)
                 remote_listening_thread.start()
+
+        if options.one_shot:
+            break
+
         try:
             time.sleep(interval)
         except:
@@ -421,6 +429,26 @@ def main():
 
     if not options.quiet:
         print("--> Finished.")
+
+    if options.one_shot:
+        ok = True
+        print('\n--> One-shot results:')
+        for monitor in m.monitors:
+            if "fail" in monitor:
+                if m.monitors[monitor].error_count == 0:
+                    print("    Monitor {} should have failed".format(monitor))
+                    ok = False
+                else:
+                    print("    Monitor {} was ok".format(monitor))
+            else:
+                if m.monitors[monitor].error_count > 0:
+                    print("    Monitor {} failed and shouldn't have".format(monitor))
+                    ok = False
+                else:
+                    print("    Monitor {} was ok".format(monitor))
+        if not ok:
+            print("Not all non-'fail' succeeded, or not all 'fail' monitors failed.")
+            sys.exit(1)
 
 if __name__ == "__main__":
     main()
