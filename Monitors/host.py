@@ -502,7 +502,6 @@ class MonitorCommand(Monitor):
             self.result_max = int(config_options["result_max"])
 
         try:
-            # command = config_options["command"].split(" ")
             command = shlex.split(config_options["command"])
         except:
             raise RuntimeError("Required configuration fields missing or invalid")
@@ -514,6 +513,7 @@ class MonitorCommand(Monitor):
         try:
             out = subprocess.check_output(self.command)
             if self.result_regexp is not None:
+                out = out.decode('utf-8')
                 matches = self.result_regexp.search(out)
                 if matches:
                     self.record_success()
