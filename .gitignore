@@ -7,5 +7,6 @@ tags
 .idea/
 monitor.ini
 monitors.ini
-monitor.jsonhtmlcov/
+monitor.json
+htmlcov/
 .coverage
