@@ -16,10 +16,14 @@ class EnvironmentAwareConfigParser(ConfigParser):
     r = re.compile('%env:([a-zA-Z0-9_]+)%')
 
     def __init__(self, *args, **kwargs):
-        """Init with our specific interpolation class. Safe on Python 2 as it ignores kwargs it doesn't know."""
-        interpolation = EnvironmentAwareInterpolation()
-        kwargs['interpolation'] = interpolation
-        super().__init__(*args, **kwargs)
+        """Init with our specific interpolation class (for Python 3)"""
+        try:
+            interpolation = EnvironmentAwareInterpolation()
+            kwargs['interpolation'] = interpolation
+        except:
+            # Python 2
+            pass
+        ConfigParser.__init__(self, *args, **kwargs)
 
     def read(self, filenames):
         """Load a config file and do environment variable interpolation on the section names."""
@@ -44,8 +48,8 @@ class EnvironmentAwareConfigParser(ConfigParser):
 
     def get(self, *args, **kwargs):
         if sys.version_info.major > 2:
-            return super().get(*args, **kwargs)
-        result = super().get(*args, **kwargs)
+            return ConfigParser.get(self, *args, **kwargs)
+        result = ConfigParser.get(self, *args, **kwargs)
         matches = self.r.search(result)
         while matches:
             env_key = matches.group(1)
