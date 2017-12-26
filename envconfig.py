@@ -47,7 +47,7 @@ class EnvironmentAwareConfigParser(ConfigParser):
         return result
 
     def get(self, *args, **kwargs):
-        if sys.version_info.major > 2:
+        if sys.version_info[0] > 2:
             return ConfigParser.get(self, *args, **kwargs)
         result = ConfigParser.get(self, *args, **kwargs)
         matches = self.r.search(result)
@@ -58,7 +58,7 @@ class EnvironmentAwareConfigParser(ConfigParser):
             matches = self.r.match(result)
         return result
 
-if sys.version_info.major > 2:
+if sys.version_info[0] > 2:
     class EnvironmentAwareInterpolation(BasicInterpolation):
         r = re.compile('%env:([a-zA-Z0-9_]+)%')
 
