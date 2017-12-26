@@ -43,7 +43,7 @@ class MonitorHTTP(Monitor):
         if 'allowed_codes' in config_options:
             allowed_codes = [int(x.strip()) for x in config_options["allowed_codes"].split(",")]
         else:
-            allowed_codes = []
+            allowed_codes = [200]
 
         # optionnal - for HTTPS client authentication only
         # in this case, certfile is required
