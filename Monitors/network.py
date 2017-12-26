@@ -25,7 +25,7 @@ class MonitorHTTP(Monitor):
 
     type = "http"
 
-    # optionnal - for HTTPS client authentication only
+    # optional - for HTTPS client authentication only
     certfile = None
     keyfile = None
 
@@ -108,12 +108,11 @@ class MonitorHTTP(Monitor):
                 self.record_success("%s in %0.2fs" % (r.status_code, (load_time.seconds + (load_time.microseconds / 1000000.2))))
                 return True
             else:
-                for line in r.text:
-                    matches = self.regexp.search(line)
-                    if matches:
-                        self.record_success("%s in %0.2fs" % (r.status_code, (load_time.seconds + (load_time.microseconds / 1000000.2))))
-                        return True
-                self.record_fail("Got '{} {}' but couldn't match /{}/ in page.".format(r.status_code, r.reason))
+                matches = self.regexp.search(r.text)
+                if matches:
+                    self.record_success("%s in %0.2fs" % (r.status_code, (load_time.seconds + (load_time.microseconds / 1000000.2))))
+                    return True
+                self.record_fail("Got '{} {}' but couldn't match /{}/ in page.".format(r.status_code, r.reason, self.regexp_text))
                 return False
         except requests.exceptions.RequestException as e:
             self.record_fail("Requests exception while opening URL: {}".format(e))
