@@ -257,7 +257,7 @@ def main():
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False, help="Be more verbose")
     parser.add_option("-q", "--quiet", action="store_true", dest="quiet", default=False, help="Don't output anything except errors")
     parser.add_option("-t", "--test", action="store_true", dest="test", default=False, help="Test config and exit")
-    parser.add_option("-p", "--pidfile", dest="pidfile", default="", help="Write PID into this file")
+    parser.add_option("-p", "--pidfile", dest="pidfile", default=None, help="Write PID into this file")
     parser.add_option("-N", "--no-network", dest="no_network", default=False, action="store_true", help="Disable network listening socket")
     parser.add_option("-d", "--debug", dest="debug", default=False, action="store_true", help="Enable debug output")
     parser.add_option("-f", "--config", dest="config", default="monitor.ini", help="configuration file")
@@ -297,22 +297,23 @@ def main():
         print('--> Missing [monitor] section from config file, or missing the "interval" setting in it')
         sys.exit(1)
 
-    pidfile = ""
+    pidfile = None
     try:
         pidfile = config.get("monitor", "pidfile")
     except:
         pass
 
-    if options.pidfile != "":
+    if options.pidfile:
         pidfile = options.pidfile
 
-    if pidfile != "":
+    if pidfile:
         my_pid = os.getpid()
         try:
             with open(pidfile, "w") as file_handle:
                 file_handle.write("%d\n" % my_pid)
         except:
             sys.stderr.write("Couldn't write to pidfile!")
+            pidfile = None
 
     if config.has_option("monitor", "monitors"):
         monitors_file = config.get("monitor", "monitors")
@@ -421,11 +422,12 @@ def main():
         remote_listening_thread.running = False
         remote_listening_thread.join(0)
 
-    if pidfile != "":
+    if pidfile:
         try:
-            unlink(pidfile)
-        except:
+            os.unlink(pidfile)
+        except Exception as e:
             print("Couldn't remove pidfile!")
+            print(e)
 
     if not options.quiet:
         print("--> Finished.")
