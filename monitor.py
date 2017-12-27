@@ -438,16 +438,16 @@ def main():
         for monitor in sorted(m.monitors.keys()):
             if "fail" in monitor:
                 if m.monitors[monitor].error_count == 0:
-                    print("    Monitor {} should have failed".format(monitor))
+                    print("    Monitor {0} should have failed".format(monitor))
                     ok = False
                 else:
-                    print("    Monitor {} was ok".format(monitor))
+                    print("    Monitor {0} was ok".format(monitor))
             else:
                 if m.monitors[monitor].error_count > 0:
-                    print("    Monitor {} failed and shouldn't have".format(monitor))
+                    print("    Monitor {0} failed and shouldn't have".format(monitor))
                     ok = False
                 else:
-                    print("    Monitor {} was ok".format(monitor))
+                    print("    Monitor {0} was ok".format(monitor))
         if not ok:
             print("Not all non-'fail' succeeded, or not all 'fail' monitors failed.")
             sys.exit(1)

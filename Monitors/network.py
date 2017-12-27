@@ -102,7 +102,7 @@ class MonitorHTTP(Monitor):
             end_time = datetime.datetime.now()
             load_time = end_time - start_time
             if r.status_code not in self.allowed_codes:
-                self.record_fail("Got status '{} {}' instead of {}".format(r.status_code, r.reason, self.allowed_codes))
+                self.record_fail("Got status '{0} {1}' instead of {2}".format(r.status_code, r.reason, self.allowed_codes))
                 return False
             if self.regexp is None:
                 self.record_success("%s in %0.2fs" % (r.status_code, (load_time.seconds + (load_time.microseconds / 1000000.2))))
@@ -112,13 +112,13 @@ class MonitorHTTP(Monitor):
                 if matches:
                     self.record_success("%s in %0.2fs" % (r.status_code, (load_time.seconds + (load_time.microseconds / 1000000.2))))
                     return True
-                self.record_fail("Got '{} {}' but couldn't match /{}/ in page.".format(r.status_code, r.reason, self.regexp_text))
+                self.record_fail("Got '{0} {1}' but couldn't match /{2}/ in page.".format(r.status_code, r.reason, self.regexp_text))
                 return False
         except requests.exceptions.RequestException as e:
-            self.record_fail("Requests exception while opening URL: {}".format(e))
+            self.record_fail("Requests exception while opening URL: {0}".format(e))
             return False
         except Exception as e:
-            self.record_fail("Exception while trying to open url: {}".format(e))
+            self.record_fail("Exception while trying to open url: {0}".format(e))
             return False
 
     def describe(self):

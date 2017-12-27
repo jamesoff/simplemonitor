@@ -36,7 +36,7 @@ class EnvironmentAwareConfigParser(ConfigParser):
                 if env_key in os.environ:
                     section = section.replace(matches.group(0), os.environ[env_key])
                 else:
-                    raise ValueError('Cannot find {} in environment for config interpolation'.format(env_key))
+                    raise ValueError('Cannot find {0} in environment for config interpolation'.format(env_key))
 
                 matches = self.r.search(section)
             if section != original_section:
@@ -71,7 +71,7 @@ if sys.version_info[0] > 2:
                 if env_key in os.environ:
                     value = value.replace(matches.group(0), os.environ[env_key])
                 else:
-                    raise ValueError('Cannot find {} in environment for config interpolation'.format(env_key))
+                    raise ValueError('Cannot find {0} in environment for config interpolation'.format(env_key))
                 matches = self.r.search(value)
                 if value == old_value:
                     break
