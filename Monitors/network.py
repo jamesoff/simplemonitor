@@ -301,7 +301,7 @@ class MonitorDNS(Monitor):
 
     def run_test(self):
         try:
-            result = subprocess.check_output(self.params)
+            result = subprocess.check_output(self.params).decode('utf-8')
             result = result.strip()
             if result is None or result == '':
                 self.record_fail("failed to resolve %s" % self.path)
