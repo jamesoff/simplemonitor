@@ -435,7 +435,7 @@ def main():
     if options.one_shot:
         ok = True
         print('\n--> One-shot results:')
-        for monitor in m.monitors:
+        for monitor in sorted(m.monitors.keys()):
             if "fail" in monitor:
                 if m.monitors[monitor].error_count == 0:
                     print("    Monitor {} should have failed".format(monitor))
