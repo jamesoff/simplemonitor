@@ -6,7 +6,6 @@ python:
 script:
     - pip install codecov
     - coverage run monitor.py -1 -v -f tests/monitor.ini
-    - codecov -F main
-    - TEST_VALUE=myenv coverage run monitor.py -t -f tests/monitor-env.ini
-    - codecov -F envconfig
+    - TEST_VALUE=myenv coverage run --append monitor.py -t -f tests/monitor-env.ini
+    - codecov
 
