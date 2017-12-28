@@ -1,4 +1,4 @@
-
+# coding=utf-8
 """Network-related monitors for SimpleMonitor."""
 
 import re

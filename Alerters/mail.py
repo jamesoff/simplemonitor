@@ -1,6 +1,11 @@
+# coding=utf-8
 import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
+try:
+    from email.MIMEMultipart import MIMEMultipart
+    from email.MIMEText import MIMEText
+except ImportError:
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.text import MIMEText
 
 from .alerter import Alerter
 
@@ -102,7 +107,7 @@ class EMailAlerter(Alerter):
             body = "Monitor %s%s failed earlier while this alerter was out of hours.\nFailed at: %s\nVirtual failure count: %d\nAdditional info: %s\nDescription: %s" % (name, host, self.format_datetime(monitor.first_failure_time()), monitor.virtual_fail_count(), monitor.get_result(), monitor.describe())
 
         else:
-            print(("Unknown alert type %s" % type))
+            print("Unknown alert type %s" % type)
             return
 
         message.attach(MIMEText(body, 'plain'))
@@ -122,7 +127,7 @@ class EMailAlerter(Alerter):
                 server.sendmail(self.from_addr, self.to_addr, message.as_string())
                 server.quit()
             except Exception as e:
-                print(("Couldn't send mail:", e))
+                print("Couldn't send mail: %s" % e)
                 self.available = False
         else:
-            print(("dry_run: would send email: %s" % message.as_string()))
+            print("dry_run: would send email: %s" % message.as_string())

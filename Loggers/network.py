@@ -1,3 +1,4 @@
+# coding=utf-8
 import pickle
 import socket
 import sys
@@ -58,7 +59,7 @@ class NetworkLogger(Logger):
             # print "My MAC is %s" % mac.hexdigest()
             s.send("%s\n%s" % (mac.hexdigest(), p))
         except Exception as e:
-            print(("Failed to send data: %s" % e))
+            print("Failed to send data: %s" % e)
         finally:
             s.close()
 
@@ -94,7 +95,7 @@ class Listener(Thread):
                 self.sock.listen(5)
                 conn, addr = self.sock.accept()
                 if self.verbose:
-                    print(("--> Got connection from %s" % addr[0]))
+                    print("--> Got connection from %s" % addr[0])
                 pickled = ""
                 while 1:
                     data = conn.recv(1024)
@@ -103,7 +104,7 @@ class Listener(Thread):
                         break
                 conn.close()
                 if self.verbose:
-                    print(("--> Finished receiving from %s" % addr[0]))
+                    print("--> Finished receiving from %s" % addr[0])
                 # compute our own HMAC and compare
                 bits = pickled.split("\n", 1)
                 their_digest = bits[0]
@@ -111,8 +112,8 @@ class Listener(Thread):
                 mac = hmac.new(self.key, pickled)
                 my_digest = mac.hexdigest()
                 if self.verbose:
-                    print(("Computed my digest to be %s" % my_digest))
-                    print(("Remote digest is %s" % their_digest))
+                    print("Computed my digest to be %s" % my_digest)
+                    print("Remote digest is %s" % their_digest)
                 if not hmac.compare_digest(their_digest, my_digest):
                     raise Exception("Mismatched MAC for network logging data from %s\nMismatched key? Old version of SimpleMonitor?\n" % addr[0])
                 result = pickle.loads(pickled)
@@ -133,7 +134,7 @@ class Listener(Thread):
                 except:
                     pass
                 if self.running:
-                    print(("Socket error caught in thread: %s" % e))
+                    print("Socket error caught in thread: %s" % e)
             except Exception as e:
                 # fail_info = sys.exc_info()
                 # print fail_info

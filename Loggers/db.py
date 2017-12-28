@@ -1,3 +1,4 @@
+# coding=utf-8
 try:
     import sqlite3
     sqlite_available = True
@@ -17,6 +18,7 @@ class DBLogger(Logger):
 
     def __init__(self, config_options):
         """Open the database connection."""
+        super(DBLogger, self).__init__()
         if not sqlite_available:
             raise RuntimeError("SQLite module not loaded.")
         try:

@@ -1,4 +1,4 @@
-
+# coding=utf-8
 """compound checks (logical and of failure of multiple probes) for SimpleMonitor."""
 
 from .monitor import Monitor
@@ -24,7 +24,6 @@ class CompoundMonitor(Monitor):
             min_fail = max(int(config_options["min_fail"]), 1)
         except:
             print("could not parse min_fail. Ignoring...")
-            pass
         self.min_fail = min_fail
         self.monitors = monitors
         self.m = -1
@@ -88,4 +87,3 @@ class CompoundMonitor(Monitor):
             return "{0} of {1} services failed. Fail after: {2}".format(failcount, monitorcount, self.min_fail)
         else:
             return "All {0} services OK".format(monitorcount)
-

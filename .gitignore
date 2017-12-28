@@ -10,3 +10,4 @@ monitors.ini
 monitor.json
 htmlcov/
 .coverage
+.idea/

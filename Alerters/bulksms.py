@@ -1,3 +1,5 @@
+# coding=utf-8
+
 import requests
 
 from .alerter import Alerter
@@ -44,14 +46,14 @@ class BulkSMSAlerter(Alerter):
         if not monitor.is_urgent():
             return
 
-        type = self.should_alert(monitor)
+        type_ = self.should_alert(monitor)
         message = ""
         url = ""
 
         (days, hours, minutes, seconds) = self.get_downtime(monitor)
-        if type == "":
+        if type_ == "":
             return
-        elif type == "catchup":
+        elif type_ == "catchup":
             (days, hours, minutes, seconds) = self.get_downtime(monitor)
             message = "catchup: %s failed on %s at %s (%d+%02d:%02d:%02d)\n%s" % (
                 name,
@@ -103,8 +105,8 @@ class BulkSMSAlerter(Alerter):
                 r = requests.get(url, params=params)
                 s = r.text
                 if not s.startswith("0"):
-                    print(("Unable to send SMS: %s (%s)" % (s.split("|")[0], s.split("|")[1])))
-                    print(("URL: %s, PARAMS: %s" % (url, params)))
+                    print("Unable to send SMS: %s (%s)" % (s.split("|")[0], s.split("|")[1]))
+                    print("URL: %s, PARAMS: %s" % (url, params))
                     self.available = False
             except Exception as e:
                 print("SMS sending failed")
@@ -112,5 +114,5 @@ class BulkSMSAlerter(Alerter):
                 print(url)
                 self.available = False
         else:
-            print(("dry_run: would send SMS: %s" % url))
+            print("dry_run: would send SMS: %s" % url)
         return

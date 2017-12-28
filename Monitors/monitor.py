@@ -1,4 +1,4 @@
-
+# coding=utf-8
 """A collection of monitors for the SimpleMonitor application.
 
 The Monitor class contains the monitor-independent logic for handling results etc.
@@ -367,7 +367,7 @@ class MonitorFail(Monitor):
 
     def run_test(self):
         """Always fails."""
-        print(("error_count = %d, interval = %d --> %d" % (self.error_count, self.interval, self.error_count % self.interval)))
+        print("error_count = %d, interval = %d --> %d" % (self.error_count, self.interval, self.error_count % self.interval))
         if (self.interval == 0) or (self.error_count == 0) or (self.error_count % self.interval != 0):
             self.record_fail("This monitor always fails.")
             return False

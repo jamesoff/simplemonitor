@@ -1,4 +1,5 @@
-
+# coding=utf-8
+from __future__ import with_statement
 
 import os
 import datetime
@@ -11,6 +12,10 @@ import io
 import sys
 import json
 
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 from .logger import Logger
 
@@ -22,7 +27,9 @@ class FileLogger(Logger):
     buffered = True
     dateformat = None
 
-    def __init__(self, config_options={}):
+    def __init__(self, config_options=None):
+        if config_options is None:
+            config_options = {}
         Logger.__init__(self, config_options)
         if "filename" in config_options:
             try:
@@ -77,7 +84,7 @@ class FileLogger(Logger):
             if not self.buffered:
                 self.file_handle.flush()
         except Exception as e:
-            print(("Error writing to logfile %s: %s" % (self.filename, e)))
+            print("Error writing to logfile %s: %s" % (self.filename, e))
 
     def hup(self):
         """Close and reopen log file."""
@@ -168,8 +175,8 @@ class HTMLLogger(Logger):
             sys.stderr.write("Couldn't create temporary file for HTML output\n")
             return
 
-        output_ok = io.StringIO()
-        output_fail = io.StringIO()
+        output_ok = StringIO()
+        output_fail = StringIO()
 
         keys = list(self.batch_data.keys())
         keys.sort()
@@ -257,7 +264,7 @@ class HTMLLogger(Logger):
             os.chmod(file_name, stat.S_IREAD | stat.S_IWRITE | stat.S_IRGRP | stat.S_IROTH)
             shutil.move(file_name, os.path.join(self.folder, self.filename))
         except Exception as e:
-            print(("problem closing temporary file for HTML output", e))
+            print("problem closing temporary file for HTML output %s" % e)
 
     def parse_file(self, file_handle):
         lines = []

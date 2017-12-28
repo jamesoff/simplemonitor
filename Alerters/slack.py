@@ -1,7 +1,7 @@
 try:
     import requests
     requests_available = True
-except:
+except ImportError:
     requests_available = False
 
 from .alerter import Alerter
@@ -127,7 +127,7 @@ class SlackAlerter(Alerter):
             message_json['attachments'][0]['fields'] = fields
 
         else:
-            print(("Unknown alert type %s" % type))
+            print("Unknown alert type %s" % type)
             return
 
         if not self.dry_run:
@@ -142,4 +142,4 @@ class SlackAlerter(Alerter):
                 print(message_json)
                 self.available = False
         else:
-            print(("dry_run: would send slack: %s" % message_json.__repr__()))
+            print("dry_run: would send slack: %s" % message_json.__repr__())
