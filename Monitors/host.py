@@ -14,43 +14,45 @@ except:
 from .monitor import Monitor
 
 
+def _size_string_to_bytes(s):
+    if s.endswith("G"):
+        gigs = int(s[:-1])
+        bytes = gigs * (1024 ** 3)
+    elif s.endswith("M"):
+        megs = int(s[:-1])
+        bytes = megs * (1024 ** 2)
+    elif s.endswith("K"):
+        kilos = int(s[:-1])
+        bytes = kilos * 1024
+    else:
+        return int(s)
+    return bytes
+
+
+def _bytes_to_size_string(b):
+    """Convert a number in bytes to a sensible unit."""
+
+    kb = 1024
+    mb = kb * 1024
+    gb = mb * 1024
+    tb = gb * 1024
+
+    if b > tb:
+        return "%0.2fTiB" % (b / float(tb))
+    elif b > gb:
+        return "%0.2fGiB" % (b / float(gb))
+    elif b > mb:
+        return "%0.2fMiB" % (b / float(mb))
+    elif b > kb:
+        return "%0.2fKiB" % (b / float(kb))
+    else:
+        return str(b)
+
+
 class MonitorDiskSpace(Monitor):
     """Make sure we have enough disk space."""
 
     type = "diskspace"
-
-    def _size_string_to_bytes(self, s):
-        if s.endswith("G"):
-            gigs = int(s[:-1])
-            bytes = gigs * (1024 ** 3)
-        elif s.endswith("M"):
-            megs = int(s[:-1])
-            bytes = megs * (1024 ** 2)
-        elif s.endswith("K"):
-            kilos = int(s[:-1])
-            bytes = kilos * 1024
-        else:
-            return int(s)
-        return bytes
-
-    def _bytes_to_size_string(self, b):
-        """Convert a number in bytes to a sensible unit."""
-
-        kb = 1024
-        mb = kb * 1024
-        gb = mb * 1024
-        tb = gb * 1024
-
-        if b > tb:
-            return "%0.2fTiB" % (b / float(tb))
-        elif b > gb:
-            return "%0.2fGiB" % (b / float(gb))
-        elif b > mb:
-            return "%0.2fMiB" % (b / float(mb))
-        elif b > kb:
-            return "%0.2fKiB" % (b / float(kb))
-        else:
-            return str(b)
 
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
@@ -66,7 +68,7 @@ class MonitorDiskSpace(Monitor):
         except:
             raise RuntimeError("Required configuration fields missing")
         self.partition = partition
-        self.limit = self._size_string_to_bytes(limit)
+        self.limit = _size_string_to_bytes(limit)
 
     def run_test(self):
         try:
@@ -83,15 +85,15 @@ class MonitorDiskSpace(Monitor):
             return False
 
         if space <= self.limit:
-            self.record_fail("%s free (%d%%)" % (self._bytes_to_size_string(space), percent))
+            self.record_fail("%s free (%d%%)" % (_bytes_to_size_string(space), percent))
             return False
         else:
-            self.record_success("%s free (%d%%)" % (self._bytes_to_size_string(space), percent))
+            self.record_success("%s free (%d%%)" % (_bytes_to_size_string(space), percent))
             return True
 
     def describe(self):
         """Explains what we do."""
-        return "Checking for at least %s free space on %s" % (self._bytes_to_size_string(self.limit), self.partition)
+        return "Checking for at least %s free space on %s" % (_bytes_to_size_string(self.limit), self.partition)
 
     def get_params(self):
         return (self.limit, self.partition)
@@ -105,39 +107,6 @@ class MonitorFileStat(Monitor):
     minsize = -1
     filename = ""
 
-    def _size_string_to_bytes(self, s):
-        if s.endswith("G"):
-            gigs = int(s[:-1])
-            bytes = gigs * (1024 ** 3)
-        elif s.endswith("M"):
-            megs = int(s[:-1])
-            bytes = megs * (1024 ** 2)
-        elif s.endswith("K"):
-            kilos = int(s[:-1])
-            bytes = kilos * 1024
-        else:
-            return int(s)
-        return bytes
-
-    def _bytes_to_size_string(self, b):
-        """Convert a number in bytes to a sensible unit."""
-
-        kb = 1024
-        mb = kb * 1024
-        gb = mb * 1024
-        tb = gb * 1024
-
-        if b > tb:
-            return "%0.2fTiB" % (b / float(tb))
-        elif b > gb:
-            return "%0.2fGiB" % (b / float(gb))
-        elif b > mb:
-            return "%0.2fMiB" % (b / float(mb))
-        elif b > kb:
-            return "%0.2fKiB" % (b / float(kb))
-        else:
-            return str(b)
-
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
         try:
@@ -149,7 +118,7 @@ class MonitorFileStat(Monitor):
 
         try:
             if 'minsize' in config_options:
-                minsize = self._size_string_to_bytes(config_options["minsize"])
+                minsize = _size_string_to_bytes(config_options["minsize"])
                 self.minsize = minsize
         except:
             raise RuntimeError("Minsize missing or not an integer (number of bytes")

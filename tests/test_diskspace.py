@@ -1,7 +1,6 @@
 import unittest
 import Monitors.host
 
-
 class TestHostMonitors(unittest.TestCase):
 
     safe_config = {'partition': '/', 'limit': '10G'}
@@ -31,38 +30,35 @@ class TestHostMonitors(unittest.TestCase):
         self.assertIsInstance(m, Monitors.host.MonitorDiskSpace)
 
     def test_DiskSpace_size_to_bytes(self):
-        m = Monitors.host.MonitorDiskSpace('test', self.safe_config)
-        size = m._size_string_to_bytes('10G')
+        size = Monitors.host._size_string_to_bytes('10G')
         self.assertEqual(size, 10737418240, 'Failed to convert 10G to bytes')
 
-        size = m._size_string_to_bytes('10M')
+        size = Monitors.host._size_string_to_bytes('10M')
         self.assertEqual(size, 10485760, 'Failed to convert 10M to bytes')
 
-        size = m._size_string_to_bytes('10K')
+        size = Monitors.host._size_string_to_bytes('10K')
         self.assertEqual(size, 10240, 'Failed to convert 10K to bytes')
 
-        size = m._size_string_to_bytes('10')
+        size = Monitors.host._size_string_to_bytes('10')
         self.assertEqual(size, 10, 'Failed to convert 10 to bytes')
 
         with self.assertRaises(ValueError):
-            m._size_string_to_bytes('a')
+            Monitors.host._size_string_to_bytes('a')
 
     def test_DiskSpace_bytes_to_size_string(self):
-        m = Monitors.host.MonitorDiskSpace('test', self.safe_config)
-
-        s = m._bytes_to_size_string(10 * self.one_TB)
+        s = Monitors.host._bytes_to_size_string(10 * self.one_TB)
         self.assertEqual(s, '10.00TiB', 'Failed to convert 10TiB to string')
 
-        s = m._bytes_to_size_string(10 * self.one_GB)
+        s = Monitors.host._bytes_to_size_string(10 * self.one_GB)
         self.assertEqual(s, '10.00GiB', 'Failed to convert 10GiB to string')
 
-        s = m._bytes_to_size_string(10 * self.one_MB)
+        s = Monitors.host._bytes_to_size_string(10 * self.one_MB)
         self.assertEqual(s, '10.00MiB', 'Failed to convert 10MiB to string')
 
-        s = m._bytes_to_size_string(10 * self.one_KB)
+        s = Monitors.host._bytes_to_size_string(10 * self.one_KB)
         self.assertEqual(s, '10.00KiB', 'Failed to convert 10KiB to string')
 
-        s = m._bytes_to_size_string(1)
+        s = Monitors.host._bytes_to_size_string(1)
         self.assertEqual(s, '1', 'Failed to convert 1B to string')
 
     def test_DiskSpace_meta(self):
