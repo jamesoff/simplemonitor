@@ -192,27 +192,27 @@ def load_loggers(m, config, quiet):
         type = config.get(logger, "type")
         config_options = get_config_dict(config, logger)
         if type == "db":
-            l = Loggers.db.DBFullLogger(config_options)
+            new_logger = Loggers.db.DBFullLogger(config_options)
         elif type == "dbstatus":
-            l = Loggers.db.DBStatusLogger(config_options)
+            new_logger = Loggers.db.DBStatusLogger(config_options)
         elif type == "logfile":
-            l = Loggers.file.FileLogger(config_options)
+            new_logger = Loggers.file.FileLogger(config_options)
         elif type == "html":
-            l = Loggers.file.HTMLLogger(config_options)
+            new_logger = Loggers.file.HTMLLogger(config_options)
         elif type == "network":
-            l = Loggers.network.NetworkLogger(config_options)
+            new_logger = Loggers.network.NetworkLogger(config_options)
         elif type == "json":
-            l = Loggers.file.JsonLogger(config_options)
+            new_logger = Loggers.file.JsonLogger(config_options)
         else:
             sys.stderr.write("Unknown logger type %s\n" % type)
             continue
-        if l is None:
+        if new_logger is None:
             print("Creating logger %s failed!" % logger)
             continue
         if not quiet:
             print("Adding %s logger %s" % (type, logger))
-        m.add_logger(logger, l)
-        del(l)
+        m.add_logger(logger, new_logger)
+        del(new_logger)
     return m
 
 
