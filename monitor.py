@@ -171,7 +171,7 @@ def load_monitors(m, filename, quiet):
             continue
 
         if not quiet:
-            print("Adding %s monitor %s" % (type, monitor))
+            print("Adding %s monitor %s: %s" % (type, monitor, new_monitor.describe()))
         m.add_monitor(monitor, new_monitor)
 
     for i in list(m.monitors.keys()):
