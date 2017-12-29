@@ -8,7 +8,7 @@ import sys
 try:
     import win32api
     win32_available = True
-except:
+except ImportError:
     win32_available = False
 
 from .monitor import Monitor
@@ -65,7 +65,7 @@ class MonitorDiskSpace(Monitor):
         try:
             partition = config_options["partition"]
             limit = config_options["limit"]
-        except:
+        except Exception:
             raise RuntimeError("Required configuration fields missing")
         self.partition = partition
         self.limit = _size_string_to_bytes(limit)
@@ -113,19 +113,19 @@ class MonitorFileStat(Monitor):
             if 'maxage' in config_options:
                 maxage = int(config_options["maxage"])
                 self.maxage = maxage
-        except:
+        except Exception:
             raise RuntimeError("Maxage missing or not an integer (number of seconds)")
 
         try:
             if 'minsize' in config_options:
                 minsize = _size_string_to_bytes(config_options["minsize"])
                 self.minsize = minsize
-        except:
+        except Exception:
             raise RuntimeError("Minsize missing or not an integer (number of bytes")
 
         try:
             filename = config_options["filename"]
-        except:
+        except Exception:
             raise RuntimeError("Filename missing")
 
         self.filename = filename
@@ -360,7 +360,7 @@ class MonitorLoadAvg(Monitor):
         if 'which' in config_options:
             try:
                 which = int(config_options["which"])
-            except:
+            except Exception:
                 raise RuntimeError("value of 'which' is not an int")
             if which < 0:
                 raise RuntimeError("value of 'which' is too low")
@@ -370,7 +370,7 @@ class MonitorLoadAvg(Monitor):
         if 'max' in config_options:
             try:
                 max = float(config_options["max"])
-            except:
+            except Exception:
                 raise RuntimeError("value of 'max' is not a float")
             if max <= 0:
                 raise RuntimeError("value of 'max' is too low")
@@ -414,7 +414,7 @@ class MonitorZap(Monitor):
         if 'span' in config_options:
             try:
                 self.span = int(config_options["span"])
-            except:
+            except Exception:
                 raise RuntimeError("span parameter must be an integer")
             if self.span < 1:
                 raise RuntimeError("span parameter must be > 0")
@@ -479,7 +479,7 @@ class MonitorCommand(Monitor):
 
         try:
             command = shlex.split(config_options["command"])
-        except:
+        except Exception:
             raise RuntimeError("Required configuration fields missing or invalid")
         if command is None or len(command) == 0:
             raise RuntimeError("missing command")
