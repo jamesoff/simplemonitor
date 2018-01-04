@@ -442,7 +442,13 @@ def main():
                     print("    Monitor {0} should have failed".format(monitor))
                     ok = False
                 else:
-                    print("    Monitor {0} was ok".format(monitor))
+                    print("    Monitor {0} was ok (failed)".format(monitor))
+            elif "skip" in monitor:
+                if m.monitors[monitor].skipped():
+                    print("    Monitor {0} was ok (skipped)".format(monitor))
+                else:
+                    print("    Monitor {0} should have been skipped".format(monitor))
+                    ok = False
             else:
                 if m.monitors[monitor].error_count > 0:
                     print("    Monitor {0} failed and shouldn't have".format(monitor))
