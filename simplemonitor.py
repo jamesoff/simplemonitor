@@ -69,6 +69,8 @@ class SimpleMonitor:
     def set_verbosity(self, verbose, debug):
         self.verbose = verbose
         self.debug = debug
+        if self.debug:
+            self.verbose = True
 
     def run_tests(self):
         self.reset_monitors()
