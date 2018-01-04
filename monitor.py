@@ -37,24 +37,6 @@ import Alerters.pushover
 VERSION = "1.7"
 
 
-def get_list(config, section, key, want_ints=False):
-    """Get a list of items back from a command-separated list."""
-    if config.has_option(section, key):
-        list = config.get(section, key).split(",")
-        list = [x.strip() for x in list]
-        if want_ints:
-            list = [int(i) for i in list]
-        return list
-    else:
-        return []
-
-
-def get_dependencies(config, monitor):
-    """Convenience method to get the dependency list for a monitor.
-    Used while parsing the config file."""
-    return get_list(config, monitor, "depend")
-
-
 def get_optional_int(config, monitor, key, default=0):
     if config.has_option(monitor, key):
         value = config.getint(monitor, key)
