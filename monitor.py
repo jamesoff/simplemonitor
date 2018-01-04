@@ -37,20 +37,6 @@ import Alerters.pushover
 VERSION = "1.7"
 
 
-def get_optional_int(config, monitor, key, default=0):
-    if config.has_option(monitor, key):
-        value = config.getint(monitor, key)
-    else:
-        value = default
-    return value
-
-
-def get_tolerance(config, monitor):
-    """Convenience method to get the tolerance for a monitor.
-    Used while parsing the config file."""
-    return get_optional_int(config, monitor, "tolerance")
-
-
 def get_config_dict(config, monitor):
     options = config.items(monitor)
     ret = {}
