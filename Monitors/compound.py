@@ -23,7 +23,7 @@ class CompoundMonitor(Monitor):
         try:
             min_fail = max(int(config_options["min_fail"]), 1)
         except:
-            print("could not parse min_fail. Ignoring...")
+            pass
         self.min_fail = min_fail
         self.monitors = monitors
         self.m = -1
@@ -40,8 +40,7 @@ class CompoundMonitor(Monitor):
 
     def describe(self):
         """Explains what we do."""
-        message = "Checking that %s tests both failed" % (self.url)
-        return message
+        return "Checking that these monitors all succeeded: {0}".format(", ".join(self.monitors))
 
     def get_params(self):
         return (self.monitors)
