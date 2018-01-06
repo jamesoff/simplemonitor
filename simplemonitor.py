@@ -29,7 +29,7 @@ class SimpleMonitor:
 
         try:
             signal.signal(signal.SIGHUP, self.hup_loggers)
-        except:
+        except Exception:
             sys.stderr.write("Unable to trap SIGHUP... maybe it doesn't exist on this platform.\n")
 
     def hup_loggers(self, sig_number, stack_frame):
@@ -106,7 +106,7 @@ class SimpleMonitor:
                             self.monitors[monitor].record_skip(dep)
                             try:
                                 new_joblist.remove(monitor)
-                            except:
+                            except Exception:
                                 print("Exception caught while trying to remove monitor %s with failed deps from new joblist." % monitor)
                                 if debug:
                                     print("new_joblist is currently", new_joblist)
@@ -185,7 +185,7 @@ class SimpleMonitor:
         try:
             for key in list(self.remote_monitors.keys()):
                 self.remote_monitors[key].log_result(key, logger)
-        except:
+        except Exception:
             print("exception while logging remote monitors")
         logger.end_batch()
 
