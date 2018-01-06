@@ -28,6 +28,7 @@ import Loggers.network
 import Alerters.mail
 import Alerters.ses
 import Alerters.bulksms
+import Alerters.fortysixelks
 import Alerters.syslogger
 import Alerters.execute
 import Alerters.slack
@@ -200,6 +201,8 @@ def load_alerters(m, config, quiet):
             a = Alerters.ses.SESAlerter(config_options)
         elif type == "bulksms":
             a = Alerters.bulksms.BulkSMSAlerter(config_options)
+        elif type == "46elks":
+            a = Alerters.fortysixelks.FortySixElksAlerter(config_options)
         elif type == "syslog":
             a = Alerters.syslogger.SyslogAlerter(config_options)
         elif type == "execute":
