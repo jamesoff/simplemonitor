@@ -4,7 +4,8 @@ python:
     - "2.7"
     - "3.5"
 script:
-    - pip install codecov
+    - pip install codecov flake8
+    - flake8 *.py Alerters/ Monitors/ Loggers/
     - coverage run monitor.py -1 -v -d -f tests/monitor.ini
     - TEST_VALUE=myenv coverage run --append monitor.py -t -f tests/monitor-env.ini
     - coverage run --append -m unittest discover -s tests
