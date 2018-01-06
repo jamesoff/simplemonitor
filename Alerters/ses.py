@@ -22,7 +22,7 @@ class SESAlerter(Alerter):
         try:
             from_addr = config_options["from"]
             to_addr = config_options["to"]
-        except:
+        except Exception:
             raise RuntimeError("Required configuration fields missing")
 
         if from_addr == "":

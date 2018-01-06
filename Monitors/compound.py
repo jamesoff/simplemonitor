@@ -17,12 +17,12 @@ class CompoundMonitor(Monitor):
         monitors = []
         try:
             monitors = [ele.strip() for ele in config_options["monitors"].split(",")]
-        except:
+        except Exception:
             raise RuntimeError("Required configuration fields missing")
         min_fail = len(monitors)
         try:
             min_fail = max(int(config_options["min_fail"]), 1)
-        except:
+        except Exception:
             pass
         self.min_fail = min_fail
         self.monitors = monitors

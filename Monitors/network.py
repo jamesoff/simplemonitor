@@ -33,7 +33,7 @@ class MonitorHTTP(Monitor):
         Monitor.__init__(self, name, config_options)
         try:
             url = config_options["url"]
-        except:
+        except Exception:
             raise RuntimeError("Required configuration fields missing")
 
         if 'regexp' in config_options:
@@ -146,7 +146,7 @@ class MonitorTCP(Monitor):
         try:
             host = config_options["host"]
             port = int(config_options["port"])
-        except:
+        except Exception:
             raise RuntimeError("Required configuration fields missing")
 
         if host == "":
@@ -162,7 +162,7 @@ class MonitorTCP(Monitor):
         try:
             s.settimeout(5.0)
             s.connect((self.host, self.port))
-        except:
+        except Exception:
             self.record_fail()
             return False
         s.close()
@@ -195,7 +195,7 @@ class MonitorHost(Monitor):
         Monitor.__init__(self, name, config_options)
         try:
             ping_ttl = config_options["ping_ttl"]
-        except:
+        except Exception:
             ping_ttl = "5"
         ping_ms = ping_ttl * 1000
         platform = sys.platform
@@ -216,7 +216,7 @@ class MonitorHost(Monitor):
 
         try:
             host = config_options["host"]
-        except:
+        except Exception:
             raise RuntimeError("Required configuration fields missing")
         if host == "":
             raise RuntimeError("missing hostname")
@@ -269,7 +269,7 @@ class MonitorDNS(Monitor):
         Monitor.__init__(self, name, config_options)
         try:
             self.path = config_options['record']
-        except:
+        except Exception:
             raise RuntimeError("Required configuration fields missing")
         if self.path == '':
             raise RuntimeError("Required configuration fields missing")

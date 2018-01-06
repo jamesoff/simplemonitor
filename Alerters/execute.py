@@ -44,7 +44,7 @@ class ExecuteAlerter(Alerter):
         elif type_ == "success":
             command = self.success_command
         elif type_ == "catchup":
-            if catchup_command == 'fail_command':
+            if self.catchup_command == 'fail_command':
                 command = self.fail_command
         else:
             print("Unknown alert type %s" % type_)

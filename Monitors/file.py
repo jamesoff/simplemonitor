@@ -18,14 +18,14 @@ class MonitorBackup(Monitor):
 
         try:
             fh = open(self.filename, "r")
-        except:
+        except Exception:
             self.record_fail("Unable to open status file")
             return False
 
         try:
             status = fh.readline()
             timestamp = fh.readline()
-        except:
+        except Exception:
             self.record_fail("Unable to read data from status file")
             return False
 

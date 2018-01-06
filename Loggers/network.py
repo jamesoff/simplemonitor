@@ -27,7 +27,7 @@ class NetworkLogger(Logger):
             self.port = int(config_options["port"])
             self.hostname = socket.gethostname()
             self.key = config_options["key"]
-        except:
+        except Exception:
             raise RuntimeError("missing config options for network monitor")
 
     def save_result2(self, name, monitor):
@@ -131,7 +131,7 @@ class Listener(Thread):
                         print("Interrupted system call in thread, I think that's a ^C")
                         self.running = False
                         self.sock.close()
-                except:
+                except Exception:
                     pass
                 if self.running:
                     print("Socket error caught in thread: %s" % e)

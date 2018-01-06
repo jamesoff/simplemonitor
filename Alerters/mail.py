@@ -19,7 +19,7 @@ class EMailAlerter(Alerter):
             mail_host = config_options["host"]
             from_addr = config_options["from"]
             to_addr = config_options["to"]
-        except:
+        except Exception:
             raise RuntimeError("Required configuration fields missing")
 
         if mail_host == "":
@@ -32,7 +32,7 @@ class EMailAlerter(Alerter):
         if 'port' in config_options:
             try:
                 mail_port = int(config_options["port"])
-            except:
+            except Exception:
                 raise RuntimeError("mail port is not an integer")
         else:
             mail_port = 25

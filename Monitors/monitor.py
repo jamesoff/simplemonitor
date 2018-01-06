@@ -19,9 +19,9 @@ import copy
 import subprocess
 
 try:
-    import win32api
+    import win32api  # noqa: F401
     win32_available = True
-except:
+except ImportError:
     win32_available = False
 
 
@@ -150,7 +150,7 @@ class Monitor:
         """Remove a dependency from the current version of the list."""
         try:
             self.deps.remove(dependency)
-        except:
+        except Exception:
             pass
 
     def get_dependencies(self):
@@ -273,7 +273,7 @@ class Monitor:
         try:
             if self.just_recovered:
                 return True
-        except:
+        except Exception:
             pass
 
         if self.last_error_count >= self.tolerance and self.success_count == 1 and not self.was_skipped:

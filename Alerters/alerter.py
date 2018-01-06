@@ -67,7 +67,7 @@ class Alerter:
                         datetime.time(
                             int(config_options["time_upper"].split(":")[0]),
                             int(config_options["time_upper"].split(":")[1]))]
-                except:
+                except Exception:
                     raise RuntimeError("error processing time limit definition")
                 self.time_info = time_info
                 self.times_type = "not"
@@ -133,7 +133,7 @@ class Alerter:
                     if monitor.name in self.ooh_failures:
                         try:
                             self.ooh_failures.remove(monitor.name)
-                        except:
+                        except Exception:
                             print("Warning: Couldn't remove %s from OOH list; will maybe generate too many alerts." % monitor.name)
                         if self.support_catchup:
                             return "catchup"
@@ -150,7 +150,7 @@ class Alerter:
         elif monitor.all_better_now() and monitor.last_virtual_fail_count() >= self.limit:
             try:
                 self.ooh_failures.remove(monitor.name)
-            except:
+            except Exception:
                 pass
             if out_of_hours:
                 if self.ooh_recovery:
@@ -180,7 +180,7 @@ class Alerter:
             else:
                 minutes = 0
             return (downtime.days, hours, minutes, seconds)
-        except:
+        except Exception:
             return (0, 0, 0, 0)
 
     def allowed_today(self):

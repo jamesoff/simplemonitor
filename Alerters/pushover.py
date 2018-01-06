@@ -12,7 +12,7 @@ class PushoverAlerter(Alerter):
         try:
             pushover_token = config_options["token"]
             pushover_user = config_options["user"]
-        except:
+        except Exception:
             raise RuntimeError("Required configuration fields missing")
 
         if pushover_token == "":

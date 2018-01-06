@@ -8,7 +8,6 @@ import socket
 import tempfile
 import shutil
 import stat
-import io
 import sys
 import json
 
@@ -164,14 +163,14 @@ class HTMLLogger(Logger):
 
         try:
             my_host = socket.gethostname().split(".")[0]
-        except:
+        except Exception:
             my_host = socket.gethostname()
 
         try:
             temp_file = tempfile.mkstemp()
             file_handle = os.fdopen(temp_file[0], "w")
             file_name = temp_file[1]
-        except:
+        except Exception:
             sys.stderr.write("Couldn't create temporary file for HTML output\n")
             return
 
@@ -194,7 +193,7 @@ class HTMLLogger(Logger):
                 remote_count += 1
             try:
                 monitor_name = entry.split("/")[1]
-            except:
+            except Exception:
                 monitor_name = entry
             if status == "FAIL":
                 output = output_fail
@@ -219,7 +218,7 @@ class HTMLLogger(Logger):
                 output.write("<td class=\"vfc\">%s</td>" % self.batch_data[entry]["fail_count"])
             try:
                 output.write("<td>%d+%02d:%02d:%02d</td>" % (self.batch_data[entry]["downtime"][0], self.batch_data[entry]["downtime"][1], self.batch_data[entry]["downtime"][2], self.batch_data[entry]["downtime"][3]))
-            except:
+            except Exception:
                 output.write("<td>&nbsp;</td>")
             output.write("<td>%s &nbsp;</td>" % (self.batch_data[entry]["fail_data"]))
             if self.batch_data[entry]["failures"] == 0:

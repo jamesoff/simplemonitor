@@ -21,7 +21,7 @@ class SlackAlerter(Alerter):
         Alerter.__init__(self, config_options)
         try:
             url = config_options['url']
-        except:
+        except Exception:
             raise RuntimeError("Required configuration fields missing")
 
         if 'channel' in config_options:
@@ -43,8 +43,6 @@ class SlackAlerter(Alerter):
 
         type = self.should_alert(monitor)
         (days, hours, minutes, seconds) = self.get_downtime(monitor)
-
-        host = "on host %s" % self.hostname
 
         if self.channel is not None:
             message_json = {'channel': self.channel}

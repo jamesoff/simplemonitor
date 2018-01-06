@@ -2,7 +2,7 @@
 try:
     import sqlite3
     sqlite_available = True
-except:
+except ImportError:
     sqlite_available = False
 
 import time
@@ -23,7 +23,7 @@ class DBLogger(Logger):
             raise RuntimeError("SQLite module not loaded.")
         try:
             db_path = config_options["db_path"]
-        except:
+        except Exception:
             raise RuntimeError("db_path not defined")
 
         if "depend" in config_options:

@@ -17,7 +17,7 @@ class BulkSMSAlerter(Alerter):
             username = config_options["username"]
             password = config_options["password"]
             target = config_options["target"]
-        except:
+        except Exception:
             raise RuntimeError("Required configuration fields missing")
 
         if 'sender' in config_options:

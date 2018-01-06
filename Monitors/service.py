@@ -18,7 +18,7 @@ class MonitorSvc(Monitor):
         Monitor.__init__(self, name, config_options)
         try:
             self.path = config_options["path"]
-        except:
+        except Exception:
             raise RuntimeError("Required configuration fields missing")
         self.params = ("svok %s" % self.path).split(" ")
 
@@ -58,7 +58,7 @@ class MonitorService(Monitor):
         Monitor.__init__(self, name, config_options)
         try:
             service_name = config_options["service"]
-        except:
+        except Exception:
             raise RuntimeError("Required configuration fields missing")
         if 'state' in config_options:
             want_state = config_options["state"]
@@ -127,7 +127,7 @@ class MonitorRC(Monitor):
         Monitor.__init__(self, name, config_options)
         try:
             service_name = config_options["service"]
-        except:
+        except Exception:
             raise RuntimeError("Required configuration fields missing")
         if 'path' in config_options:
             script_path = config_options["path"]
@@ -196,7 +196,7 @@ class MonitorEximQueue(Monitor):
         Monitor.__init__(self, name, config_options)
         try:
             self.max_length = int(config_options["max_length"])
-        except:
+        except Exception:
             raise RuntimeError("Required configuration field 'max_length' missing or not an integer")
         if not (self.max_length > 0):
             raise RuntimeError("'max_length' must be >= 1")
@@ -254,14 +254,14 @@ class MonitorWindowsDHCPScope(Monitor):
         Monitor.__init__(self, name, config_options)
         try:
             self.max_used = int(config_options["max_used"])
-        except:
+        except Exception:
             raise RuntimeError("Required configuration field 'max_used' missing or not an integer")
         if not (self.max_used > 0):
             raise RuntimeError("max_used must be >= 1")
 
         try:
             self.scope = config_options["scope"]
-        except:
+        except Exception:
             raise RuntimeError("Required configuration field 'scope' missing")
 
     def run_test(self):
