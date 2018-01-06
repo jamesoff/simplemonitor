@@ -20,7 +20,7 @@ class EnvironmentAwareConfigParser(ConfigParser):
         try:
             interpolation = EnvironmentAwareInterpolation()
             kwargs['interpolation'] = interpolation
-        except:
+        except Exception:
             # Python 2
             pass
         ConfigParser.__init__(self, *args, **kwargs)
@@ -58,6 +58,7 @@ class EnvironmentAwareConfigParser(ConfigParser):
             matches = self.r.match(result)
         return result
 
+
 if sys.version_info[0] > 2:
     class EnvironmentAwareInterpolation(BasicInterpolation):
         r = re.compile('%env:([a-zA-Z0-9_]+)%')
@@ -77,4 +78,3 @@ if sys.version_info[0] > 2:
                     break
                 old_value = value
             return value
-
