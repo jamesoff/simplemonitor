@@ -265,14 +265,14 @@ def main():
 
     try:
         interval = config.getint("monitor", "interval")
-    except NoOptionError:
+    except Exception:
         print('--> Missing [monitor] section from config file, or missing the "interval" setting in it')
         sys.exit(1)
 
     pidfile = None
     try:
         pidfile = config.get("monitor", "pidfile")
-    except:
+    except Exception:
         pass
 
     if options.pidfile:
@@ -283,7 +283,7 @@ def main():
         try:
             with open(pidfile, "w") as file_handle:
                 file_handle.write("%d\n" % my_pid)
-        except:
+        except Exception:
             sys.stderr.write("Couldn't write to pidfile!")
             pidfile = None
 
@@ -319,7 +319,7 @@ def main():
                 enable_remote = False
         else:
             enable_remote = False
-    except:
+    except Exception:
         enable_remote = False
 
     if not m.verify_dependencies():
@@ -337,7 +337,7 @@ def main():
 
     try:
         key = config.get("monitor", "key")
-    except:
+    except Exception:
         key = None
 
     if enable_remote:
@@ -386,7 +386,7 @@ def main():
 
         try:
             time.sleep(interval)
-        except:
+        except Exception:
             print("\n--> Quitting.")
             loop = False
 
@@ -429,6 +429,7 @@ def main():
         if not ok:
             print("Not all non-'fail' succeeded, or not all 'fail' monitors failed.")
             sys.exit(1)
+
 
 if __name__ == "__main__":
     main()
