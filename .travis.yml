@@ -5,6 +5,9 @@ python:
     - "3.5"
 install:
     - pip install codecov flake8
+before_script:
+    - rm -f monitor.db
+    - sqlite3 monitor.db < monitor.sql
 script:
     - flake8 --ignore=E501 *.py Alerters/ Monitors/ Loggers/
     - coverage run monitor.py -1 -v -d -f tests/monitor.ini
