@@ -26,9 +26,6 @@ class DBLogger(Logger):
         except Exception:
             raise RuntimeError("db_path not defined")
 
-        if "depend" in config_options:
-            self.set_dependencies([x.strip() for x in config_options["depend"].split(",")])
-
         self.db_handle = sqlite3.connect(db_path, isolation_level=None)
         self.connected = True
 
