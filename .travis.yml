@@ -6,8 +6,9 @@ python:
 install:
     - pip install codecov flake8
 before_script:
-    - rm -f monitor.db
+    - rm -f monitor.db monitor2.db
     - sqlite3 monitor.db < monitor.sql
+    - sqlite3 monitor2.db < monitor.sql
 script:
     - flake8 --ignore=E501 *.py Alerters/ Monitors/ Loggers/
     - coverage run monitor.py -1 -v -d -f tests/monitor.ini
