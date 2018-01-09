@@ -1,6 +1,7 @@
 import unittest
 import Monitors.host
 
+
 class TestHostMonitors(unittest.TestCase):
 
     safe_config = {'partition': '/', 'limit': '10G'}
@@ -13,17 +14,17 @@ class TestHostMonitors(unittest.TestCase):
     def test_DiskSpace_brokenConfigOne(self):
         config_options = {}
         with self.assertRaises(RuntimeError):
-            m = Monitors.host.MonitorDiskSpace('test', config_options)
+            Monitors.host.MonitorDiskSpace('test', config_options)
 
     def test_DiskSpace_brokenConfigTwo(self):
         config_options = {'partition': '/'}
         with self.assertRaises(RuntimeError):
-            m = Monitors.host.MonitorDiskSpace('test', config_options)
+            Monitors.host.MonitorDiskSpace('test', config_options)
 
     def test_DiskSpace_brokenConfigThree(self):
         config_options = {'partition': '/', 'limit': 'moo'}
         with self.assertRaises(ValueError):
-            m = Monitors.host.MonitorDiskSpace('test', config_options)
+            Monitors.host.MonitorDiskSpace('test', config_options)
 
     def test_DiskSpace_correctConfig(self):
         m = Monitors.host.MonitorDiskSpace('test', self.safe_config)
@@ -94,6 +95,26 @@ class TestHostMonitors(unittest.TestCase):
             "Couldn't get free disk space",
             'Monitor did not report error correctly'
         )
+
+    def test_DiskSpace_get_params(self):
+        config_options = {'partition': '/', 'limit': '1'}
+        m = Monitors.host.MonitorDiskSpace('test', config_options)
+        self.assertTupleEqual(m.get_params(), (1, '/'))
+
+    def test_Filestat_get_params(self):
+        config_options = {'maxage': '10', 'minsize': '20', 'filename': '/test'}
+        m = Monitors.host.MonitorFileStat('test', config_options)
+        self.assertTupleEqual(m.get_params(), ('/test', 20, 10))
+
+    def test_Command_get_params(self):
+        config_options = {'command': 'ls /', 'result_regexp': 'moo', 'result_max': '10'}
+        m = Monitors.host.MonitorCommand('test', config_options)
+        self.assertTupleEqual(m.get_params(), (['ls', '/'], 'moo', None))
+
+        config_options = {'command': 'ls /', 'result_max': '10'}
+        m = Monitors.host.MonitorCommand('test', config_options)
+        self.assertTupleEqual(m.get_params(), (['ls', '/'], '', 10))
+
 
 if __name__ == '__main__':
     unittest.main()
