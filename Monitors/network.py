@@ -1,15 +1,39 @@
-# coding=utf-8
-"""Network-related monitors for SimpleMonitor."""
 
+"""Network-related monitors for SimpleMonitor."""
+from urllib.request import HTTPSHandler, urlopen, HTTPBasicAuthHandler, build_opener, HTTPError
+import http.client
+import ssl
 import re
 import sys
 import socket
 import datetime
 import subprocess
-import requests
-from requests.auth import HTTPBasicAuth
 
-from .monitor import Monitor
+from monitor import Monitor
+
+
+# coded by Kalys Osmonov
+# source: http://www.osmonov.com/2009/04/client-certificates-with-urllib2.html
+try:
+    class HTTPSClientAuthHandler(HTTPSHandler):
+        def __init__(self, key, cert, context=None):
+            urllib2.HTTPSHandler.__init__(self)
+            self.key = key
+            self.cert = cert
+            self.context = context
+
+        def https_open(self, req):
+            # Rather than pass in a reference to a connection class, we pass in
+            # a reference to a function which, for all intents and purposes,
+            # will behave as a constructor
+            return self.do_open(self.getConnection, req)
+
+        def getConnection(self, host, timeout=300):
+                return httplib.HTTPSConnection(host, key_file=self.key, cert_file=self.cert, context=self.context)
+
+    https_handler_available = True
+except AttributeError as e:
+    https_handler_available = False
 
 
 class MonitorHTTP(Monitor):
@@ -25,7 +49,7 @@ class MonitorHTTP(Monitor):
 
     type = "http"
 
-    # optional - for HTTPS client authentication only
+    # optionnal - for HTTPS client authentication only
     certfile = None
     keyfile = None
 
@@ -33,7 +57,7 @@ class MonitorHTTP(Monitor):
         Monitor.__init__(self, name, config_options)
         try:
             url = config_options["url"]
-        except Exception:
+        except:
             raise RuntimeError("Required configuration fields missing")
 
         if 'regexp' in config_options:
@@ -43,7 +67,7 @@ class MonitorHTTP(Monitor):
         if 'allowed_codes' in config_options:
             allowed_codes = [int(x.strip()) for x in config_options["allowed_codes"].split(",")]
         else:
-            allowed_codes = [200]
+            allowed_codes = []
 
         # optionnal - for HTTPS client authentication only
         # in this case, certfile is required
@@ -57,7 +81,12 @@ class MonitorHTTP(Monitor):
                 keyfile = certfile
             self.certfile = certfile
             self.keyfile = keyfile
+            if not https_handler_available:
+                print ("Warning: HTTPS client options specified but urllib2.HTTPSHandler is not available!")
+                print ("Are you missing SSL support?")
+                raise RuntimeError('Cannot continue without SSL support')
 
+        # optional - for HTTPS hostname verification (self signed certificates)
         self.verify_hostname = True
         if 'verify_hostname' in config_options:
             if config_options["verify_hostname"].lower() == "false":
@@ -77,48 +106,58 @@ class MonitorHTTP(Monitor):
     def run_test(self):
         start_time = datetime.datetime.now()
         end_time = None
+        status = None
+        context = None
+        if not self.verify_hostname:
+            context = ssl._create_unverified_context()
         try:
-            if self.certfile is None and self.username is None:
-                r = requests.get(self.url,
-                                 timeout=self.request_timeout,
-                                 verify=self.verify_hostname
-                                 )
-            elif self.certfile is None and self.username is not None:
-                r = requests.get(self.url,
-                                 timeout=self.request_timeout,
-                                 auth=HTTPBasicAuth(
-                                     self.username,
-                                     self.password
-                                 ),
-                                 verify=self.verify_hostname
-                                 )
+            if self.certfile is None:
+                if self.username is None:
+                    url_handle = urllib2.urlopen(self.url, context=context, timeout=self.request_timeout)
+                else:
+                    password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
+                    password_mgr.add_password(None, self.url, self.username, self.password)
+                    handler = urllib2.HTTPBasicAuthHandler(password_mgr)
+                    opener = urllib2.build_opener(handler)
+                    url_handle = opener.open(self.url, context=context, timeout=self.request_timeout)
             else:
-                r = requests.get(self.url,
-                                 timeout=self.request_timeout,
-                                 cert=(self.certfile, self.keyfile),
-                                 verify=self.verify_hostname
-                                 )
+                # HTTPS with client authentication
+                opener = urllib2.build_opener(HTTPSClientAuthHandler(self.keyfile, self.certfile, context))
+                url_handle = opener.open(self.url, timeout=self.request_timeout)
 
             end_time = datetime.datetime.now()
             load_time = end_time - start_time
-            if r.status_code not in self.allowed_codes:
-                self.record_fail("Got status '{0} {1}' instead of {2}".format(r.status_code, r.reason, self.allowed_codes))
+            status = "200 OK"
+            if hasattr(url_handle, "status"):
+                if url_handle.status != "":
+                    status = url_handle.status
+            if status != "200 OK":
+                self.record_fail("Got status '%s' instead of 200 OK" % status)
                 return False
             if self.regexp is None:
-                self.record_success("%s in %0.2fs" % (r.status_code, (load_time.seconds + (load_time.microseconds / 1000000.2))))
+                self.record_success("%s in %0.2fs" % (status, (load_time.seconds + (load_time.microseconds / 1000000.2))))
                 return True
             else:
-                matches = self.regexp.search(r.text)
-                if matches:
-                    self.record_success("%s in %0.2fs" % (r.status_code, (load_time.seconds + (load_time.microseconds / 1000000.2))))
-                    return True
-                self.record_fail("Got '{0} {1}' but couldn't match /{2}/ in page.".format(r.status_code, r.reason, self.regexp_text))
+                for line in url_handle:
+                    matches = self.regexp.search(line)
+                    if matches:
+                        self.record_success("%s in %0.2fs" % (status, (load_time.seconds + (load_time.microseconds / 1000000.2))))
+                        return True
+                self.record_fail("Got 200 OK but couldn't match /%s/ in page." % self.regexp_text)
                 return False
-        except requests.exceptions.RequestException as e:
-            self.record_fail("Requests exception while opening URL: {0}".format(e))
+        except urllib2.HTTPError as e:
+            status = "%s %s" % (e.code, e.reason)
+            if e.code in self.allowed_codes:
+                if end_time is not None:
+                    load_time = end_time - start_time
+                    self.record_success("%s in %0.2fs" % (status, (load_time.seconds + (load_time.microseconds / 1000000.2))))
+                else:
+                    self.record_success("%s" % status)
+                return True
+            self.record_fail("HTTP error while opening URL: %s" % e)
             return False
         except Exception as e:
-            self.record_fail("Exception while trying to open url: {0}".format(e))
+            self.record_fail("Exception while trying to open url: %s" % (e))
             return False
 
     def describe(self):
@@ -146,7 +185,7 @@ class MonitorTCP(Monitor):
         try:
             host = config_options["host"]
             port = int(config_options["port"])
-        except Exception:
+        except:
             raise RuntimeError("Required configuration fields missing")
 
         if host == "":
@@ -162,7 +201,7 @@ class MonitorTCP(Monitor):
         try:
             s.settimeout(5.0)
             s.connect((self.host, self.port))
-        except Exception:
+        except:
             self.record_fail()
             return False
         s.close()
@@ -195,7 +234,7 @@ class MonitorHost(Monitor):
         Monitor.__init__(self, name, config_options)
         try:
             ping_ttl = config_options["ping_ttl"]
-        except Exception:
+        except:
             ping_ttl = "5"
         ping_ms = ping_ttl * 1000
         platform = sys.platform
@@ -216,7 +255,7 @@ class MonitorHost(Monitor):
 
         try:
             host = config_options["host"]
-        except Exception:
+        except:
             raise RuntimeError("Required configuration fields missing")
         if host == "":
             raise RuntimeError("missing hostname")
@@ -269,7 +308,7 @@ class MonitorDNS(Monitor):
         Monitor.__init__(self, name, config_options)
         try:
             self.path = config_options['record']
-        except Exception:
+        except:
             raise RuntimeError("Required configuration fields missing")
         if self.path == '':
             raise RuntimeError("Required configuration fields missing")
@@ -301,7 +340,7 @@ class MonitorDNS(Monitor):
 
     def run_test(self):
         try:
-            result = subprocess.check_output(self.params).decode('utf-8')
+            result = subprocess.check_output(self.params)
             result = result.strip()
             if result is None or result == '':
                 self.record_fail("failed to resolve %s" % self.path)
