@@ -196,13 +196,13 @@ class MonitorApcupsd(Monitor):
         except subprocess.CalledProcessError as e:
             output = e.output
         except OSError as e:
-            self.record_fail("Could not run %s: %s", (executable, e))
+            self.record_fail("Could not run {0}: {1}".format(executable, e))
             return False
         except OSError as e:
-            self.record_fail("Error while getting UPS info: %s", e)
+            self.record_fail("Error while getting UPS info: {0}".format(e))
             return False
 
-        for line in output:
+        for line in output.splitlines():
             if line.find(":") > -1:
                 bits = line.split(":")
                 info[bits[0].strip()] = bits[1].strip()
