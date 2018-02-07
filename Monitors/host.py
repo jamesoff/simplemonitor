@@ -193,6 +193,7 @@ class MonitorApcupsd(Monitor):
                 executable = "apcaccess"
         try:
             output = subprocess.check_output(executable)
+            output = output.decode('utf-8')
         except subprocess.CalledProcessError as e:
             output = e.output
         except OSError as e:
