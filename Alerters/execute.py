@@ -62,7 +62,8 @@ class ExecuteAlerter(Alerter):
             failed_at=self.format_datetime(monitor.first_failure_time()),
             virtual_fail_count=monitor.virtual_fail_count(),
             info=monitor.get_result(),
-            description=monitor.describe()
+            description=monitor.describe(),
+            last_virtual_fail_count=monitor.last_virtual_fail_count()
         )
 
         if not self.dry_run:
