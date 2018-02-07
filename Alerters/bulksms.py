@@ -73,7 +73,7 @@ class BulkSMSAlerter(Alerter):
                 'sender': self.sender,
                 'repliable': '0'
             }
-        elif type == "failure":
+        elif type_ == "failure":
             (days, hours, minutes, seconds) = self.get_downtime(monitor)
             message = "%s failed on %s at %s (%d+%02d:%02d:%02d)\n%s" % (
                 name,
