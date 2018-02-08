@@ -3,6 +3,8 @@ language: python
 python:
     - "2.7"
     - "3.5"
+    - "3.6"
+    - "3.7-dev"
 install:
     - pip install codecov flake8
 before_script:
@@ -16,3 +18,7 @@ script:
     - coverage run --append -m unittest discover -s tests
 after_success:
     - codecov
+matrix:
+  allow_failures:
+    - python: "3.6"
+    - python: "3.7-dev"
