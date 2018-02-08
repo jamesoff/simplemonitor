@@ -7,6 +7,7 @@ python:
     - "3.7-dev"
 install:
     - pip install codecov flake8
+    - pip install -r requirements.txt
 before_script:
     - rm -f monitor.db monitor2.db
     - sqlite3 monitor.db < monitor.sql
