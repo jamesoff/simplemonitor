@@ -202,11 +202,13 @@ class MonitorEximQueue(Monitor):
             raise RuntimeError("'max_length' must be >= 1")
         if "path" in config_options:
             self.path = config_options["path"]
+        self.path = os.path.join(self.path, "exiqgrep")
 
     def run_test(self):
         try:
-            output = subprocess.check_output([os.path.join(self.path, "exiqgrep"), "-xc"])
-            for line in output:
+            output = subprocess.check_output([self.path, "-xc"])
+            output = output.decode('utf-8')
+            for line in output.splitlines():
                 matches = self.r.match(line)
                 if matches:
                     count = int(matches.group("count"))
