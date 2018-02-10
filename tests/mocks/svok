@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+# mock svok file for simplemonitor
+
+if [[ $1 == 'pass' ]]; then
+	exit 0
+fi
+
+if [[ $1 == 'fail' ]]; then
+	exit 1
+fi
