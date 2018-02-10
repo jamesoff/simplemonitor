@@ -11,3 +11,4 @@ monitor.json
 htmlcov/
 .coverage
 .idea/
+html/status.html
