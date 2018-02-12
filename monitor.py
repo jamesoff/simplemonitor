@@ -32,6 +32,7 @@ import Alerters.syslogger
 import Alerters.execute
 import Alerters.slack
 import Alerters.pushover
+import Alerters.nma
 
 
 VERSION = "1.7"
@@ -242,6 +243,8 @@ def load_alerters(m, config, quiet):
             a = Alerters.slack.SlackAlerter(config_options)
         elif type == "pushover":
             a = Alerters.pushover.PushoverAlerter(config_options)
+        elif type == "nma":
+            a = Alerters.nma.NMAAlerter(config_options)
         else:
             sys.stderr.write("Unknown alerter type %s\n" % type)
             continue
@@ -263,7 +266,7 @@ def main():
     parser.add_option("-p", "--pidfile", dest="pidfile", default="", help="Write PID into this file")
     parser.add_option("-N", "--no-network", dest="no_network", default=False, action="store_true", help="Disable network listening socket")
     parser.add_option("-d", "--debug", dest="debug", default=False, action="store_true", help="Enable debug output")
-    parser.add_option("-f", "--config", dest="config", default="monitor.ini", help="configuration file")
+    parser.add_option("-f", "--config", dest="config", default="config.ini", help="configuration file")
     parser.add_option("-H", "--no-heartbeat", action="store_true", dest="no_heartbeat", default=False, help="Omit printing the '.' character when running checks")
 
     (options, args) = parser.parse_args()

@@ -5,7 +5,6 @@ import pickle
 import datetime
 import time
 
-
 class SimpleMonitor:
 
     # TODO: move this outside into monitor.py?
@@ -190,6 +189,8 @@ class SimpleMonitor:
         """Use the given alerter object to send an alert, if needed."""
         alerter.check_dependencies(self.failed + self.still_failing + self.skipped)
         for key in self.monitors.keys():
+            if self.debug:
+                print "{}({}) -> {}({})".format(self.monitors[key].name, self.monitors[key].group, alerter.name, alerter.groups)
             # Don't generate alerts for monitors which want it done remotely
             if self.monitors[key].remote_alerting:
                 # TODO: could potentially disable alerts by setting a monitor to remote alerting, but not having anywhere to send it!
@@ -197,7 +198,18 @@ class SimpleMonitor:
                     print "skipping alert for monitor %s as it wants remote alerting" % key
                 continue
             try:
-                alerter.send_alert(key, self.monitors[key])
+                if self.monitors[key].group in alerter.groups:
+                    # Only notifications for services that have it enabled
+                    if self.monitors[key].notify:
+                        if self.debug:
+                            print "  - Notifying alerter: {}".format(alerter.name)
+                        alerter.send_alert(key, self.monitors[key])
+                    else:
+                        if self.debug:
+                            print "  - Skipping alerters: Monitor Disabled"
+                else:
+                    if self.debug:
+                        print " - Skipping alerter: {}".format(alerter.name)
             except Exception, e:
                 print "exception caught while alerting for %s: %s" % (key, e)
         for key in self.remote_monitors.keys():
