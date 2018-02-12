@@ -316,7 +316,7 @@ class Monitor:
 
     def set_notify(self, notify):
         """Record if this monitor needs notifications."""
-        self.notify = True if (notify == 1 or notify.lower() == 'true' or notify == True) else False
+        self.notify = True if (notify == 1 or notify.lower() == 'true' or notify) else False
 
     def set_group(self, group):
         """Record if this monitor has a group."""
