@@ -23,6 +23,7 @@ class Alerter:
     verbose = False
 
     dry_run = False
+    groups = ['default']
 
     delay_notification = False
     ooh_failures = []
@@ -40,6 +41,8 @@ class Alerter:
             self.limit = int(config_options["limit"])
         if 'repeat' in config_options:
             self.repeat = int(config_options["repeat"])
+        if 'groups' in config_options:
+            self.set_groups([x.strip() for x in config_options["groups"].split(",")])
         if 'times_type' in config_options:
             times_type = config_options["times_type"]
             if times_type == "always":
@@ -102,6 +105,11 @@ class Alerter:
         If a monitor we depend on fails, it means we can't reach the database, so we shouldn't bother trying to write to it."""
 
         self.dependencies = dependency_list
+
+    def set_groups(self, group_list):
+        """Record which groups we alert"""
+
+        self.groups = group_list
 
     def check_dependencies(self, failed_list):
         """Check if anything we depend on has failed."""
