@@ -11,6 +11,7 @@ class SlackAlerter(Alerter):
     """Send alerts to a Slack webhook."""
 
     channel = None
+    username = None
 
     def __init__(self, config_options):
         if not requests_available:
@@ -29,17 +30,20 @@ class SlackAlerter(Alerter):
         else:
             channel = None
 
+        if 'username' in config_options:
+            username = config_options['username']
+        else:
+            username = None
+
         if url == "":
             raise RuntimeError("missing url")
 
         self.url = url
         self.channel = channel
+        self.username = username
 
     def send_alert(self, name, monitor):
         """Send the message."""
-
-        if self.channel is None:
-            return
 
         type = self.should_alert(monitor)
         (days, hours, minutes, seconds) = self.get_downtime(monitor)
@@ -48,6 +52,8 @@ class SlackAlerter(Alerter):
 
         if self.channel is not None:
             message_json = {'channel': self.channel}
+        elif self.username is not None:
+            message_json = {'username': self.username}
         else:
             message_json = {}
 
