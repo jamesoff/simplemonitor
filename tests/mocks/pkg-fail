@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+# mock pkg (audit) for simplemonitor
+
+cat <<EOF
+python34-3.4.7 is vulnerable:
+python -- possible integer overflow vulnerability
+CVE: CVE-2017-1000158
+WWW: https://vuxml.FreeBSD.org/freebsd/0fe70bcd-2ce3-46c9-a64b-4a7da097db07.html
+
+4 problem(s) in the installed packages found.
+EOF

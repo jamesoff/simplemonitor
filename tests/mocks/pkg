@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+# mock pkg (audit) for simplemonitor
+
+cat <<EOF
+0 problem(s) in the installed packages found.
+EOF
