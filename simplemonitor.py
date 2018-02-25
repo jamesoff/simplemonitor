@@ -213,7 +213,7 @@ class SimpleMonitor:
                             print("  - Skipping alerters: Monitor Disabled")
                 else:
                     if self.debug:
-                        print(" - Skipping alerter: {1}".format(alerter.name))
+                        print(" - Skipping alerter: {0}".format(alerter.name))
             except Exception as e:
                 print("exception caught while alerting for %s: %s" % (key, e))
         for key in list(self.remote_monitors.keys()):
