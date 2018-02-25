@@ -263,17 +263,17 @@ class MonitorPortAudit(Monitor):
             if self.path == "":
                 self.path = "/usr/local/sbin/portaudit"
             try:
-                output = subprocess.call([self.path, '-a', '-X', '1'])
+                output = subprocess.check_output([self.path, '-a', '-X', '1']).decode('utf-8')
             except subprocess.CalledProcessError as e:
                 output = e.output
             except OSError as e:
-                self.record_fail("Error running %s: %s", (self.path, e))
+                self.record_fail("Error running %s: %s" % (self.path, e))
                 return False
             except Exception as e:
-                self.record_fail("Error running portaudit: %s", e)
+                self.record_fail("Error running portaudit: %s" % e)
                 return False
 
-            for line in output:
+            for line in output.splitlines():
                 matches = self.regexp.match(line)
                 if matches:
                     count = int(matches.group(1))
