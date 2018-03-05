@@ -1,7 +1,7 @@
-import httplib
+import requests
 import json
 
-from alerter import Alerter
+from .alerter import Alerter
 from base64 import b64encode
 
 
@@ -30,8 +30,7 @@ class PushbulletAlerter(Alerter):
         _headers = {'content-type': 'application/json',
                     'Authorization': 'Basic {}'.format(_auth)}
 
-        conn = httplib.HTTPSConnection("api.pushbullet.com:443")
-        conn.request("POST", "/v2/pushes", json.dumps(_payload), _headers)
+        requests.post('https://api.pushbullet.com/v2/pushes', json=json.dumps(_payload), headers=_headers)
 
     def send_alert(self, name, monitor):
         """Build up the content for the push notification."""
