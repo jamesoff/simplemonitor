@@ -34,6 +34,7 @@ import Alerters.execute
 import Alerters.slack
 import Alerters.pushover
 import Alerters.nma
+import Alerters.pushbullet
 
 
 VERSION = "1.7"
@@ -214,6 +215,8 @@ def load_alerters(m, config, quiet):
             a = Alerters.pushover.PushoverAlerter(config_options)
         elif type == "nma":
             a = Alerters.nma.NMAAlerter(config_options)
+        elif type == "pushbullet":
+            a = Alerters.pushbullet.PushbulletAlerter(config_options)
         else:
             sys.stderr.write("Unknown alerter type %s\n" % type)
             continue
