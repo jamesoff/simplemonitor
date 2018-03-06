@@ -10,7 +10,7 @@ import hmac
 
 from threading import Thread
 
-from logger import Logger
+from .logger import Logger
 
 
 class NetworkLogger(Logger):
@@ -31,7 +31,7 @@ class NetworkLogger(Logger):
 
     def save_result2(self, name, monitor):
         if not self.doing_batch:
-            print "NetworkLogger.save_result2() called while not doing batch."
+            print("NetworkLogger.save_result2() called while not doing batch.")
             return
         # id = "%s_%s" % (self.hostname, monitor.name)
         # data_line = {
@@ -57,8 +57,8 @@ class NetworkLogger(Logger):
             mac = hmac.new(self.key, p)
             # print "My MAC is %s" % mac.hexdigest()
             s.send("%s\n%s" % (mac.hexdigest(), p))
-        except Exception, e:
-            print "Failed to send data: %s" % e
+        except Exception as e:
+            print("Failed to send data: %s" % e)
         finally:
             s.close()
 
@@ -94,7 +94,7 @@ class Listener(Thread):
                 self.sock.listen(5)
                 conn, addr = self.sock.accept()
                 if self.verbose:
-                    print "--> Got connection from %s" % addr[0]
+                    print("--> Got connection from %s" % addr[0])
                 pickled = ""
                 while 1:
                     data = conn.recv(1024)
@@ -103,7 +103,7 @@ class Listener(Thread):
                         break
                 conn.close()
                 if self.verbose:
-                    print "--> Finished receiving from %s" % addr[0]
+                    print("--> Finished receiving from %s" % addr[0])
                 # compute our own HMAC and compare
                 bits = pickled.split("\n", 1)
                 their_digest = bits[0]
@@ -111,30 +111,30 @@ class Listener(Thread):
                 mac = hmac.new(self.key, pickled)
                 my_digest = mac.hexdigest()
                 if self.verbose:
-                    print "Computed my digest to be %s" % my_digest
-                    print "Remote digest is %s" % their_digest
+                    print("Computed my digest to be %s" % my_digest)
+                    print("Remote digest is %s" % their_digest)
                 if not hmac.compare_digest(their_digest, my_digest):
                     raise Exception("Mismatched MAC for network logging data from %s\nMismatched key? Old version of SimpleMonitor?\n" % addr[0])
                 result = pickle.loads(pickled)
                 try:
                     self.simplemonitor.update_remote_monitor(result, addr[0])
-                except Exception, e:
+                except Exception as e:
                     fail_info = sys.exc_info()
                     sys.stderr.write("Error adding remote monitor %s" % e)
 
-            except socket.error, e:
+            except socket.error as e:
                 fail_info = sys.exc_info()
                 try:
                     if fail_info[1][0] == 4:
                         # Interrupted system call
-                        print "Interrupted system call in thread, I think that's a ^C"
+                        print("Interrupted system call in thread, I think that's a ^C")
                         self.running = False
                         self.sock.close()
                 except:
                     pass
                 if self.running:
-                    print "Socket error caught in thread: %s" % e
-            except Exception, e:
+                    print("Socket error caught in thread: %s" % e)
+            except Exception as e:
                 # fail_info = sys.exc_info()
                 # print fail_info
                 # print traceback.print_tb(fail_info[2])

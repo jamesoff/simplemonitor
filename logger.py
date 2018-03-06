@@ -39,7 +39,7 @@ class FileLogger(Logger):
         try:
             self.file_handle = open(filename, "w+")
         except:
-            print "Couldn't open %s for appending." % filename
+            print("Couldn't open %s for appending." % filename)
             sys.exit(1)
         self.only_failures = only_failures
         self.buffered = buffered
