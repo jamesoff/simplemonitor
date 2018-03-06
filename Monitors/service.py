@@ -4,7 +4,7 @@ import os
 import subprocess
 import sys
 
-from monitor import Monitor
+from .monitor import Monitor
 
 
 class MonitorSvc(Monitor):
@@ -34,7 +34,7 @@ class MonitorSvc(Monitor):
             else:
                 self.record_success()
                 return True
-        except Exception, e:
+        except Exception as e:
             self.record_fail("Exception while executing svok: %s" % e)
             return False
 
@@ -96,7 +96,7 @@ class MonitorService(Monitor):
             if matches:
                 self.record_success()
                 return True
-        except Exception, e:
+        except Exception as e:
             sys.stderr.write("%s\n" % e)
             pass
         self.record_fail()
@@ -164,12 +164,12 @@ class MonitorRC(Monitor):
             if returncode == self.want_return_code:
                 self.record_success()
                 return True
-        except subprocess.CalledProcessError, e:
+        except subprocess.CalledProcessError as e:
             if e.returncode == self.want_return_code:
                 self.record_success()
                 return True
             returncode = -1
-        except Exception, e:
+        except Exception as e:
             self.record_fail("Exception while executing script: %s" % e)
             return False
         self.record_fail("Return code: %d (wanted %d)" % (returncode, self.want_return_code))
@@ -224,7 +224,7 @@ class MonitorEximQueue(Monitor):
                         return True
             self.record_fail("Error getting queue size")
             return False
-        except Exception, e:
+        except Exception as e:
             self.record_fail("Error running exiqgrep: %s" % e)
             return False
 
@@ -277,8 +277,8 @@ class MonitorWindowsDHCPScope(Monitor):
                     return True
             self.record_fail("Error getting client count: no match")
             return False
-        except Exception, e:
-            print e
+        except Exception as e:
+            print(e)
             self.record_fail("Error getting client count: %s", e)
             return False
 
