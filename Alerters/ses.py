@@ -6,7 +6,7 @@ except:
 
 import os
 
-from alerter import Alerter
+from .alerter import Alerter
 
 
 class SESAlerter(Alerter):
@@ -14,7 +14,7 @@ class SESAlerter(Alerter):
 
     def __init__(self, config_options):
         if not boto3_available:
-            print "Boto3 package is not available, cannot use SESAlerter."
+            print("Boto3 package is not available, cannot use SESAlerter.")
             return
 
         Alerter.__init__(self, config_options)
@@ -90,7 +90,7 @@ class SESAlerter(Alerter):
             message['Body'] = {'Text': {'Data': "Monitor %s%s failed earlier while this alerter was out of hours.\nFailed at: %s\nVirtual failure count: %d\nAdditional info: %s\nDescription: %s" % (name, host, self.format_datetime(monitor.first_failure_time()), monitor.virtual_fail_count(), monitor.get_result(), monitor.describe())}}
 
         else:
-            print "Unknown alert type %s" % type
+            print("Unknown alert type %s" % type)
             return
 
         mail['Message'] = message
@@ -99,10 +99,10 @@ class SESAlerter(Alerter):
             try:
                 client = boto3.client('ses', **self.ses_client_params)
                 client.send_email(**mail)
-            except Exception, e:
-                print "Couldn't send mail: %s", e
+            except Exception as e:
+                print("Couldn't send mail: %s", e)
                 self.available = False
         else:
-            print "dry_run: would send email:"
-            print "Subject: %s" % message['Subject']['Data']
-            print "Body: %s" % message['Body']['Text']['Data']
+            print("dry_run: would send email:")
+            print("Subject: %s" % message['Subject']['Data'])
+            print("Body: %s" % message['Body']['Text']['Data'])

@@ -10,7 +10,7 @@ try:
 except:
     win32_available = False
 
-from monitor import Monitor
+from .monitor import Monitor
 
 
 class MonitorDiskSpace(Monitor):
@@ -77,7 +77,7 @@ class MonitorDiskSpace(Monitor):
                 result = win32api.GetDiskFreeSpaceEx(self.partition)
                 space = result[2]
                 percent = float(result[2]) / float(result[1]) * 100
-        except Exception, e:
+        except Exception as e:
             self.record_fail("Couldn't get free disk space: %s" % e)
             return False
 
@@ -163,7 +163,7 @@ class MonitorFileStat(Monitor):
     def run_test(self):
         try:
             statinfo = os.stat(self.filename)
-        except Exception, e:
+        except Exception as e:
             self.record_fail("Unable to check file: %s" % e)
             return False
 
@@ -223,12 +223,12 @@ class MonitorApcupsd(Monitor):
                 executable = "apcaccess"
         try:
             output = subprocess.check_output(executable)
-        except subprocess.CalledProcessError, e:
+        except subprocess.CalledProcessError as e:
             output = e.output
-        except OSError, e:
+        except OSError as e:
             self.record_fail("Could not run %s: %s", (executable, e))
             return False
-        except OSError, e:
+        except OSError as e:
             self.record_fail("Error while getting UPS info: %s", e)
             return False
 
@@ -293,12 +293,12 @@ class MonitorPortAudit(Monitor):
                 self.path = "/usr/local/sbin/portaudit"
             try:
                 output = subprocess.call([self.path, '-a', '-X', '1'])
-            except subprocess.CalledProcessError, e:
+            except subprocess.CalledProcessError as e:
                 output = e.output
-            except OSError, e:
+            except OSError as e:
                 self.record_fail("Error running %s: %s", (self.path, e))
                 return False
-            except Exception, e:
+            except Exception as e:
                 self.record_fail("Error running portaudit: %s", e)
                 return False
 
@@ -317,7 +317,7 @@ class MonitorPortAudit(Monitor):
                     return False
             self.record_success()
             return True
-        except Exception, e:
+        except Exception as e:
             self.record_fail("Could not run portaudit: %s" % e)
             return False
 
@@ -346,12 +346,12 @@ class MonitorPkgAudit(Monitor):
                 self.path = "/usr/local/sbin/pkg"
             try:
                 output = subprocess.check_output([self.path, 'audit'])
-            except subprocess.CalledProcessError, e:
+            except subprocess.CalledProcessError as e:
                 output = e.output
-            except OSError, e:
+            except OSError as e:
                 self.record_fail("Failed to run %s audit: %s", (self.path, e))
                 return False
-            except Exception, e:
+            except Exception as e:
                 self.record_fail("Error running pkg audit: %s", e)
                 return False
 
@@ -370,7 +370,7 @@ class MonitorPkgAudit(Monitor):
                     return False
             self.record_success()
             return True
-        except Exception, e:
+        except Exception as e:
             self.record_fail("Could not run pkg: %s" % e)
             return False
 
@@ -417,7 +417,7 @@ class MonitorLoadAvg(Monitor):
     def run_test(self):
         try:
             loadavg = os.getloadavg()
-        except Exception, e:
+        except Exception as e:
             self.record_fail("Exception getting loadavg: %s" % e)
             return False
 
@@ -464,7 +464,7 @@ class MonitorZap(Monitor):
                         return True
             self.record_fail("Error getting status")
             return False
-        except Exception, e:
+        except Exception as e:
             self.record_fail("Error running ztscan: %s" % e)
             return False
 
@@ -531,7 +531,7 @@ class MonitorCommand(Monitor):
                     return False
             self.record_success()
             return True
-        except Exception, e:
+        except Exception as e:
             self.record_fail(e)
             return False
 

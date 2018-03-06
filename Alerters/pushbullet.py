@@ -1,8 +1,12 @@
-import httplib
-import json
+try:
+    from httplib import HTTPSConnection
+except ImportError:
+    from http.client import HTTPSConnection
 
-from alerter import Alerter
+import json
 from base64 import b64encode
+
+from .alerter import Alerter
 
 
 class PushbulletAlerter(Alerter):
@@ -30,7 +34,7 @@ class PushbulletAlerter(Alerter):
         _headers = {'content-type': 'application/json',
                     'Authorization': 'Basic {}'.format(_auth)}
 
-        conn = httplib.HTTPSConnection("api.pushbullet.com:443")
+        conn = HTTPSConnection("api.pushbullet.com:443")
         conn.request("POST", "/v2/pushes", json.dumps(_payload), _headers)
 
     def send_alert(self, name, monitor):
@@ -83,17 +87,17 @@ class PushbulletAlerter(Alerter):
             monitor.get_result(), monitor.describe())
 
         else:
-            print
+            print()
             "Unknown alert type %s" % type
             return
 
         if not self.dry_run:
             try:
                 self.send_pushbullet_notification(subject, body)
-            except Exception, e:
-                print
+            except Exception as e:
+                print()
                 "Couldn't send push notification: %s", e
                 self.available = False
         else:
-            print
+            print()
             "dry_run: would send push notification: %s" % body
