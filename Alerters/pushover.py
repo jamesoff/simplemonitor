@@ -1,7 +1,11 @@
-import httplib, urllib
+try:
+    from httplib import HTTPSConnection
+    from urllib import urlencode
+except ImportError:
+    from http.client import HTTPSConnection
+    from urllib.parse import urlencode
 
-from alerter import Alerter
-
+from .alerter import Alerter
 
 class PushoverAlerter(Alerter):
     """Send push notification via Pushover."""
@@ -27,9 +31,9 @@ class PushoverAlerter(Alerter):
     def send_pushover_notification(self, subject, body):
         """Send a push notification."""
         
-        conn = httplib.HTTPSConnection("api.pushover.net:443")
+        conn = HTTPSConnection("api.pushover.net:443")
         conn.request("POST", "/1/messages.json",
-            urllib.urlencode({
+            urlencode({
                 "token": self.pushover_token,
                 "user": self.pushover_user,
                 "title": subject,
@@ -82,14 +86,14 @@ class PushoverAlerter(Alerter):
             body = "Monitor %s%s failed earlier while this alerter was out of hours.\nFailed at: %s\nVirtual failure count: %d\nAdditional info: %s\nDescription: %s" % (name, host, self.format_datetime(monitor.first_failure_time()), monitor.virtual_fail_count(), monitor.get_result(), monitor.describe())
 
         else:
-            print "Unknown alert type %s" % type
+            print("Unknown alert type %s" % type)
             return
 
         if not self.dry_run:
             try:
                 self.send_pushover_notification(subject, body)
-            except Exception, e:
-                print "Couldn't send push notification: %s", e
+            except Exception as e:
+                print("Couldn't send push notification: %s", e)
                 self.available = False
         else:
-            print "dry_run: would send push notification: %s" % body
+            print("dry_run: would send push notification: %s" % body)

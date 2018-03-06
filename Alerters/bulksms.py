@@ -1,6 +1,11 @@
-import urllib
+try:
+    from urllib import urlencode
+    from urllib2 import urlopen
+except ImportError:
+    from urllib.parse import urlencode
+    from urllib.request import urlopen
 
-from alerter import Alerter
+from .alerter import Alerter
 
 
 class BulkSMSAlerter(Alerter):
@@ -21,7 +26,7 @@ class BulkSMSAlerter(Alerter):
         if 'sender' in config_options:
             sender = config_options["sender"]
             if len(sender) > 11:
-                print "warning: truncating SMS sender name to 11 chars"
+                print("warning: truncating SMS sender name to 11 chars")
                 sender = sender[:11]
         else:
             sender = "SmplMntr"
@@ -60,10 +65,10 @@ class BulkSMSAlerter(Alerter):
                 days, hours, minutes, seconds,
                 monitor.get_result())
             if len(message) > 160:
-                print "Warning! Truncating SMS message to 160 chars."
+                print("Warning! Truncating SMS message to 160 chars.")
                 message = message[:156] + "..."
             url = "https://{}/eapi/submission/send_sms/2/2.0".format(self.api_host)
-            params = urllib.urlencode({
+            params = urlencode({
                 'username': self.username,
                 'password': self.password,
                 'message': message,
@@ -80,10 +85,10 @@ class BulkSMSAlerter(Alerter):
                 days, hours, minutes, seconds,
                 monitor.get_result())
             if len(message) > 160:
-                print "Warning! Truncating SMS message to 160 chars."
+                print("Warning! Truncating SMS message to 160 chars.")
                 message = message[:156] + "..."
             url = "https://{}/eapi/submission/send_sms/2/2.0".format(self.api_host)
-            params = urllib.urlencode({
+            params = urlencode({
                 'username': self.username,
                 'password': self.password,
                 'message': message,
@@ -100,19 +105,19 @@ class BulkSMSAlerter(Alerter):
 
         if not self.dry_run:
             try:
-                handle = urllib.urlopen(url, params)
+                handle = urlopen(url, params)
                 s = handle.read()
                 if not s.startswith("0"):
-                    print "Unable to send SMS: %s (%s)" % (s.split("|")[0], s.split("|")[1])
-                    print "URL: %s, PARAMS: %s" % (url, params)
+                    print("Unable to send SMS: %s (%s)" % (s.split("|")[0], s.split("|")[1]))
+                    print("URL: %s, PARAMS: %s" % (url, params))
                     self.available = False
                 handle.close()
             except Exception as e:
-                print "SMS sending failed"
-                print e
-                print url
-                print params
+                print("SMS sending failed")
+                print(e)
+                print(url)
+                print(params)
                 self.available = False
         else:
-            print "dry_run: would send SMS: %s" % url
+            print("dry_run: would send SMS: %s" % url)
         return

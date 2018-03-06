@@ -1,8 +1,16 @@
 
 """Network-related monitors for SimpleMonitor."""
 
-import urllib2
-import httplib
+try:
+    # Python 2
+    from urllib2 import HTTPSHandler, urlopen, HTTPPasswordMgrWithDefaultRealm, \
+        HTTPBasicAuthHandler, build_opener
+    from httplib import HTTPSConnection
+except ImportError:
+    # Python 3
+    from urllib.request import HTTPSHandler, urlopen, HTTPPasswordMgrWithDefaultRealm, \
+        HTTPBasicAuthHandler, build_opener
+    from http.client import HTTPSConnection
 import ssl
 import re
 import sys
@@ -10,15 +18,15 @@ import socket
 import datetime
 import subprocess
 
-from monitor import Monitor
+from .monitor import Monitor
 
 
 # coded by Kalys Osmonov
 # source: http://www.osmonov.com/2009/04/client-certificates-with-urllib2.html
 try:
-    class HTTPSClientAuthHandler(urllib2.HTTPSHandler):
+    class HTTPSClientAuthHandler(HTTPSHandler):
         def __init__(self, key, cert, context=None):
-            urllib2.HTTPSHandler.__init__(self)
+            HTTPSHandler.__init__(self)
             self.key = key
             self.cert = cert
             self.context = context
@@ -30,7 +38,7 @@ try:
             return self.do_open(self.getConnection, req)
 
         def getConnection(self, host, timeout=300):
-                return httplib.HTTPSConnection(host, key_file=self.key, cert_file=self.cert, context=self.context)
+            return HTTPSConnection(host, key_file=self.key, cert_file=self.cert, context=self.context)
 
     https_handler_available = True
 except AttributeError as e:
@@ -50,7 +58,7 @@ class MonitorHTTP(Monitor):
 
     type = "http"
 
-    # optionnal - for HTTPS client authentication only
+    # optional - for HTTPS client authentication only
     certfile = None
     keyfile = None
 
@@ -70,7 +78,7 @@ class MonitorHTTP(Monitor):
         else:
             allowed_codes = []
 
-        # optionnal - for HTTPS client authentication only
+        # optional - for HTTPS client authentication only
         # in this case, certfile is required
         if 'certfile' in config_options:
             certfile = config_options["certfile"]
@@ -83,8 +91,8 @@ class MonitorHTTP(Monitor):
             self.certfile = certfile
             self.keyfile = keyfile
             if not https_handler_available:
-                print "Warning: HTTPS client options specified but urllib2.HTTPSHandler is not available!"
-                print "Are you missing SSL support?"
+                print("Warning: HTTPS client options specified but urllib2.HTTPSHandler is not available!")
+                print("Are you missing SSL support?")
                 raise RuntimeError('Cannot continue without SSL support')
 
         # optional - for HTTPS hostname verification (self signed certificates)
@@ -114,16 +122,16 @@ class MonitorHTTP(Monitor):
         try:
             if self.certfile is None:
                 if self.username is None:
-                    url_handle = urllib2.urlopen(self.url, context=context, timeout=self.request_timeout)
+                    url_handle = urlopen(self.url, context=context, timeout=self.request_timeout)
                 else:
-                    password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
+                    password_mgr = HTTPPasswordMgrWithDefaultRealm()
                     password_mgr.add_password(None, self.url, self.username, self.password)
-                    handler = urllib2.HTTPBasicAuthHandler(password_mgr)
-                    opener = urllib2.build_opener(handler)
+                    handler = HTTPBasicAuthHandler(password_mgr)
+                    opener = build_opener(handler)
                     url_handle = opener.open(self.url, context=context, timeout=self.request_timeout)
             else:
                 # HTTPS with client authentication
-                opener = urllib2.build_opener(HTTPSClientAuthHandler(self.keyfile, self.certfile, context))
+                opener = build_opener(HTTPSClientAuthHandler(self.keyfile, self.certfile, context))
                 url_handle = opener.open(self.url, timeout=self.request_timeout)
 
             end_time = datetime.datetime.now()
@@ -146,7 +154,7 @@ class MonitorHTTP(Monitor):
                         return True
                 self.record_fail("Got 200 OK but couldn't match /%s/ in page." % self.regexp_text)
                 return False
-        except urllib2.HTTPError, e:
+        except urllib.error.HTTPError as e:
             status = "%s %s" % (e.code, e.reason)
             if e.code in self.allowed_codes:
                 if end_time is not None:
@@ -157,7 +165,7 @@ class MonitorHTTP(Monitor):
                 return True
             self.record_fail("HTTP error while opening URL: %s" % e)
             return False
-        except Exception, e:
+        except Exception as e:
             self.record_fail("Exception while trying to open url: %s" % (e))
             return False
 
@@ -278,7 +286,7 @@ class MonitorHost(Monitor):
                     matches = r2.search(line)
                     if matches:
                         pingtime = matches.group("ms")
-        except Exception, e:
+        except Exception as e:
             self.record_fail(e)
             return False
         if success:
@@ -351,7 +359,7 @@ class MonitorDNS(Monitor):
                 return False
             self.record_success()
             return True
-        except Exception, e:
+        except Exception as e:
             self.record_fail("Exception while executing %s: %s" % (self.command, e))
             return False
 

@@ -1,7 +1,10 @@
 import os
 import re
 
-from ConfigParser import ConfigParser
+try:
+    from ConfigParser import ConfigParser
+except (ImportError, ModuleNotFoundError):
+    from configparser import ConfigParser
 
 class EnvironmentAwareConfigParser(ConfigParser):
     """A subclass of ConfigParser which allows %env:VAR% interpolation via the

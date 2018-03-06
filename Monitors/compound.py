@@ -1,7 +1,7 @@
 
 """compound checks (logical and of failure of multiple probes) for SimpleMonitor."""
 
-from monitor import Monitor
+from .monitor import Monitor
 
 
 class CompoundMonitor(Monitor):
