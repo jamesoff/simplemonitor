@@ -1,0 +1,15 @@
+version: '2'
+services:
+  simplemonitor:
+    build: .
+    image: simplemonitor
+    ports:
+      - "8012:8012"
+    environment:
+      - HTTP_PORT=8012
+    volumes:
+      - simplemonitor_config:/config/
+    restart: always
+volumes:
+  simplemonitor_config:
+    external: true
