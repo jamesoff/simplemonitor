@@ -26,11 +26,11 @@ class PushbulletAlerter(Alerter):
         """Send a push notification."""
 
         _payload = {'type': 'note', 'title': subject, 'body': body}
-        _auth = b64encode("{}:".format(self.pushbullet_token).encode('utf-8')).decode("ascii")
-        _headers = {'content-type': 'application/json',
-                    'Authorization': 'Basic {}'.format(_auth)}
+        _auth = requests.auth.HTTPBasicAuth(self.pushbullet_token, '')
 
-        requests.post('https://api.pushbullet.com/v2/pushes', json=json.dumps(_payload), headers=_headers)
+        r = requests.post('https://api.pushbullet.com/v2/pushes', data=_payload, auth=_auth)
+        if not r.status_code == requests.codes.ok:
+            raise RuntimeError("Unable to send Pushbullet notification")
 
     def send_alert(self, name, monitor):
         """Build up the content for the push notification."""
