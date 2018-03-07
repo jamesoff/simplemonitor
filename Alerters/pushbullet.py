@@ -1,8 +1,6 @@
 import requests
-import json
 
 from .alerter import Alerter
-from base64 import b64encode
 
 
 class PushbulletAlerter(Alerter):
