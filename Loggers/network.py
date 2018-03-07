@@ -26,7 +26,7 @@ class NetworkLogger(Logger):
             self.host = config_options["host"]
             self.port = int(config_options["port"])
             self.hostname = socket.gethostname()
-            self.key = config_options["key"]
+            self.key = bytearray(config_options["key"], 'utf-8')
         except Exception:
             raise RuntimeError("missing config options for network monitor")
 
@@ -56,7 +56,7 @@ class NetworkLogger(Logger):
             s.connect((self.host, self.port))
             p = pickle.dumps(self.batch_data)
             mac = hmac.new(self.key, p)
-            # print "My MAC is %s" % mac.hexdigest()
+            print("My MAC is %s" % mac.hexdigest())
             s.send("%s\n%s" % (mac.hexdigest(), p))
         except Exception as e:
             print("Failed to send data: %s" % e)
