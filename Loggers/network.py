@@ -3,6 +3,7 @@ import pickle
 import socket
 import sys
 import hmac
+import traceback
 
 # From the docs:
 #  Threads interact strangely with interrupts: the KeyboardInterrupt exception
@@ -135,7 +136,7 @@ class Listener(Thread):
                         self.running = False
                         self.sock.close()
                 except Exception:
-                    print(sys.exc_info())
+                    traceback.print_exc()
                 if self.running:
                     print("Socket error caught in thread: %s" % e)
             except Exception as e:
