@@ -126,7 +126,6 @@ class Listener(Thread):
 
             except socket.error as e:
                 fail_info = sys.exc_info()
-                print(sys.exc_info())
                 try:
                     if fail_info[1][0] == 4:
                         # Interrupted system call
@@ -138,7 +137,7 @@ class Listener(Thread):
                 if self.running:
                     print("Socket error caught in thread: %s" % e)
             except Exception as e:
-                # fail_info = sys.exc_info()
-                # print fail_info
+                fail_info = sys.exc_info()
+                print fail_info
                 # print traceback.print_tb(fail_info[2])
                 sys.stderr.write("Listener thread caught exception %s" % e)
