@@ -57,7 +57,7 @@ class NetworkLogger(Logger):
             p = pickle.dumps(self.batch_data)
             mac = hmac.new(self.key, p)
             print("My MAC is %s" % mac.hexdigest())
-            message = bytes("%s\n%s" % (mac.hexdigest(), p))
+            message = bytearray("{0}\n{1}".format(mac.hexdigest(), p), 'utf-8')
             s.send(message)
         except Exception as e:
             print("Failed to send data: %s" % e)
