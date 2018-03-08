@@ -138,6 +138,5 @@ class Listener(Thread):
                     print("Socket error caught in thread: %s" % e)
             except Exception as e:
                 fail_info = sys.exc_info()
-                print fail_info
-                # print traceback.print_tb(fail_info[2])
+                print(fail_info)
                 sys.stderr.write("Listener thread caught exception %s" % e)
