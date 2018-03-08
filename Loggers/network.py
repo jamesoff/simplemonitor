@@ -98,12 +98,14 @@ class Listener(Thread):
                 if self.verbose:
                     print("--> Got connection from %s" % addr[0])
                 pickled = ""
+                data = ''
                 while 1:
                     data = conn.recv(1024)
                     pickled += data
                     if not data:
                         break
                 conn.close()
+                data = data.decode('utf-8')
                 if self.verbose:
                     print("--> Finished receiving from %s" % addr[0])
                 # compute our own HMAC and compare
