@@ -184,6 +184,7 @@ class SimpleMonitor:
             self.monitors[key].log_result(key, logger)
         try:
             for key in list(self.remote_monitors.keys()):
+                print('remote logging for {0}'.format(key))
                 self.remote_monitors[key].log_result(key, logger)
         except Exception:
             print("exception while logging remote monitors")
