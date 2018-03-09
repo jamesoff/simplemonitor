@@ -9,7 +9,7 @@ coverage run --append monitor.py -f tests/network/master/monitor.ini -d &
 sleep 5
 
 # run the client instance
-coverage run --append monitor.py -f tests/network/client/monitor.ini -1 -d &
+COVERAGE_FILE=.coverage.2 coverage run --append monitor.py -f tests/network/client/monitor.ini -1 -d &
 
 # let them run
 sleep 25
