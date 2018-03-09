@@ -21,4 +21,7 @@ kill %2
 # make sure the client reached the master 
 grep test2 network.log
 
+# make sure both instances have exited before we combine logs
+wait
+
 coverage combine --append
