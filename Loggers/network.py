@@ -4,6 +4,7 @@ import socket
 import sys
 import hmac
 import traceback
+import struct
 
 # From the docs:
 #  Threads interact strangely with interrupts: the KeyboardInterrupt exception
@@ -57,9 +58,8 @@ class NetworkLogger(Logger):
             s.connect((self.host, self.port))
             p = pickle.dumps(self.batch_data)
             mac = hmac.new(self.key, p)
-            print("My MAC is %s" % mac.hexdigest())
-            message = bytearray("{0}\n{1}".format(mac.hexdigest(), p), 'utf-8')
-            s.send(message)
+            send_bytes = struct.pack('B', mac.digest_size) + mac.digest() + p
+            s.send(send_bytes)
         except Exception as e:
             print("Failed to send data: %s" % e)
         finally:
@@ -83,7 +83,7 @@ class Listener(Thread):
         self.sock.bind(('', port))
         self.simplemonitor = simplemonitor
         self.verbose = verbose
-        self.key = key
+        self.key = bytearray(key, 'utf-8')
 
     def run(self):
         """The main body of our thread.
@@ -98,23 +98,23 @@ class Listener(Thread):
                 conn, addr = self.sock.accept()
                 if self.verbose:
                     print("--> Got connection from %s" % addr[0])
-                pickled = ""
-                data = ''
+                pickled = bytearray()
                 while 1:
                     data = conn.recv(1024)
-                    pickled += data
                     if not data:
                         break
+                    pickled = pickled + data
                 conn.close()
-                data = data.decode('utf-8')
                 if self.verbose:
                     print("--> Finished receiving from %s" % addr[0])
-                # compute our own HMAC and compare
-                bits = pickled.split("\n", 1)
-                their_digest = bits[0]
-                pickled = bits[1]
+                # first byte is the size of the MAC
+                mac_size = pickled[0]
+                # then the MAC
+                their_digest = pickled[1:mac_size + 1]
+                # then the rest is the pickled data
+                pickled = pickled[mac_size + 1:]
                 mac = hmac.new(self.key, pickled)
-                my_digest = mac.hexdigest()
+                my_digest = mac.digest()
                 if self.verbose:
                     print("Computed my digest to be %s" % my_digest)
                     print("Remote digest is %s" % their_digest)
@@ -140,6 +140,5 @@ class Listener(Thread):
                 if self.running:
                     print("Socket error caught in thread: %s" % e)
             except Exception as e:
-                fail_info = sys.exc_info()
-                print(fail_info)
+                traceback.print_exc()
                 sys.stderr.write("Listener thread caught exception %s" % e)
