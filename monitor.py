@@ -8,7 +8,7 @@ import time
 
 from envconfig import EnvironmentAwareConfigParser
 
-from optparse import OptionParser
+from optparse import OptionParser, SUPPRESS_HELP
 
 from socket import gethostname
 
@@ -241,6 +241,7 @@ def main():
     parser.add_option("-f", "--config", dest="config", default="monitor.ini", help="configuration file")
     parser.add_option("-H", "--no-heartbeat", action="store_true", dest="no_heartbeat", default=False, help="Omit printing the '.' character when running checks")
     parser.add_option('-1', '--one-shot', action='store_true', dest='one_shot', default=False, help='Run the monitors once only, without alerting. Require monitors without "fail" in the name to succeed. Exit zero or non-zero accordingly.')
+    parser.add_option('--loops', dest='loops', default=-1, help=SUPPRESS_HELP, type=int)
 
     (options, args) = parser.parse_args()
 
@@ -359,9 +360,15 @@ def main():
     heartbeat = 0
 
     m.set_verbosity(options.verbose, options.debug)
+    loops = int(options.loops)
 
     while loop:
         try:
+            if loops > 0:
+                loops -= 1
+                if loops == 0:
+                    print('Ran out of loop counter, will stop after this one')
+                    loop = False
             m.run_tests()
             m.do_recovery()
             m.do_alerts()
