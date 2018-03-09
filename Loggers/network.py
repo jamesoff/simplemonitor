@@ -36,29 +36,15 @@ class NetworkLogger(Logger):
         if not self.doing_batch:
             print("NetworkLogger.save_result2() called while not doing batch.")
             return
-        # id = "%s_%s" % (self.hostname, monitor.name)
-        # data_line = {
-        #        "id": id,
-        #        "name": self.hostname + "/" + monitor.name,
-        #        "type": monitor.type,
-        #        "host": self.hostname,
-        #        "vfc": monitor.virtual_fail_count(),
-        #        "failed_at": monitor.first_failure_time(),
-        #        "more_info": monitor.get_result(),
-        #        "just_recovered": monitor.all_better_now(),
-        #        "urgent": monitor.is_urgent()
-        #        }
-
-        # self.batch_data[monitor.name] = data_line
         self.batch_data[monitor.name] = pickle.dumps(monitor)
 
     def process_batch(self):
         try:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.connect((self.host, self.port))
             p = pickle.dumps(self.batch_data)
             mac = hmac.new(self.key, p)
             send_bytes = struct.pack('B', mac.digest_size) + mac.digest() + p
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.connect((self.host, self.port))
             s.send(send_bytes)
         except Exception as e:
             print("Failed to send data: %s" % e)
