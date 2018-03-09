@@ -20,7 +20,7 @@ script:
     - TEST_VALUE=myenv coverage run --append monitor.py -t -f tests/monitor-env.ini
     - coverage run --append -m unittest discover -s tests
     - tests/test-network.sh
-    - coverage combine
+    - coverage combine --append
 after_success:
     - codecov
 matrix:
