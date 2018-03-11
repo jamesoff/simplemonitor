@@ -144,38 +144,6 @@ class SimpleMonitor:
         if verbose:
             print()
 
-    def _print_pretty_results(self, keys):
-        """Private function used by pretty_results.
-        Actually does the printing."""
-        for service in keys:
-            reason = self.monitors[service].get_result()
-            if reason == "":
-                print(service)
-            else:
-                print("%s (%s)" % (service, reason))
-
-    def pretty_results(self):
-        """Display the current state of our monitors in a human-readable fashion."""
-        if len(self.warning + self.failed + self.still_failing + self.skipped):
-            print()
-            print(datetime.datetime.now().isoformat())
-
-        if len(self.warning):
-            print("--> Warnings:")
-            self._print_pretty_results(self.warning)
-
-        if len(self.failed):
-            print("--> New failures:")
-            self._print_pretty_results(self.failed)
-
-        if len(self.still_failing):
-            print("--> Still failing:")
-            self._print_pretty_results(self.still_failing)
-
-        if len(self.skipped):
-            print("--> Skipped due to failed dependencies:")
-            self._print_pretty_results(self.skipped)
-
     def log_result(self, logger):
         """Use the given logger object to log our state."""
         logger.check_dependencies(self.failed + self.still_failing + self.skipped)
