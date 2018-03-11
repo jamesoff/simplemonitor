@@ -1,7 +1,7 @@
 import unittest
 import datetime
 import Alerters.alerter
-
+import Monitors.monitor
 
 class TestAlerter(unittest.TestCase):
 
@@ -85,3 +85,23 @@ class TestAlerter(unittest.TestCase):
         self.assertEqual(a.dependencies, ['a', 'b', 'c'], 'Alerter did not store dependencies')
         self.assertEqual(a.check_dependencies(['d', 'e']), None, 'Alerter thinks a dependency failed')
         self.assertEqual(a.check_dependencies(['a']), False, 'Alerter did not notice a dependency failed')
+
+    def test_limit(self):
+        config_options = {
+            'limit': '5'
+        }
+        a = Alerters.alerter.Alerter(config_options)
+        self.assertEqual(a.limit, 5)
+
+    def test_repeat(self):
+        config_options = {
+            'repeat': '5'
+        }
+        a = Alerters.alerter.Alerter(config_options)
+        self.assertEqual(a.repeat, 5)
+
+    def test_should_alert(self):
+        a = Alerters.alerter.Alerter(None)
+        a.available = False
+        m = Monitors.monitor.MonitorNull()
+        self.assertEqual(a.should_alert(m), '', 'Alerter did not handle being unavailable')
