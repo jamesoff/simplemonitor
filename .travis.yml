@@ -1,9 +1,28 @@
 ---
+dist: trusty
+sudo: required
 language: python
 python:
-    - "2.6"
     - "2.7"
+    - "3.5"
+    - "3.6"
+    - "3.7-dev"
+install:
+    - pip install codecov flake8
+    - pip install -r requirements.txt
+before_script:
+    - rm -f monitor.db monitor2.db
+    - sqlite3 monitor.db < monitor.sql
+    - sqlite3 monitor2.db < monitor.sql
 script:
-    - python monitor.py -t -f tests/monitor.ini
-    - TEST_VALUE=myenv python monitor.py -t -f tests/monitor-env.ini
-
+    - flake8 --ignore=E501 *.py Alerters/ Monitors/ Loggers/
+    - env PATH=$PWD/tests/mocks:$PATH coverage run monitor.py -1 -v -d -f tests/monitor.ini
+    - TEST_VALUE=myenv coverage run --append monitor.py -t -f tests/monitor-env.ini
+    - coverage run --append -m unittest discover -s tests
+    - tests/test-network.sh
+after_success:
+    - codecov
+matrix:
+  allow_failures:
+    - python: "3.6"
+    - python: "3.7-dev"

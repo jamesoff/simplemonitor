@@ -3,53 +3,56 @@ import os
 import subprocess
 import time
 import shlex
+import sys
 
 try:
     import win32api
     win32_available = True
-except:
+except ImportError:
     win32_available = False
 
-from monitor import Monitor
+from .monitor import Monitor
+
+
+def _size_string_to_bytes(s):
+    if s.endswith("G"):
+        gigs = int(s[:-1])
+        bytes = gigs * (1024 ** 3)
+    elif s.endswith("M"):
+        megs = int(s[:-1])
+        bytes = megs * (1024 ** 2)
+    elif s.endswith("K"):
+        kilos = int(s[:-1])
+        bytes = kilos * 1024
+    else:
+        return int(s)
+    return bytes
+
+
+def _bytes_to_size_string(b):
+    """Convert a number in bytes to a sensible unit."""
+
+    kb = 1024
+    mb = kb * 1024
+    gb = mb * 1024
+    tb = gb * 1024
+
+    if b > tb:
+        return "%0.2fTiB" % (b / float(tb))
+    elif b > gb:
+        return "%0.2fGiB" % (b / float(gb))
+    elif b > mb:
+        return "%0.2fMiB" % (b / float(mb))
+    elif b > kb:
+        return "%0.2fKiB" % (b / float(kb))
+    else:
+        return str(b)
 
 
 class MonitorDiskSpace(Monitor):
     """Make sure we have enough disk space."""
 
     type = "diskspace"
-
-    def _size_string_to_bytes(self, s):
-        if s.endswith("G"):
-            gigs = int(s[:-1])
-            bytes = gigs * (1024 ** 3)
-        elif s.endswith("M"):
-            megs = int(s[:-1])
-            bytes = megs * (1024 ** 2)
-        elif s.endswith("K"):
-            kilos = int(s[:-1])
-            bytes = kilos * 1024
-        else:
-            return int(s)
-        return bytes
-
-    def _bytes_to_size_string(self, b):
-        """Convert a number in bytes to a sensible unit."""
-
-        kb = 1024
-        mb = kb * 1024
-        gb = mb * 1024
-        tb = gb * 1024
-
-        if b > tb:
-            return "%0.2fTiB" % (b / float(tb))
-        elif b > gb:
-            return "%0.2fGiB" % (b / float(gb))
-        elif b > mb:
-            return "%0.2fMiB" % (b / float(mb))
-        elif b > kb:
-            return "%0.2fKiB" % (b / float(kb))
-        else:
-            return str(b)
 
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
@@ -62,10 +65,10 @@ class MonitorDiskSpace(Monitor):
         try:
             partition = config_options["partition"]
             limit = config_options["limit"]
-        except:
+        except Exception:
             raise RuntimeError("Required configuration fields missing")
         self.partition = partition
-        self.limit = self._size_string_to_bytes(limit)
+        self.limit = _size_string_to_bytes(limit)
 
     def run_test(self):
         try:
@@ -77,20 +80,20 @@ class MonitorDiskSpace(Monitor):
                 result = win32api.GetDiskFreeSpaceEx(self.partition)
                 space = result[2]
                 percent = float(result[2]) / float(result[1]) * 100
-        except Exception, e:
+        except Exception as e:
             self.record_fail("Couldn't get free disk space: %s" % e)
             return False
 
         if space <= self.limit:
-            self.record_fail("%s free (%d%%)" % (self._bytes_to_size_string(space), percent))
+            self.record_fail("%s free (%d%%)" % (_bytes_to_size_string(space), percent))
             return False
         else:
-            self.record_success("%s free (%d%%)" % (self._bytes_to_size_string(space), percent))
+            self.record_success("%s free (%d%%)" % (_bytes_to_size_string(space), percent))
             return True
 
     def describe(self):
         """Explains what we do."""
-        return "Checking for at least %s free space on %s" % (self._bytes_to_size_string(self.limit), self.partition)
+        return "Checking for at least %s free space on %s" % (_bytes_to_size_string(self.limit), self.partition)
 
     def get_params(self):
         return (self.limit, self.partition)
@@ -104,58 +107,25 @@ class MonitorFileStat(Monitor):
     minsize = -1
     filename = ""
 
-    def _size_string_to_bytes(self, s):
-        if s.endswith("G"):
-            gigs = int(s[:-1])
-            bytes = gigs * (1024 ** 3)
-        elif s.endswith("M"):
-            megs = int(s[:-1])
-            bytes = megs * (1024 ** 2)
-        elif s.endswith("K"):
-            kilos = int(s[:-1])
-            bytes = kilos * 1024
-        else:
-            return int(s)
-        return bytes
-
-    def _bytes_to_size_string(self, b):
-        """Convert a number in bytes to a sensible unit."""
-
-        kb = 1024
-        mb = kb * 1024
-        gb = mb * 1024
-        tb = gb * 1024
-
-        if b > tb:
-            return "%0.2fTiB" % (b / float(tb))
-        elif b > gb:
-            return "%0.2fGiB" % (b / float(gb))
-        elif b > mb:
-            return "%0.2fMiB" % (b / float(mb))
-        elif b > kb:
-            return "%0.2fKiB" % (b / float(kb))
-        else:
-            return str(b)
-
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
         try:
             if 'maxage' in config_options:
                 maxage = int(config_options["maxage"])
                 self.maxage = maxage
-        except:
+        except Exception:
             raise RuntimeError("Maxage missing or not an integer (number of seconds)")
 
         try:
             if 'minsize' in config_options:
-                minsize = self._size_string_to_bytes(config_options["minsize"])
+                minsize = _size_string_to_bytes(config_options["minsize"])
                 self.minsize = minsize
-        except:
+        except Exception:
             raise RuntimeError("Minsize missing or not an integer (number of bytes")
 
         try:
             filename = config_options["filename"]
-        except:
+        except Exception:
             raise RuntimeError("Filename missing")
 
         self.filename = filename
@@ -163,7 +133,7 @@ class MonitorFileStat(Monitor):
     def run_test(self):
         try:
             statinfo = os.stat(self.filename)
-        except Exception, e:
+        except Exception as e:
             self.record_fail("Unable to check file: %s" % e)
             return False
 
@@ -223,16 +193,17 @@ class MonitorApcupsd(Monitor):
                 executable = "apcaccess"
         try:
             output = subprocess.check_output(executable)
-        except subprocess.CalledProcessError, e:
+            output = output.decode('utf-8')
+        except subprocess.CalledProcessError as e:
             output = e.output
-        except OSError, e:
-            self.record_fail("Could not run %s: %s", (executable, e))
+        except OSError as e:
+            self.record_fail("Could not run {0}: {1}".format(executable, e))
             return False
-        except OSError, e:
-            self.record_fail("Error while getting UPS info: %s", e)
+        except OSError as e:
+            self.record_fail("Error while getting UPS info: {0}".format(e))
             return False
 
-        for line in output:
+        for line in output.splitlines():
             if line.find(":") > -1:
                 bits = line.split(":")
                 info[bits[0].strip()] = bits[1].strip()
@@ -292,17 +263,17 @@ class MonitorPortAudit(Monitor):
             if self.path == "":
                 self.path = "/usr/local/sbin/portaudit"
             try:
-                output = subprocess.call([self.path, '-a', '-X', '1'])
-            except subprocess.CalledProcessError, e:
+                output = subprocess.check_output([self.path, '-a', '-X', '1']).decode('utf-8')
+            except subprocess.CalledProcessError as e:
                 output = e.output
-            except OSError, e:
-                self.record_fail("Error running %s: %s", (self.path, e))
+            except OSError as e:
+                self.record_fail("Error running %s: %s" % (self.path, e))
                 return False
-            except Exception, e:
-                self.record_fail("Error running portaudit: %s", e)
+            except Exception as e:
+                self.record_fail("Error running portaudit: %s" % e)
                 return False
 
-            for line in output:
+            for line in output.splitlines():
                 matches = self.regexp.match(line)
                 if matches:
                     count = int(matches.group(1))
@@ -317,7 +288,7 @@ class MonitorPortAudit(Monitor):
                     return False
             self.record_success()
             return True
-        except Exception, e:
+        except Exception as e:
             self.record_fail("Could not run portaudit: %s" % e)
             return False
 
@@ -345,17 +316,17 @@ class MonitorPkgAudit(Monitor):
             if self.path == "":
                 self.path = "/usr/local/sbin/pkg"
             try:
-                output = subprocess.check_output([self.path, 'audit'])
-            except subprocess.CalledProcessError, e:
+                output = subprocess.check_output([self.path, 'audit']).decode('utf-8')
+            except subprocess.CalledProcessError as e:
                 output = e.output
-            except OSError, e:
+            except OSError as e:
                 self.record_fail("Failed to run %s audit: %s", (self.path, e))
                 return False
-            except Exception, e:
+            except Exception as e:
                 self.record_fail("Error running pkg audit: %s", e)
                 return False
 
-            for line in output:
+            for line in output.splitlines():
                 matches = self.regexp.match(line)
                 if matches:
                     count = int(matches.group(1))
@@ -370,7 +341,7 @@ class MonitorPkgAudit(Monitor):
                     return False
             self.record_success()
             return True
-        except Exception, e:
+        except Exception as e:
             self.record_fail("Could not run pkg: %s" % e)
             return False
 
@@ -390,7 +361,7 @@ class MonitorLoadAvg(Monitor):
         if 'which' in config_options:
             try:
                 which = int(config_options["which"])
-            except:
+            except Exception:
                 raise RuntimeError("value of 'which' is not an int")
             if which < 0:
                 raise RuntimeError("value of 'which' is too low")
@@ -400,7 +371,7 @@ class MonitorLoadAvg(Monitor):
         if 'max' in config_options:
             try:
                 max = float(config_options["max"])
-            except:
+            except Exception:
                 raise RuntimeError("value of 'max' is not a float")
             if max <= 0:
                 raise RuntimeError("value of 'max' is too low")
@@ -417,7 +388,7 @@ class MonitorLoadAvg(Monitor):
     def run_test(self):
         try:
             loadavg = os.getloadavg()
-        except Exception, e:
+        except Exception as e:
             self.record_fail("Exception getting loadavg: %s" % e)
             return False
 
@@ -444,7 +415,7 @@ class MonitorZap(Monitor):
         if 'span' in config_options:
             try:
                 self.span = int(config_options["span"])
-            except:
+            except Exception:
                 raise RuntimeError("span parameter must be an integer")
             if self.span < 1:
                 raise RuntimeError("span parameter must be > 0")
@@ -464,7 +435,7 @@ class MonitorZap(Monitor):
                         return True
             self.record_fail("Error getting status")
             return False
-        except Exception, e:
+        except Exception as e:
             self.record_fail("Error running ztscan: %s" % e)
             return False
 
@@ -488,8 +459,14 @@ class MonitorCommand(Monitor):
 
     type = "command"
 
+    available = True
+
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
+
+        if sys.version_info[0] == 2 and sys.version_info[1] == 6:
+            print('Warning: Command monitors are unsupported on Python 2.6!')
+            self.available = False
 
         self.result_regexp_text = ""
         self.result_regexp = None
@@ -502,18 +479,21 @@ class MonitorCommand(Monitor):
             self.result_max = int(config_options["result_max"])
 
         try:
-            # command = config_options["command"].split(" ")
             command = shlex.split(config_options["command"])
-        except:
+        except Exception:
             raise RuntimeError("Required configuration fields missing or invalid")
         if command is None or len(command) == 0:
             raise RuntimeError("missing command")
         self.command = command
 
     def run_test(self):
+        if not self.available:
+            self.record_skip(None)
+            return False
         try:
             out = subprocess.check_output(self.command)
             if self.result_regexp is not None:
+                out = out.decode('utf-8')
                 matches = self.result_regexp.search(out)
                 if matches:
                     self.record_success()
@@ -531,7 +511,7 @@ class MonitorCommand(Monitor):
                     return False
             self.record_success()
             return True
-        except Exception, e:
+        except Exception as e:
             self.record_fail(e)
             return False
 

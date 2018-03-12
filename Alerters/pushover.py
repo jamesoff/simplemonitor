@@ -1,6 +1,7 @@
-import httplib, urllib
+# coding=utf-8
+import requests
 
-from alerter import Alerter
+from .alerter import Alerter
 
 
 class PushoverAlerter(Alerter):
@@ -11,7 +12,7 @@ class PushoverAlerter(Alerter):
         try:
             pushover_token = config_options["token"]
             pushover_user = config_options["user"]
-        except:
+        except Exception:
             raise RuntimeError("Required configuration fields missing")
 
         if pushover_token == "":
@@ -21,21 +22,20 @@ class PushoverAlerter(Alerter):
 
         self.pushover_token = pushover_token
         self.pushover_user = pushover_user
-        
+
         self.support_catchup = True
 
     def send_pushover_notification(self, subject, body):
         """Send a push notification."""
-        
-        conn = httplib.HTTPSConnection("api.pushover.net:443")
-        conn.request("POST", "/1/messages.json",
-            urllib.urlencode({
-                "token": self.pushover_token,
-                "user": self.pushover_user,
-                "title": subject,
-                "message": body,
-            }), { "Content-type": "application/x-www-form-urlencoded" })
-    
+
+        requests.post('api.pushover.net:443/1/messages.json',
+                      data={
+                          "token": self.pushover_token,
+                          "user": self.pushover_user,
+                          "title": subject,
+                          "message": body,
+                      })
+
     def send_alert(self, name, monitor):
         """Build up the content for the push notification."""
 
@@ -49,7 +49,7 @@ class PushoverAlerter(Alerter):
 
         subject = ""
         body = ""
-        
+
         if type == "":
             return
         elif type == "failure":
@@ -82,14 +82,14 @@ class PushoverAlerter(Alerter):
             body = "Monitor %s%s failed earlier while this alerter was out of hours.\nFailed at: %s\nVirtual failure count: %d\nAdditional info: %s\nDescription: %s" % (name, host, self.format_datetime(monitor.first_failure_time()), monitor.virtual_fail_count(), monitor.get_result(), monitor.describe())
 
         else:
-            print "Unknown alert type %s" % type
+            print("Unknown alert type %s" % type)
             return
 
         if not self.dry_run:
             try:
                 self.send_pushover_notification(subject, body)
-            except Exception, e:
-                print "Couldn't send push notification: %s", e
+            except Exception as e:
+                print("Couldn't send push notification: %s", e)
                 self.available = False
         else:
-            print "dry_run: would send push notification: %s" % body
+            print("dry_run: would send push notification: %s" % body)

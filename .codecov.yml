@@ -1,0 +1,2 @@
+ignore:
+  - Monitors/file.py

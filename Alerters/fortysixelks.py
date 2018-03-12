@@ -1,10 +1,10 @@
 try:
     import requests
     requests_available = True
-except:
+except ImportError:
     requests_available = False
 
-from alerter import Alerter
+from .alerter import Alerter
 
 
 class FortySixElksAlerter(Alerter):
@@ -14,8 +14,8 @@ class FortySixElksAlerter(Alerter):
 
     def __init__(self, config_options):
         if not requests_available:
-            print "Requests package is not available, cannot use FortySixElksAlerter."
-            print "Try: pip install -r requirements.txt"
+            print("Requests package is not available, cannot use FortySixElksAlerter.")
+            print("Try: pip install -r requirements.txt")
             return
 
         Alerter.__init__(self, config_options)
@@ -24,7 +24,7 @@ class FortySixElksAlerter(Alerter):
             username = config_options["username"]
             password = config_options["password"]
             target = config_options["target"]
-        except:
+        except Exception:
             raise RuntimeError("Required configuration fields missing")
 
         if 'sender' in config_options:
@@ -35,7 +35,7 @@ class FortySixElksAlerter(Alerter):
             elif len(sender) < 3:
                 raise RuntimeError("SMS sender name must be at least 3 chars long")
             elif len(sender) > 11:
-                print "warning: truncating SMS sender name to 11 chars"
+                print("warning: truncating SMS sender name to 11 chars")
                 sender = sender[:11]
         else:
             sender = "SmplMntr"
@@ -74,7 +74,7 @@ class FortySixElksAlerter(Alerter):
                 days, hours, minutes, seconds,
                 monitor.get_result())
             if len(message) > 160:
-                print "Warning! Truncating SMS message to 160 chars."
+                print("Warning! Truncating SMS message to 160 chars.")
                 message = message[:156] + "..."
             url = "https://{}/a1/SMS".format(self.api_host)
             auth = (self.username, self.password)
@@ -92,7 +92,7 @@ class FortySixElksAlerter(Alerter):
                 days, hours, minutes, seconds,
                 monitor.get_result())
             if len(message) > 160:
-                print "Warning! Truncating SMS message to 160 chars."
+                print("Warning! Truncating SMS message to 160 chars.")
                 message = message[:156] + "..."
             url = "https://{}/a1/SMS".format(self.api_host)
             auth = (self.username, self.password)
@@ -113,15 +113,15 @@ class FortySixElksAlerter(Alerter):
                 response = requests.post(url, data=params, auth=auth)
                 s = response.json()
                 if s['status'] not in ('created', 'delivered'):
-                    print "Unable to send SMS: %s" % s
-                    print "URL: %s, PARAMS: %s" % (url, params)
+                    print("Unable to send SMS: %s" % s)
+                    print("URL: %s, PARAMS: %s" % (url, params))
                     self.available = False
             except Exception as e:
-                print "SMS sending failed"
-                print e
-                print url
-                print params
+                print("SMS sending failed")
+                print(e)
+                print(url)
+                print(params)
                 self.available = False
         else:
-            print "dry_run: would send SMS: %s" % url
+            print("dry_run: would send SMS: %s" % url)
         return

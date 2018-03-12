@@ -1,7 +1,7 @@
-
+# coding=utf-8
 """compound checks (logical and of failure of multiple probes) for SimpleMonitor."""
 
-from monitor import Monitor
+from .monitor import Monitor
 
 
 class CompoundMonitor(Monitor):
@@ -17,13 +17,12 @@ class CompoundMonitor(Monitor):
         monitors = []
         try:
             monitors = [ele.strip() for ele in config_options["monitors"].split(",")]
-        except:
+        except Exception:
             raise RuntimeError("Required configuration fields missing")
         min_fail = len(monitors)
         try:
             min_fail = max(int(config_options["min_fail"]), 1)
-        except:
-            print("could not parse min_fail. Ignoring...")
+        except Exception:
             pass
         self.min_fail = min_fail
         self.monitors = monitors
@@ -41,8 +40,7 @@ class CompoundMonitor(Monitor):
 
     def describe(self):
         """Explains what we do."""
-        message = "Checking that %s tests both failed" % (self.url)
-        return message
+        return "Checking that these monitors all succeeded: {0}".format(", ".join(self.monitors))
 
     def get_params(self):
         return (self.monitors)
@@ -56,12 +54,12 @@ class CompoundMonitor(Monitor):
         if self.m != -1:
             return
         self.m = {}
-        for i in self.mt.monitors.keys():
+        for i in list(self.mt.monitors.keys()):
             if i in self.monitors:
                 self.m[i] = self.mt.monitors[i]
         # make sure we find all of our monitors or die during config
         for i in self.monitors:
-            if i not in self.m.keys():
+            if i not in list(self.m.keys()):
                 raise RuntimeError("No such monitor %s in compound monitor" % i)
 
     def virtual_fail_count(self):
@@ -88,4 +86,3 @@ class CompoundMonitor(Monitor):
             return "{0} of {1} services failed. Fail after: {2}".format(failcount, monitorcount, self.min_fail)
         else:
             return "All {0} services OK".format(monitorcount)
-

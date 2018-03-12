@@ -1,3 +1,4 @@
+# coding=utf-8
 from __future__ import with_statement
 
 import os
@@ -7,12 +8,15 @@ import socket
 import tempfile
 import shutil
 import stat
-import cStringIO
 import sys
 import json
 
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
-from logger import Logger
+from .logger import Logger
 
 
 class FileLogger(Logger):
@@ -22,13 +26,15 @@ class FileLogger(Logger):
     buffered = True
     dateformat = None
 
-    def __init__(self, config_options={}):
+    def __init__(self, config_options=None):
+        if config_options is None:
+            config_options = {}
         Logger.__init__(self, config_options)
         if "filename" in config_options:
             try:
                 self.filename = config_options["filename"]
                 self.file_handle = open(self.filename, "a+")
-            except Exception, e:
+            except Exception as e:
                 raise RuntimeError("Couldn't open log file %s for appending: %s" % (self.filename, e))
         else:
             raise RuntimeError("Missing filename for logfile")
@@ -76,15 +82,15 @@ class FileLogger(Logger):
 
             if not self.buffered:
                 self.file_handle.flush()
-        except Exception, e:
-            print "Error writing to logfile %s: %s" % (self.filename, e)
+        except Exception as e:
+            print("Error writing to logfile %s: %s" % (self.filename, e))
 
     def hup(self):
         """Close and reopen log file."""
         self.file_handle.close()
         try:
             self.file_handle = open(self.filename, "a+")
-        except Exception, e:
+        except Exception as e:
             raise RuntimeError("Couldn't reopen log file %s after HUP: %s" % (self.filename, e))
 
 
@@ -103,11 +109,11 @@ class HTMLLogger(Logger):
             self.footer = config_options["footer"]
             self.folder = config_options["folder"]
         except Exception:
-            print "Missing required value for HTML Logger"
+            print("Missing required value for HTML Logger")
 
     def save_result2(self, name, monitor):
         if not self.doing_batch:
-            print "HTMLLogger.save_result2() called while not doing batch."
+            print("HTMLLogger.save_result2() called while not doing batch.")
             return
         if monitor.virtual_fail_count() == 0:
             status = True
@@ -157,21 +163,21 @@ class HTMLLogger(Logger):
 
         try:
             my_host = socket.gethostname().split(".")[0]
-        except:
+        except Exception:
             my_host = socket.gethostname()
 
         try:
             temp_file = tempfile.mkstemp()
             file_handle = os.fdopen(temp_file[0], "w")
             file_name = temp_file[1]
-        except:
+        except Exception:
             sys.stderr.write("Couldn't create temporary file for HTML output\n")
             return
 
-        output_ok = cStringIO.StringIO()
-        output_fail = cStringIO.StringIO()
+        output_ok = StringIO()
+        output_fail = StringIO()
 
-        keys = self.batch_data.keys()
+        keys = list(self.batch_data.keys())
         keys.sort()
         for entry in keys:
             if self.batch_data[entry]["age"] > 120:
@@ -187,7 +193,7 @@ class HTMLLogger(Logger):
                 remote_count += 1
             try:
                 monitor_name = entry.split("/")[1]
-            except:
+            except Exception:
                 monitor_name = entry
             if status == "FAIL":
                 output = output_fail
@@ -212,7 +218,7 @@ class HTMLLogger(Logger):
                 output.write("<td class=\"vfc\">%s</td>" % self.batch_data[entry]["fail_count"])
             try:
                 output.write("<td>%d+%02d:%02d:%02d</td>" % (self.batch_data[entry]["downtime"][0], self.batch_data[entry]["downtime"][1], self.batch_data[entry]["downtime"][2], self.batch_data[entry]["downtime"][3]))
-            except:
+            except Exception:
                 output.write("<td>&nbsp;</td>")
             output.write("<td>%s &nbsp;</td>" % (self.batch_data[entry]["fail_data"]))
             if self.batch_data[entry]["failures"] == 0:
@@ -256,8 +262,8 @@ class HTMLLogger(Logger):
             file_handle.close()
             os.chmod(file_name, stat.S_IREAD | stat.S_IWRITE | stat.S_IRGRP | stat.S_IROTH)
             shutil.move(file_name, os.path.join(self.folder, self.filename))
-        except Exception, e:
-            print "problem closing temporary file for HTML output", e
+        except Exception as e:
+            print("problem closing temporary file for HTML output %s" % e)
 
     def parse_file(self, file_handle):
         lines = []

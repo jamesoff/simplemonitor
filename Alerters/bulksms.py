@@ -1,6 +1,8 @@
-import urllib
+# coding=utf-8
 
-from alerter import Alerter
+import requests
+
+from .alerter import Alerter
 
 
 class BulkSMSAlerter(Alerter):
@@ -15,13 +17,13 @@ class BulkSMSAlerter(Alerter):
             username = config_options["username"]
             password = config_options["password"]
             target = config_options["target"]
-        except:
+        except Exception:
             raise RuntimeError("Required configuration fields missing")
 
         if 'sender' in config_options:
             sender = config_options["sender"]
             if len(sender) > 11:
-                print "warning: truncating SMS sender name to 11 chars"
+                print("warning: truncating SMS sender name to 11 chars")
                 sender = sender[:11]
         else:
             sender = "SmplMntr"
@@ -44,14 +46,14 @@ class BulkSMSAlerter(Alerter):
         if not monitor.is_urgent():
             return
 
-        type = self.should_alert(monitor)
+        type_ = self.should_alert(monitor)
         message = ""
         url = ""
 
         (days, hours, minutes, seconds) = self.get_downtime(monitor)
-        if type == "":
+        if type_ == "":
             return
-        elif type == "catchup":
+        elif type_ == "catchup":
             (days, hours, minutes, seconds) = self.get_downtime(monitor)
             message = "catchup: %s failed on %s at %s (%d+%02d:%02d:%02d)\n%s" % (
                 name,
@@ -60,18 +62,18 @@ class BulkSMSAlerter(Alerter):
                 days, hours, minutes, seconds,
                 monitor.get_result())
             if len(message) > 160:
-                print "Warning! Truncating SMS message to 160 chars."
+                print("Warning! Truncating SMS message to 160 chars.")
                 message = message[:156] + "..."
             url = "https://{}/eapi/submission/send_sms/2/2.0".format(self.api_host)
-            params = urllib.urlencode({
+            params = {
                 'username': self.username,
                 'password': self.password,
                 'message': message,
                 'msisdn': self.target,
                 'sender': self.sender,
                 'repliable': '0'
-            })
-        elif type == "failure":
+            }
+        elif type_ == "failure":
             (days, hours, minutes, seconds) = self.get_downtime(monitor)
             message = "%s failed on %s at %s (%d+%02d:%02d:%02d)\n%s" % (
                 name,
@@ -80,17 +82,17 @@ class BulkSMSAlerter(Alerter):
                 days, hours, minutes, seconds,
                 monitor.get_result())
             if len(message) > 160:
-                print "Warning! Truncating SMS message to 160 chars."
+                print("Warning! Truncating SMS message to 160 chars.")
                 message = message[:156] + "..."
             url = "https://{}/eapi/submission/send_sms/2/2.0".format(self.api_host)
-            params = urllib.urlencode({
+            params = {
                 'username': self.username,
                 'password': self.password,
                 'message': message,
                 'msisdn': self.target,
                 'sender': self.sender,
                 'repliable': '0'
-            })
+            }
         else:
             # we don't handle other types of message
             pass
@@ -100,19 +102,17 @@ class BulkSMSAlerter(Alerter):
 
         if not self.dry_run:
             try:
-                handle = urllib.urlopen(url, params)
-                s = handle.read()
+                r = requests.get(url, params=params)
+                s = r.text
                 if not s.startswith("0"):
-                    print "Unable to send SMS: %s (%s)" % (s.split("|")[0], s.split("|")[1])
-                    print "URL: %s, PARAMS: %s" % (url, params)
+                    print("Unable to send SMS: %s (%s)" % (s.split("|")[0], s.split("|")[1]))
+                    print("URL: %s, PARAMS: %s" % (url, params))
                     self.available = False
-                handle.close()
             except Exception as e:
-                print "SMS sending failed"
-                print e
-                print url
-                print params
+                print("SMS sending failed")
+                print(e)
+                print(url)
                 self.available = False
         else:
-            print "dry_run: would send SMS: %s" % url
+            print("dry_run: would send SMS: %s" % url)
         return

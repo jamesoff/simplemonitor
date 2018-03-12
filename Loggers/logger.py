@@ -1,7 +1,8 @@
+# coding=utf-8
 import datetime
 
 
-class Logger:
+class Logger(object):
     """Abstract class basis for loggers."""
 
     dependencies = []
@@ -72,7 +73,7 @@ class Logger:
             else:
                 minutes = 0
             return (downtime.days, hours, minutes, seconds)
-        except:
+        except Exception:
             return (0, 0, 0, 0)
 
     def format_datetime(self, dt):

@@ -1,7 +1,8 @@
+# coding=utf-8
 import subprocess
 import shlex
 
-from alerter import Alerter
+from .alerter import Alerter
 
 
 class ExecuteAlerter(Alerter):
@@ -28,7 +29,7 @@ class ExecuteAlerter(Alerter):
             self.catchup_command = config_options['catchup_command']
 
     def send_alert(self, name, monitor):
-        type = self.should_alert(monitor)
+        type_ = self.should_alert(monitor)
         command = None
         (days, hours, minutes, seconds) = self.get_downtime(monitor)
         if monitor.is_remote():
@@ -36,17 +37,17 @@ class ExecuteAlerter(Alerter):
         else:
             host = self.hostname
 
-        if type == "":
+        if type_ == "":
             return
-        elif type == "failure":
+        elif type_ == "failure":
             command = self.fail_command
-        elif type == "success":
+        elif type_ == "success":
             command = self.success_command
-        elif type == "catchup":
-            if catchup_command == 'fail_command':
+        elif type_ == "catchup":
+            if self.catchup_command == 'fail_command':
                 command = self.fail_command
         else:
-            print "Unknown alert type %s" % type
+            print("Unknown alert type %s" % type_)
             return
 
         if command is None:
@@ -68,13 +69,13 @@ class ExecuteAlerter(Alerter):
 
         if not self.dry_run:
             if self.debug:
-                print "About to execute command:", command
+                print("About to execute command: %s" % command)
             try:
                 subprocess.call(shlex.split(command))
-            except Exception, e:
-                print "Exception encountered running command:", command
-                print e
+            except Exception as e:
+                print("Exception encountered running command: %s" % command)
+                print(e)
             if self.debug:
-                print "Command has finished."
+                print("Command has finished.")
         else:
-            print "Would run command: %s" % command
+            print("Would run command: %s" % command)

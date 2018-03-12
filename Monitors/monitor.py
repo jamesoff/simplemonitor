@@ -1,4 +1,4 @@
-
+# coding=utf-8
 """A collection of monitors for the SimpleMonitor application.
 
 The Monitor class contains the monitor-independent logic for handling results etc.
@@ -19,9 +19,9 @@ import copy
 import subprocess
 
 try:
-    import win32api
+    import win32api  # noqa: F401
     win32_available = True
-except:
+except ImportError:
     win32_available = False
 
 
@@ -42,6 +42,8 @@ class Monitor:
     last_run = 0
 
     urgent = 1
+    notify = True
+    group = 'default'
 
     failures = 0
     last_failure = None
@@ -69,6 +71,10 @@ class Monitor:
             self.set_dependencies([x.strip() for x in config_options["depend"].split(",")])
         if 'urgent' in config_options:
             self.set_urgency(int(config_options["urgent"]))
+        if 'notify' in config_options:
+            self.set_notify(config_options["notify"])
+        if 'group' in config_options:
+            self.set_group(config_options["group"])
         if 'tolerance' in config_options:
             self.set_tolerance(int(config_options["tolerance"]))
         if 'remote_alert' in config_options:
@@ -81,6 +87,8 @@ class Monitor:
             self.set_gap(config_options["gap"])
         self.running_on = self.short_hostname()
         self.name = name
+        # Populate the notify flag for every host
+        self.notify = self.notify
 
     def set_recover_command(self, command):
         self.recover_command = command
@@ -150,7 +158,7 @@ class Monitor:
         """Remove a dependency from the current version of the list."""
         try:
             self.deps.remove(dependency)
-        except:
+        except Exception:
             pass
 
     def get_dependencies(self):
@@ -172,7 +180,7 @@ class Monitor:
             result = 1
         try:
             logger.save_result2(name, self)
-        except Exception, e:
+        except Exception as e:
             sys.stderr.write("%s\n" % e)
             logger.save_result(name, self.type, self.get_params(), result, self.last_result)
 
@@ -273,7 +281,7 @@ class Monitor:
         try:
             if self.just_recovered:
                 return True
-        except:
+        except Exception:
             pass
 
         if self.last_error_count >= self.tolerance and self.success_count == 1 and not self.was_skipped:
@@ -293,6 +301,10 @@ class Monitor:
         """Check if this monitor needs urgent alerts (e.g. SMS)."""
         return self.urgent
 
+    def is_notify(self):
+        """Check if this monitor has notifications enabled"""
+        return self.notify
+
     def set_urgency(self, urgency):
         """Record if this monitor needs urgent alerts."""
         if urgency == 1:
@@ -301,6 +313,14 @@ class Monitor:
             urgency = False
 
         self.urgent = urgency
+
+    def set_notify(self, notify):
+        """Record if this monitor needs notifications."""
+        self.notify = True if (notify == 1 or notify.lower() == 'true' or notify) else False
+
+    def set_group(self, group):
+        """Record if this monitor has a group."""
+        self.group = group
 
     def should_run(self):
         """Check if we should run our tests.
@@ -341,7 +361,7 @@ class Monitor:
             p = subprocess.Popen(self.recover_command.split(' '))
             p.wait()
             self.recover_info = "Command executed and returned %d" % p.returncode
-        except Exception, e:
+        except Exception as e:
             self.recover_info = "Unable to run command: %s" % e
 
         return
@@ -367,7 +387,7 @@ class MonitorFail(Monitor):
 
     def run_test(self):
         """Always fails."""
-        print "error_count = %d, interval = %d --> %d" % (self.error_count, self.interval, self.error_count % self.interval)
+        print("error_count = %d, interval = %d --> %d" % (self.error_count, self.interval, self.error_count % self.interval))
         if (self.interval == 0) or (self.error_count == 0) or (self.error_count % self.interval != 0):
             self.record_fail("This monitor always fails.")
             return False

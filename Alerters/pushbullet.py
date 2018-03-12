@@ -1,8 +1,6 @@
-import httplib
-import json
+import requests
 
-from alerter import Alerter
-from base64 import b64encode
+from .alerter import Alerter
 
 
 class PushbulletAlerter(Alerter):
@@ -12,7 +10,7 @@ class PushbulletAlerter(Alerter):
         Alerter.__init__(self, config_options)
         try:
             pushbullet_token = config_options["token"]
-        except:
+        except Exception:
             raise RuntimeError("Required configuration fields missing")
 
         if pushbullet_token == "":
@@ -26,12 +24,11 @@ class PushbulletAlerter(Alerter):
         """Send a push notification."""
 
         _payload = {'type': 'note', 'title': subject, 'body': body}
-        _auth = b64encode("{}:".format(self.pushbullet_token).encode('utf-8')).decode("ascii")
-        _headers = {'content-type': 'application/json',
-                    'Authorization': 'Basic {}'.format(_auth)}
+        _auth = requests.auth.HTTPBasicAuth(self.pushbullet_token, '')
 
-        conn = httplib.HTTPSConnection("api.pushbullet.com:443")
-        conn.request("POST", "/v2/pushes", json.dumps(_payload), _headers)
+        r = requests.post('https://api.pushbullet.com/v2/pushes', data=_payload, auth=_auth)
+        if not r.status_code == requests.codes.ok:
+            raise RuntimeError("Unable to send Pushbullet notification")
 
     def send_alert(self, name, monitor):
         """Build up the content for the push notification."""
@@ -73,27 +70,24 @@ class PushbulletAlerter(Alerter):
         elif type == "success":
             subject = "[%s] Monitor %s succeeded" % (self.hostname, name)
             body = "Monitor %s%s is back up.\nOriginally failed at: %s\nDowntime: %d+%02d:%02d:%02d\nDescription: %s" % (
-            name, host, self.format_datetime(monitor.first_failure_time()), days, hours, minutes, seconds,
-            monitor.describe())
+                name, host, self.format_datetime(monitor.first_failure_time()), days, hours, minutes, seconds,
+                monitor.describe())
 
         elif type == "catchup":
             subject = "[%s] Monitor %s failed earlier!" % (self.from_addr, self.to_addr, self.hostname, name)
             body = "Monitor %s%s failed earlier while this alerter was out of hours.\nFailed at: %s\nVirtual failure count: %d\nAdditional info: %s\nDescription: %s" % (
-            name, host, self.format_datetime(monitor.first_failure_time()), monitor.virtual_fail_count(),
-            monitor.get_result(), monitor.describe())
+                name, host, self.format_datetime(monitor.first_failure_time()), monitor.virtual_fail_count(),
+                monitor.get_result(), monitor.describe())
 
         else:
-            print
-            "Unknown alert type %s" % type
+            print("Unknown alert type %s" % type)
             return
 
         if not self.dry_run:
             try:
                 self.send_pushbullet_notification(subject, body)
-            except Exception, e:
-                print
-                "Couldn't send push notification: %s", e
+            except Exception as e:
+                print("Couldn't send push notification: %s", e)
                 self.available = False
         else:
-            print
-            "dry_run: would send push notification: %s" % body
+            print("dry_run: would send push notification: %s" % body)

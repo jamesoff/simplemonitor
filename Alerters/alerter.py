@@ -1,3 +1,4 @@
+# coding=utf-8
 """A collection of alerters for SimpleMonitor."""
 
 import datetime
@@ -14,7 +15,7 @@ class Alerter:
     limit = 1
     repeat = 0
 
-    days = range(0, 7)
+    days = list(range(0, 7))
     times_type = "always"
     time_info = [None, None]
 
@@ -22,6 +23,7 @@ class Alerter:
     verbose = False
 
     dry_run = False
+    groups = ['default']
 
     delay_notification = False
     ooh_failures = []
@@ -29,7 +31,9 @@ class Alerter:
     support_catchup = False
     ooh_recovery = False
 
-    def __init__(self, config_options={}):
+    def __init__(self, config_options=None):
+        if config_options is None:
+            config_options = {}
         self.available = True
         if 'depend' in config_options:
             self.set_dependencies([x.strip() for x in config_options["depend"].split(",")])
@@ -37,6 +41,8 @@ class Alerter:
             self.limit = int(config_options["limit"])
         if 'repeat' in config_options:
             self.repeat = int(config_options["repeat"])
+        if 'groups' in config_options:
+            self.set_groups([x.strip() for x in config_options["groups"].split(",")])
         if 'times_type' in config_options:
             times_type = config_options["times_type"]
             if times_type == "always":
@@ -50,8 +56,8 @@ class Alerter:
                         datetime.time(
                             int(config_options["time_upper"].split(":")[0]),
                             int(config_options["time_upper"].split(":")[1]))]
-                except Exception, e:
-                    print e
+                except Exception as e:
+                    print(e)
                     raise RuntimeError("error processing time limit definition")
                 self.time_info = time_info
                 self.times_type = "only"
@@ -64,7 +70,7 @@ class Alerter:
                         datetime.time(
                             int(config_options["time_upper"].split(":")[0]),
                             int(config_options["time_upper"].split(":")[1]))]
-                except:
+                except Exception:
                     raise RuntimeError("error processing time limit definition")
                 self.time_info = time_info
                 self.times_type = "not"
@@ -87,7 +93,7 @@ class Alerter:
                 (datetime.datetime.utcnow() - datetime.timedelta(minutes=1)).time(),
                 (datetime.datetime.utcnow() + datetime.timedelta(minutes=1)).time()
             ]
-            print "debug: set times for alerter to", self.time_info
+            print("debug: set times for alerter to", self.time_info)
 
     def format_datetime(self, dt):
         """Return an isoformat()-like datetime without the microseconds."""
@@ -99,6 +105,11 @@ class Alerter:
         If a monitor we depend on fails, it means we can't reach the database, so we shouldn't bother trying to write to it."""
 
         self.dependencies = dependency_list
+
+    def set_groups(self, group_list):
+        """Record which groups we alert"""
+
+        self.groups = group_list
 
     def check_dependencies(self, failed_list):
         """Check if anything we depend on has failed."""
@@ -123,15 +134,15 @@ class Alerter:
 
         if monitor.virtual_fail_count() > 0:
             if self.debug:
-                print "alerter %s: monitor %s has failed" % (self.name, monitor.name)
+                print("alerter %s: monitor %s has failed" % (self.name, monitor.name))
             # Monitor has failed (not just first time)
             if self.delay_notification:
                 if not out_of_hours:
                     if monitor.name in self.ooh_failures:
                         try:
                             self.ooh_failures.remove(monitor.name)
-                        except:
-                            print "Warning: Couldn't remove %s from OOH list; will maybe generate too many alerts." % monitor.name
+                        except Exception:
+                            print("Warning: Couldn't remove %s from OOH list; will maybe generate too many alerts." % monitor.name)
                         if self.support_catchup:
                             return "catchup"
                         else:
@@ -147,7 +158,7 @@ class Alerter:
         elif monitor.all_better_now() and monitor.last_virtual_fail_count() >= self.limit:
             try:
                 self.ooh_failures.remove(monitor.name)
-            except:
+            except Exception:
                 pass
             if out_of_hours:
                 if self.ooh_recovery:
@@ -177,7 +188,7 @@ class Alerter:
             else:
                 minutes = 0
             return (downtime.days, hours, minutes, seconds)
-        except:
+        except Exception:
             return (0, 0, 0, 0)
 
     def allowed_today(self):
@@ -202,5 +213,5 @@ class Alerter:
             else:
                 return True
         else:
-            print "This should never happen! Unknown times_type in alerter."
+            print("This should never happen! Unknown times_type in alerter.")
             return True

@@ -1,7 +1,10 @@
+# coding=utf-8
 import pickle
 import socket
 import sys
 import hmac
+import traceback
+import struct
 
 # From the docs:
 #  Threads interact strangely with interrupts: the KeyboardInterrupt exception
@@ -10,7 +13,7 @@ import hmac
 
 from threading import Thread
 
-from logger import Logger
+from .logger import Logger
 
 
 class NetworkLogger(Logger):
@@ -25,40 +28,26 @@ class NetworkLogger(Logger):
             self.host = config_options["host"]
             self.port = int(config_options["port"])
             self.hostname = socket.gethostname()
-            self.key = config_options["key"]
-        except:
+            self.key = bytearray(config_options["key"], 'utf-8')
+        except Exception:
             raise RuntimeError("missing config options for network monitor")
 
     def save_result2(self, name, monitor):
         if not self.doing_batch:
-            print "NetworkLogger.save_result2() called while not doing batch."
+            print("NetworkLogger.save_result2() called while not doing batch.")
             return
-        # id = "%s_%s" % (self.hostname, monitor.name)
-        # data_line = {
-        #        "id": id,
-        #        "name": self.hostname + "/" + monitor.name,
-        #        "type": monitor.type,
-        #        "host": self.hostname,
-        #        "vfc": monitor.virtual_fail_count(),
-        #        "failed_at": monitor.first_failure_time(),
-        #        "more_info": monitor.get_result(),
-        #        "just_recovered": monitor.all_better_now(),
-        #        "urgent": monitor.is_urgent()
-        #        }
-
-        # self.batch_data[monitor.name] = data_line
         self.batch_data[monitor.name] = pickle.dumps(monitor)
 
     def process_batch(self):
         try:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.connect((self.host, self.port))
             p = pickle.dumps(self.batch_data)
             mac = hmac.new(self.key, p)
-            # print "My MAC is %s" % mac.hexdigest()
-            s.send("%s\n%s" % (mac.hexdigest(), p))
-        except Exception, e:
-            print "Failed to send data: %s" % e
+            send_bytes = struct.pack('B', mac.digest_size) + mac.digest() + p
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.connect((self.host, self.port))
+            s.send(send_bytes)
+        except Exception as e:
+            print("Failed to send data: %s" % e)
         finally:
             s.close()
 
@@ -80,7 +69,7 @@ class Listener(Thread):
         self.sock.bind(('', port))
         self.simplemonitor = simplemonitor
         self.verbose = verbose
-        self.key = key
+        self.key = bytearray(key, 'utf-8')
 
     def run(self):
         """The main body of our thread.
@@ -94,48 +83,48 @@ class Listener(Thread):
                 self.sock.listen(5)
                 conn, addr = self.sock.accept()
                 if self.verbose:
-                    print "--> Got connection from %s" % addr[0]
-                pickled = ""
+                    print("--> Got connection from %s" % addr[0])
+                pickled = bytearray()
                 while 1:
                     data = conn.recv(1024)
-                    pickled += data
                     if not data:
                         break
+                    pickled = pickled + data
                 conn.close()
                 if self.verbose:
-                    print "--> Finished receiving from %s" % addr[0]
-                # compute our own HMAC and compare
-                bits = pickled.split("\n", 1)
-                their_digest = bits[0]
-                pickled = bits[1]
+                    print("--> Finished receiving from %s" % addr[0])
+                # first byte is the size of the MAC
+                mac_size = pickled[0]
+                # then the MAC
+                their_digest = pickled[1:mac_size + 1]
+                # then the rest is the pickled data
+                pickled = pickled[mac_size + 1:]
                 mac = hmac.new(self.key, pickled)
-                my_digest = mac.hexdigest()
+                my_digest = mac.digest()
                 if self.verbose:
-                    print "Computed my digest to be %s" % my_digest
-                    print "Remote digest is %s" % their_digest
+                    print("Computed my digest to be %s" % my_digest)
+                    print("Remote digest is %s" % their_digest)
                 if not hmac.compare_digest(their_digest, my_digest):
                     raise Exception("Mismatched MAC for network logging data from %s\nMismatched key? Old version of SimpleMonitor?\n" % addr[0])
                 result = pickle.loads(pickled)
                 try:
                     self.simplemonitor.update_remote_monitor(result, addr[0])
-                except Exception, e:
+                except Exception as e:
                     fail_info = sys.exc_info()
                     sys.stderr.write("Error adding remote monitor %s" % e)
 
-            except socket.error, e:
+            except socket.error as e:
                 fail_info = sys.exc_info()
                 try:
                     if fail_info[1][0] == 4:
                         # Interrupted system call
-                        print "Interrupted system call in thread, I think that's a ^C"
+                        print("Interrupted system call in thread, I think that's a ^C")
                         self.running = False
                         self.sock.close()
-                except:
-                    pass
+                except Exception:
+                    traceback.print_exc()
                 if self.running:
-                    print "Socket error caught in thread: %s" % e
-            except Exception, e:
-                # fail_info = sys.exc_info()
-                # print fail_info
-                # print traceback.print_tb(fail_info[2])
+                    print("Socket error caught in thread: %s" % e)
+            except Exception as e:
+                traceback.print_exc()
                 sys.stderr.write("Listener thread caught exception %s" % e)

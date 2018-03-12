@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+# mock portaudit for simplemonitor
+
+cat <<EOF
+Affected package: cups-base-1.1.22.0_1
+Type of problem: cups-base -- HPGL buffer overflow vulnerability.
+Reference: <http://www.FreeBSD.org/ports/portaudit/40a3bca2-6809-11d9-a9e7-0001020eed82.html>
+
+1 problem(s) in your installed packages found.
+
+You are advised to update or deinstall the affected package(s) immediately.
+EOF

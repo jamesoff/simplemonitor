@@ -1,11 +1,12 @@
+# coding=utf-8
 try:
     import sqlite3
     sqlite_available = True
-except:
+except ImportError:
     sqlite_available = False
 
 import time
-from logger import Logger
+from .logger import Logger
 from socket import gethostname
 
 
@@ -17,15 +18,13 @@ class DBLogger(Logger):
 
     def __init__(self, config_options):
         """Open the database connection."""
+        Logger.__init__(self, config_options)
         if not sqlite_available:
             raise RuntimeError("SQLite module not loaded.")
         try:
             db_path = config_options["db_path"]
-        except:
+        except Exception:
             raise RuntimeError("db_path not defined")
-
-        if "depend" in config_options:
-            self.set_dependencies([x.strip() for x in config_options["depend"].split(",")])
 
         self.db_handle = sqlite3.connect(db_path, isolation_level=None)
         self.connected = True
@@ -37,7 +36,7 @@ class DBFullLogger(DBLogger):
     def save_result(self, monitor_name, monitor_type, monitor_params, monitor_result, monitor_info, hostname=""):
         """Write to the database."""
         if not self.connected:
-            print "cannot send results, a dependency failed"
+            print("cannot send results, a dependency failed")
             return
         sql = "INSERT INTO results (result_id, monitor_host, monitor_name, monitor_type, monitor_params, monitor_result, timestamp, monitor_info) VALUES (null, ?, ?, ?, ?, ?, ?, ?)"
 

@@ -1,11 +1,11 @@
-
+# coding=utf-8
 """ File-based monitors for SimpleMonitor. """
 
 import os
 import os.path
 import time
 
-from monitor import Monitor
+from .monitor import Monitor
 
 
 class MonitorBackup(Monitor):
@@ -18,14 +18,14 @@ class MonitorBackup(Monitor):
 
         try:
             fh = open(self.filename, "r")
-        except:
+        except Exception:
             self.record_fail("Unable to open status file")
             return False
 
         try:
             status = fh.readline()
             timestamp = fh.readline()
-        except:
+        except Exception:
             self.record_fail("Unable to read data from status file")
             return False
 
@@ -44,7 +44,7 @@ class MonitorBackup(Monitor):
             return False
 
         gap = now - timestamp
-        print timestamp, now, gap
+        print(timestamp, now, gap)
         if status == "ok":
             if gap > (3600 * 24):
                 self.record_fail("OK was reported %ds ago" % gap)

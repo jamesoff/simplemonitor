@@ -1,10 +1,11 @@
+# coding=utf-8
 import platform
 import re
 import os
 import subprocess
 import sys
 
-from monitor import Monitor
+from .monitor import Monitor
 
 
 class MonitorSvc(Monitor):
@@ -17,7 +18,7 @@ class MonitorSvc(Monitor):
         Monitor.__init__(self, name, config_options)
         try:
             self.path = config_options["path"]
-        except:
+        except Exception:
             raise RuntimeError("Required configuration fields missing")
         self.params = ("svok %s" % self.path).split(" ")
 
@@ -34,7 +35,7 @@ class MonitorSvc(Monitor):
             else:
                 self.record_success()
                 return True
-        except Exception, e:
+        except Exception as e:
             self.record_fail("Exception while executing svok: %s" % e)
             return False
 
@@ -57,7 +58,7 @@ class MonitorService(Monitor):
         Monitor.__init__(self, name, config_options)
         try:
             service_name = config_options["service"]
-        except:
+        except Exception:
             raise RuntimeError("Required configuration fields missing")
         if 'state' in config_options:
             want_state = config_options["state"]
@@ -96,7 +97,7 @@ class MonitorService(Monitor):
             if matches:
                 self.record_success()
                 return True
-        except Exception, e:
+        except Exception as e:
             sys.stderr.write("%s\n" % e)
             pass
         self.record_fail()
@@ -126,7 +127,7 @@ class MonitorRC(Monitor):
         Monitor.__init__(self, name, config_options)
         try:
             service_name = config_options["service"]
-        except:
+        except Exception:
             raise RuntimeError("Required configuration fields missing")
         if 'path' in config_options:
             script_path = config_options["path"]
@@ -164,12 +165,12 @@ class MonitorRC(Monitor):
             if returncode == self.want_return_code:
                 self.record_success()
                 return True
-        except subprocess.CalledProcessError, e:
+        except subprocess.CalledProcessError as e:
             if e.returncode == self.want_return_code:
                 self.record_success()
                 return True
             returncode = -1
-        except Exception, e:
+        except Exception as e:
             self.record_fail("Exception while executing script: %s" % e)
             return False
         self.record_fail("Return code: %d (wanted %d)" % (returncode, self.want_return_code))
@@ -195,17 +196,19 @@ class MonitorEximQueue(Monitor):
         Monitor.__init__(self, name, config_options)
         try:
             self.max_length = int(config_options["max_length"])
-        except:
+        except Exception:
             raise RuntimeError("Required configuration field 'max_length' missing or not an integer")
         if not (self.max_length > 0):
             raise RuntimeError("'max_length' must be >= 1")
         if "path" in config_options:
             self.path = config_options["path"]
+        self.path = os.path.join(self.path, "exiqgrep")
 
     def run_test(self):
         try:
-            output = subprocess.check_output([os.path.join(self.path, "exiqgrep"), "-xc"])
-            for line in output:
+            output = subprocess.check_output([self.path, "-xc"])
+            output = output.decode('utf-8')
+            for line in output.splitlines():
                 matches = self.r.match(line)
                 if matches:
                     count = int(matches.group("count"))
@@ -224,7 +227,7 @@ class MonitorEximQueue(Monitor):
                         return True
             self.record_fail("Error getting queue size")
             return False
-        except Exception, e:
+        except Exception as e:
             self.record_fail("Error running exiqgrep: %s" % e)
             return False
 
@@ -253,14 +256,14 @@ class MonitorWindowsDHCPScope(Monitor):
         Monitor.__init__(self, name, config_options)
         try:
             self.max_used = int(config_options["max_used"])
-        except:
+        except Exception:
             raise RuntimeError("Required configuration field 'max_used' missing or not an integer")
         if not (self.max_used > 0):
             raise RuntimeError("max_used must be >= 1")
 
         try:
             self.scope = config_options["scope"]
-        except:
+        except Exception:
             raise RuntimeError("Required configuration field 'scope' missing")
 
     def run_test(self):
@@ -277,8 +280,8 @@ class MonitorWindowsDHCPScope(Monitor):
                     return True
             self.record_fail("Error getting client count: no match")
             return False
-        except Exception, e:
-            print e
+        except Exception as e:
+            print(e)
             self.record_fail("Error getting client count: %s", e)
             return False
 

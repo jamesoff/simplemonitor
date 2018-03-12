@@ -1,2 +1,3 @@
 requests>=2.10.0
+pyopenssl
 boto3>=1.3.1
