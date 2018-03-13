@@ -1,4 +1,4 @@
-# coding=utf-8
+
 """A collection of monitors for the SimpleMonitor application.
 
 The Monitor class contains the monitor-independent logic for handling results etc.
@@ -19,9 +19,9 @@ import copy
 import subprocess
 
 try:
-    import win32api  # noqa: F401
+    import win32api
     win32_available = True
-except ImportError:
+except:
     win32_available = False
 
 
@@ -158,7 +158,7 @@ class Monitor:
         """Remove a dependency from the current version of the list."""
         try:
             self.deps.remove(dependency)
-        except Exception:
+        except:
             pass
 
     def get_dependencies(self):
@@ -281,7 +281,7 @@ class Monitor:
         try:
             if self.just_recovered:
                 return True
-        except Exception:
+        except:
             pass
 
         if self.last_error_count >= self.tolerance and self.success_count == 1 and not self.was_skipped:
@@ -387,7 +387,7 @@ class MonitorFail(Monitor):
 
     def run_test(self):
         """Always fails."""
-        print("error_count = %d, interval = %d --> %d" % (self.error_count, self.interval, self.error_count % self.interval))
+        print ("error_count = %d, interval = %d --> %d" % (self.error_count, self.interval, self.error_count % self.interval))
         if (self.interval == 0) or (self.error_count == 0) or (self.error_count % self.interval != 0):
             self.record_fail("This monitor always fails.")
             return False
