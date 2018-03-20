@@ -30,12 +30,13 @@ Adding more monitor types is quite simple if you are able to code in Python.
 
 * Writing the state of each monitor at each iteration to a SQLite database (i.e. a history of results)
 * Maintaining a snapshot of the current state of the monitors in a SQLite database
-* Sending an email alert when a monitor fails, and when it recovers
+* Sending an email alert when a monitor fails, and when it recovers, directly over SMTP or via Amazon SES
 * Writing a log file of all successes and failures, or just failures
 * Sending a text message via BulkSMS (subscription required)
-* Writing an HTML status page.
+* Writing an HTML status page
 * Writing an entry to the syslog (non-Windows only)
-* Posting notifications to Slack
+* Posting notifications to Slack, 46elks, Notify My Android, Pushbullet, and Pushover
+* Executing arbitary commands on monitor failure and recovery
 
 Again, adding more logging/alerting methods is simply a case of writing some Python.
 
