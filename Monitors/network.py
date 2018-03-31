@@ -237,7 +237,7 @@ class MonitorHost(Monitor):
                 else:
                     matches = r2.search(line)
                     if matches:
-                        pingtime = matches.group("ms")
+                        pingtime = float(matches.group("ms"))
         except Exception as e:
             self.record_fail(e)
             return False
