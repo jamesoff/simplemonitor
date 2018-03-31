@@ -229,8 +229,8 @@ class MonitorHost(Monitor):
         pingtime = 0.0
         try:
             cmd = (self.ping_command % self.host).split(' ')
-            output = subprocess.check_output(cmd)
-            for line in str(output).split("\n"):
+            output = subprocess.check_output(cmd).decode('utf-8')
+            for line in output.splitlines():
                 matches = r.search(line)
                 if matches:
                     success = True
