@@ -73,10 +73,11 @@ class FileLogger(Logger):
                     monitor.last_run_duration
                 ))
             else:
-                self.file_handle.write("%s %s: ok (%0.3fs)" % (
+                self.file_handle.write("%s %s: ok (%0.3fs) (%s)" % (
                     datestring,
                     name,
-                    monitor.last_run_duration
+                    monitor.last_run_duration,
+                    monitor.get_result()
                 ))
             self.file_handle.write("\n")
 
