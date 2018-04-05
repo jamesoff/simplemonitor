@@ -238,12 +238,15 @@ class MonitorHost(Monitor):
                     matches = r2.search(line)
                     if matches:
                         pingtime = float(matches.group("ms"))
+        except subprocess.CalledProcessError as e:
+            self.record_fail('ping command {0} returned exit status {1}'.format(' '.join(e.cmd), e.returncode))
+            return False
         except Exception as e:
             self.record_fail(e)
             return False
         if success:
             if pingtime > 0:
-                self.record_success("%sms" % pingtime)
+                self.record_success("ping=%sms" % pingtime)
             else:
                 self.record_success()
             return True
