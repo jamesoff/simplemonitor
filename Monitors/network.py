@@ -34,28 +34,27 @@ class MonitorHTTP(Monitor):
         self.url = Monitor.get_config_option(config_options, 'url', required=True)
 
         regexp = Monitor.get_config_option(config_options, 'regexp')
+        if regexp is not None:
+            self.regexp = re.compile(regexp)
+            self.regexp_text = regexp
         if not regexp:
-            allowed_codes = Monitor.get_config_option(
+            self.allowed_codes = Monitor.get_config_option(
                 config_options,
                 'allowed_codes',
                 default=[200],
                 required_type='[int]'
             )
         else:
-            allowed_codes = [200]
+            self.allowed_codes = [200]
 
         # optionnal - for HTTPS client authentication only
         # in this case, certfile is required
-        if 'certfile' in config_options:
-            certfile = config_options["certfile"]
-            # if keyfile not given, it is assumed key is in certfile
-            if 'keyfile' in config_options:
-                keyfile = config_options["keyfile"]
-            else:
-                # default: key
-                keyfile = certfile
-            self.certfile = certfile
-            self.keyfile = keyfile
+        self.certfile = config_options.get('certfile')
+        self.keyfile = config_options.get('keyfile')
+        if self.certfile and not self.keyfile:
+            self.keyfile = self.certfile
+        if not self.certfile and self.keyfile:
+            raise ValueError('config option keyfile is set but certfile is not')
 
         self.verify_hostname = Monitor.get_config_option(
             config_options,
@@ -64,12 +63,12 @@ class MonitorHTTP(Monitor):
             required_type='bool'
         )
 
-        if regexp is not None:
-            self.regexp = re.compile(regexp)
-            self.regexp_text = regexp
-        self.allowed_codes = allowed_codes
-
-        self.request_timeout = int(config_options.get('timeout')) if 'timeout' in config_options else 5
+        self.request_timeout = Monitor.get_config_option(
+            config_options,
+            'timeout',
+            default=5,
+            required_type='int'
+        )
 
         self.username = config_options.get('username')
         self.password = config_options.get('password')
