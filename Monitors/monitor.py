@@ -90,6 +90,33 @@ class Monitor:
         # Populate the notify flag for every host
         self.notify = self.notify
 
+    @staticmethod
+    def get_config_option(config_options, key, **kwargs):
+        """Get a value out of a dict, with possible default, required type and requiredness."""
+        if not isinstance(config_options, dict):
+            raise ValueError('config_options should be a dict')
+
+        default = kwargs.get('default', None)
+        required = kwargs.get('required', False)
+        value = config_options.get(key, default)
+        if required and value is None:
+            raise ValueError('config option {0} is missing and is required'.format(key))
+        required_type = kwargs.get('required_type', None)
+        if isinstance(value, str) and required_type:
+            if required_type == 'int':
+                try:
+                    value = int(value)
+                except ValueError:
+                    raise ValueError('config option {0} needs to be an int'.format(key))
+            if required_type == '[int]':
+                try:
+                    value = [int(x) for x in value.split(",")]
+                except ValueError:
+                    raise ValueError('config option {0} needs to be a list of int[int,...]'.format(key))
+            if required_type == 'bool':
+                value = bool(value.lower() in ['1', 'true', 'yes'])
+        return value
+
     def set_recover_command(self, command):
         self.recover_command = command
 
