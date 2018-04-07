@@ -31,17 +31,16 @@ class MonitorHTTP(Monitor):
 
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
-        try:
-            url = config_options["url"]
-        except Exception:
-            raise RuntimeError("Required configuration fields missing")
+        self.url = Monitor.get_config_option(config_options, 'url', required=True)
 
-        if 'regexp' in config_options:
-            regexp = config_options["regexp"]
-        else:
-            regexp = ""
-        if 'allowed_codes' in config_options:
-            allowed_codes = [int(x.strip()) for x in config_options["allowed_codes"].split(",")]
+        regexp = Monitor.get_config_option(config_options, 'regexp')
+        if not regexp:
+            allowed_codes = Monitor.get_config_option(
+                config_options,
+                'allowed_codes',
+                default=[200],
+                required_type='[int]'
+            )
         else:
             allowed_codes = [200]
 
@@ -58,13 +57,14 @@ class MonitorHTTP(Monitor):
             self.certfile = certfile
             self.keyfile = keyfile
 
-        self.verify_hostname = True
-        if 'verify_hostname' in config_options:
-            if config_options["verify_hostname"].lower() == "false":
-                self.verify_hostname = False
+        self.verify_hostname = Monitor.get_config_option(
+            config_options,
+            'verify_hostname',
+            default=True,
+            required_type='bool'
+        )
 
-        self.url = url
-        if regexp != "":
+        if regexp is not None:
             self.regexp = re.compile(regexp)
             self.regexp_text = regexp
         self.allowed_codes = allowed_codes
@@ -107,7 +107,6 @@ class MonitorHTTP(Monitor):
             if self.regexp is None:
                 self.record_success("%s in %0.2fs" % (r.status_code, (load_time.seconds + (load_time.microseconds / 1000000.2))))
                 return True
-            else:
                 matches = self.regexp.search(r.text)
                 if matches:
                     self.record_success("%s in %0.2fs" % (r.status_code, (load_time.seconds + (load_time.microseconds / 1000000.2))))
