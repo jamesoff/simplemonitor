@@ -5,7 +5,7 @@ import os
 import subprocess
 import sys
 
-from .monitor import Monitor, MonitorConfigurtionError
+from .monitor import Monitor, MonitorConfigurationError
 
 
 class MonitorSvc(Monitor):
@@ -70,7 +70,7 @@ class MonitorService(Monitor):
         )
 
         if self.want_state not in ["RUNNING", "STOPPED"]:
-            raise MonitorConfigurtionError("invalid state {0} for MonitorService".format(self.want_state))
+            raise MonitorConfigurationError("invalid state {0} for MonitorService".format(self.want_state))
 
     def run_test(self):
         """Check the service is in the desired state"""

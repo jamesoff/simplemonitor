@@ -123,28 +123,28 @@ class Monitor:
     def get_config_option(config_options, key, **kwargs):
         """Get a value out of a dict, with possible default, required type and requiredness."""
         if not isinstance(config_options, dict):
-            raise MonitorConfigurtionError('config_options should be a dict')
+            raise MonitorConfigurationError('config_options should be a dict')
 
         default = kwargs.get('default', None)
         required = kwargs.get('required', False)
         value = config_options.get(key, default)
         if required and value is None:
-            raise MonitorConfigurtionError('config option {0} is missing and is required'.format(key))
+            raise MonitorConfigurationError('config option {0} is missing and is required'.format(key))
         required_type = kwargs.get('required_type', None)
         if isinstance(value, str) and required_type:
             if required_type == 'int':
                 try:
                     value = int(value)
                 except ValueError:
-                    raise MonitorConfigurtionError('config option {0} needs to be an int'.format(key))
+                    raise MonitorConfigurationError('config option {0} needs to be an int'.format(key))
                 minimum = kwargs.get('minimum')
                 if minimum is not None and value < minimum:
-                    raise MonitorConfigurtionError('config option {0} needs to be >= {1}'.format(key, minimum))
+                    raise MonitorConfigurationError('config option {0} needs to be >= {1}'.format(key, minimum))
             if required_type == '[int]':
                 try:
                     value = [int(x) for x in value.split(",")]
                 except ValueError:
-                    raise MonitorConfigurtionError('config option {0} needs to be a list of int[int,...]'.format(key))
+                    raise MonitorConfigurationError('config option {0} needs to be a list of int[int,...]'.format(key))
             if required_type == 'bool':
                 value = bool(value.lower() in ['1', 'true', 'yes'])
             if required_type == '[str]':
@@ -475,6 +475,6 @@ class MonitorNull(Monitor):
         return ()
 
 
-class MonitorConfigurtionError(ValueError):
+class MonitorConfigurationError(ValueError):
     """Missing or bad configuration value."""
     pass
