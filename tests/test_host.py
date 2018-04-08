@@ -1,6 +1,8 @@
 import unittest
 import Monitors.host
 
+from Monitors.monitor import MonitorConfigurationError
+
 
 class TestHostMonitors(unittest.TestCase):
 
@@ -13,12 +15,12 @@ class TestHostMonitors(unittest.TestCase):
 
     def test_DiskSpace_brokenConfigOne(self):
         config_options = {}
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(MonitorConfigurationError):
             Monitors.host.MonitorDiskSpace('test', config_options)
 
     def test_DiskSpace_brokenConfigTwo(self):
         config_options = {'partition': '/'}
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(MonitorConfigurationError):
             Monitors.host.MonitorDiskSpace('test', config_options)
 
     def test_DiskSpace_brokenConfigThree(self):
