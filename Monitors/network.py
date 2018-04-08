@@ -265,34 +265,25 @@ class MonitorDNS(Monitor):
 
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
-        try:
-            self.path = config_options['record']
-        except Exception:
-            raise RuntimeError("Required configuration fields missing")
-        if self.path == '':
-            raise RuntimeError("Required configuration fields missing")
+        self.path = Monitor.get_config_option(
+            config_options,
+            'record',
+            required=True
+        )
 
-        if 'desired_val' in config_options:
-            self.desired_val = config_options['desired_val']
-        else:
-            self.desired_val = None
+        self.desired_val = Monitor.get_config_option(config_options, 'desired_val')
 
-        if 'server' in config_options:
-            self.server = config_options['server']
-        else:
-            self.server = None
+        self.server = Monitor.get_config_option(config_options, 'server')
 
         self.params = [self.command]
 
         if self.server:
             self.params.append("@%s" % self.server)
 
-        if 'record_type' in config_options:
+        self.rectype = Monitor.get_config_option(config_options, 'record_type')
+        if self.rectype:
             self.params.append('-t')
             self.params.append(config_options['record_type'])
-            self.rectype = config_options['record_type']
-        else:
-            self.rectype = None
 
         self.params.append(self.path)
         self.params.append('+short')
