@@ -5,7 +5,7 @@ import os
 import subprocess
 import sys
 
-from .monitor import Monitor
+from .monitor import Monitor, MonitorConfigurtionError
 
 
 class MonitorSvc(Monitor):
@@ -53,28 +53,24 @@ class MonitorService(Monitor):
 
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
-        try:
-            service_name = config_options["service"]
-        except Exception:
-            raise RuntimeError("Required configuration fields missing")
-        if 'state' in config_options:
-            want_state = config_options["state"]
-        else:
-            want_state = "RUNNING"
+        self.service_name = Monitor.get_config_option(
+            config_options,
+            'service',
+            required=True
+        )
+        self.want_state = Monitor.get_config_option(
+            config_options,
+            'state',
+            default='RUNNING'
+        )
+        self.host = Monitor.get_config_option(
+            config_options,
+            'host',
+            default='.'
+        )
 
-        if 'host' in config_options:
-            host = config_options["host"]
-        else:
-            host = "."
-
-        if service_name == "":
-            raise RuntimeError("missing service name")
-        if want_state not in ["RUNNING", "STOPPED"]:
-            raise RuntimeError("invalid state")
-
-        self.service_name = service_name
-        self.want_state = want_state
-        self.host = host
+        if self.want_state not in ["RUNNING", "STOPPED"]:
+            raise MonitorConfigurtionError("invalid state {0} for MonitorService".format(self.want_state))
 
     def run_test(self):
         """Check the service is in the desired state"""
@@ -279,7 +275,7 @@ class MonitorWindowsDHCPScope(Monitor):
             return False
         except Exception as e:
             print(e)
-            self.record_fail("Error getting client count: %s", e)
+            self.record_fail("Error getting client count: {0}".format(e))
             return False
 
     def describe(self):
