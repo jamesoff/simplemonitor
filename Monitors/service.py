@@ -169,15 +169,13 @@ class MonitorEximQueue(Monitor):
 
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
-        try:
-            self.max_length = int(config_options["max_length"])
-        except Exception:
-            raise RuntimeError("Required configuration field 'max_length' missing or not an integer")
-        if not (self.max_length > 0):
-            raise RuntimeError("'max_length' must be >= 1")
-        if "path" in config_options:
-            self.path = config_options["path"]
-        self.path = os.path.join(self.path, "exiqgrep")
+        self.max_length = Monitor.get_config_option(config_options,
+                                                    'max_length',
+                                                    required_type='int',
+                                                    minimum=1
+                                                    )
+        path = Monitor.get_config_option(config_options, 'path', default='/usr/local/sbin')
+        self.path = os.path.join(path, "exiqgrep")
 
     def run_test(self):
         try:
