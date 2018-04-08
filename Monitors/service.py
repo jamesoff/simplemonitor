@@ -118,29 +118,11 @@ class MonitorRC(Monitor):
         Change script path to /etc/rc.d/ to monitor base system services. If the
         script path ends with /, the service name is appended."""
         Monitor.__init__(self, name, config_options)
-        try:
-            service_name = config_options["service"]
-        except Exception:
-            raise RuntimeError("Required configuration fields missing")
-        if 'path' in config_options:
-            script_path = config_options["path"]
-        else:
-            script_path = "/usr/local/etc/rc.d/"
-        if 'return_code' in config_options:
-            want_return_code = int(config_options["return_code"])
-        else:
-            want_return_code = 0
-
-        if service_name == "":
-            raise RuntimeError("missing service name")
-        if script_path == "":
-            raise RuntimeError("missing script path")
-        if script_path.endswith("/"):
-            script_path = script_path + service_name
-        self.script_path = script_path
-        self.service_name = service_name
-        self.want_return_code = want_return_code
-        # Check if we need a .sh (old-style RC scripts in FreeBSD)
+        self.service_name = Monitor.get_config_option(config_options, 'service', required=True)
+        self.script_path = Monitor.get_config_option(config_options, 'path', default='/usr/local/etc/rc.d')
+        self.want_return_code = Monitor.get_config_option(config_options, 'return_code', required_type='int', default=0)
+        if self.script_path.endswith("/"):
+            self.script_path = self.script_path + self.service_name
         if not os.path.isfile(self.script_path):
             if os.path.isfile(self.script_path + ".sh"):
                 self.script_path = self.script_path + ".sh"
