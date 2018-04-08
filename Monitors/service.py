@@ -227,17 +227,8 @@ class MonitorWindowsDHCPScope(Monitor):
         if not self.is_windows(True):
             raise RuntimeError("DHCPScope monitor requires a Windows platform.")
         Monitor.__init__(self, name, config_options)
-        try:
-            self.max_used = int(config_options["max_used"])
-        except Exception:
-            raise RuntimeError("Required configuration field 'max_used' missing or not an integer")
-        if not (self.max_used > 0):
-            raise RuntimeError("max_used must be >= 1")
-
-        try:
-            self.scope = config_options["scope"]
-        except Exception:
-            raise RuntimeError("Required configuration field 'scope' missing")
+        self.max_used = Monitor.get_config_option(config_options, 'max_used', required_type='int', minimum=1)
+        self.scope = Monitor.get_config_option(config_options, 'scope', required=True)
 
     def run_test(self):
         try:
