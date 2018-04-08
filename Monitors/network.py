@@ -141,18 +141,14 @@ class MonitorTCP(Monitor):
     def __init__(self, name, config_options):
         """Constructor"""
         Monitor.__init__(self, name, config_options)
-        try:
-            host = config_options["host"]
-            port = int(config_options["port"])
-        except Exception:
-            raise RuntimeError("Required configuration fields missing")
-
-        if host == "":
-            raise RuntimeError("missing hostname")
-        if port == "" or port <= 0:
-            raise RuntimeError("missing or invalid port number")
-        self.host = host
-        self.port = port
+        self.host = Monitor.get_config_option(config_options, 'host', required=True)
+        self.port = Monitor.get_config_option(
+            config_options,
+            'port',
+            required=True,
+            required_type='int',
+            minimum=0
+        )
 
     def run_test(self):
         """Check the port is open on the remote host"""
