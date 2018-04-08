@@ -15,6 +15,8 @@ from .monitor import Monitor
 
 
 def _size_string_to_bytes(s):
+    if s is None:
+        return None
     if s.endswith("G"):
         gigs = int(s[:-1])
         bytes = gigs * (1024 ** 3)
@@ -62,13 +64,8 @@ class MonitorDiskSpace(Monitor):
                 raise RuntimeError("win32api is not available, but is needed for DiskSpace monitor.")
         else:
             self.use_statvfs = True
-        try:
-            partition = config_options["partition"]
-            limit = config_options["limit"]
-        except Exception:
-            raise RuntimeError("Required configuration fields missing")
-        self.partition = partition
-        self.limit = _size_string_to_bytes(limit)
+        self.partition = Monitor.get_config_option(config_options, 'partition', required=True)
+        self.limit = _size_string_to_bytes(Monitor.get_config_option(config_options, 'limit', required=True))
 
     def run_test(self):
         try:
@@ -109,26 +106,11 @@ class MonitorFileStat(Monitor):
 
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
-        try:
-            if 'maxage' in config_options:
-                maxage = int(config_options["maxage"])
-                self.maxage = maxage
-        except Exception:
-            raise RuntimeError("Maxage missing or not an integer (number of seconds)")
-
-        try:
-            if 'minsize' in config_options:
-                minsize = _size_string_to_bytes(config_options["minsize"])
-                self.minsize = minsize
-        except Exception:
-            raise RuntimeError("Minsize missing or not an integer (number of bytes")
-
-        try:
-            filename = config_options["filename"]
-        except Exception:
-            raise RuntimeError("Filename missing")
-
-        self.filename = filename
+        self.maxage = Monitor.get_config_option(config_options, 'maxage', required_type='int', minimum=0)
+        self.minsize = Monitor.get_config_option(config_options, 'minsize')
+        if self.minsize:
+            self.minsize = _size_string_to_bytes(self.minsize)
+        self.filename = Monitor.get_config_option(config_options, 'filename', required=True)
 
     def run_test(self):
         try:
