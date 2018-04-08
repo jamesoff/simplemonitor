@@ -191,11 +191,15 @@ class MonitorHost(Monitor):
         a machine in trouble anyway, so should probably count as a failure.
         """
         Monitor.__init__(self, name, config_options)
-        try:
-            ping_ttl = config_options["ping_ttl"]
-        except Exception:
-            ping_ttl = "5"
-        ping_ms = ping_ttl * 1000
+        ping_ttl = Monitor.get_config_option(
+            config_options,
+            'ping_ttl',
+            required_type='int',
+            minimum=0,
+            default=5
+        )
+        ping_ms = str(ping_ttl * 1000)
+        ping_ttl = str(ping_ttl)
         platform = sys.platform
         if platform in ['win32', 'cygwin']:
             self.ping_command = "ping -n 1 -w " + ping_ms + " %s"
@@ -212,13 +216,11 @@ class MonitorHost(Monitor):
         else:
             RuntimeError("Don't know how to run ping on this platform, help!")
 
-        try:
-            host = config_options["host"]
-        except Exception:
-            raise RuntimeError("Required configuration fields missing")
-        if host == "":
-            raise RuntimeError("missing hostname")
-        self.host = host
+        self.host = Monitor.get_config_option(
+            config_options,
+            'host',
+            required=True
+        )
 
     def run_test(self):
         r = re.compile(self.ping_regexp)
