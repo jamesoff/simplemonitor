@@ -69,28 +69,54 @@ class Monitor:
         """What's that coming over the hill? Is a monitor?"""
         if config_options is None:
             config_options = {}
-        if 'depend' in config_options:
-            self.set_dependencies([x.strip() for x in config_options["depend"].split(",")])
-        if 'urgent' in config_options:
-            self.set_urgency(int(config_options["urgent"]))
-        if 'notify' in config_options:
-            self.set_notify(config_options["notify"])
-        if 'group' in config_options:
-            self.set_group(config_options["group"])
-        if 'tolerance' in config_options:
-            self.set_tolerance(int(config_options["tolerance"]))
-        if 'remote_alert' in config_options:
-            self.set_remote_alerting(int(config_options["remote_alert"]))
-        if 'remote_alerts' in config_options:
-            self.set_remote_alerting(int(config_options["remote_alerts"]))
-        if 'recover_command' in config_options:
-            self.set_recover_command(config_options["recover_command"])
-        if 'gap' in config_options:
-            self.set_gap(config_options["gap"])
+        self.set_dependencies(Monitor.get_config_option(
+            config_options,
+            'depend',
+            required_type='[str]',
+            default=list()
+        ))
+        self.set_urgency(Monitor.get_config_option(
+            config_options,
+            'urgent',
+            required_type='bool',
+            default=True
+        ))
+        self.set_notify(Monitor.get_config_option(
+            config_options,
+            'notify',
+            required_type='bool',
+            default=True
+        ))
+        self.set_group(Monitor.get_config_option(
+            config_options,
+            'notify',
+            default='default'
+        ))
+        self.set_tolerance(Monitor.get_config_option(
+            config_options,
+            'tolerance',
+            required_type='int',
+            default=0,
+            minimum=0
+        ))
+        self.set_remote_alerting(Monitor.get_config_option(
+            config_options,
+            'remote_alerts',
+            required_type='bool',
+            default=False
+        ))
+        self.set_recover_command(Monitor.get_config_option(
+            config_options,
+            'recover_command'
+        ))
+        self.set_gap(Monitor.get_config_option(
+            config_options,
+            'gap',
+            required_type='int',
+            minimum=0
+        ))
         self.running_on = self.short_hostname()
         self.name = name
-        # Populate the notify flag for every host
-        self.notify = self.notify
 
     @staticmethod
     def get_config_option(config_options, key, **kwargs):
@@ -110,6 +136,9 @@ class Monitor:
                     value = int(value)
                 except ValueError:
                     raise MonitorConfigurtionError('config option {0} needs to be an int'.format(key))
+                minimum = kwargs.get('minimum')
+                if minimum is not None and value < minimum:
+                    raise MonitorConfigurtionError('config option {0} needs to be >= {1}'.format(key, minimum))
             if required_type == '[int]':
                 try:
                     value = [int(x) for x in value.split(",")]
@@ -117,6 +146,8 @@ class Monitor:
                     raise MonitorConfigurtionError('config option {0} needs to be a list of int[int,...]'.format(key))
             if required_type == 'bool':
                 value = bool(value.lower() in ['1', 'true', 'yes'])
+            if required_type == '[str]':
+                value = [x.strip() for x in value.split(",")]
         return value
 
     def set_recover_command(self, command):
@@ -380,7 +411,7 @@ class Monitor:
             return self.last_error_count - self.tolerance
 
     def attempt_recover(self):
-        if self.recover_command == "":
+        if self.recover_command is None:
             self.recover_info = ""
             return
         if not self.first_failure():
