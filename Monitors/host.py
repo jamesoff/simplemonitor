@@ -229,8 +229,7 @@ class MonitorPortAudit(Monitor):
 
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
-        if 'path' in config_options:
-            self.path = config_options["path"]
+        self.path = Monitor.get_config_option(config_options, 'path', default='')
 
     def describe(self):
         return "Checking for insecure ports."
