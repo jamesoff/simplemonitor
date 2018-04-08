@@ -16,10 +16,7 @@ class MonitorSvc(Monitor):
 
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
-        try:
-            self.path = config_options["path"]
-        except Exception:
-            raise RuntimeError("Required configuration fields missing")
+        self.path = Monitor.get_config_option(config_options, 'path', required=True)
         self.params = ("svok %s" % self.path).split(" ")
 
     def run_test(self):
