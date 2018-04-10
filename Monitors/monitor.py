@@ -132,14 +132,20 @@ class Monitor:
             raise MonitorConfigurationError('config option {0} is missing and is required'.format(key))
         required_type = kwargs.get('required_type', None)
         if isinstance(value, str) and required_type:
-            if required_type == 'int':
+            if required_type in ['int', 'float']:
                 try:
-                    value = int(value)
+                    if required_type == 'int':
+                        value = int(value)
+                    else:
+                        value = float(value)
                 except ValueError:
-                    raise MonitorConfigurationError('config option {0} needs to be an int'.format(key))
+                    raise MonitorConfigurationError('config option {0} needs to be an {1}'.format(key, required_type))
                 minimum = kwargs.get('minimum')
                 if minimum is not None and value < minimum:
                     raise MonitorConfigurationError('config option {0} needs to be >= {1}'.format(key, minimum))
+                maximum = kwargs.get('maximum')
+                if maximum is not None and value > maximum:
+                    raise MonitorConfigurationError('config option {0} needs to be <= {1}'.format(key, maximum))
             if required_type == '[int]':
                 try:
                     value = [int(x) for x in value.split(",")]
