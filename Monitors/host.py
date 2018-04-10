@@ -337,24 +337,21 @@ class MonitorLoadAvg(Monitor):
         Monitor.__init__(self, name, config_options)
         if self.is_windows(allow_cygwin=False):
             raise RuntimeError("loadavg monitor does not support Windows")
-        if 'which' in config_options:
-            try:
-                which = int(config_options["which"])
-            except Exception:
-                raise RuntimeError("value of 'which' is not an int")
-            if which < 0:
-                raise RuntimeError("value of 'which' is too low")
-            if which > 2:
-                raise RuntimeError("value of 'which' is too high")
-            self.which = which
-        if 'max' in config_options:
-            try:
-                max = float(config_options["max"])
-            except Exception:
-                raise RuntimeError("value of 'max' is not a float")
-            if max <= 0:
-                raise RuntimeError("value of 'max' is too low")
-            self.max = max
+        self.which = Monitor.get_config_option(
+            config_options,
+            'which',
+            required_type='int',
+            default=1,
+            minimum=0,
+            maximum=2
+        )
+        self.max = Monitor.get_config_option(
+            config_options,
+            'max',
+            required_type='float',
+            default=1.00,
+            minimum=0
+        )
 
     def describe(self):
         if self.which == 0:
