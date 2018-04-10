@@ -282,8 +282,7 @@ class MonitorPkgAudit(Monitor):
 
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
-        if 'path' in config_options:
-            self.path = config_options["path"]
+        self.path = Monitor.get_config_option(config_options, 'path', default='')
 
     def describe(self):
         return "Checking for insecure packages."
@@ -300,10 +299,10 @@ class MonitorPkgAudit(Monitor):
             except subprocess.CalledProcessError as e:
                 output = e.output
             except OSError as e:
-                self.record_fail("Failed to run %s audit: %s", (self.path, e))
+                self.record_fail("Failed to run %s audit: {0} {1}".format(self.path, e))
                 return False
             except Exception as e:
-                self.record_fail("Error running pkg audit: %s", e)
+                self.record_fail("Error running pkg audit: {0}".format(e))
                 return False
 
             for line in output.splitlines():
