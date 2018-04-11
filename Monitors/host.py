@@ -119,15 +119,15 @@ class MonitorFileStat(Monitor):
             self.record_fail("Unable to check file: %s" % e)
             return False
 
-        if (self.minsize >= 0):
-            if (statinfo.st_size < self.minsize):
-                    self.record_fail("Size is %d, should be >= %d bytes" % (statinfo.st_size, self.minsize))
-                    return False
+        if self.minsize:
+            if statinfo.st_size < self.minsize:
+                self.record_fail("Size is %d, should be >= %d bytes" % (statinfo.st_size, self.minsize))
+                return False
 
-        if (self.maxage >= 0):
+        if self.maxage:
             now = time.time()
             diff = now - statinfo.st_mtime
-            if (diff > self.maxage):
+            if diff > self.maxage:
                 self.record_fail("Age is %d, should be < %d seconds" % (diff, self.maxage))
                 return False
 
@@ -137,9 +137,9 @@ class MonitorFileStat(Monitor):
     def describe(self):
         """Explains what we do"""
         desc = "Checking %s exists" % self.filename
-        if (self.maxage >= 0):
+        if self.maxage:
             desc = desc + " and is not older than %d seconds" % self.maxage
-        if (self.minsize >= 0):
+        if self.minsize:
             desc = desc + " and is not smaller than %d bytes" % self.minsize
         return desc
 
