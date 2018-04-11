@@ -24,6 +24,7 @@ try:
 except ImportError:
     win32_available = False
 
+from util import get_config_option, MonitorConfigurationError
 
 class Monitor:
     """Simple monitor. This class is abstract."""
@@ -121,41 +122,8 @@ class Monitor:
 
     @staticmethod
     def get_config_option(config_options, key, **kwargs):
-        """Get a value out of a dict, with possible default, required type and requiredness."""
-        if not isinstance(config_options, dict):
-            raise MonitorConfigurationError('config_options should be a dict')
-
-        default = kwargs.get('default', None)
-        required = kwargs.get('required', False)
-        value = config_options.get(key, default)
-        if required and value is None:
-            raise MonitorConfigurationError('config option {0} is missing and is required'.format(key))
-        required_type = kwargs.get('required_type', None)
-        if isinstance(value, str) and required_type:
-            if required_type in ['int', 'float']:
-                try:
-                    if required_type == 'int':
-                        value = int(value)
-                    else:
-                        value = float(value)
-                except ValueError:
-                    raise MonitorConfigurationError('config option {0} needs to be an {1}'.format(key, required_type))
-                minimum = kwargs.get('minimum')
-                if minimum is not None and value < minimum:
-                    raise MonitorConfigurationError('config option {0} needs to be >= {1}'.format(key, minimum))
-                maximum = kwargs.get('maximum')
-                if maximum is not None and value > maximum:
-                    raise MonitorConfigurationError('config option {0} needs to be <= {1}'.format(key, maximum))
-            if required_type == '[int]':
-                try:
-                    value = [int(x) for x in value.split(",")]
-                except ValueError:
-                    raise MonitorConfigurationError('config option {0} needs to be a list of int[int,...]'.format(key))
-            if required_type == 'bool':
-                value = bool(value.lower() in ['1', 'true', 'yes'])
-            if required_type == '[str]':
-                value = [x.strip() for x in value.split(",")]
-        return value
+        kwargs['exception'] = MonitorConfigurationError
+        return get_config_option(config_options, key, **kwargs)
 
     def set_recover_command(self, command):
         self.recover_command = command
@@ -271,7 +239,7 @@ class Monitor:
 
     def set_gap(self, gap):
         """Set our minimum gap."""
-        if int(gap) >= 0:
+        if gap and gap >= 0:
             self.minimum_gap = int(gap)
 
     def describe(self):
@@ -383,7 +351,7 @@ class Monitor:
 
     def set_notify(self, notify):
         """Record if this monitor needs notifications."""
-        self.notify = True if (notify == 1 or notify.lower() == 'true' or notify) else False
+        self.notify = notify
 
     def set_group(self, group):
         """Record if this monitor has a group."""

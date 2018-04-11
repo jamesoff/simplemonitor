@@ -18,7 +18,8 @@ class CompoundMonitor(Monitor):
             config_options,
             'monitors',
             required_type='[str]',
-            required=True
+            required=True,
+            default=[]
         )
         self.min_fail = Monitor.get_config_option(config_options,
                                                   'min_fail',

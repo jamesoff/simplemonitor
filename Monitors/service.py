@@ -5,7 +5,9 @@ import os
 import subprocess
 import sys
 
-from .monitor import Monitor, MonitorConfigurationError
+from util import MonitorConfigurationError
+
+from .monitor import Monitor
 
 
 class MonitorSvc(Monitor):
