@@ -26,6 +26,7 @@ except ImportError:
 
 from util import get_config_option, MonitorConfigurationError
 
+
 class Monitor:
     """Simple monitor. This class is abstract."""
 
@@ -447,8 +448,3 @@ class MonitorNull(Monitor):
 
     def get_params(self):
         return ()
-
-
-class MonitorConfigurationError(ValueError):
-    """Missing or bad configuration value."""
-    pass
