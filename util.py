@@ -29,6 +29,7 @@ def get_config_option(config_options, key, **kwargs):
     if required and value is None:
         raise exception('config option {0} is missing and is required'.format(key))
     required_type = kwargs.get('required_type', None)
+    allowed_values = kwargs.get('allowed_values', None)
     if isinstance(value, str) and required_type:
         if required_type in ['int', 'float']:
             try:
@@ -53,4 +54,11 @@ def get_config_option(config_options, key, **kwargs):
             value = bool(value.lower() in ['1', 'true', 'yes'])
         if required_type == '[str]':
             value = [x.strip() for x in value.split(",")]
+    if isinstance(value, list) and allowed_values:
+        if not all([x in allowed_values for x in value]):
+            raise exception('config option {0} needs to be one of {1}'.format(key, allowed_values))
+    else:
+        print('value: {0}, allowed_values: {1}'.format(value, allowed_values))
+        if value is not None and allowed_values is not None and value not in allowed_values:
+            raise exception('config option {0} needs to be one of {1}'.format(key, allowed_values))
     return value

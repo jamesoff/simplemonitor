@@ -43,58 +43,91 @@ class Alerter:
             required_type='[str]',
             default=[]
         ))
-        if 'limit' in config_options:
-            self.limit = int(config_options["limit"])
-        if 'repeat' in config_options:
-            self.repeat = int(config_options["repeat"])
-        if 'groups' in config_options:
-            self.set_groups([x.strip() for x in config_options["groups"].split(",")])
-        if 'times_type' in config_options:
-            times_type = config_options["times_type"]
-            if times_type == "always":
-                pass
-            elif times_type == "only":
-                try:
-                    time_info = [datetime.time(
-                        int(config_options["time_lower"].split(":")[0]),
-                        int(config_options["time_lower"].split(":")[1])),
-
-                        datetime.time(
-                            int(config_options["time_upper"].split(":")[0]),
-                            int(config_options["time_upper"].split(":")[1]))]
-                except Exception as e:
-                    print(e)
-                    raise RuntimeError("error processing time limit definition")
+        self.limit = Alerter.get_config_option(
+            config_options,
+            'limit',
+            required_type='int',
+            minimum=1,
+            default=1
+        )
+        self.repeat = Alerter.get_config_option(
+            config_options,
+            'repeat',
+            required_type='int',
+            default=0,
+            minimum=0
+        )
+        self.set_groups(Alerter.get_config_option(
+            config_options,
+            'groups',
+            required_type='[str]',
+            default=['default']
+        ))
+        self.times_type = Alerter.get_config_option(
+            config_options,
+            'times_type',
+            required_type='str',
+            allowed_values=['always', 'only', 'not']
+        )
+        if self.times_type in ['only', 'not']:
+            time_lower = Alerter.get_config_option(
+                config_options,
+                'time_lower',
+                required_type='str',
+                required=True
+            )
+            time_upper = Alerter.get_config_option(
+                config_options,
+                'time_upper',
+                required_type='str',
+                required=True
+            )
+            try:
+                time_info = [
+                    datetime.time(
+                        int(time_lower.split(":")[0]),
+                        int(time_lower.split(":")[1])
+                    ),
+                    datetime.time(
+                        int(time_upper.split(":")[0]),
+                        int(time_upper.split(":")[1])
+                    )
+                ]
                 self.time_info = time_info
-                self.times_type = "only"
-            elif times_type == "not":
-                try:
-                    time_info = [datetime.time(
-                        int(config_options["time_lower"].split(":")[0]),
-                        int(config_options["time_lower"].split(":")[1])),
+            except Exception:
+                raise RuntimeError("error processing time limit definition")
+        self.days = Alerter.get_config_option(
+            config_options,
+            'days',
+            required_type='[int]',
+            allowed_values=list(range(0, 7)),
+            default=list(range(0, 7))
+        )
+        self.delay_notification = Alerter.get_config_option(
+            config_options,
+            'delay',
+            required_type='bool',
+            default=False
+        )
+        self.dry_run = Alerter.get_config_option(
+            config_options,
+            'dry_run',
+            required_type='bool',
+            default=False
+        )
+        self.ooh_recovery = Alerter.get_config_option(
+            config_options,
+            'ooh_recovery',
+            required_type='bool',
+            default=False
+        )
 
-                        datetime.time(
-                            int(config_options["time_upper"].split(":")[0]),
-                            int(config_options["time_upper"].split(":")[1]))]
-                except Exception:
-                    raise RuntimeError("error processing time limit definition")
-                self.time_info = time_info
-                self.times_type = "not"
-            else:
-                raise RuntimeError("invalid times_type definition %s" % times_type)
-        if 'days' in config_options:
-            self.days = [int(x.strip()) for x in config_options["days"].split(",")]
-        if 'delay' in config_options:
-            if config_options["delay"] == "1":
-                self.delay_notification = True
-        if 'dry_run' in config_options:
-            if config_options["dry_run"] == "1":
-                self.dry_run = True
-        if 'ooh_recovery' in config_options:
-            if config_options['ooh_recovery'] == "1":
-                self.ooh_recovery = True
-
-        if 'debug_times' in config_options:
+        if Alerter.get_config_option(
+            config_options,
+            'debug_times',
+            required_type=bool,
+            default=False
+        ):
             self.time_info = [
                 (datetime.datetime.utcnow() - datetime.timedelta(minutes=1)).time(),
                 (datetime.datetime.utcnow() + datetime.timedelta(minutes=1)).time()
