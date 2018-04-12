@@ -388,13 +388,13 @@ class MonitorZap(Monitor):
 
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
-        if 'span' in config_options:
-            try:
-                self.span = int(config_options["span"])
-            except Exception:
-                raise RuntimeError("span parameter must be an integer")
-            if self.span < 1:
-                raise RuntimeError("span parameter must be > 0")
+        self.span = Monitor.get_config_option(
+            config_options,
+            'span',
+            required_type='int',
+            default=1,
+            minimum=1
+        )
 
     def run_test(self):
         try:
