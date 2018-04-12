@@ -5,6 +5,8 @@ import datetime
 
 from socket import gethostname
 
+from util import get_config_option, AlerterConfigurationError
+
 
 class Alerter:
     """Abstract class basis for alerters."""
@@ -35,8 +37,12 @@ class Alerter:
         if config_options is None:
             config_options = {}
         self.available = True
-        if 'depend' in config_options:
-            self.set_dependencies([x.strip() for x in config_options["depend"].split(",")])
+        self.set_dependencies(Alerter.get_config_option(
+            config_options,
+            'depend',
+            required_type='[str]',
+            default=[]
+        ))
         if 'limit' in config_options:
             self.limit = int(config_options["limit"])
         if 'repeat' in config_options:
@@ -94,6 +100,11 @@ class Alerter:
                 (datetime.datetime.utcnow() + datetime.timedelta(minutes=1)).time()
             ]
             print("debug: set times for alerter to", self.time_info)
+
+    @staticmethod
+    def get_config_option(config_options, key, **kwargs):
+        kwargs['exception'] = AlerterConfigurationError
+        return get_config_option(config_options, key, **kwargs)
 
     def format_datetime(self, dt):
         """Return an isoformat()-like datetime without the microseconds."""
