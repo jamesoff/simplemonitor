@@ -58,7 +58,6 @@ def get_config_option(config_options, key, **kwargs):
         if not all([x in allowed_values for x in value]):
             raise exception('config option {0} needs to be one of {1}'.format(key, allowed_values))
     else:
-        print('value: {0}, allowed_values: {1}'.format(value, allowed_values))
         if value is not None and allowed_values is not None and value not in allowed_values:
             raise exception('config option {0} needs to be one of {1}'.format(key, allowed_values))
     return value

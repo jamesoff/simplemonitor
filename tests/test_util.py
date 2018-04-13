@@ -56,3 +56,64 @@ class TestUtil(unittest.TestCase):
                 required_type='bool'),
             False
         )
+        with self.assertRaises(ValueError):
+            util.get_config_option(
+                ['not a dict'],
+                ''
+            )
+        with self.assertRaises(ValueError):
+            util.get_config_option(
+                config_options,
+                'missing_value',
+                required=True
+            )
+        with self.assertRaises(ValueError):
+            util.get_config_option(
+                config_options,
+                'test_string',
+                required_type='int'
+            )
+        with self.assertRaises(ValueError):
+            util.get_config_option(
+                config_options,
+                'test_string',
+                required_type='float'
+            )
+        with self.assertRaises(ValueError):
+            util.get_config_option(
+                config_options,
+                'test_int',
+                required_type='int',
+                minimum=4
+            )
+        with self.assertRaises(ValueError):
+            util.get_config_option(
+                config_options,
+                'test_int',
+                required_type='int',
+                maximum=2
+            )
+        with self.assertRaises(ValueError):
+            util.get_config_option(
+                config_options,
+                'test_[str]',
+                required_type='[int]'
+            )
+        with self.assertRaises(ValueError):
+            util.get_config_option(
+                config_options,
+                'test_[str]',
+                allowed_values=['d']
+            )
+        with self.assertRaises(ValueError):
+            util.get_config_option(
+                config_options,
+                'test_string',
+                allowed_values=['other string', 'other other string']
+            )
+        with self.assertRaises(NotImplementedError):
+            util.get_config_option(
+                'not a dict',
+                "doesn't matter",
+                exception=NotImplementedError
+            )
