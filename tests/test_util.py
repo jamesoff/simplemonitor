@@ -118,3 +118,10 @@ class TestUtil(unittest.TestCase):
                 "doesn't matter",
                 exception=NotImplementedError
             )
+        with self.assertRaises(ValueError):
+            util.get_config_option(
+                {'empty_string': ''},
+                'empty_string',
+                required_type='str',
+                allow_empty=False
+            )
