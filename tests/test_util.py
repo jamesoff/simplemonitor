@@ -103,6 +103,7 @@ class TestUtil(unittest.TestCase):
             util.get_config_option(
                 config_options,
                 'test_[str]',
+                required_type='[str]',
                 allowed_values=['d']
             )
         with self.assertRaises(ValueError):
