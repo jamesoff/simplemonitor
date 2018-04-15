@@ -4,6 +4,7 @@ try:
 except ImportError:
     requests_available = False
 
+from util import AlerterConfigurationError
 from .alerter import Alerter
 
 
@@ -19,36 +20,44 @@ class FortySixElksAlerter(Alerter):
             return
 
         Alerter.__init__(self, config_options)
+        self.username = Alerter.get_config_option(
+            config_options,
+            'username',
+            required=True,
+            allow_empty=False
+        )
+        self.password = Alerter.get_config_option(
+            config_options,
+            'password',
+            required=True,
+            allow_empty=False
+        )
+        self.target = Alerter.get_config_option(
+            config_options,
+            'target',
+            required=True,
+            allow_empty=False
+        )
 
-        try:
-            username = config_options["username"]
-            password = config_options["password"]
-            target = config_options["target"]
-        except Exception:
-            raise RuntimeError("Required configuration fields missing")
+        self.sender = Alerter.get_config_option(
+            config_options,
+            'sender',
+            default='SmplMntr'
+        )
+        if self.sender[0] == '+' and self.sender[1:].isdigit():
+            # sender is phone number
+            pass
+        elif len(self.sender) < 3:
+            raise AlerterConfigurationError("SMS sender name must be at least 3 chars long")
+        elif len(self.sender) > 11:
+            print("warning: truncating SMS sender name to 11 chars")
+            self.sender = self.sender[:11]
 
-        if 'sender' in config_options:
-            sender = config_options["sender"]
-            if sender[0] == '+' and sender[1:].isdigit():
-                # sender is phone number
-                pass
-            elif len(sender) < 3:
-                raise RuntimeError("SMS sender name must be at least 3 chars long")
-            elif len(sender) > 11:
-                print("warning: truncating SMS sender name to 11 chars")
-                sender = sender[:11]
-        else:
-            sender = "SmplMntr"
-
-        api_host = 'api.46elks.com'
-        if 'api_host' in config_options:
-            api_host = config_options['api_host']
-
-        self.username = username
-        self.password = password
-        self.target = target
-        self.sender = sender
-        self.api_host = api_host
+        self.api_host = Alerter.get_config_option(
+            config_options,
+            'api_host',
+            default='api.46elks.com'
+        )
 
         self.support_catchup = True
 
