@@ -2,6 +2,7 @@
 import subprocess
 import shlex
 
+from util import AlerterConfigurationError
 from .alerter import Alerter
 
 
@@ -11,22 +12,23 @@ class ExecuteAlerter(Alerter):
     def __init__(self, config_options):
         Alerter.__init__(self, config_options)
 
-        # config options
-        # fail command string
-        # recover command string
-
-        if 'fail_command' in config_options:
-            self.fail_command = config_options['fail_command']
-        else:
-            self.fail_command = None
-
-        if 'success_command' in config_options:
-            self.success_command = config_options['success_command']
-        else:
-            self.success_command = None
-
-        if 'catchup_command' in config_options:
-            self.catchup_command = config_options['catchup_command']
+        self.fail_command = Alerter.get_config_option(
+            config_options,
+            'fail_command',
+            allow_empty=False
+        )
+        self.success_command = Alerter.get_config_option(
+            config_options,
+            'success_command',
+            allow_empty=False
+        )
+        self.catchup_command = Alerter.get_config_option(
+            config_options,
+            'catchup_command',
+            allow_empty=False
+        )
+        if self.fail_command is None and self.success_command is None and self.catchup_command is None:
+            raise AlerterConfigurationError('execute alerter has no commands defined')
 
     def send_alert(self, name, monitor):
         type_ = self.should_alert(monitor)
