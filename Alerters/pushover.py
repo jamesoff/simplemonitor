@@ -9,19 +9,19 @@ class PushoverAlerter(Alerter):
 
     def __init__(self, config_options):
         Alerter.__init__(self, config_options)
-        try:
-            pushover_token = config_options["token"]
-            pushover_user = config_options["user"]
-        except Exception:
-            raise RuntimeError("Required configuration fields missing")
 
-        if pushover_token == "":
-            raise RuntimeError("missing pushover token")
-        if pushover_user == "":
-            raise RuntimeError("missing pushover user")
-
-        self.pushover_token = pushover_token
-        self.pushover_user = pushover_user
+        self.pushover_token = Alerter.get_config_option(
+            config_options,
+            'token',
+            required=True,
+            allow_empty=False
+        )
+        self.pushover_user = Alerter.get_config_option(
+            config_options,
+            'user',
+            required=True,
+            allow_empty=False
+        )
 
         self.support_catchup = True
 
