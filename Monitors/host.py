@@ -444,23 +444,29 @@ class MonitorCommand(Monitor):
             print('Warning: Command monitors are unsupported on Python 2.6!')
             self.available = False
 
-        self.result_regexp_text = ""
-        self.result_regexp = None
-        self.result_max = None
-
-        if 'result_regexp' in config_options:
-            self.result_regexp_text = config_options["result_regexp"]
+        self.result_regexp_text = Monitor.get_config_option(
+            config_options,
+            'result_regexp',
+            default=''
+        )
+        self.result_max = Monitor.get_config_option(
+            config_options,
+            'result_max',
+            required_type='int'
+        )
+        if self.result_regexp_text != '':
             self.result_regexp = re.compile(self.result_regexp_text)
-        elif 'result_max' in config_options:
-            self.result_max = int(config_options["result_max"])
+            if self.result_max is not None:
+                print('Warning: command monitors do not support result_regexp AND result_max settings simultaneously')
+                self.result_max = None
 
-        try:
-            command = shlex.split(config_options["command"])
-        except Exception:
-            raise RuntimeError("Required configuration fields missing or invalid")
-        if command is None or len(command) == 0:
-            raise RuntimeError("missing command")
-        self.command = command
+        command = Monitor.get_config_option(
+            config_options,
+            'command',
+            required=True,
+            allow_empty=False
+        )
+        self.command = shlex.split(command)
 
     def run_test(self):
         if not self.available:
