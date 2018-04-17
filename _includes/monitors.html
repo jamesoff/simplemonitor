@@ -18,7 +18,8 @@ All monitor types share the following configuration options:
 |gap| The number of seconds gap between polls for this monitor. Setting this lower than the global interval will have no effect. Use it to make a monitor poll only once an hour, for example.|no|0|
 |remote_alert| This monitor wants a remote host to handle alerting instead of the local host. Set to 1 to enable. This is a good candidate for putting in defaults if you want to use remote alerting for all your monitors.|no|0|
 |recover_command| A command to execute once when this monitor fails. It could, for example, restart a service if an HTTP check fails.|no| |
-
+|group|The group the monitor belongs to. Alerters will only fire for monitors which appear in their groups.|no|`default`|
+|notify|If the monitor should alert at all|no|1|
 {% for monitor in m %}
 <a name="{{monitor.name}}"></a>
 
