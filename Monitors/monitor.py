@@ -416,10 +416,13 @@ class MonitorFail(Monitor):
 
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
-        if 'interval' in config_options:
-            self.interval = int(config_options["interval"])
-        else:
-            self.interval = 5
+        self.interval = Monitor.get_config_option(
+            config_options,
+            'interval',
+            required_type='int',
+            minimum=1,
+            default=5
+        )
 
     def run_test(self):
         """Always fails."""
