@@ -66,7 +66,9 @@ Again, adding more logging/alerting methods is simply a case of writing some Pyt
 
 That was easy.
 
-If you want to hide all output except errors, use the -q option. If you want more verbose blah about what’s happening, use -v.
+For help on command line options, run `python monitor.py -h`, or see below.
+
+SimpleMonitor does not fork.
 
 On non-Windows, SimpleMonitor runs very nicely under daemontools. You just need a run file a bit like this:
 
@@ -78,8 +80,37 @@ cd /usr/local/monitor && exec /usr/local/bin/python monitor.py -q
 
 On Windows hosts, you’ll have to leave it running in a Command Prompt for now; I haven’t gotten round to making it run as a service.
 
-For help on (the scarce) command line options, run `python monitor.py -h`.
+In the `scripts` folder you can find startup scripts for various systems. You will need to adjust paths, usernames and options before using them!
+
+
+## Command line options
+
+* `-h`, `--help`: display help
+
+### Configuration
+
+* `-f CONFIG`, `--config=CONFIG`: configuration file (monitor.ini)
+* `-p PIDFILE`, `--pidfile=PIDFILE`: Write PID into this file
+* `-N`, `--no-network`: Disable network listening socket (if enabled in config)
+
+### Testing
+
+These options exist mainly for automated testing and validation.
+
+* `-t`, `--test`: Test config and exit. Exits non-zero if config is broken
+* `-1`, `--one-shot`: Run the monitors once only, without alerting. Require monitors without "fail" in the name to succeed. Require monitors with "skip" in the name to skip. Exit zero or non-zero accordingly.
+* `--loops`: (Undocumented) Run this many loops of checks/logging/alerting and exit
+
+### Output
+
+SimpleMonitor currently outputs everything to stdout.
+
+* `-v`, `--verbose`: Be more verbose
+* `-q`, `--quiet`: Don't output anything except errors
+* `-d`, `--debug`: Enable debug output (and enable verbose mode)
+* `-H`, `--no-heartbeat`: Omit printing the '.' character when running checks
 
 ## Licence
+
 SimpleMonitor is released under the BSD licence.
 
