@@ -16,8 +16,12 @@ class Logger(object):
     batch_data = {}
 
     def __init__(self, config_options):
-        if "depend" in config_options:
-            self.set_dependencies([x.strip() for x in config_options["depend"].split(",")])
+        self.set_dependencies(Logger.get_config_option(
+            config_options,
+            'depend',
+            required_type='[str]',
+            default=[]
+        ))
 
     @staticmethod
     def get_config_option(config_options, key, **kwargs):
