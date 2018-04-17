@@ -21,10 +21,12 @@ class DBLogger(Logger):
         Logger.__init__(self, config_options)
         if not sqlite_available:
             raise RuntimeError("SQLite module not loaded.")
-        try:
-            db_path = config_options["db_path"]
-        except Exception:
-            raise RuntimeError("db_path not defined")
+        db_path = Logger.get_config_option(
+            config_options,
+            'db_path',
+            required=True,
+            allow_empty=False
+        )
 
         self.db_handle = sqlite3.connect(db_path, isolation_level=None)
         self.connected = True
