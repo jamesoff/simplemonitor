@@ -107,7 +107,12 @@ class MonitorFileStat(Monitor):
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
         self.maxage = Monitor.get_config_option(config_options, 'maxage', required_type='int', minimum=0)
-        self.minsize = Monitor.get_config_option(config_options, 'minsize', required_type='int', minimum=0)
+        self.minsize = Monitor.get_config_option(
+            config_options,
+            'minsize',
+            required_type='str',
+            allow_empty=False
+        )
         if self.minsize:
             self.minsize = _size_string_to_bytes(self.minsize)
         self.filename = Monitor.get_config_option(config_options, 'filename', required=True)
