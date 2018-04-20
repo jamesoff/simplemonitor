@@ -2,6 +2,7 @@ import unittest
 import datetime
 import Alerters.alerter
 import Monitors.monitor
+import util
 
 class TestAlerter(unittest.TestCase):
 
@@ -46,7 +47,7 @@ class TestAlerter(unittest.TestCase):
             'time_lower': '10:00',
             'time_upper': '11:00'
         }
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(util.AlerterConfigurationError):
             Alerters.alerter.Alerter(config_options)
 
     def test_days(self):

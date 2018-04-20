@@ -24,6 +24,8 @@ try:
 except ImportError:
     win32_available = False
 
+from util import get_config_option, MonitorConfigurationError
+
 
 class Monitor:
     """Simple monitor. This class is abstract."""
@@ -65,30 +67,64 @@ class Monitor:
     recover_command = ""
     recover_info = ""
 
-    def __init__(self, name="unnamed", config_options={}):
+    def __init__(self, name="unnamed", config_options=None):
         """What's that coming over the hill? Is a monitor?"""
-        if 'depend' in config_options:
-            self.set_dependencies([x.strip() for x in config_options["depend"].split(",")])
-        if 'urgent' in config_options:
-            self.set_urgency(int(config_options["urgent"]))
-        if 'notify' in config_options:
-            self.set_notify(config_options["notify"])
-        if 'group' in config_options:
-            self.set_group(config_options["group"])
-        if 'tolerance' in config_options:
-            self.set_tolerance(int(config_options["tolerance"]))
-        if 'remote_alert' in config_options:
-            self.set_remote_alerting(int(config_options["remote_alert"]))
-        if 'remote_alerts' in config_options:
-            self.set_remote_alerting(int(config_options["remote_alerts"]))
-        if 'recover_command' in config_options:
-            self.set_recover_command(config_options["recover_command"])
-        if 'gap' in config_options:
-            self.set_gap(config_options["gap"])
+        if config_options is None:
+            config_options = {}
+        self.set_dependencies(Monitor.get_config_option(
+            config_options,
+            'depend',
+            required_type='[str]',
+            default=list()
+        ))
+        self.set_urgency(Monitor.get_config_option(
+            config_options,
+            'urgent',
+            required_type='bool',
+            default=True
+        ))
+        self.set_notify(Monitor.get_config_option(
+            config_options,
+            'notify',
+            required_type='bool',
+            default=True
+        ))
+        self.set_group(Monitor.get_config_option(
+            config_options,
+            'notify',
+            default='default'
+        ))
+        self.set_tolerance(Monitor.get_config_option(
+            config_options,
+            'tolerance',
+            required_type='int',
+            default=0,
+            minimum=0
+        ))
+        self.set_remote_alerting(Monitor.get_config_option(
+            config_options,
+            'remote_alert',
+            required_type='bool',
+            default=False
+        ))
+        self.set_recover_command(Monitor.get_config_option(
+            config_options,
+            'recover_command'
+        ))
+        self.set_gap(Monitor.get_config_option(
+            config_options,
+            'gap',
+            required_type='int',
+            minimum=0,
+            default=0
+        ))
         self.running_on = self.short_hostname()
         self.name = name
-        # Populate the notify flag for every host
-        self.notify = self.notify
+
+    @staticmethod
+    def get_config_option(config_options, key, **kwargs):
+        kwargs['exception'] = MonitorConfigurationError
+        return get_config_option(config_options, key, **kwargs)
 
     def set_recover_command(self, command):
         self.recover_command = command
@@ -204,7 +240,7 @@ class Monitor:
 
     def set_gap(self, gap):
         """Set our minimum gap."""
-        if int(gap) >= 0:
+        if gap and gap >= 0:
             self.minimum_gap = int(gap)
 
     def describe(self):
@@ -316,7 +352,7 @@ class Monitor:
 
     def set_notify(self, notify):
         """Record if this monitor needs notifications."""
-        self.notify = True if (notify == 1 or notify.lower() == 'true' or notify) else False
+        self.notify = notify
 
     def set_group(self, group):
         """Record if this monitor has a group."""
@@ -351,7 +387,7 @@ class Monitor:
             return self.last_error_count - self.tolerance
 
     def attempt_recover(self):
-        if self.recover_command == "":
+        if self.recover_command is None:
             self.recover_info = ""
             return
         if not self.first_failure():
@@ -380,10 +416,13 @@ class MonitorFail(Monitor):
 
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
-        if 'interval' in config_options:
-            self.interval = int(config_options["interval"])
-        else:
-            self.interval = 5
+        self.interval = Monitor.get_config_option(
+            config_options,
+            'interval',
+            required_type='int',
+            minimum=1,
+            default=5
+        )
 
     def run_test(self):
         """Always fails."""

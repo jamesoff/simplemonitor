@@ -8,15 +8,13 @@ class PushbulletAlerter(Alerter):
 
     def __init__(self, config_options):
         Alerter.__init__(self, config_options)
-        try:
-            pushbullet_token = config_options["token"]
-        except Exception:
-            raise RuntimeError("Required configuration fields missing")
 
-        if pushbullet_token == "":
-            raise RuntimeError("missing pushbullet token")
-
-        self.pushbullet_token = pushbullet_token
+        self.pushbullet_token = Alerter.get_config_option(
+            config_options,
+            'token',
+            required=True,
+            allow_empty=False
+        )
 
         self.support_catchup = True
 

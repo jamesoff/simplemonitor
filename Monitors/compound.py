@@ -14,18 +14,19 @@ class CompoundMonitor(Monitor):
 
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
-        monitors = []
-        try:
-            monitors = [ele.strip() for ele in config_options["monitors"].split(",")]
-        except Exception:
-            raise RuntimeError("Required configuration fields missing")
-        min_fail = len(monitors)
-        try:
-            min_fail = max(int(config_options["min_fail"]), 1)
-        except Exception:
-            pass
-        self.min_fail = min_fail
-        self.monitors = monitors
+        self.monitors = Monitor.get_config_option(
+            config_options,
+            'monitors',
+            required_type='[str]',
+            required=True,
+            default=[]
+        )
+        self.min_fail = Monitor.get_config_option(config_options,
+                                                  'min_fail',
+                                                  required_type='int',
+                                                  default=len(self.monitors),
+                                                  minimum=1
+                                                  )
         self.m = -1
         self.mt = None
 

@@ -19,30 +19,31 @@ class SESAlerter(Alerter):
             return
 
         Alerter.__init__(self, config_options)
-        try:
-            from_addr = config_options["from"]
-            to_addr = config_options["to"]
-        except Exception:
-            raise RuntimeError("Required configuration fields missing")
-
-        if from_addr == "":
-            raise RuntimeError("missing mail from address")
-        if to_addr == "":
-            raise RuntimeError("missing mail to address")
-
-        self.from_addr = from_addr
-        self.to_addr = to_addr
+        self.from_addr = Alerter.get_config_option(
+            config_options,
+            'from',
+            allow_empty=False
+        )
+        self.to_addr = Alerter.get_config_option(
+            config_options,
+            'to',
+            allow_empty=False
+        )
 
         self.support_catchup = True
 
         self.ses_client_params = {}
 
-        if 'aws_region' in config_options:
-            os.environ["AWS_DEFAULT_REGION"] = config_options['aws_region']
+        aws_region = Alerter.get_config_option(config_options, 'aws_region')
+        if aws_region:
+            os.environ["AWS_DEFAULT_REGION"] = aws_region
 
-        if 'aws_access_key' in config_options and 'aws_secret_key' in config_options:
-            self.ses_client_params['aws_access_key_id'] = config_options['aws_access_key']
-            self.ses_client_params['aws_secret_access_key'] = config_options['aws_secret_key']
+        aws_access_key = Alerter.get_config_option(config_options, 'aws_access_key')
+        aws_secret_key = Alerter.get_config_option(config_options, 'aws_secret_access_key')
+
+        if aws_access_key and aws_secret_key:
+            self.ses_client_params['aws_access_key_id'] = aws_access_key
+            self.ses_client_params['aws_secret_access_key'] = aws_secret_key
 
     def send_alert(self, name, monitor):
         """Send the email."""

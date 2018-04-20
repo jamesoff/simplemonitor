@@ -11,22 +11,22 @@ class NMAAlerter(Alerter):
     def __init__(self, config_options):
         Alerter.__init__(self, config_options)
 
-        try:
-            apikey = config_options["apikey"]
-        except Exception:
-            raise RuntimeError("Required configuration fields missing")
-
-        api_host = 'www.notifymyandroid.com'
-        if 'api_host' in config_options:
-            api_host = config_options['api_host']
-
-        application = 'SimpleMonitor'
-        if 'application' in config_options:
-            application = config_options['application']
-
-        self.apikey = apikey
-        self.api_host = api_host
-        self.application = application
+        self.apikey = Alerter.get_config_option(
+            config_options,
+            'apikey',
+            required=True,
+            allow_empty=False
+        )
+        self.api_host = Alerter.get_config_option(
+            config_options,
+            'api_host',
+            default='www.notifymyandroid.com'
+        )
+        self.application = Alerter.get_config_option(
+            config_options,
+            'application',
+            default='SimpleMonitor'
+        )
 
         self.support_catchup = True
 

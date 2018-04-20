@@ -20,27 +20,15 @@ class SlackAlerter(Alerter):
             return
 
         Alerter.__init__(self, config_options)
-        try:
-            url = config_options['url']
-        except Exception:
-            raise RuntimeError("Required configuration fields missing")
+        self.url = Alerter.get_config_option(
+            config_options,
+            'url',
+            required=True,
+            allow_empty=False
+        )
 
-        if 'channel' in config_options:
-            channel = config_options['channel']
-        else:
-            channel = None
-
-        if 'username' in config_options:
-            username = config_options['username']
-        else:
-            username = None
-
-        if url == "":
-            raise RuntimeError("missing url")
-
-        self.url = url
-        self.channel = channel
-        self.username = username
+        self.channel = Alerter.get_config_option(config_options, 'channel')
+        self.username = Alerter.get_config_option(config_options, 'username')
 
     def send_alert(self, name, monitor):
         """Send the message."""

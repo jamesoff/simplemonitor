@@ -12,31 +12,39 @@ class BulkSMSAlerter(Alerter):
 
     def __init__(self, config_options):
         Alerter.__init__(self, config_options)
+        self.username = Alerter.get_config_option(
+            config_options,
+            'username',
+            required=True,
+            allow_empty=False
+        )
+        self.password = Alerter.get_config_option(
+            config_options,
+            'password',
+            required=True,
+            allow_empty=False
+        )
+        self.target = Alerter.get_config_option(
+            config_options,
+            'target',
+            required=True,
+            allow_empty=False
+        )
 
-        try:
-            username = config_options["username"]
-            password = config_options["password"]
-            target = config_options["target"]
-        except Exception:
-            raise RuntimeError("Required configuration fields missing")
+        self.sender = Alerter.get_config_option(
+            config_options,
+            'sender',
+            default='SmplMntr'
+        )
+        if len(self.sender) > 11:
+            print("warning: truncating SMS sender name to 11 chars")
+            self.sender = self.sender[:11]
 
-        if 'sender' in config_options:
-            sender = config_options["sender"]
-            if len(sender) > 11:
-                print("warning: truncating SMS sender name to 11 chars")
-                sender = sender[:11]
-        else:
-            sender = "SmplMntr"
-
-        api_host = 'www.bulksms.co.uk'
-        if 'api_host' in config_options:
-            api_host = config_options['api_host']
-
-        self.username = username
-        self.password = password
-        self.target = target
-        self.sender = sender
-        self.api_host = api_host
+        self.api_host = Alerter.get_config_option(
+            config_options,
+            'api_host',
+            default='www.bulksms.co.uk'
+        )
 
         self.support_catchup = True
 

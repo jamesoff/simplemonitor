@@ -5,6 +5,8 @@ import os
 import subprocess
 import sys
 
+from util import MonitorConfigurationError
+
 from .monitor import Monitor
 
 
@@ -16,10 +18,7 @@ class MonitorSvc(Monitor):
 
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
-        try:
-            self.path = config_options["path"]
-        except Exception:
-            raise RuntimeError("Required configuration fields missing")
+        self.path = Monitor.get_config_option(config_options, 'path', required=True)
         self.params = ("svok %s" % self.path).split(" ")
 
     def run_test(self):
@@ -56,28 +55,24 @@ class MonitorService(Monitor):
 
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
-        try:
-            service_name = config_options["service"]
-        except Exception:
-            raise RuntimeError("Required configuration fields missing")
-        if 'state' in config_options:
-            want_state = config_options["state"]
-        else:
-            want_state = "RUNNING"
+        self.service_name = Monitor.get_config_option(
+            config_options,
+            'service',
+            required=True
+        )
+        self.want_state = Monitor.get_config_option(
+            config_options,
+            'state',
+            default='RUNNING'
+        )
+        self.host = Monitor.get_config_option(
+            config_options,
+            'host',
+            default='.'
+        )
 
-        if 'host' in config_options:
-            host = config_options["host"]
-        else:
-            host = "."
-
-        if service_name == "":
-            raise RuntimeError("missing service name")
-        if want_state not in ["RUNNING", "STOPPED"]:
-            raise RuntimeError("invalid state")
-
-        self.service_name = service_name
-        self.want_state = want_state
-        self.host = host
+        if self.want_state not in ["RUNNING", "STOPPED"]:
+            raise MonitorConfigurationError("invalid state {0} for MonitorService".format(self.want_state))
 
     def run_test(self):
         """Check the service is in the desired state"""
@@ -125,29 +120,11 @@ class MonitorRC(Monitor):
         Change script path to /etc/rc.d/ to monitor base system services. If the
         script path ends with /, the service name is appended."""
         Monitor.__init__(self, name, config_options)
-        try:
-            service_name = config_options["service"]
-        except Exception:
-            raise RuntimeError("Required configuration fields missing")
-        if 'path' in config_options:
-            script_path = config_options["path"]
-        else:
-            script_path = "/usr/local/etc/rc.d/"
-        if 'return_code' in config_options:
-            want_return_code = int(config_options["return_code"])
-        else:
-            want_return_code = 0
-
-        if service_name == "":
-            raise RuntimeError("missing service name")
-        if script_path == "":
-            raise RuntimeError("missing script path")
-        if script_path.endswith("/"):
-            script_path = script_path + service_name
-        self.script_path = script_path
-        self.service_name = service_name
-        self.want_return_code = want_return_code
-        # Check if we need a .sh (old-style RC scripts in FreeBSD)
+        self.service_name = Monitor.get_config_option(config_options, 'service', required=True)
+        self.script_path = Monitor.get_config_option(config_options, 'path', default='/usr/local/etc/rc.d')
+        self.want_return_code = Monitor.get_config_option(config_options, 'return_code', required_type='int', default=0)
+        if self.script_path.endswith("/"):
+            self.script_path = self.script_path + self.service_name
         if not os.path.isfile(self.script_path):
             if os.path.isfile(self.script_path + ".sh"):
                 self.script_path = self.script_path + ".sh"
@@ -194,15 +171,13 @@ class MonitorEximQueue(Monitor):
 
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
-        try:
-            self.max_length = int(config_options["max_length"])
-        except Exception:
-            raise RuntimeError("Required configuration field 'max_length' missing or not an integer")
-        if not (self.max_length > 0):
-            raise RuntimeError("'max_length' must be >= 1")
-        if "path" in config_options:
-            self.path = config_options["path"]
-        self.path = os.path.join(self.path, "exiqgrep")
+        self.max_length = Monitor.get_config_option(config_options,
+                                                    'max_length',
+                                                    required_type='int',
+                                                    minimum=1
+                                                    )
+        path = Monitor.get_config_option(config_options, 'path', default='/usr/local/sbin')
+        self.path = os.path.join(path, "exiqgrep")
 
     def run_test(self):
         try:
@@ -254,17 +229,8 @@ class MonitorWindowsDHCPScope(Monitor):
         if not self.is_windows(True):
             raise RuntimeError("DHCPScope monitor requires a Windows platform.")
         Monitor.__init__(self, name, config_options)
-        try:
-            self.max_used = int(config_options["max_used"])
-        except Exception:
-            raise RuntimeError("Required configuration field 'max_used' missing or not an integer")
-        if not (self.max_used > 0):
-            raise RuntimeError("max_used must be >= 1")
-
-        try:
-            self.scope = config_options["scope"]
-        except Exception:
-            raise RuntimeError("Required configuration field 'scope' missing")
+        self.max_used = Monitor.get_config_option(config_options, 'max_used', required_type='int', minimum=1)
+        self.scope = Monitor.get_config_option(config_options, 'scope', required=True)
 
     def run_test(self):
         try:
@@ -282,7 +248,7 @@ class MonitorWindowsDHCPScope(Monitor):
             return False
         except Exception as e:
             print(e)
-            self.record_fail("Error getting client count: %s", e)
+            self.record_fail("Error getting client count: {0}".format(e))
             return False
 
     def describe(self):

@@ -14,3 +14,5 @@ htmlcov/
 .idea/
 html/status.html
 monitor.db
+monitor?.log
+monitor2.db

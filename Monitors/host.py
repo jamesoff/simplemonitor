@@ -15,6 +15,8 @@ from .monitor import Monitor
 
 
 def _size_string_to_bytes(s):
+    if s is None:
+        return None
     if s.endswith("G"):
         gigs = int(s[:-1])
         bytes = gigs * (1024 ** 3)
@@ -62,13 +64,8 @@ class MonitorDiskSpace(Monitor):
                 raise RuntimeError("win32api is not available, but is needed for DiskSpace monitor.")
         else:
             self.use_statvfs = True
-        try:
-            partition = config_options["partition"]
-            limit = config_options["limit"]
-        except Exception:
-            raise RuntimeError("Required configuration fields missing")
-        self.partition = partition
-        self.limit = _size_string_to_bytes(limit)
+        self.partition = Monitor.get_config_option(config_options, 'partition', required=True)
+        self.limit = _size_string_to_bytes(Monitor.get_config_option(config_options, 'limit', required=True))
 
     def run_test(self):
         try:
@@ -109,26 +106,16 @@ class MonitorFileStat(Monitor):
 
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
-        try:
-            if 'maxage' in config_options:
-                maxage = int(config_options["maxage"])
-                self.maxage = maxage
-        except Exception:
-            raise RuntimeError("Maxage missing or not an integer (number of seconds)")
-
-        try:
-            if 'minsize' in config_options:
-                minsize = _size_string_to_bytes(config_options["minsize"])
-                self.minsize = minsize
-        except Exception:
-            raise RuntimeError("Minsize missing or not an integer (number of bytes")
-
-        try:
-            filename = config_options["filename"]
-        except Exception:
-            raise RuntimeError("Filename missing")
-
-        self.filename = filename
+        self.maxage = Monitor.get_config_option(config_options, 'maxage', required_type='int', minimum=0)
+        self.minsize = Monitor.get_config_option(
+            config_options,
+            'minsize',
+            required_type='str',
+            allow_empty=False
+        )
+        if self.minsize:
+            self.minsize = _size_string_to_bytes(self.minsize)
+        self.filename = Monitor.get_config_option(config_options, 'filename', required=True)
 
     def run_test(self):
         try:
@@ -137,15 +124,15 @@ class MonitorFileStat(Monitor):
             self.record_fail("Unable to check file: %s" % e)
             return False
 
-        if (self.minsize >= 0):
-            if (statinfo.st_size < self.minsize):
-                    self.record_fail("Size is %d, should be >= %d bytes" % (statinfo.st_size, self.minsize))
-                    return False
+        if self.minsize:
+            if statinfo.st_size < self.minsize:
+                self.record_fail("Size is %d, should be >= %d bytes" % (statinfo.st_size, self.minsize))
+                return False
 
-        if (self.maxage >= 0):
+        if self.maxage:
             now = time.time()
             diff = now - statinfo.st_mtime
-            if (diff > self.maxage):
+            if diff > self.maxage:
                 self.record_fail("Age is %d, should be < %d seconds" % (diff, self.maxage))
                 return False
 
@@ -155,9 +142,9 @@ class MonitorFileStat(Monitor):
     def describe(self):
         """Explains what we do"""
         desc = "Checking %s exists" % self.filename
-        if (self.maxage >= 0):
+        if self.maxage:
             desc = desc + " and is not older than %d seconds" % self.maxage
-        if (self.minsize >= 0):
+        if self.minsize:
             desc = desc + " and is not smaller than %d bytes" % self.minsize
         return desc
 
@@ -179,8 +166,7 @@ class MonitorApcupsd(Monitor):
 
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
-        if 'path' in config_options:
-            self.path = config_options["path"]
+        self.path = Monitor.get_config_option(config_options, 'path', default='')
 
     def run_test(self):
         info = {}
@@ -248,8 +234,7 @@ class MonitorPortAudit(Monitor):
 
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
-        if 'path' in config_options:
-            self.path = config_options["path"]
+        self.path = Monitor.get_config_option(config_options, 'path', default='')
 
     def describe(self):
         return "Checking for insecure ports."
@@ -302,8 +287,7 @@ class MonitorPkgAudit(Monitor):
 
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
-        if 'path' in config_options:
-            self.path = config_options["path"]
+        self.path = Monitor.get_config_option(config_options, 'path', default='')
 
     def describe(self):
         return "Checking for insecure packages."
@@ -320,10 +304,10 @@ class MonitorPkgAudit(Monitor):
             except subprocess.CalledProcessError as e:
                 output = e.output
             except OSError as e:
-                self.record_fail("Failed to run %s audit: %s", (self.path, e))
+                self.record_fail("Failed to run %s audit: {0} {1}".format(self.path, e))
                 return False
             except Exception as e:
-                self.record_fail("Error running pkg audit: %s", e)
+                self.record_fail("Error running pkg audit: {0}".format(e))
                 return False
 
             for line in output.splitlines():
@@ -358,24 +342,21 @@ class MonitorLoadAvg(Monitor):
         Monitor.__init__(self, name, config_options)
         if self.is_windows(allow_cygwin=False):
             raise RuntimeError("loadavg monitor does not support Windows")
-        if 'which' in config_options:
-            try:
-                which = int(config_options["which"])
-            except Exception:
-                raise RuntimeError("value of 'which' is not an int")
-            if which < 0:
-                raise RuntimeError("value of 'which' is too low")
-            if which > 2:
-                raise RuntimeError("value of 'which' is too high")
-            self.which = which
-        if 'max' in config_options:
-            try:
-                max = float(config_options["max"])
-            except Exception:
-                raise RuntimeError("value of 'max' is not a float")
-            if max <= 0:
-                raise RuntimeError("value of 'max' is too low")
-            self.max = max
+        self.which = Monitor.get_config_option(
+            config_options,
+            'which',
+            required_type='int',
+            default=1,
+            minimum=0,
+            maximum=2
+        )
+        self.max = Monitor.get_config_option(
+            config_options,
+            'max',
+            required_type='float',
+            default=1.00,
+            minimum=0
+        )
 
     def describe(self):
         if self.which == 0:
@@ -412,13 +393,13 @@ class MonitorZap(Monitor):
 
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
-        if 'span' in config_options:
-            try:
-                self.span = int(config_options["span"])
-            except Exception:
-                raise RuntimeError("span parameter must be an integer")
-            if self.span < 1:
-                raise RuntimeError("span parameter must be > 0")
+        self.span = Monitor.get_config_option(
+            config_options,
+            'span',
+            required_type='int',
+            default=1,
+            minimum=1
+        )
 
     def run_test(self):
         try:
@@ -468,23 +449,29 @@ class MonitorCommand(Monitor):
             print('Warning: Command monitors are unsupported on Python 2.6!')
             self.available = False
 
-        self.result_regexp_text = ""
-        self.result_regexp = None
-        self.result_max = None
-
-        if 'result_regexp' in config_options:
-            self.result_regexp_text = config_options["result_regexp"]
+        self.result_regexp_text = Monitor.get_config_option(
+            config_options,
+            'result_regexp',
+            default=''
+        )
+        self.result_max = Monitor.get_config_option(
+            config_options,
+            'result_max',
+            required_type='int'
+        )
+        if self.result_regexp_text != '':
             self.result_regexp = re.compile(self.result_regexp_text)
-        elif 'result_max' in config_options:
-            self.result_max = int(config_options["result_max"])
+            if self.result_max is not None:
+                print('Warning: command monitors do not support result_regexp AND result_max settings simultaneously')
+                self.result_max = None
 
-        try:
-            command = shlex.split(config_options["command"])
-        except Exception:
-            raise RuntimeError("Required configuration fields missing or invalid")
-        if command is None or len(command) == 0:
-            raise RuntimeError("missing command")
-        self.command = command
+        command = Monitor.get_config_option(
+            config_options,
+            'command',
+            required=True,
+            allow_empty=False
+        )
+        self.command = shlex.split(command)
 
     def run_test(self):
         if not self.available:

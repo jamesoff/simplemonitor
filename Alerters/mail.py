@@ -15,48 +15,45 @@ class EMailAlerter(Alerter):
 
     def __init__(self, config_options):
         Alerter.__init__(self, config_options)
-        try:
-            mail_host = config_options["host"]
-            from_addr = config_options["from"]
-            to_addr = config_options["to"]
-        except Exception:
-            raise RuntimeError("Required configuration fields missing")
-
-        if mail_host == "":
-            raise RuntimeError("missing mailserver hostname")
-        if from_addr == "":
-            raise RuntimeError("missing mail from address")
-        if to_addr == "":
-            raise RuntimeError("missing mail to address")
-
-        if 'port' in config_options:
-            try:
-                mail_port = int(config_options["port"])
-            except Exception:
-                raise RuntimeError("mail port is not an integer")
-        else:
-            mail_port = 25
-
-        self.username = None
-        self.password = None
-        if 'username' in config_options:
-            self.username = config_options['username']
-        if 'password' in config_options:
-            self.password = config_options['password']
-
-        if 'ssl' in config_options:
-            if config_options['ssl'] == 'starttls':
-                self.ssl = 'starttls'
-            elif config_options['ssl'] == 'yes':
-                print('Warning: ssl=yes for email alerter is untested')
-                self.ssl = 'yes'
-        else:
-            self.ssl = None
-
-        self.mail_host = mail_host
-        self.mail_port = mail_port
-        self.from_addr = from_addr
-        self.to_addr = to_addr
+        self.mail_host = Alerter.get_config_option(
+            config_options,
+            'host',
+            required=True,
+            allow_empty=False
+        )
+        self.from_addr = Alerter.get_config_option(
+            config_options,
+            'from',
+            required=True,
+            allow_empty=False
+        )
+        self.to_addr = Alerter.get_config_option(
+            config_options,
+            'to',
+            required=True,
+            allow_empty=False
+        )
+        self.mail_port = Alerter.get_config_option(
+            config_options,
+            'port',
+            required_type='int',
+            default=25
+        )
+        self.username = Alerter.get_config_option(
+            config_options,
+            'username'
+        )
+        self.password = Alerter.get_config_option(
+            config_options,
+            'password'
+        )
+        self.ssl = Alerter.get_config_option(
+            config_options,
+            'ssl',
+            allowed_values=['starttls', 'yes']
+        )
+        if self.ssl == 'yes':
+            print('Warning: ssl=yes for email alerter is untested')
 
         self.support_catchup = True
 

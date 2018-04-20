@@ -31,45 +31,44 @@ class MonitorHTTP(Monitor):
 
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
-        try:
-            url = config_options["url"]
-        except Exception:
-            raise RuntimeError("Required configuration fields missing")
+        self.url = Monitor.get_config_option(config_options, 'url', required=True)
 
-        if 'regexp' in config_options:
-            regexp = config_options["regexp"]
+        regexp = Monitor.get_config_option(config_options, 'regexp')
+        if regexp is not None:
+            self.regexp = re.compile(regexp)
+            self.regexp_text = regexp
+        if not regexp:
+            self.allowed_codes = Monitor.get_config_option(
+                config_options,
+                'allowed_codes',
+                default=[200],
+                required_type='[int]'
+            )
         else:
-            regexp = ""
-        if 'allowed_codes' in config_options:
-            allowed_codes = [int(x.strip()) for x in config_options["allowed_codes"].split(",")]
-        else:
-            allowed_codes = [200]
+            self.allowed_codes = [200]
 
         # optionnal - for HTTPS client authentication only
         # in this case, certfile is required
-        if 'certfile' in config_options:
-            certfile = config_options["certfile"]
-            # if keyfile not given, it is assumed key is in certfile
-            if 'keyfile' in config_options:
-                keyfile = config_options["keyfile"]
-            else:
-                # default: key
-                keyfile = certfile
-            self.certfile = certfile
-            self.keyfile = keyfile
+        self.certfile = config_options.get('certfile')
+        self.keyfile = config_options.get('keyfile')
+        if self.certfile and not self.keyfile:
+            self.keyfile = self.certfile
+        if not self.certfile and self.keyfile:
+            raise ValueError('config option keyfile is set but certfile is not')
 
-        self.verify_hostname = True
-        if 'verify_hostname' in config_options:
-            if config_options["verify_hostname"].lower() == "false":
-                self.verify_hostname = False
+        self.verify_hostname = Monitor.get_config_option(
+            config_options,
+            'verify_hostname',
+            default=True,
+            required_type='bool'
+        )
 
-        self.url = url
-        if regexp != "":
-            self.regexp = re.compile(regexp)
-            self.regexp_text = regexp
-        self.allowed_codes = allowed_codes
-
-        self.request_timeout = int(config_options.get('timeout')) if 'timeout' in config_options else 5
+        self.request_timeout = Monitor.get_config_option(
+            config_options,
+            'timeout',
+            default=5,
+            required_type='int'
+        )
 
         self.username = config_options.get('username')
         self.password = config_options.get('password')
@@ -107,7 +106,6 @@ class MonitorHTTP(Monitor):
             if self.regexp is None:
                 self.record_success("%s in %0.2fs" % (r.status_code, (load_time.seconds + (load_time.microseconds / 1000000.2))))
                 return True
-            else:
                 matches = self.regexp.search(r.text)
                 if matches:
                     self.record_success("%s in %0.2fs" % (r.status_code, (load_time.seconds + (load_time.microseconds / 1000000.2))))
@@ -143,18 +141,14 @@ class MonitorTCP(Monitor):
     def __init__(self, name, config_options):
         """Constructor"""
         Monitor.__init__(self, name, config_options)
-        try:
-            host = config_options["host"]
-            port = int(config_options["port"])
-        except Exception:
-            raise RuntimeError("Required configuration fields missing")
-
-        if host == "":
-            raise RuntimeError("missing hostname")
-        if port == "" or port <= 0:
-            raise RuntimeError("missing or invalid port number")
-        self.host = host
-        self.port = port
+        self.host = Monitor.get_config_option(config_options, 'host', required=True)
+        self.port = Monitor.get_config_option(
+            config_options,
+            'port',
+            required=True,
+            required_type='int',
+            minimum=0
+        )
 
     def run_test(self):
         """Check the port is open on the remote host"""
@@ -193,11 +187,15 @@ class MonitorHost(Monitor):
         a machine in trouble anyway, so should probably count as a failure.
         """
         Monitor.__init__(self, name, config_options)
-        try:
-            ping_ttl = config_options["ping_ttl"]
-        except Exception:
-            ping_ttl = "5"
-        ping_ms = ping_ttl * 1000
+        ping_ttl = Monitor.get_config_option(
+            config_options,
+            'ping_ttl',
+            required_type='int',
+            minimum=0,
+            default=5
+        )
+        ping_ms = str(ping_ttl * 1000)
+        ping_ttl = str(ping_ttl)
         platform = sys.platform
         if platform in ['win32', 'cygwin']:
             self.ping_command = "ping -n 1 -w " + ping_ms + " %s"
@@ -214,13 +212,11 @@ class MonitorHost(Monitor):
         else:
             RuntimeError("Don't know how to run ping on this platform, help!")
 
-        try:
-            host = config_options["host"]
-        except Exception:
-            raise RuntimeError("Required configuration fields missing")
-        if host == "":
-            raise RuntimeError("missing hostname")
-        self.host = host
+        self.host = Monitor.get_config_option(
+            config_options,
+            'host',
+            required=True
+        )
 
     def run_test(self):
         r = re.compile(self.ping_regexp)
@@ -267,34 +263,25 @@ class MonitorDNS(Monitor):
 
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
-        try:
-            self.path = config_options['record']
-        except Exception:
-            raise RuntimeError("Required configuration fields missing")
-        if self.path == '':
-            raise RuntimeError("Required configuration fields missing")
+        self.path = Monitor.get_config_option(
+            config_options,
+            'record',
+            required=True
+        )
 
-        if 'desired_val' in config_options:
-            self.desired_val = config_options['desired_val']
-        else:
-            self.desired_val = None
+        self.desired_val = Monitor.get_config_option(config_options, 'desired_val')
 
-        if 'server' in config_options:
-            self.server = config_options['server']
-        else:
-            self.server = None
+        self.server = Monitor.get_config_option(config_options, 'server')
 
         self.params = [self.command]
 
         if self.server:
             self.params.append("@%s" % self.server)
 
-        if 'record_type' in config_options:
+        self.rectype = Monitor.get_config_option(config_options, 'record_type')
+        if self.rectype:
             self.params.append('-t')
             self.params.append(config_options['record_type'])
-            self.rectype = config_options['record_type']
-        else:
-            self.rectype = None
 
         self.params.append(self.path)
         self.params.append('+short')
