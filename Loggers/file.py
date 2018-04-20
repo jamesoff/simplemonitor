@@ -125,6 +125,30 @@ class HTMLLogger(Logger):
             self.folder = config_options["folder"]
         except Exception:
             print("Missing required value for HTML Logger")
+        self.filename = Logger.get_config_option(
+            config_options,
+            'filename',
+            required=True,
+            allow_empty=False
+        )
+        self.header = Logger.get_config_option(
+            config_options,
+            'header',
+            required=True,
+            allow_empty=False
+        )
+        self.footer = Logger.get_config_option(
+            config_options,
+            'footer',
+            required=True,
+            allow_empty=False
+        )
+        self.folder = Logger.get_config_option(
+            config_options,
+            'folder',
+            required=True,
+            allow_empty=False
+        )
 
     def save_result2(self, name, monitor):
         if not self.doing_batch:
