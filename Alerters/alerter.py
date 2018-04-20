@@ -67,7 +67,8 @@ class Alerter:
             config_options,
             'times_type',
             required_type='str',
-            allowed_values=['always', 'only', 'not']
+            allowed_values=['always', 'only', 'not'],
+            default='always'
         )
         if self.times_type in ['only', 'not']:
             time_lower = Alerter.get_config_option(
