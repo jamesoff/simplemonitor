@@ -38,17 +38,32 @@ class FileLogger(Logger):
                 raise RuntimeError("Couldn't open log file %s for appending: %s" % (self.filename, e))
         else:
             raise RuntimeError("Missing filename for logfile")
+        self.filename = Logger.get_config_option(
+            config_options,
+            'filename',
+            required=True,
+            allow_empty=False
+        )
+        self.file_handle = open(self.filename, 'a+')
 
-        if "only_failures" in config_options:
-            if config_options["only_failures"] == "1":
-                self.only_failures = True
+        self.only_failures = Logger.get_config_option(
+            config_options,
+            'only_failures',
+            required_type='bool',
+            default=False
+        )
 
-        if "buffered" in config_options:
-            if config_options["buffered"] == "0":
-                self.buffered = False
+        self.buffered = Logger.get_config_option(
+            config_options,
+            'buffered',
+            required_type='bool',
+            default=True
+        )
 
-        if "dateformat" in config_options:
-            self.dateformat = config_options['dateformat']
+        self.dateformat = Logger.get_config_option(
+            config_options,
+            'dateformat'
+        )
 
     def save_result2(self, name, monitor):
         if self.only_failures and monitor.virtual_fail_count() == 0:
