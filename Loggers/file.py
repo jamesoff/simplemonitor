@@ -354,10 +354,12 @@ class JsonLogger(Logger):
 
     def __init__(self, config_options={}):
         Logger.__init__(self, config_options)
-        if "filename" in config_options:
-                self.filename = config_options["filename"]
-        else:
-            raise RuntimeError("Missing filename for json filename")
+        self.filename = Logger.get_config_option(
+            config_options,
+            'filename',
+            required=True,
+            allow_empty=False
+        )
 
     def save_result2(self, name, monitor):
         result = MonitorResult()
