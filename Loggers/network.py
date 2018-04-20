@@ -24,13 +24,27 @@ class NetworkLogger(Logger):
     def __init__(self, config_options):
         Logger.__init__(self, config_options)
 
-        try:
-            self.host = config_options["host"]
-            self.port = int(config_options["port"])
-            self.hostname = socket.gethostname()
-            self.key = bytearray(config_options["key"], 'utf-8')
-        except Exception:
-            raise RuntimeError("missing config options for network monitor")
+        self.host = Logger.get_config_option(
+            config_options,
+            'host',
+            required=True,
+            allow_empty=False
+        )
+        self.port = Logger.get_config_option(
+            config_options,
+            'port',
+            required_type='int',
+            required=True
+        )
+        self.hostname = socket.gethostname()
+        self.key = bytearray(
+            Logger.get_config_option(
+                config_options,
+                'key',
+                required=True,
+                allow_empty=False),
+            'utf-8'
+        )
 
     def save_result2(self, name, monitor):
         if not self.doing_batch:
