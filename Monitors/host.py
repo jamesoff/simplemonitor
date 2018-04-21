@@ -430,7 +430,7 @@ class MonitorZap(Monitor):
 class MonitorCommand(Monitor):
     """Check the output of a command.
 
-    We can check for a regexp match in the ouput or give a max value and check the output is lower that this value.
+    We can check for a regexp match in the output or give a max value and check the output is lower that this value.
     """
 
     command = ""

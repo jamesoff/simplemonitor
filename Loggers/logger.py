@@ -1,6 +1,8 @@
 # coding=utf-8
 import datetime
 
+from util import get_config_option, LoggerConfigurationError
+
 
 class Logger(object):
     """Abstract class basis for loggers."""
@@ -14,8 +16,17 @@ class Logger(object):
     batch_data = {}
 
     def __init__(self, config_options):
-        if "depend" in config_options:
-            self.set_dependencies([x.strip() for x in config_options["depend"].split(",")])
+        self.set_dependencies(Logger.get_config_option(
+            config_options,
+            'depend',
+            required_type='[str]',
+            default=[]
+        ))
+
+    @staticmethod
+    def get_config_option(config_options, key, **kwargs):
+        kwargs['exception'] = LoggerConfigurationError
+        return get_config_option(config_options, key, **kwargs)
 
     def hup(self):
         """Close and reopen our log file, if supported.
