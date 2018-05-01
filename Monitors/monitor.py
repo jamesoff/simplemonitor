@@ -17,6 +17,7 @@ import datetime
 import time
 import copy
 import subprocess
+import logging
 
 try:
     import win32api  # noqa: F401
@@ -71,6 +72,8 @@ class Monitor:
         """What's that coming over the hill? Is a monitor?"""
         if config_options is None:
             config_options = {}
+        self.name = name
+        self.monitor_logger = logging.getLogger('simplemonitor.monitor-' + self.name)
         self.set_dependencies(Monitor.get_config_option(
             config_options,
             'depend',
@@ -119,7 +122,6 @@ class Monitor:
             default=0
         ))
         self.running_on = self.short_hostname()
-        self.name = name
 
     @staticmethod
     def get_config_option(config_options, key, **kwargs):
@@ -406,6 +408,24 @@ class Monitor:
         """ any post config setup needed """
         pass
 
+    def __getstate__(self):
+        """Loggers (the Python kind, not the SimpleMonitor kind) can't be picked.
+        In order to work around that, we omit them when getting pickled (for
+        being sent over the network).
+        """
+        print('getstate called')
+        pickle_dict = dict(self.__dict__)
+        del pickle_dict['monitor_logger']
+        print(pickle_dict)
+        return pickle_dict
+
+    def __setstate__(self, state):
+        print('setstate called')
+        self._set_monitor_logger()
+
+    def _set_monitor_logger(self):
+        self.monitor_logger = logging.getLogger('simplemonitor.monitor-' + self.name)
+
 
 class MonitorFail(Monitor):
     """A monitor which always fails.
@@ -426,7 +446,7 @@ class MonitorFail(Monitor):
 
     def run_test(self):
         """Always fails."""
-        print("error_count = %d, interval = %d --> %d" % (self.error_count, self.interval, self.error_count % self.interval))
+        self.monitor_logger.info("error_count = %d, interval = %d --> %d", self.error_count, self.interval, self.error_count % self.interval)
         if (self.interval == 0) or (self.error_count == 0) or (self.error_count % self.interval != 0):
             self.record_fail("This monitor always fails.")
             return False

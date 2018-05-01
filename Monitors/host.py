@@ -446,7 +446,7 @@ class MonitorCommand(Monitor):
         Monitor.__init__(self, name, config_options)
 
         if sys.version_info[0] == 2 and sys.version_info[1] == 6:
-            print('Warning: Command monitors are unsupported on Python 2.6!')
+            self.monitor_logger.critical('Warning: Command monitors are unsupported on Python 2.6!')
             self.available = False
 
         self.result_regexp_text = Monitor.get_config_option(
@@ -462,7 +462,7 @@ class MonitorCommand(Monitor):
         if self.result_regexp_text != '':
             self.result_regexp = re.compile(self.result_regexp_text)
             if self.result_max is not None:
-                print('Warning: command monitors do not support result_regexp AND result_max settings simultaneously')
+                self.monitor_logger.error('command monitors do not support result_regexp AND result_max settings simultaneously')
                 self.result_max = None
 
         command = Monitor.get_config_option(

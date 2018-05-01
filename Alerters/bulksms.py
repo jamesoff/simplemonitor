@@ -37,7 +37,7 @@ class BulkSMSAlerter(Alerter):
             default='SmplMntr'
         )
         if len(self.sender) > 11:
-            print("warning: truncating SMS sender name to 11 chars")
+            self.alerter_logger.warning("truncating SMS sender name to 11 chars")
             self.sender = self.sender[:11]
 
         self.api_host = Alerter.get_config_option(
@@ -70,7 +70,7 @@ class BulkSMSAlerter(Alerter):
                 days, hours, minutes, seconds,
                 monitor.get_result())
             if len(message) > 160:
-                print("Warning! Truncating SMS message to 160 chars.")
+                self.alerter_logger.warning("Truncating SMS message to 160 chars.")
                 message = message[:156] + "..."
             url = "https://{}/eapi/submission/send_sms/2/2.0".format(self.api_host)
             params = {
@@ -90,7 +90,7 @@ class BulkSMSAlerter(Alerter):
                 days, hours, minutes, seconds,
                 monitor.get_result())
             if len(message) > 160:
-                print("Warning! Truncating SMS message to 160 chars.")
+                self.alerter_logger.warning("Truncating SMS message to 160 chars.")
                 message = message[:156] + "..."
             url = "https://{}/eapi/submission/send_sms/2/2.0".format(self.api_host)
             params = {
@@ -113,14 +113,11 @@ class BulkSMSAlerter(Alerter):
                 r = requests.get(url, params=params)
                 s = r.text
                 if not s.startswith("0"):
-                    print("Unable to send SMS: %s (%s)" % (s.split("|")[0], s.split("|")[1]))
-                    print("URL: %s, PARAMS: %s" % (url, params))
+                    self.alerter_logger.error("Unable to send SMS: %s (%s)", s.split("|")[0], s.split("|")[1])
                     self.available = False
             except Exception as e:
-                print("SMS sending failed")
-                print(e)
-                print(url)
+                self.alerter_logger.exception("SMS sending failed")
                 self.available = False
         else:
-            print("dry_run: would send SMS: %s" % url)
+            self.alerter_logger.info("dry_run: would send SMS: %s", url)
         return

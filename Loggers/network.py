@@ -5,6 +5,7 @@ import sys
 import hmac
 import traceback
 import struct
+import logging
 
 # From the docs:
 #  Threads interact strangely with interrupts: the KeyboardInterrupt exception
@@ -50,7 +51,11 @@ class NetworkLogger(Logger):
         if not self.doing_batch:
             print("NetworkLogger.save_result2() called while not doing batch.")
             return
-        self.batch_data[monitor.name] = pickle.dumps(monitor)
+        print("network: %s %s" % (name, monitor))
+        try:
+            self.batch_data[monitor.name] = pickle.dumps(monitor)
+        except Exception:
+            logging.exception('Failed to pickle')
 
     def process_batch(self):
         try:

@@ -53,7 +53,7 @@ class EMailAlerter(Alerter):
             allowed_values=['starttls', 'yes']
         )
         if self.ssl == 'yes':
-            print('Warning: ssl=yes for email alerter is untested')
+            self.alerter_logger.warning('ssl=yes for email alerter is untested')
 
         self.support_catchup = True
 
@@ -100,11 +100,11 @@ class EMailAlerter(Alerter):
             body = "Monitor %s%s is back up.\nOriginally failed at: %s\nDowntime: %d+%02d:%02d:%02d\nDescription: %s" % (name, host, self.format_datetime(monitor.first_failure_time()), days, hours, minutes, seconds, monitor.describe())
 
         elif type == "catchup":
-            message['Subject'] = "[%s] Monitor %s failed earlier!" % (self.from_addr, self.to_addr, self.hostname, name)
+            message['Subject'] = "[%s] Monitor %s failed earlier!" % (self.hostname, name)
             body = "Monitor %s%s failed earlier while this alerter was out of hours.\nFailed at: %s\nVirtual failure count: %d\nAdditional info: %s\nDescription: %s" % (name, host, self.format_datetime(monitor.first_failure_time()), monitor.virtual_fail_count(), monitor.get_result(), monitor.describe())
 
         else:
-            print("Unknown alert type %s" % type)
+            self.alerter_logger.critical("unknown alert type %s", type)
             return
 
         message.attach(MIMEText(body, 'plain'))
@@ -124,7 +124,7 @@ class EMailAlerter(Alerter):
                 server.sendmail(self.from_addr, self.to_addr, message.as_string())
                 server.quit()
             except Exception as e:
-                print("Couldn't send mail: %s" % e)
+                self.alerter_logger.exception("couldn't send mail")
                 self.available = False
         else:
-            print("dry_run: would send email: %s" % message.as_string())
+            self.alerter_logger.info("dry_run: would send email: %s", message.as_string())

@@ -5,6 +5,7 @@
 import os
 import sys
 import time
+import logging
 
 from envconfig import EnvironmentAwareConfigParser
 
@@ -39,6 +40,8 @@ import Alerters.pushbullet
 
 VERSION = "1.7"
 
+main_logger = logging.getLogger('simplemonitor')
+
 
 def get_config_dict(config, monitor):
     options = config.items(monitor)
@@ -48,7 +51,7 @@ def get_config_dict(config, monitor):
     return ret
 
 
-def load_monitors(m, filename, quiet):
+def load_monitors(m, filename):
     """Load all the monitors from the config file and return a populated SimpleMonitor."""
     config = EnvironmentAwareConfigParser()
     config.read(filename)
@@ -64,7 +67,7 @@ def load_monitors(m, filename, quiet):
     for monitor in monitors:
         if config.has_option(monitor, "runon"):
             if myhostname != config.get(monitor, "runon").lower():
-                sys.stderr.write("Ignoring monitor %s because it's only for host %s\n" % (monitor, config.get(monitor, "runon")))
+                main_logger.warning("Ignoring monitor %s because it's only for host %s", monitor, config.get(monitor, "runon"))
                 continue
         type = config.get(monitor, "type")
         new_monitor = None
@@ -136,13 +139,12 @@ def load_monitors(m, filename, quiet):
             new_monitor = Monitors.host.MonitorCommand(monitor, config_options)
 
         else:
-            sys.stderr.write("Unknown type %s for monitor %s\n" % (type, monitor))
+            main_logger.error("Unknown type %s for monitor %s", type, monitor)
             continue
         if new_monitor is None:
             continue
 
-        if not quiet:
-            print("Adding %s monitor %s: %s" % (type, monitor, new_monitor.describe()))
+        main_logger.info("Adding %s monitor %s: %s", type, monitor, new_monitor.describe())
         m.add_monitor(monitor, new_monitor)
 
     for i in list(m.monitors.keys()):
@@ -159,9 +161,9 @@ def load_loggers(m, config, quiet):
     else:
         loggers = []
 
-    for logger in loggers:
-        type = config.get(logger, "type")
-        config_options = get_config_dict(config, logger)
+    for config_logger in loggers:
+        type = config.get(config_logger, "type")
+        config_options = get_config_dict(config, config_logger)
         if type == "db":
             new_logger = Loggers.db.DBFullLogger(config_options)
         elif type == "dbstatus":
@@ -175,14 +177,13 @@ def load_loggers(m, config, quiet):
         elif type == "json":
             new_logger = Loggers.file.JsonLogger(config_options)
         else:
-            sys.stderr.write("Unknown logger type %s\n" % type)
+            main_logger.error("Unknown logger type %s", type)
             continue
         if new_logger is None:
-            print("Creating logger %s failed!" % logger)
+            main_logger.error("Creating logger %s failed!", new_logger)
             continue
-        if not quiet:
-            print("Adding %s logger %s" % (type, logger))
-        m.add_logger(logger, new_logger)
+        main_logger.info("Adding %s logger %s", type, new_logger)
+        m.add_logger(config_logger, new_logger)
         del(new_logger)
     return m
 
@@ -218,10 +219,9 @@ def load_alerters(m, config, quiet):
         elif type == "pushbullet":
             a = Alerters.pushbullet.PushbulletAlerter(config_options)
         else:
-            sys.stderr.write("Unknown alerter type %s\n" % type)
+            main_logger.error("Unknown alerter type %s" % type)
             continue
-        if not quiet:
-            print("Adding %s alerter %s" % (type, alerter))
+        main_logger.info("Adding %s alerter %s", type, alerter)
         a.name = alerter
         m.add_alerter(alerter, a)
         del(a)
@@ -232,48 +232,60 @@ def main():
     """This is where it happens \o/"""
 
     parser = OptionParser()
-    parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False, help="Be more verbose")
-    parser.add_option("-q", "--quiet", action="store_true", dest="quiet", default=False, help="Don't output anything except errors")
+    parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False, help=SUPPRESS_HELP)
+    parser.add_option("-q", "--quiet", action="store_true", dest="quiet", default=False, help=SUPPRESS_HELP)
     parser.add_option("-t", "--test", action="store_true", dest="test", default=False, help="Test config and exit")
     parser.add_option("-p", "--pidfile", dest="pidfile", default=None, help="Write PID into this file")
     parser.add_option("-N", "--no-network", dest="no_network", default=False, action="store_true", help="Disable network listening socket")
-    parser.add_option("-d", "--debug", dest="debug", default=False, action="store_true", help="Enable debug output")
+    parser.add_option("-d", "--debug", dest="debug", default=False, action="store_true", help=SUPPRESS_HELP)
     parser.add_option("-f", "--config", dest="config", default="monitor.ini", help="configuration file")
     parser.add_option("-H", "--no-heartbeat", action="store_true", dest="no_heartbeat", default=False, help="Omit printing the '.' character when running checks")
     parser.add_option('-1', '--one-shot', action='store_true', dest='one_shot', default=False, help='Run the monitors once only, without alerting. Require monitors without "fail" in the name to succeed. Exit zero or non-zero accordingly.')
     parser.add_option('--loops', dest='loops', default=-1, help=SUPPRESS_HELP, type=int)
+    parser.add_option('-l', '--log-level', dest="loglevel", default="warn", help="Log level: critical, error, warn, info, debug")
 
     (options, args) = parser.parse_args()
 
-    if options.quiet and options.verbose:
-        options.verbose = False
+    if options.quiet:
+        print('Warning: --quiet is deprecated; use --log-level=critical')
+        options.loglevel = 'critical'
 
-    if options.quiet and options.debug:
-        options.debug = False
+    if options.verbose:
+        print('Warning: --verbose is deprecated; use --log-level=info')
+        options.loglevel = 'info'
 
-    if options.debug and not options.verbose:
-        options.verbose = True
+    if options.debug:
+        print('Warning: --debug is deprecated; use --log-level=debug')
+        options.loglevel = 'debug'
+
+    try:
+        log_level = getattr(logging, options.loglevel.upper())
+    except AttributeError:
+        print('Log level {0} is unknown'.format(options.loglevel))
+        sys.exit(1)
+
+    logging.basicConfig(format='%(asctime)s %(levelname)s (%(name)s) %(message)s')
+    main_logger.setLevel(log_level)
 
     if not options.quiet:
-        print("SimpleMonitor v%s" % VERSION)
-        print("--> Loading main config from %s" % options.config)
+        main_logger.info('SimpleMonitor v%s', VERSION)
+        main_logger.info('Loading main config from %s', options.config)
 
     config = EnvironmentAwareConfigParser()
     if not os.path.exists(options.config):
-        print('--> Configuration file "%s" does not exist!' % options.config)
+        main_logger.critical('Configuration file "%s" does not exist!', options.config)
         sys.exit(1)
     try:
         config.read(options.config)
     except Exception as e:
-        print('--> Unable to read configuration file "%s"' % options.config)
-        print('The config parser reported:')
-        print(e)
+        main_logger.critical('Unable to read configuration file')
+        main_logger.critical(e)
         sys.exit(1)
 
     try:
         interval = config.getint("monitor", "interval")
     except Exception:
-        print('--> Missing [monitor] section from config file, or missing the "interval" setting in it')
+        main_logger.critical('Missing [monitor] section from config file, or missing the "interval" setting in it')
         sys.exit(1)
 
     pidfile = None
@@ -291,7 +303,7 @@ def main():
             with open(pidfile, "w") as file_handle:
                 file_handle.write("%d\n" % my_pid)
         except Exception:
-            sys.stderr.write("Couldn't write to pidfile!")
+            main_logger.error("Couldn't write to pidfile!")
             pidfile = None
 
     if config.has_option("monitor", "monitors"):
@@ -299,20 +311,19 @@ def main():
     else:
         monitors_file = "monitors.ini"
 
-    if not options.quiet:
-        print("--> Loading monitor config from %s" % monitors_file)
+    main_logger.info("Loading monitor config from %s", monitors_file)
 
     m = SimpleMonitor()
 
-    m = load_monitors(m, monitors_file, options.quiet)
+    m = load_monitors(m, monitors_file)
 
     count = m.count_monitors()
     if count == 0:
-        sys.stderr.write("No monitors loaded :(\n")
+        main_logger.critical("No monitors loaded :(")
         sys.exit(2)
 
     if not options.quiet:
-        print("--> Loaded %d monitors.\n" % count)
+        main_logger.info("Loaded %d monitors.", count)
 
     m = load_loggers(m, config, options.quiet)
     m = load_alerters(m, config, options.quiet)
@@ -333,14 +344,11 @@ def main():
         sys.exit(1)
 
     if options.test:
-        print("--> Config test complete. Exiting.")
+        main_logger.warn("Config test complete. Exiting.")
         sys.exit(0)
 
     if options.one_shot:
-        print("--> One-shot mode: expecting monitors without 'fail' in the name to succeed,\n     and with to fail. Will exit zero or non-zero accordingly.")
-
-    if not options.quiet:
-        print()
+        main_logger.warn("One-shot mode: expecting monitors without 'fail' in the name to succeed, and with to fail. Will exit zero or non-zero accordingly.")
 
     try:
         key = config.get("monitor", "key")
@@ -349,13 +357,13 @@ def main():
 
     if enable_remote:
         if not options.quiet:
-            print("--> Starting remote listener thread")
+            main_logger.info("Starting remote listener thread")
         remote_listening_thread = Loggers.network.Listener(m, remote_port, options.verbose, key)
         remote_listening_thread.daemon = True
         remote_listening_thread.start()
 
     if not options.quiet:
-        print("--> Starting... (loop runs every %ds) Hit ^C to stop" % interval)
+        main_logger.info("Starting... (loop runs every %ds) Hit ^C to stop" % interval)
     loop = True
     heartbeat = 0
 
@@ -367,7 +375,7 @@ def main():
             if loops > 0:
                 loops -= 1
                 if loops == 0:
-                    print('Ran out of loop counter, will stop after this one')
+                    main_logger.warn('Ran out of loop counter, will stop after this one')
                     loop = False
             m.run_tests()
             m.do_recovery()
@@ -387,10 +395,10 @@ def main():
             loop = False
         except Exception as e:
             sys.exc_info()
-            sys.stderr.write("Caught unhandled exception during main loop: %s\n" % e)
+            main_logger.exception("Caught unhandled exception during main loop")
         if loop and enable_remote:
             if not remote_listening_thread.isAlive():
-                print("Listener thread died :(")
+                main_logger.error("Listener thread died :(")
                 remote_listening_thread = Loggers.network.Listener(m, remote_port, options.verbose)
                 remote_listening_thread.start()
 
@@ -400,7 +408,7 @@ def main():
         try:
             time.sleep(interval)
         except Exception:
-            print("\n--> Quitting.")
+            main_logger.info("Quitting")
             loop = False
 
     if enable_remote:
@@ -411,11 +419,10 @@ def main():
         try:
             os.unlink(pidfile)
         except Exception as e:
-            print("Couldn't remove pidfile!")
-            print(e)
+            main_logger.error("Couldn't remove pidfile!")
 
     if not options.quiet:
-        print("--> Finished.")
+        main_logger.info("Finished.")
 
     if options.one_shot:
         ok = True
@@ -442,6 +449,8 @@ def main():
         if not ok:
             print("Not all non-'fail' succeeded, or not all 'fail' monitors failed.")
             sys.exit(1)
+
+    logging.shutdown()
 
 
 if __name__ == "__main__":

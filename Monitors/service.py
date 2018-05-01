@@ -247,7 +247,6 @@ class MonitorWindowsDHCPScope(Monitor):
             self.record_fail("Error getting client count: no match")
             return False
         except Exception as e:
-            print(e)
             self.record_fail("Error getting client count: {0}".format(e))
             return False
 

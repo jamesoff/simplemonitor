@@ -49,7 +49,7 @@ class ExecuteAlerter(Alerter):
             if self.catchup_command == 'fail_command':
                 command = self.fail_command
         else:
-            print("Unknown alert type %s" % type_)
+            self.alerter_logger.error("Unknown alert type %s", type_)
             return
 
         if command is None:
@@ -70,14 +70,12 @@ class ExecuteAlerter(Alerter):
         )
 
         if not self.dry_run:
-            if self.debug:
-                print("About to execute command: %s" % command)
+            self.alerter_logger.debug("About to execute command: %s", command)
             try:
                 subprocess.call(shlex.split(command))
             except Exception as e:
-                print("Exception encountered running command: %s" % command)
-                print(e)
+                self.alerter_logger.exception("Exception encountered running command: %s", command)
             if self.debug:
-                print("Command has finished.")
+                self.alerter_logger.debug("Command has finished.")
         else:
-            print("Would run command: %s" % command)
+            self.alerter_logger.info("Would run command: %s", command)

@@ -1,9 +1,14 @@
 # coding=utf-8
-import sys
+
 import signal
 import copy
 import pickle
 import time
+import logging
+
+import Loggers
+
+module_logger = logging.getLogger('simplemonitor')
 
 
 class SimpleMonitor:
@@ -29,7 +34,7 @@ class SimpleMonitor:
         try:
             signal.signal(signal.SIGHUP, self.hup_loggers)
         except Exception:
-            sys.stderr.write("Unable to trap SIGHUP... maybe it doesn't exist on this platform.\n")
+            module_logger.warning("Unable to trap SIGHUP... maybe it doesn't exist on this platform.\n")
 
     def hup_loggers(self, sig_number, stack_frame):
         """Handle a SIGHUP (rotate logfiles).
@@ -37,7 +42,7 @@ class SimpleMonitor:
         We set a variable to say we want to do this later (so it's done at the right time)."""
 
         self.need_hup = True
-        print("We get signal.")
+        module_logger.info("We get signal.")
 
     def add_monitor(self, name, monitor):
         self.monitors[name] = monitor
@@ -61,7 +66,7 @@ class SimpleMonitor:
         for k in list(self.monitors.keys()):
             for dependency in self.monitors[k]._dependencies:
                 if dependency not in list(self.monitors.keys()):
-                    print("Configuration error: dependency %s of monitor %s is not defined!" % (dependency, k))
+                    module_logger.critical("Configuration error: dependency %s of monitor %s is not defined!", dependency, k)
                     ok = False
         return ok
 
@@ -74,7 +79,6 @@ class SimpleMonitor:
     def run_tests(self):
         self.reset_monitors()
         verbose = self.verbose
-        debug = self.debug
 
         joblist = list(self.monitors.keys())
         new_joblist = []
@@ -84,31 +88,25 @@ class SimpleMonitor:
 
         while len(joblist) > 0:
             new_joblist = []
-            if debug:
-                print("\nStarting loop:", joblist)
+            module_logger.debug("Starting loop with joblist %s", joblist)
             for monitor in joblist:
-                if debug:
-                    print("Trying: %s" % monitor)
+                module_logger.debug("Trying monitor: %s", monitor)
                 if len(self.monitors[monitor].get_dependencies()) > 0:
                     # this monitor has outstanding deps, put it on the new joblist for next loop
                     new_joblist.append(monitor)
-                    if debug:
-                        print("added %s to new joblist, is now" % monitor, new_joblist)
+                    module_logger.debug("Added %s to new joblist, is now %s", monitor, new_joblist)
                     for dep in self.monitors[monitor].get_dependencies():
-                        if debug:
-                            print("  considering %s's dependency %s" % (monitor, dep), failed)
+                        module_logger.debug("considering %s's dependency %s (failed monitors: %s)", monitor, dep, failed)
                         if dep in failed:
                             # oh wait, actually one of its deps failed, so we'll never be able to run it
-                            if verbose:
-                                print("Doesn't look like %s worked, skipping %s" % (dep, monitor))
+                            module_logger.info("Doesn't look like %s worked, skipping %s", dep, monitor)
                             failed.append(monitor)
                             self.monitors[monitor].record_skip(dep)
                             try:
                                 new_joblist.remove(monitor)
                             except Exception:
-                                print("Exception caught while trying to remove monitor %s with failed deps from new joblist." % monitor)
-                                if debug:
-                                    print("new_joblist is currently", new_joblist)
+                                module_logger.exception("Exception caught while trying to remove monitor %s with failed deps from new joblist.", monitor)
+                                module_logger.debug("new_joblist is currently: %s", new_joblist)
                             break
                     continue
                 try:
@@ -121,11 +119,9 @@ class SimpleMonitor:
                     else:
                         not_run = True
                         self.monitors[monitor].record_skip(None)
-                        if verbose:
-                            print("Not run: %s" % monitor)
+                        module_logger.info("Not run: %s", monitor)
                 except Exception as e:
-                    if verbose:
-                        sys.stderr.write("Monitor %s threw exception during run_test(): %s\n" % (monitor, e))
+                    module_logger.exception("Monitor %s threw exception during run_test(): %s\n" % (monitor, e))
                 if self.monitors[monitor].get_error_count() > 0:
                     if self.monitors[monitor].virtual_fail_count() == 0:
                         if verbose:
@@ -203,7 +199,10 @@ class SimpleMonitor:
         self.alerters[name] = alerter
 
     def add_logger(self, name, logger):
-        self.loggers[name] = logger
+        if isinstance(logger, Loggers.logger.Logger):
+            self.loggers[name] = logger
+        else:
+            module_logger.critical('Failed to add logger because it is not the right type')
 
     def do_alerts(self):
         for key in list(self.alerters.keys()):
