@@ -25,18 +25,18 @@
         },
         "boto3": {
             "hashes": [
-                "sha256:355cb1c0b7e279854d0f103ad077151ebf97b7b0a13cf1053706d60326b61892",
-                "sha256:7d0c91993f542eae3e7787b6a0919e44588c2096b988cd55d910b58722038126"
+                "sha256:c6ee95e49d58494389ce125b4a999981463afd8283eb8b16b9c8c204899a3100",
+                "sha256:ecdbeda97ccf4c94b7dcb63219c96eeb52a5fcd12758af0760217b3b000a14f4"
             ],
             "index": "pypi",
-            "version": "==1.7.5"
+            "version": "==1.7.11"
         },
         "botocore": {
             "hashes": [
-                "sha256:190aeedb9badf4e5a867652eab86adbb4de0c75413fa9487f9cf237cf7c5a2d0",
-                "sha256:76eae3d1d6a0a9f91b39a121d5c47b86bfa42cac759e2180cf2360384e7e9ffe"
+                "sha256:3cbcbc12e4a657fbb0ad5779b330c8869f3c53eeb737de5d476b0bb32c734981",
+                "sha256:c4f5d266624d67ab42d6882c6272a7f988990835e7630e373df76cea78d1fb14"
             ],
-            "version": "==1.10.5"
+            "version": "==1.10.11"
         },
         "certifi": {
             "hashes": [
@@ -145,10 +145,11 @@
         },
         "python-dateutil": {
             "hashes": [
-                "sha256:891c38b2a02f5bb1be3e4793866c8df49c7d19baabf9c1bad62547e0b4866aca",
-                "sha256:95511bae634d69bc7329ba55e646499a842bc4ec342ad54a8cdb65645a0aad3c"
+                "sha256:3220490fb9741e2342e1cf29a503394fdac874bc39568288717ee67047ff29df",
+                "sha256:9d8074be4c993fbe4947878ce593052f71dac82932a677d49194d8ce9778002e"
             ],
-            "version": "==2.6.1"
+            "markers": "python_version >= '2.7'",
+            "version": "==2.7.2"
         },
         "requests": {
             "hashes": [
