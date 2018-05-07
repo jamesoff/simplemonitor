@@ -91,7 +91,7 @@ class Monitor:
         ))
         self.set_group(Monitor.get_config_option(
             config_options,
-            'notify',
+            'group',
             default='default'
         ))
         self.set_tolerance(Monitor.get_config_option(
