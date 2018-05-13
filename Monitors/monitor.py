@@ -409,18 +409,15 @@ class Monitor:
         pass
 
     def __getstate__(self):
-        """Loggers (the Python kind, not the SimpleMonitor kind) can't be picked.
+        """Loggers (the Python kind, not the SimpleMonitor kind) can't be pickled.
         In order to work around that, we omit them when getting pickled (for
         being sent over the network).
         """
-        print('getstate called')
         pickle_dict = dict(self.__dict__)
         del pickle_dict['monitor_logger']
-        print(pickle_dict)
         return pickle_dict
 
     def __setstate__(self, state):
-        print('setstate called')
         self._set_monitor_logger()
 
     def _set_monitor_logger(self):
