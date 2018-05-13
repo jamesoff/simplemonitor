@@ -234,7 +234,7 @@ class Alerter:
                 seconds = seconds - (minutes * 60)
             else:
                 minutes = 0
-            return (downtime.days, hours, minutes, seconds)
+            return (downtime.days, hours, int(minutes), int(seconds))
         except Exception:
             return (0, 0, 0, 0)
 
