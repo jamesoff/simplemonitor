@@ -122,6 +122,7 @@ class Monitor:
             default=0
         ))
         self.running_on = self.short_hostname()
+        self.was_skipped = False
 
     @staticmethod
     def get_config_option(config_options, key, **kwargs):
