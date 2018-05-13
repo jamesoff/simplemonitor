@@ -41,7 +41,7 @@ class PushoverAlerter(Alerter):
         """Build up the content for the push notification."""
 
         type = self.should_alert(monitor)
-        (days, hours, minutes, seconds) = self.get_downtime(monitor)
+        (days, hours, minutes, seconds) = monitor.get_downtime()
 
         if monitor.is_remote():
             host = " on %s " % monitor.running_on

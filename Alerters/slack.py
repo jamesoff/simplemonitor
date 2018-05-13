@@ -35,7 +35,7 @@ class SlackAlerter(Alerter):
         """Send the message."""
 
         type = self.should_alert(monitor)
-        (days, hours, minutes, seconds) = self.get_downtime(monitor)
+        (days, hours, minutes, seconds) = monitor.get_downtime()
 
         if self.channel is not None:
             message_json = {'channel': self.channel}

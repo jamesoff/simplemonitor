@@ -155,7 +155,7 @@ class HTMLLogger(Logger):
             fail_time = format_datetime(monitor.first_failure_time())
             fail_count = monitor.virtual_fail_count()
             fail_data = monitor.get_result()
-            downtime = self.get_downtime(monitor)
+            downtime = monitor.get_downtime()
         else:
             fail_time = ""
             fail_count = 0

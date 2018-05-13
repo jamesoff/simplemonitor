@@ -215,24 +215,6 @@ class Alerter:
         """Abstract function to do the alerting."""
         raise NotImplementedError
 
-    def get_downtime(self, monitor):
-        try:
-            downtime = datetime.datetime.utcnow() - monitor.first_failure_time()
-            seconds = downtime.seconds
-            if seconds > 3600:
-                hours = seconds / 3600
-                seconds = seconds - (hours * 3600)
-            else:
-                hours = 0
-            if seconds > 60:
-                minutes = seconds / 60
-                seconds = seconds - (minutes * 60)
-            else:
-                minutes = 0
-            return (downtime.days, hours, int(minutes), int(seconds))
-        except Exception:
-            return (0, 0, 0, 0)
-
     def allowed_today(self):
         """Check if today is an allowed day for an alert."""
         if datetime.datetime.now().weekday() not in self.days:

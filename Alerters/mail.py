@@ -62,7 +62,7 @@ class EMailAlerter(Alerter):
         """Send the email."""
 
         type = self.should_alert(monitor)
-        (days, hours, minutes, seconds) = self.get_downtime(monitor)
+        (days, hours, minutes, seconds) = monitor.get_downtime()
 
         if monitor.is_remote():
             host = " on %s " % monitor.running_on

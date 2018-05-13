@@ -59,11 +59,10 @@ class BulkSMSAlerter(Alerter):
         message = ""
         url = ""
 
-        (days, hours, minutes, seconds) = self.get_downtime(monitor)
+        (days, hours, minutes, seconds) = monitor.get_downtime()
         if type_ == "":
             return
         elif type_ == "catchup":
-            (days, hours, minutes, seconds) = self.get_downtime(monitor)
             message = "catchup: %s failed on %s at %s (%d+%02d:%02d:%02d)\n%s" % (
                 name,
                 monitor.running_on,
@@ -83,7 +82,6 @@ class BulkSMSAlerter(Alerter):
                 'repliable': '0'
             }
         elif type_ == "failure":
-            (days, hours, minutes, seconds) = self.get_downtime(monitor)
             message = "%s failed on %s at %s (%d+%02d:%02d:%02d)\n%s" % (
                 name,
                 monitor.running_on,

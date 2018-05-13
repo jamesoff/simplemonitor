@@ -427,6 +427,26 @@ class Monitor:
     def _set_monitor_logger(self):
         self.monitor_logger = logging.getLogger('simplemonitor.monitor-' + self.name)
 
+    def get_downtime(self):
+        try:
+            downtime = datetime.datetime.utcnow() - self.first_failure_time()
+            seconds = downtime.seconds
+            if seconds > 3600:
+                hours = seconds / 3600
+                seconds = seconds - (hours * 3600)
+            else:
+                hours = 0
+            if seconds > 60:
+                minutes = seconds / 60
+                seconds = seconds - (minutes * 60)
+            else:
+                minutes = 0
+            return (downtime.days, hours, int(minutes), int(seconds))
+        except Exception:
+            self.monitor_logger.exception('Failed to calculate downtime')
+            return (0, 0, 0, 0)
+
+
 
 class MonitorFail(Monitor):
     """A monitor which always fails.

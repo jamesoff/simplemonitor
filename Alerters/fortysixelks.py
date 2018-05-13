@@ -71,11 +71,10 @@ class FortySixElksAlerter(Alerter):
         message = ""
         url = ""
 
-        (days, hours, minutes, seconds) = self.get_downtime(monitor)
+        (days, hours, minutes, seconds) = monitor.get_downtime()
         if type == "":
             return
         elif type == "catchup":
-            (days, hours, minutes, seconds) = self.get_downtime(monitor)
             message = "catchup: %s failed on %s at %s (%d+%02d:%02d:%02d)\n%s" % (
                 name,
                 monitor.running_on,
@@ -93,7 +92,6 @@ class FortySixElksAlerter(Alerter):
                 'message': message,
             }
         elif type == "failure":
-            (days, hours, minutes, seconds) = self.get_downtime(monitor)
             message = "%s failed on %s at %s (%d+%02d:%02d:%02d)\n%s" % (
                 name,
                 monitor.running_on,

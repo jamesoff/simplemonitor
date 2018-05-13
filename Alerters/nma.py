@@ -41,11 +41,11 @@ class NMAAlerter(Alerter):
         message = ""
         url = ""
 
-        (days, hours, minutes, seconds) = self.get_downtime(monitor)
+        (days, hours, minutes, seconds) = monitor.get_downtime()
         if type == "":
             return
         elif type == "catchup":
-            (days, hours, minutes, seconds) = self.get_downtime(monitor)
+            (days, hours, minutes, seconds) = monitor.get_downtime()
             message = "catchup: %s failed on %s at %s (%d+%02d:%02d:%02d)\n%s" % (
                 name,
                 monitor.running_on,
@@ -60,7 +60,7 @@ class NMAAlerter(Alerter):
                 'event': "%s: %s" % (name, monitor.get_result())
             }
         elif type == "failure":
-            (days, hours, minutes, seconds) = self.get_downtime(monitor)
+            (days, hours, minutes, seconds) = monitor.get_downtime()
             message = "%s failed on %s at %s (%d+%02d:%02d:%02d)\n%s" % (
                 name,
                 monitor.running_on,
