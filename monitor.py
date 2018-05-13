@@ -153,7 +153,7 @@ def load_monitors(m, filename):
     return m
 
 
-def load_loggers(m, config, quiet):
+def load_loggers(m, config):
     """Load the loggers listed in the config object."""
 
     if config.has_option("reporting", "loggers"):
@@ -162,33 +162,34 @@ def load_loggers(m, config, quiet):
         loggers = []
 
     for config_logger in loggers:
-        type = config.get(config_logger, "type")
+        logger_type = config.get(config_logger, "type")
         config_options = get_config_dict(config, config_logger)
-        if type == "db":
+        config_options['_name'] = config_logger
+        if logger_type == "db":
             new_logger = Loggers.db.DBFullLogger(config_options)
-        elif type == "dbstatus":
+        elif logger_type == "dbstatus":
             new_logger = Loggers.db.DBStatusLogger(config_options)
-        elif type == "logfile":
+        elif logger_type == "logfile":
             new_logger = Loggers.file.FileLogger(config_options)
-        elif type == "html":
+        elif logger_type == "html":
             new_logger = Loggers.file.HTMLLogger(config_options)
-        elif type == "network":
+        elif logger_type == "network":
             new_logger = Loggers.network.NetworkLogger(config_options)
-        elif type == "json":
+        elif logger_type == "json":
             new_logger = Loggers.file.JsonLogger(config_options)
         else:
-            main_logger.error("Unknown logger type %s", type)
+            main_logger.error("Unknown logger logger_type %s", logger_type)
             continue
         if new_logger is None:
             main_logger.error("Creating logger %s failed!", new_logger)
             continue
-        main_logger.info("Adding %s logger %s", type, new_logger)
+        main_logger.info("Adding %s logger %s", logger_type, new_logger)
         m.add_logger(config_logger, new_logger)
-        del(new_logger)
+        del new_logger
     return m
 
 
-def load_alerters(m, config, quiet):
+def load_alerters(m, config):
     """Load the alerters listed in the config object."""
     if config.has_option("reporting", "alerters"):
         alerters = config.get("reporting", "alerters").split(",")
@@ -325,8 +326,8 @@ def main():
     if not options.quiet:
         main_logger.info("Loaded %d monitors.", count)
 
-    m = load_loggers(m, config, options.quiet)
-    m = load_alerters(m, config, options.quiet)
+    m = load_loggers(m, config)
+    m = load_alerters(m, config)
 
     try:
         if config.get("monitor", "remote") == "1":

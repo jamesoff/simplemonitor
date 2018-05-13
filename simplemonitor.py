@@ -121,23 +121,19 @@ class SimpleMonitor:
                         self.monitors[monitor].record_skip(None)
                         module_logger.info("Not run: %s", monitor)
                 except Exception as e:
-                    module_logger.exception("Monitor %s threw exception during run_test(): %s\n" % (monitor, e))
+                    module_logger.exception("Monitor %s threw exception during run_test()", monitor)
                 if self.monitors[monitor].get_error_count() > 0:
                     if self.monitors[monitor].virtual_fail_count() == 0:
-                        if verbose:
-                            print("Warning: %s" % monitor)
+                        module_logger.warning("monitor failed but within tolerance: %s", monitor)
                     else:
-                        if verbose:
-                            print("Fail: %s (%s)" % (monitor, self.monitors[monitor].last_result))
+                        module_logger.error("monitor failed: %s (%s)", monitor, self.monitors[monitor].last_result)
                     failed.append(monitor)
                 else:
-                    if verbose and not not_run:
-                        print("Passed: %s" % monitor)
+                    if not not_run:
+                        module_logger.info("monitor passed: %s", monitor)
                     for monitor2 in joblist:
                         self.monitors[monitor2].dependency_succeeded(monitor)
             joblist = copy.copy(new_joblist)
-        if verbose:
-            print()
 
     def log_result(self, logger):
         """Use the given logger object to log our state."""
@@ -147,49 +143,48 @@ class SimpleMonitor:
             self.monitors[key].log_result(key, logger)
         try:
             for key in list(self.remote_monitors.keys()):
-                print('remote logging for {0}'.format(key))
+                module_logger.info('remote logging for %s', key)
                 self.remote_monitors[key].log_result(key, logger)
         except Exception:
-            print("exception while logging remote monitors")
+            module_logger.exception("exception while logging remote monitors")
         logger.end_batch()
 
     def do_alert(self, alerter):
         """Use the given alerter object to send an alert, if needed."""
         alerter.check_dependencies(self.failed + self.still_failing + self.skipped)
         for key in list(self.monitors.keys()):
-            if self.debug:
-                print("{0}({1}) -> {2}({3})".format(self.monitors[key].name, self.monitors[key].group, alerter.name, alerter.groups))
             # Don't generate alerts for monitors which want it done remotely
             if self.monitors[key].remote_alerting:
                 # TODO: could potentially disable alerts by setting a monitor to remote alerting, but not having anywhere to send it!
-                if self.debug:
-                    print("skipping alert for monitor %s as it wants remote alerting" % key)
+                module_logger.debug("skipping alert for monitor %s as it wants remote alerting", key)
                 continue
+            module_logger.debug("considering alert for monitor %s (group: %s) with alerter %s (groups: %s)",
+                                self.monitors[key].name,
+                                self.monitors[key].group,
+                                alerter.name,
+                                alerter.groups
+                                )
             try:
                 if self.monitors[key].group in alerter.groups:
                     # Only notifications for services that have it enabled
                     if self.monitors[key].notify:
-                        if self.debug:
-                            print("  - Notifying alerter: {0}".format(alerter.name))
+                        module_logger.debug("notifying alerter %s", alerter.name)
                         alerter.send_alert(key, self.monitors[key])
                     else:
-                        if self.debug:
-                            print("  - Skipping alerters: Monitor Disabled")
+                        module_logger.info("skipping alerters for disabled monitor %s", key)
                 else:
-                    if self.debug:
-                        print(" - Skipping alerter: {0}".format(alerter.name))
+                    module_logger.info("skipping alerter %s as monitor is not in group", alerter.name)
             except Exception as e:
-                print("exception caught while alerting for %s: %s" % (key, e))
+                module_logger.exception("exception caught while alerting for %s", key)
         for key in list(self.remote_monitors.keys()):
             try:
                 if self.remote_monitors[key].remote_alerting:
                     alerter.send_alert(key, self.remote_monitors[key])
                 else:
-                    if self.debug:
-                        print("not alerting for monitor %s as it doesn't want remote alerts" % key)
+                    module_logger.debug("not alerting for monitor %s as it doesn't want remote alerts", key)
                     continue
             except Exception as e:
-                print("exception caught while alerting for %s: %s" % (key, e))
+                module_logger.exception("exception caught while alerting for %s", key)
 
     def count_monitors(self):
         """Gets the number of monitors we have defined."""
@@ -214,7 +209,7 @@ class SimpleMonitor:
 
     def do_logs(self):
         if self.need_hup:
-            print("Processing HUP.")
+            module_logger.info("Processing HUP.")
             for logger in self.loggers:
                 self.loggers[logger].hup()
             self.need_hup = False
@@ -224,6 +219,5 @@ class SimpleMonitor:
 
     def update_remote_monitor(self, data, hostname):
         for monitor in list(data.keys()):
-            if self.debug:
-                print("trying remote monitor %s" % monitor)
+            module_logger.info("trying remote monitor %s", monitor)
             self.remote_monitors[monitor] = pickle.loads(data[monitor])
