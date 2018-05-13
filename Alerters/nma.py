@@ -1,5 +1,6 @@
 import requests
 
+from util import format_datetime
 from .alerter import Alerter
 
 
@@ -48,7 +49,7 @@ class NMAAlerter(Alerter):
             message = "catchup: %s failed on %s at %s (%d+%02d:%02d:%02d)\n%s" % (
                 name,
                 monitor.running_on,
-                self.format_datetime(monitor.first_failure_time()),
+                format_datetime(monitor.first_failure_time()),
                 days, hours, minutes, seconds,
                 monitor.get_result())
             url = "https://{}/publicapi/notify".format(self.api_host)
@@ -63,7 +64,7 @@ class NMAAlerter(Alerter):
             message = "%s failed on %s at %s (%d+%02d:%02d:%02d)\n%s" % (
                 name,
                 monitor.running_on,
-                self.format_datetime(monitor.first_failure_time()),
+                format_datetime(monitor.first_failure_time()),
                 days, hours, minutes, seconds,
                 monitor.get_result())
             url = "https://{}/publicapi/notify".format(self.api_host)

@@ -7,6 +7,7 @@ except ImportError:
     from email.mime.multipart import MIMEMultipart
     from email.mime.text import MIMEText
 
+from util import format_datetime
 from .alerter import Alerter
 
 
@@ -84,7 +85,7 @@ class EMailAlerter(Alerter):
             Description: %s""" % (
                 name,
                 host,
-                self.format_datetime(monitor.first_failure_time()),
+                format_datetime(monitor.first_failure_time()),
                 days, hours, minutes, seconds,
                 monitor.virtual_fail_count(),
                 monitor.get_result(),
@@ -97,11 +98,11 @@ class EMailAlerter(Alerter):
 
         elif type == "success":
             message['Subject'] = "[%s] Monitor %s succeeded" % (self.hostname, name)
-            body = "Monitor %s%s is back up.\nOriginally failed at: %s\nDowntime: %d+%02d:%02d:%02d\nDescription: %s" % (name, host, self.format_datetime(monitor.first_failure_time()), days, hours, minutes, seconds, monitor.describe())
+            body = "Monitor %s%s is back up.\nOriginally failed at: %s\nDowntime: %d+%02d:%02d:%02d\nDescription: %s" % (name, host, format_datetime(monitor.first_failure_time()), days, hours, minutes, seconds, monitor.describe())
 
         elif type == "catchup":
             message['Subject'] = "[%s] Monitor %s failed earlier!" % (self.hostname, name)
-            body = "Monitor %s%s failed earlier while this alerter was out of hours.\nFailed at: %s\nVirtual failure count: %d\nAdditional info: %s\nDescription: %s" % (name, host, self.format_datetime(monitor.first_failure_time()), monitor.virtual_fail_count(), monitor.get_result(), monitor.describe())
+            body = "Monitor %s%s failed earlier while this alerter was out of hours.\nFailed at: %s\nVirtual failure count: %d\nAdditional info: %s\nDescription: %s" % (name, host, format_datetime(monitor.first_failure_time()), monitor.virtual_fail_count(), monitor.get_result(), monitor.describe())
 
         else:
             self.alerter_logger.critical("unknown alert type %s", type)

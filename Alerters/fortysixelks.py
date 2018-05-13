@@ -4,7 +4,7 @@ try:
 except ImportError:
     requests_available = False
 
-from util import AlerterConfigurationError
+from util import AlerterConfigurationError, format_datetime
 from .alerter import Alerter
 
 
@@ -79,7 +79,7 @@ class FortySixElksAlerter(Alerter):
             message = "catchup: %s failed on %s at %s (%d+%02d:%02d:%02d)\n%s" % (
                 name,
                 monitor.running_on,
-                self.format_datetime(monitor.first_failure_time()),
+                format_datetime(monitor.first_failure_time()),
                 days, hours, minutes, seconds,
                 monitor.get_result())
             if len(message) > 160:
@@ -97,7 +97,7 @@ class FortySixElksAlerter(Alerter):
             message = "%s failed on %s at %s (%d+%02d:%02d:%02d)\n%s" % (
                 name,
                 monitor.running_on,
-                self.format_datetime(monitor.first_failure_time()),
+                format_datetime(monitor.first_failure_time()),
                 days, hours, minutes, seconds,
                 monitor.get_result())
             if len(message) > 160:

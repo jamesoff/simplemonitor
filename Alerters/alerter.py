@@ -144,11 +144,6 @@ class Alerter:
         kwargs['exception'] = AlerterConfigurationError
         return get_config_option(config_options, key, **kwargs)
 
-    def format_datetime(self, dt):
-        """Return an isoformat()-like datetime without the microseconds."""
-        dt = dt.replace(microsecond=0)
-        return dt.isoformat(" ")
-
     def set_dependencies(self, dependency_list):
         """Record which monitors we depend on.
         If a monitor we depend on fails, it means we can't reach the database, so we shouldn't bother trying to write to it."""

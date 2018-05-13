@@ -4,6 +4,7 @@ try:
 except ImportError:
     requests_available = False
 
+from util import format_datetime
 from .alerter import Alerter
 
 
@@ -53,7 +54,7 @@ class SlackAlerter(Alerter):
             fields = [
                 {
                     'title': 'Failed at',
-                    'value': self.format_datetime(monitor.first_failure_time()),
+                    'value': format_datetime(monitor.first_failure_time()),
                     'short': True
                 },
                 {
@@ -97,7 +98,7 @@ class SlackAlerter(Alerter):
             fields = [
                 {
                     'title': 'Failed at',
-                    'value': self.format_datetime(monitor.first_failure_time()),
+                    'value': format_datetime(monitor.first_failure_time()),
                     'short': True
                 },
                 {

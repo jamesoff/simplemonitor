@@ -1,5 +1,7 @@
 """Utilities for SimpleMonitor."""
 
+import datetime
+
 
 class MonitorConfigurationError(ValueError):
     """A config error for a Monitor"""
@@ -64,3 +66,14 @@ def get_config_option(config_options, key, **kwargs):
         if allowed_values is not None and value not in allowed_values:
             raise exception('config option {0} needs to be one of {1}'.format(key, allowed_values))
     return value
+
+
+def format_datetime(the_datetime):
+    """Return an isoformat()-like datetime without the microseconds."""
+    if the_datetime is None:
+        return ""
+
+    if isinstance(the_datetime, datetime.datetime):
+        the_datetime = the_datetime.replace(microsecond=0)
+        return the_datetime.isoformat(' ')
+    return the_datetime

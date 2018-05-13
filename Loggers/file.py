@@ -16,8 +16,8 @@ try:
 except ImportError:
     from io import StringIO
 
+from util import format_datetime
 from .logger import Logger
-
 
 class FileLogger(Logger):
 
@@ -76,13 +76,13 @@ class FileLogger(Logger):
         if dateformat == 'timestamp':
             datestring = str(int(time.time()))
         elif dateformat == 'iso8601':
-            datestring = self.format_datetime(datetime.datetime.now())
+            datestring = format_datetime(datetime.datetime.now())
         try:
             if monitor.virtual_fail_count() > 0:
                 self.file_handle.write("%s %s: failed since %s; VFC=%d (%s) (%0.3fs)" % (
                     datestring,
                     name,
-                    self.format_datetime(monitor.first_failure_time()),
+                    format_datetime(monitor.first_failure_time()),
                     monitor.virtual_fail_count(),
                     monitor.get_result(),
                     monitor.last_run_duration
@@ -152,7 +152,7 @@ class HTMLLogger(Logger):
         else:
             status = False
         if not status:
-            fail_time = self.format_datetime(monitor.first_failure_time())
+            fail_time = format_datetime(monitor.first_failure_time())
             fail_count = monitor.virtual_fail_count()
             fail_data = monitor.get_result()
             downtime = self.get_downtime(monitor)
@@ -259,7 +259,7 @@ class HTMLLogger(Logger):
                 output.write("""<td>%s</td>
                 <td>%s</td>""" % (
                     self.batch_data[entry]["failures"],
-                    self.format_datetime(self.batch_data[entry]["last_failure"])
+                    format_datetime(self.batch_data[entry]["last_failure"])
                 )
                 )
             if self.batch_data[entry]["host"] == my_host:
@@ -300,7 +300,7 @@ class HTMLLogger(Logger):
     def parse_file(self, file_handle):
         lines = []
         for line in file_handle:
-            line = line.replace("_NOW_", self.format_datetime(datetime.datetime.now()))
+            line = line.replace("_NOW_", format_datetime(datetime.datetime.now()))
             line = line.replace("_HOST_", socket.gethostname())
             line = line.replace("_COUNTS_", self.count_data)
             line = line.replace("_TIMESTAMP_", str(int(time.time())))
@@ -356,7 +356,7 @@ class JsonLogger(Logger):
 
     def save_result2(self, name, monitor):
         result = MonitorResult()
-        result.first_failure_time = self.format_datetime(monitor.first_failure_time())
+        result.first_failure_time = format_datetime(monitor.first_failure_time())
         result.virtual_fail_count = monitor.virtual_fail_count()
         result.last_run_duration = monitor.last_run_duration
         result.result = monitor.get_result()
@@ -370,7 +370,7 @@ class JsonLogger(Logger):
 
     def process_batch(self):
         payload = MonitorJsonPayload()
-        payload.generated = self.format_datetime(datetime.datetime.now())
+        payload.generated = format_datetime(datetime.datetime.now())
         payload.monitors = self.batch_data
 
         with open(self.filename, 'w') as outfile:

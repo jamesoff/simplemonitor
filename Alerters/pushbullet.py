@@ -1,5 +1,6 @@
 import requests
 
+from util import format_datetime
 from .alerter import Alerter
 
 
@@ -54,7 +55,7 @@ class PushbulletAlerter(Alerter):
             Description: %s""" % (
                 name,
                 host,
-                self.format_datetime(monitor.first_failure_time()),
+                format_datetime(monitor.first_failure_time()),
                 days, hours, minutes, seconds,
                 monitor.virtual_fail_count(),
                 monitor.get_result(),
@@ -68,13 +69,13 @@ class PushbulletAlerter(Alerter):
         elif type == "success":
             subject = "[%s] Monitor %s succeeded" % (self.hostname, name)
             body = "Monitor %s%s is back up.\nOriginally failed at: %s\nDowntime: %d+%02d:%02d:%02d\nDescription: %s" % (
-                name, host, self.format_datetime(monitor.first_failure_time()), days, hours, minutes, seconds,
+                name, host, format_datetime(monitor.first_failure_time()), days, hours, minutes, seconds,
                 monitor.describe())
 
         elif type == "catchup":
             subject = "[%s] Monitor %s failed earlier!" % (self.hostname, name)
             body = "Monitor %s%s failed earlier while this alerter was out of hours.\nFailed at: %s\nVirtual failure count: %d\nAdditional info: %s\nDescription: %s" % (
-                name, host, self.format_datetime(monitor.first_failure_time()), monitor.virtual_fail_count(),
+                name, host, format_datetime(monitor.first_failure_time()), monitor.virtual_fail_count(),
                 monitor.get_result(), monitor.describe())
 
         else:

@@ -2,7 +2,7 @@
 import subprocess
 import shlex
 
-from util import AlerterConfigurationError
+from util import AlerterConfigurationError, format_datetime
 from .alerter import Alerter
 
 
@@ -62,7 +62,7 @@ class ExecuteAlerter(Alerter):
             hours=hours,
             minutes=minutes,
             seconds=seconds,
-            failed_at=self.format_datetime(monitor.first_failure_time()),
+            failed_at=format_datetime(monitor.first_failure_time()),
             virtual_fail_count=monitor.virtual_fail_count(),
             info=monitor.get_result(),
             description=monitor.describe(),

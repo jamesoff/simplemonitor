@@ -2,6 +2,7 @@
 
 import requests
 
+from util import format_datetime
 from .alerter import Alerter
 
 
@@ -66,7 +67,7 @@ class BulkSMSAlerter(Alerter):
             message = "catchup: %s failed on %s at %s (%d+%02d:%02d:%02d)\n%s" % (
                 name,
                 monitor.running_on,
-                self.format_datetime(monitor.first_failure_time()),
+                format_datetime(monitor.first_failure_time()),
                 days, hours, minutes, seconds,
                 monitor.get_result())
             if len(message) > 160:
@@ -86,7 +87,7 @@ class BulkSMSAlerter(Alerter):
             message = "%s failed on %s at %s (%d+%02d:%02d:%02d)\n%s" % (
                 name,
                 monitor.running_on,
-                self.format_datetime(monitor.first_failure_time()),
+                format_datetime(monitor.first_failure_time()),
                 days, hours, minutes, seconds,
                 monitor.get_result())
             if len(message) > 160:

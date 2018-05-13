@@ -75,32 +75,3 @@ class Logger(object):
     def process_batch(self):
         """This is blank for the base class."""
         return
-
-    def get_downtime(self, monitor):
-        try:
-            downtime = datetime.datetime.utcnow() - monitor.first_failure_time()
-            seconds = downtime.seconds
-            if seconds > 3600:
-                hours = seconds / 3600
-                seconds = seconds - (hours * 3600)
-            else:
-                hours = 0
-            if seconds > 60:
-                minutes = seconds / 60
-                seconds = seconds - (minutes * 60)
-            else:
-                minutes = 0
-            return (downtime.days, hours, int(minutes), int(seconds))
-        except Exception:
-            return (0, 0, 0, 0)
-
-    def format_datetime(self, dt):
-        """Return an isoformat()-like datetime without the microseconds."""
-        if dt is None:
-            return ""
-
-        if isinstance(dt, datetime.datetime):
-            dt = dt.replace(microsecond=0)
-            return dt.isoformat(' ')
-        else:
-            return dt
