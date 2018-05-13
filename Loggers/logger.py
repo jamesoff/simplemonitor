@@ -1,5 +1,6 @@
 # coding=utf-8
 import datetime
+import logging
 
 from util import get_config_option, LoggerConfigurationError
 
@@ -16,6 +17,12 @@ class Logger(object):
     batch_data = {}
 
     def __init__(self, config_options):
+        self.name = Logger.get_config_option(
+            config_options,
+            '_name',
+            default='unnamed'
+        )
+        self.logger_logger = logging.getLogger('simplemonitor.logger-' + self.name)
         self.set_dependencies(Logger.get_config_option(
             config_options,
             'depend',

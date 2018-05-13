@@ -38,7 +38,7 @@ class DBFullLogger(DBLogger):
     def save_result(self, monitor_name, monitor_type, monitor_params, monitor_result, monitor_info, hostname=""):
         """Write to the database."""
         if not self.connected:
-            print("cannot send results, a dependency failed")
+            self.logger_logger.warning("cannot send results, a dependency failed")
             return
         sql = "INSERT INTO results (result_id, monitor_host, monitor_name, monitor_type, monitor_params, monitor_result, timestamp, monitor_info) VALUES (null, ?, ?, ?, ?, ?, ?, ?)"
 

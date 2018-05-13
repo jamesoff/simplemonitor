@@ -98,7 +98,7 @@ class FileLogger(Logger):
             if not self.buffered:
                 self.file_handle.flush()
         except Exception as e:
-            print("Error writing to logfile %s: %s" % (self.filename, e))
+            self.logger_logger.exception("Error writing to logfile %s", self.filename)
 
     def hup(self):
         """Close and reopen log file."""
@@ -118,13 +118,6 @@ class HTMLLogger(Logger):
 
     def __init__(self, config_options={}):
         Logger.__init__(self, config_options)
-        try:
-            self.filename = config_options["filename"]
-            self.header = config_options["header"]
-            self.footer = config_options["footer"]
-            self.folder = config_options["folder"]
-        except Exception:
-            print("Missing required value for HTML Logger")
         self.filename = Logger.get_config_option(
             config_options,
             'filename',
@@ -152,7 +145,7 @@ class HTMLLogger(Logger):
 
     def save_result2(self, name, monitor):
         if not self.doing_batch:
-            print("HTMLLogger.save_result2() called while not doing batch.")
+            self.logger_logger.error("HTMLLogger.save_result2() called while not doing batch.")
             return
         if monitor.virtual_fail_count() == 0:
             status = True
@@ -302,7 +295,7 @@ class HTMLLogger(Logger):
             os.chmod(file_name, stat.S_IREAD | stat.S_IWRITE | stat.S_IRGRP | stat.S_IROTH)
             shutil.move(file_name, os.path.join(self.folder, self.filename))
         except Exception as e:
-            print("problem closing temporary file for HTML output %s" % e)
+            self.logger_logger.exception("problem closing temporary file for HTML output")
 
     def parse_file(self, file_handle):
         lines = []
