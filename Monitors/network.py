@@ -291,16 +291,17 @@ class MonitorDNS(Monitor):
             result = subprocess.check_output(self.params).decode('utf-8')
             result = result.strip()
             if result is None or result == '':
-                self.record_fail("failed to resolve %s" % self.path)
-                return False
+                return self.record_fail("failed to resolve %s" % self.path)
             if self.desired_val and result != self.desired_val:
-                self.record_fail("resolved DNS record is unexpected: %s != %s" % (self.desired_val, result))
-                return False
-            self.record_success()
-            return True
+                return self.record_fail("resolved DNS record is unexpected: %s != %s" % (self.desired_val, result))
+            return self.record_success()
+        except subprocess.CalledProcessError as e:
+            return self.record_fail("Command '%s' exited non-zero (%d)" % (
+                ' '.join(self.params),
+                e.returncode
+            ))
         except Exception as e:
-            self.record_fail("Exception while executing %s: %s" % (self.command, e))
-            return False
+            return self.record_fail("Exception while executing '%s': %s" % (' '.join(self.params), e))
 
     def describe(self):
         if self.desired_val:
