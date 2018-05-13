@@ -277,6 +277,7 @@ class Monitor:
         self.success_count = 0
         self.tests_run += 1
         self.was_skipped = False
+        return False
 
     def record_success(self, message=""):
         """Update internal state to show we had a success."""
@@ -289,6 +290,7 @@ class Monitor:
         self.tests_run += 1
         self.was_skipped = False
         self.last_result = message
+        return True
 
     def record_skip(self, which_dep):
         """Record that we were skipped.
@@ -302,6 +304,7 @@ class Monitor:
         else:
             # we were skipped because of the gap value
             self.was_skipped = True
+        return True
 
     def skipped(self):
         if self.was_skipped:
