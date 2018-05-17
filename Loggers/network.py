@@ -81,7 +81,7 @@ class Listener(Thread):
 
     Here seemed a reasonable place to put it."""
 
-    def __init__(self, simplemonitor, port, verbose=False, key=None):
+    def __init__(self, simplemonitor, port, key=None):
         """Set up the thread.
 
         simplemonitor is a SimpleMonitor object which we will put our results into.
@@ -92,7 +92,6 @@ class Listener(Thread):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.bind(('', port))
         self.simplemonitor = simplemonitor
-        self.verbose = verbose
         self.key = bytearray(key, 'utf-8')
         self.logger = logging.getLogger('simplemonitor.logger.networklistener')
         self.running = False

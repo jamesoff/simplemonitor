@@ -378,7 +378,7 @@ def main():
     if enable_remote:
         if not options.quiet:
             main_logger.info("Starting remote listener thread")
-        remote_listening_thread = Loggers.network.Listener(m, remote_port, options.verbose, key)
+        remote_listening_thread = Loggers.network.Listener(m, remote_port, key)
         remote_listening_thread.daemon = True
         remote_listening_thread.start()
 
@@ -418,7 +418,7 @@ def main():
         if loop and enable_remote:
             if not remote_listening_thread.isAlive():
                 main_logger.error("Listener thread died :(")
-                remote_listening_thread = Loggers.network.Listener(m, remote_port, options.verbose)
+                remote_listening_thread = Loggers.network.Listener(m, remote_port, options.verbose, key)
                 remote_listening_thread.start()
 
         if options.one_shot:
