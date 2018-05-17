@@ -37,6 +37,10 @@ import Alerters.pushover
 import Alerters.nma
 import Alerters.pushbullet
 
+try:
+    import colorlog
+except ImportError:
+    pass
 
 VERSION = "1.7"
 
@@ -249,6 +253,7 @@ def main():
     parser.add_option('-1', '--one-shot', action='store_true', dest='one_shot', default=False, help='Run the monitors once only, without alerting. Require monitors without "fail" in the name to succeed. Exit zero or non-zero accordingly.')
     parser.add_option('--loops', dest='loops', default=-1, help=SUPPRESS_HELP, type=int)
     parser.add_option('-l', '--log-level', dest="loglevel", default="warn", help="Log level: critical, error, warn, info, debug")
+    parser.add_option('-C', '--no-colour', '--no-color', action='store_true', dest='no_colour', default=False, help='Do not colourise log output')
 
     (options, args) = parser.parse_args()
 
@@ -270,7 +275,19 @@ def main():
         print('Log level {0} is unknown'.format(options.loglevel))
         sys.exit(1)
 
-    logging.basicConfig(format='%(asctime)s %(levelname)s (%(name)s) %(message)s')
+    log_datefmt = '%Y-%m-%d %H:%M:%S'
+    log_plain_format = '%(asctime)s %(levelname)8s (%(name)s) %(message)s'
+    if not options.no_colour:
+        try:
+            handler = colorlog.StreamHandler()
+            handler.setFormatter(colorlog.ColoredFormatter('%(asctime)s %(log_color)s%(levelname)8s%(reset)s (%(name)s) %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
+            main_logger.addHandler(handler)
+        except NameError:
+            logging.basicConfig(format=log_plain_format, datefmt=log_datefmt)
+            main_logger.error('Could not enable colorlog')
+    else:
+        logging.basicConfig(format=log_plain_format, datefmt=log_datefmt)
+
     main_logger.setLevel(log_level)
 
     if not options.quiet:
