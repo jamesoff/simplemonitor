@@ -21,14 +21,14 @@ class DBLogger(Logger):
         Logger.__init__(self, config_options)
         if not sqlite_available:
             raise RuntimeError("SQLite module not loaded.")
-        db_path = Logger.get_config_option(
+        self.db_path = Logger.get_config_option(
             config_options,
             'db_path',
             required=True,
             allow_empty=False
         )
 
-        self.db_handle = sqlite3.connect(db_path, isolation_level=None)
+        self.db_handle = sqlite3.connect(self.db_path, isolation_level=None)
         self.connected = True
 
 
@@ -50,7 +50,10 @@ class DBFullLogger(DBLogger):
             hostname = self.hostname
 
         params = (hostname, monitor_name, monitor_type, join_string.join([str(x) for x in monitor_params]), monitor_result, timestamp, monitor_info)
-        c.execute(sql, params)
+        try:
+            c.execute(sql, params)
+        except sqlite3.OperationalError as e:
+            self.logger_logger.critical("sqlite failed to write to database: %s", e.message)
 
     def save_result2(self, name, monitor):
         """new interface."""
@@ -59,6 +62,9 @@ class DBFullLogger(DBLogger):
         else:
             result = 0
         self.save_result(name, monitor.type, monitor.get_params(), result, monitor.describe())
+
+    def describe(self):
+        return "Logging results to {0}".format(self.db_path)
 
 
 class DBStatusLogger(DBLogger):
@@ -73,8 +79,11 @@ class DBStatusLogger(DBLogger):
         if hostname == "":
             hostname = self.hostname
         c = self.db_handle.cursor()
-        c.execute("DELETE FROM status WHERE monitor_host = ? AND monitor_name = ?", (self.hostname, monitor_name))
-        c.execute("REPLACE INTO status (monitor_host, monitor_name, monitor_result, monitor_info) VALUES (?, ?, ?, ?)", (hostname, monitor_name, monitor_result, monitor_info))
+        try:
+            c.execute("DELETE FROM status WHERE monitor_host = ? AND monitor_name = ?", (self.hostname, monitor_name))
+            c.execute("REPLACE INTO status (monitor_host, monitor_name, monitor_result, monitor_info) VALUES (?, ?, ?, ?)", (hostname, monitor_name, monitor_result, monitor_info))
+        except sqlite3.OperationalError as e:
+            self.logger_logger.critical("sqlite failed to write to database: %s", e.message)
 
     def save_result2(self, name, monitor):
         """new interface."""
@@ -83,3 +92,6 @@ class DBStatusLogger(DBLogger):
         else:
             result = 0
         self.save_result(name, monitor.type, monitor.get_params(), result, monitor.describe())
+
+    def describe(self):
+        return "Logging status to {0}".format(self.db_path)
