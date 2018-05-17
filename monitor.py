@@ -387,7 +387,6 @@ def main():
     loop = True
     heartbeat = 0
 
-    m.set_verbosity(options.verbose, options.debug)
     loops = int(options.loops)
 
     while loop:

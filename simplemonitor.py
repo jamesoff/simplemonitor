@@ -16,8 +16,6 @@ class SimpleMonitor:
     # TODO: move this outside into monitor.py?
     #      could give better control over restarting the listener thread
     need_hup = False
-    verbose = False
-    debug = False
 
     def __init__(self):
         """Main class turn on."""
@@ -70,15 +68,8 @@ class SimpleMonitor:
                     ok = False
         return ok
 
-    def set_verbosity(self, verbose, debug):
-        self.verbose = verbose
-        self.debug = debug
-        if self.debug:
-            self.verbose = True
-
     def run_tests(self):
         self.reset_monitors()
-        verbose = self.verbose
 
         joblist = list(self.monitors.keys())
         new_joblist = []
