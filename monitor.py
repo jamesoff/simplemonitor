@@ -64,6 +64,7 @@ def load_monitors(m, filename):
 
     myhostname = gethostname().lower()
 
+    main_logger.info('=== Loading monitors')
     for monitor in monitors:
         if config.has_option(monitor, "runon"):
             if myhostname != config.get(monitor, "runon").lower():
@@ -149,7 +150,7 @@ def load_monitors(m, filename):
 
     for i in list(m.monitors.keys()):
         m.monitors[i].post_config_setup()
-
+    main_logger.info('--- Loaded %d monitors', m.count_monitors())
     return m
 
 
@@ -161,6 +162,7 @@ def load_loggers(m, config):
     else:
         loggers = []
 
+    main_logger.info('=== Loading loggers')
     for config_logger in loggers:
         logger_type = config.get(config_logger, "type")
         config_options = get_config_dict(config, config_logger)
@@ -186,6 +188,7 @@ def load_loggers(m, config):
         main_logger.info("Adding %s logger %s: %s", logger_type, config_logger, new_logger)
         m.add_logger(config_logger, new_logger)
         del new_logger
+    main_logger.info('--- Loaded %d loggers', len(m.loggers))
     return m
 
 
@@ -196,6 +199,7 @@ def load_alerters(m, config):
     else:
         alerters = []
 
+    main_logger.info('=== Loading alerters')
     for alerter in alerters:
         type = config.get(alerter, "type")
         config_options = get_config_dict(config, alerter)
@@ -226,6 +230,7 @@ def load_alerters(m, config):
         a.name = alerter
         m.add_alerter(alerter, a)
         del(a)
+    main_logger.info('--- Loaded %d alerters', len(m.alerters))
     return m
 
 
@@ -269,7 +274,7 @@ def main():
     main_logger.setLevel(log_level)
 
     if not options.quiet:
-        main_logger.info('SimpleMonitor v%s', VERSION)
+        main_logger.info('=== SimpleMonitor v%s', VERSION)
         main_logger.info('Loading main config from %s', options.config)
 
     config = EnvironmentAwareConfigParser()
@@ -323,9 +328,6 @@ def main():
         main_logger.critical("No monitors loaded :(")
         sys.exit(2)
 
-    if not options.quiet:
-        main_logger.info("Loaded %d monitors.", count)
-
     m = load_loggers(m, config)
     m = load_alerters(m, config)
 
@@ -364,7 +366,7 @@ def main():
         remote_listening_thread.start()
 
     if not options.quiet:
-        main_logger.info("Starting... (loop runs every %ds) Hit ^C to stop" % interval)
+        main_logger.info("=== Starting... (loop runs every %ds) Hit ^C to stop" % interval)
     loop = True
     heartbeat = 0
 
