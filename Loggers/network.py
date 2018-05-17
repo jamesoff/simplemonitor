@@ -49,6 +49,9 @@ class NetworkLogger(Logger):
             'utf-8'
         )
 
+    def describe(self):
+        return "Sending monitor results to {0}:{1}".format(self.host, self.port)
+
     def save_result2(self, name, monitor):
         if not self.doing_batch:
             self.logger_logger.error("NetworkLogger.save_result2() called while not doing batch.")
