@@ -442,6 +442,8 @@ class Monitor:
             else:
                 minutes = 0
             return (downtime.days, hours, int(minutes), int(seconds))
+        except TypeError:
+            return (0, 0, 0, 0)
         except Exception:
             self.monitor_logger.exception('Failed to calculate downtime')
             return (0, 0, 0, 0)
