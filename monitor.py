@@ -74,82 +74,82 @@ def load_monitors(m, filename):
             if myhostname != config.get(monitor, "runon").lower():
                 main_logger.warning("Ignoring monitor %s because it's only for host %s", monitor, config.get(monitor, "runon"))
                 continue
-        type = config.get(monitor, "type")
+        monitor_type = config.get(monitor, "type")
         new_monitor = None
         config_options = default_config.copy()
         config_options.update(get_config_dict(config, monitor))
 
-        if type == "host":
+        if monitor_type == "host":
             new_monitor = Monitors.network.MonitorHost(monitor, config_options)
 
-        elif type == "service":
+        elif monitor_type == "service":
             new_monitor = Monitors.service.MonitorService(monitor, config_options)
 
-        elif type == "tcp":
+        elif monitor_type == "tcp":
             new_monitor = Monitors.network.MonitorTCP(monitor, config_options)
 
-        elif type == "rc":
+        elif monitor_type == "rc":
             new_monitor = Monitors.service.MonitorRC(monitor, config_options)
 
-        elif type == "diskspace":
+        elif monitor_type == "diskspace":
             new_monitor = Monitors.host.MonitorDiskSpace(monitor, config_options)
 
-        elif type == "http":
+        elif monitor_type == "http":
             new_monitor = Monitors.network.MonitorHTTP(monitor, config_options)
 
-        elif type == "apcupsd":
+        elif monitor_type == "apcupsd":
             new_monitor = Monitors.host.MonitorApcupsd(monitor, config_options)
 
-        elif type == "svc":
+        elif monitor_type == "svc":
             new_monitor = Monitors.service.MonitorSvc(monitor, config_options)
 
-        elif type == "backup":
+        elif monitor_type == "backup":
             new_monitor = Monitors.file.MonitorBackup(monitor, config_options)
 
-        elif type == "portaudit":
+        elif monitor_type == "portaudit":
             new_monitor = Monitors.host.MonitorPortAudit(monitor, config_options)
 
-        elif type == "pkgaudit":
+        elif monitor_type == "pkgaudit":
             new_monitor = Monitors.host.MonitorPkgAudit(monitor, config_options)
 
-        elif type == "loadavg":
+        elif monitor_type == "loadavg":
             new_monitor = Monitors.host.MonitorLoadAvg(monitor, config_options)
 
-        elif type == "eximqueue":
+        elif monitor_type == "eximqueue":
             new_monitor = Monitors.service.MonitorEximQueue(monitor, config_options)
 
-        elif type == "windowsdhcp":
+        elif monitor_type == "windowsdhcp":
             new_monitor = Monitors.service.MonitorWindowsDHCPScope(monitor, config_options)
 
-        elif type == "zap":
+        elif monitor_type == "zap":
             new_monitor = Monitors.host.MonitorZap(monitor, config_options)
 
-        elif type == "fail":
+        elif monitor_type == "fail":
             new_monitor = Monitors.monitor.MonitorFail(monitor, config_options)
 
-        elif type == "null":
+        elif monitor_type == "null":
             new_monitor = Monitors.monitor.MonitorNull(monitor, config_options)
 
-        elif type == "filestat":
+        elif monitor_type == "filestat":
             new_monitor = Monitors.host.MonitorFileStat(monitor, config_options)
 
-        elif type == "compound":
+        elif monitor_type == "compound":
             new_monitor = Monitors.compound.CompoundMonitor(monitor, config_options)
             new_monitor.set_mon_refs(m)
 
-        elif type == 'dns':
+        elif monitor_type == 'dns':
             new_monitor = Monitors.network.MonitorDNS(monitor, config_options)
 
-        elif type == 'command':
+        elif monitor_type == 'command':
             new_monitor = Monitors.host.MonitorCommand(monitor, config_options)
 
         else:
-            main_logger.error("Unknown type %s for monitor %s", type, monitor)
+            main_logger.error("Unknown type %s for monitor %s", monitor_type, monitor)
             continue
         if new_monitor is None:
             continue
 
-        main_logger.info("Adding %s monitor %s: %s", type, monitor, new_monitor)
+        main_logger.info("Adding %s monitor %s: %s", monitor_type, monitor, new_monitor)
         m.add_monitor(monitor, new_monitor)
 
     for i in list(m.monitors.keys()):
@@ -205,35 +205,35 @@ def load_alerters(m, config):
 
     main_logger.info('=== Loading alerters')
     for alerter in alerters:
-        type = config.get(alerter, "type")
+        alerter_type = config.get(alerter, "type")
         config_options = get_config_dict(config, alerter)
-        if type == "email":
-            a = Alerters.mail.EMailAlerter(config_options)
-        elif type == "ses":
-            a = Alerters.ses.SESAlerter(config_options)
-        elif type == "bulksms":
-            a = Alerters.bulksms.BulkSMSAlerter(config_options)
-        elif type == "46elks":
-            a = Alerters.fortysixelks.FortySixElksAlerter(config_options)
-        elif type == "syslog":
-            a = Alerters.syslogger.SyslogAlerter(config_options)
-        elif type == "execute":
-            a = Alerters.execute.ExecuteAlerter(config_options)
-        elif type == "slack":
-            a = Alerters.slack.SlackAlerter(config_options)
-        elif type == "pushover":
-            a = Alerters.pushover.PushoverAlerter(config_options)
-        elif type == "nma":
-            a = Alerters.nma.NMAAlerter(config_options)
-        elif type == "pushbullet":
-            a = Alerters.pushbullet.PushbulletAlerter(config_options)
+        if alerter_type == "email":
+            new_alerter = Alerters.mail.EMailAlerter(config_options)
+        elif alerter_type == "ses":
+            new_alerter = Alerters.ses.SESAlerter(config_options)
+        elif alerter_type == "bulksms":
+            new_alerter = Alerters.bulksms.BulkSMSAlerter(config_options)
+        elif alerter_type == "46elks":
+            new_alerter = Alerters.fortysixelks.FortySixElksAlerter(config_options)
+        elif alerter_type == "syslog":
+            new_alerter = Alerters.syslogger.SyslogAlerter(config_options)
+        elif alerter_type == "execute":
+            new_alerter = Alerters.execute.ExecuteAlerter(config_options)
+        elif alerter_type == "slack":
+            new_alerter = Alerters.slack.SlackAlerter(config_options)
+        elif alerter_type == "pushover":
+            new_alerter = Alerters.pushover.PushoverAlerter(config_options)
+        elif alerter_type == "nma":
+            new_alerter = Alerters.nma.NMAAlerter(config_options)
+        elif alerter_type == "pushbullet":
+            new_alerter = Alerters.pushbullet.PushbulletAlerter(config_options)
         else:
-            main_logger.error("Unknown alerter type %s" % type)
+            main_logger.error("Unknown alerter type %s", alerter_type)
             continue
-        main_logger.info("Adding %s alerter %s", type, alerter)
-        a.name = alerter
-        m.add_alerter(alerter, a)
-        del(a)
+        main_logger.info("Adding %s alerter %s", alerter_type, alerter)
+        new_alerter.name = alerter
+        m.add_alerter(alerter, new_alerter)
+        del new_alerter
     main_logger.info('--- Loaded %d alerters', len(m.alerters))
     return m
 
@@ -255,7 +255,7 @@ def main():
     parser.add_option('-l', '--log-level', dest="loglevel", default="warn", help="Log level: critical, error, warn, info, debug")
     parser.add_option('-C', '--no-colour', '--no-color', action='store_true', dest='no_colour', default=False, help='Do not colourise log output')
 
-    (options, args) = parser.parse_args()
+    (options, _) = parser.parse_args()
 
     if options.quiet:
         print('Warning: --quiet is deprecated; use --log-level=critical')
@@ -364,11 +364,11 @@ def main():
         sys.exit(1)
 
     if options.test:
-        main_logger.warn("Config test complete. Exiting.")
+        main_logger.warning("Config test complete. Exiting.")
         sys.exit(0)
 
     if options.one_shot:
-        main_logger.warn("One-shot mode: expecting monitors without 'fail' in the name to succeed, and with to fail. Will exit zero or non-zero accordingly.")
+        main_logger.warning("One-shot mode: expecting monitors without 'fail' in the name to succeed, and with to fail. Will exit zero or non-zero accordingly.")
 
     try:
         key = config.get("monitor", "key")
@@ -383,7 +383,7 @@ def main():
         remote_listening_thread.start()
 
     if not options.quiet:
-        main_logger.info("=== Starting... (loop runs every %ds) Hit ^C to stop" % interval)
+        main_logger.info("=== Starting... (loop runs every %ds) Hit ^C to stop", interval)
     loop = True
     heartbeat = 0
 
@@ -394,7 +394,7 @@ def main():
             if loops > 0:
                 loops -= 1
                 if loops == 0:
-                    main_logger.warn('Ran out of loop counter, will stop after this one')
+                    main_logger.warning('Ran out of loop counter, will stop after this one')
                     loop = False
             m.run_tests()
             m.do_recovery()
@@ -418,7 +418,7 @@ def main():
         if loop and enable_remote:
             if not remote_listening_thread.isAlive():
                 main_logger.error("Listener thread died :(")
-                remote_listening_thread = Loggers.network.Listener(m, remote_port, options.verbose, key)
+                remote_listening_thread = Loggers.network.Listener(m, remote_port, key)
                 remote_listening_thread.start()
 
         if options.one_shot:
@@ -432,6 +432,7 @@ def main():
 
     if enable_remote:
         remote_listening_thread.running = False
+        main_logger.info('Waiting for listener thread to exit')
         remote_listening_thread.join(0)
 
     if pidfile:
