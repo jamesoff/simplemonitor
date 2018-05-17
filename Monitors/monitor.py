@@ -446,6 +446,8 @@ class Monitor:
             self.monitor_logger.exception('Failed to calculate downtime')
             return (0, 0, 0, 0)
 
+    def __str__(self):
+        return self.describe()
 
 
 class MonitorFail(Monitor):

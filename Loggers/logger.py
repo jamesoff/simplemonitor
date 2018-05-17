@@ -75,3 +75,12 @@ class Logger(object):
     def process_batch(self):
         """This is blank for the base class."""
         return
+
+    def describe(self):
+        """Explain what this logger does.
+        We don't throw NotImplementedError here as it won't show up until something breaks,
+        and we don't want to randomly die then."""
+        return "(Logger did not write an auto-biography.)"
+
+    def __str__(self):
+        return self.describe()

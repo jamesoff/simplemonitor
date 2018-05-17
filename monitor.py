@@ -144,7 +144,7 @@ def load_monitors(m, filename):
         if new_monitor is None:
             continue
 
-        main_logger.info("Adding %s monitor %s: %s", type, monitor, new_monitor.describe())
+        main_logger.info("Adding %s monitor %s: %s", type, monitor, new_monitor)
         m.add_monitor(monitor, new_monitor)
 
     for i in list(m.monitors.keys()):
@@ -183,7 +183,7 @@ def load_loggers(m, config):
         if new_logger is None:
             main_logger.error("Creating logger %s failed!", new_logger)
             continue
-        main_logger.info("Adding %s logger %s", logger_type, new_logger)
+        main_logger.info("Adding %s logger %s: %s", logger_type, config_logger, new_logger)
         m.add_logger(config_logger, new_logger)
         del new_logger
     return m
