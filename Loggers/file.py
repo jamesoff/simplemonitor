@@ -108,6 +108,9 @@ class FileLogger(Logger):
         except Exception as e:
             raise RuntimeError("Couldn't reopen log file %s after HUP: %s" % (self.filename, e))
 
+    def describe(self):
+        return "Writing log file to {0}".format(self.filename)
+
 
 class HTMLLogger(Logger):
     """A batching logger which writes a simple HTML page of the current state."""
@@ -308,6 +311,8 @@ class HTMLLogger(Logger):
             lines.append(line)
         return lines
 
+    def describe(self):
+        return "Writing HTML page to {0}".format(self.filename)
 
 class MonitorResult(object):
 
@@ -380,3 +385,6 @@ class JsonLogger(Logger):
                       ensure_ascii=False,
                       cls=PayloadEncoder)
         self.batch_data = {}
+
+    def describe(self):
+        return "Writing JSON file to {0}".format(self.filename)
