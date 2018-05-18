@@ -19,6 +19,7 @@ except ImportError:
 from util import format_datetime
 from .logger import Logger
 
+
 class FileLogger(Logger):
 
     filename = ""
@@ -313,6 +314,7 @@ class HTMLLogger(Logger):
 
     def describe(self):
         return "Writing HTML page to {0}".format(self.filename)
+
 
 class MonitorResult(object):
 

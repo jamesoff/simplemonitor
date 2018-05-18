@@ -1,5 +1,4 @@
 # coding=utf-8
-import datetime
 import logging
 
 from util import get_config_option, LoggerConfigurationError

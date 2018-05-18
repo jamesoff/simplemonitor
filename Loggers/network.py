@@ -3,7 +3,6 @@ import pickle
 import socket
 import sys
 import hmac
-import traceback
 import struct
 import logging
 
