@@ -28,7 +28,7 @@ class PushoverAlerter(Alerter):
     def send_pushover_notification(self, subject, body):
         """Send a push notification."""
 
-        requests.post('api.pushover.net:443/1/messages.json',
+        requests.post('https://api.pushover.net/1/messages.json',
                       data={
                           "token": self.pushover_token,
                           "user": self.pushover_user,
