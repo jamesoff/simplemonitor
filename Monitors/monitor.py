@@ -430,22 +430,14 @@ class Monitor:
     def get_downtime(self):
         try:
             downtime = datetime.datetime.utcnow() - self.first_failure_time()
-            seconds = downtime.seconds
-            if seconds > 3600:
-                hours = seconds / 3600
-                seconds = seconds - (hours * 3600)
-            else:
-                hours = 0
-            if seconds > 60:
-                minutes = seconds / 60
-                seconds = seconds - (minutes * 60)
-            else:
-                minutes = 0
-            return (downtime.days, hours, int(minutes), int(seconds))
+            downtime_seconds = downtime.seconds
+            (hours, minutes) = (0, 0)
+            if downtime_seconds > 3600:
+                (hours, downtime_seconds) = divmod(downtime_seconds, 3600)
+            if downtime_seconds > 60:
+                (minutes, downtime_seconds) = divmod(downtime_seconds, 60)
+            return (downtime.days, hours, minutes, downtime_seconds)
         except TypeError:
-            return (0, 0, 0, 0)
-        except Exception:
-            self.monitor_logger.exception('Failed to calculate downtime')
             return (0, 0, 0, 0)
 
     def __str__(self):
