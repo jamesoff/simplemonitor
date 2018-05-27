@@ -409,16 +409,11 @@ class MonitorZap(Monitor):
                 if matches:
                     status = matches.group("status")
                     if status != "OK":
-                        self.record_fail("status is %s" % status)
-                        return False
-                    else:
-                        self.record_success()
-                        return True
-            self.record_fail("Error getting status")
-            return False
+                        return self.record_fail("status is %s" % status)
+                    return self.record_success()
+            return self.record_fail("Error getting status")
         except Exception as e:
-            self.record_fail("Error running ztscan: %s" % e)
-            return False
+            return self.record_fail("Error running ztscan: %s" % e)
 
     def describe(self):
         return "Checking status of zap span %d is OK" % self.span
@@ -483,27 +478,18 @@ class MonitorCommand(Monitor):
                 out = out.decode('utf-8')
                 matches = self.result_regexp.search(out)
                 if matches:
-                    self.record_success()
-                    return True
-                else:
-                    self.record_fail('could not match regexp in out')
-                    return False
+                    return self.record_success()
+                return self.record_fail('could not match regexp in out')
             elif self.result_max is not None:
                 outasinteger = int(out)
                 if outasinteger < self.result_max:
-                    self.record_success("%s < %s" % (outasinteger, self.result_max))
-                    return True
-                else:
-                    self.record_fail("%s >= %s" % (outasinteger, self.result_max))
-                    return False
-            self.record_success()
-            return True
+                    return self.record_success("%s < %s" % (outasinteger, self.result_max))
+                return self.record_fail("%s >= %s" % (outasinteger, self.result_max))
+            return self.record_success()
         except Exception as e:
-            self.record_fail(e)
-            return False
+            return self.record_fail(e)
 
-        self.record_fail()
-        return False
+        return self.record_fail()
 
     def describe(self):
         """Explains what this instance is checking"""
