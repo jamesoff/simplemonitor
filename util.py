@@ -18,6 +18,11 @@ class LoggerConfigurationError(ValueError):
     pass
 
 
+class SimpleMonitorConfigurationError(ValueError):
+    """A general config error"""
+    pass
+
+
 def get_config_option(config_options, key, **kwargs):
     """Get a value out of a dict, with possible default, required type and requiredness."""
     exception = kwargs.get('exception', ValueError)
