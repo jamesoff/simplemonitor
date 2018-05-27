@@ -29,14 +29,10 @@ class MonitorSvc(Monitor):
             if result is None:
                 result = 0
             if result > 0:
-                self.record_fail("svok returned %d" % int(result))
-                return False
-            else:
-                self.record_success()
-                return True
+                return self.record_fail("svok returned %d" % int(result))
+            return self.record_success()
         except Exception as e:
-            self.record_fail("Exception while executing svok: %s" % e)
-            return False
+            return self.record_fail("Exception while executing svok: %s" % e)
 
     def describe(self):
         return "Checking that the supervise-managed service in %s is running." % self.path
@@ -84,19 +80,16 @@ class MonitorService(Monitor):
                 host = '\\\\' + self.host
             else:
                 # we need windows for sc
-                self.record_fail("Cannot check for Windows services while running on a non-Windows platform.")
-                return False
+                return self.record_fail("Cannot check for Windows services while running on a non-Windows platform.")
 
             output = str(subprocess.check_output(['sc', host, 'query', self.service_name]))
             matches = r.search(output)
             if matches:
-                self.record_success()
-                return True
+                return self.record_success()
         except Exception as e:
             sys.stderr.write("%s\n" % e)
             pass
-        self.record_fail()
-        return False
+        return self.record_fail()
 
     def describe(self):
         """Explains what this instance is checking"""
@@ -140,18 +133,14 @@ class MonitorRC(Monitor):
         try:
             returncode = subprocess.check_call([self.script_path, 'status'])
             if returncode == self.want_return_code:
-                self.record_success()
-                return True
+                return self.record_success()
         except subprocess.CalledProcessError as e:
             if e.returncode == self.want_return_code:
-                self.record_success()
-                return True
+                return self.record_success()
             returncode = -1
         except Exception as e:
-            self.record_fail("Exception while executing script: %s" % e)
-            return False
-        self.record_fail("Return code: %d (wanted %d)" % (returncode, self.want_return_code))
-        return False
+            return self.record_fail("Exception while executing script: %s" % e)
+        return self.record_fail("Return code: %d (wanted %d)" % (returncode, self.want_return_code))
 
     def get_params(self):
         return (self.service_name, self.want_return_code)
@@ -190,21 +179,15 @@ class MonitorEximQueue(Monitor):
                     # total = int(matches.group("total"))
                     if count > self.max_length:
                         if count == 1:
-                            self.record_fail("%d message queued" % count)
-                        else:
-                            self.record_fail("%d messages queued" % count)
-                        return False
+                            return self.record_fail("%d message queued" % count)
+                        return self.record_fail("%d messages queued" % count)
                     else:
                         if count == 1:
-                            self.record_success("%d message queued" % count)
-                        else:
-                            self.record_success("%d messages queued" % count)
-                        return True
-            self.record_fail("Error getting queue size")
-            return False
+                            return self.record_success("%d message queued" % count)
+                        return self.record_success("%d messages queued" % count)
+            return self.record_fail("Error getting queue size")
         except Exception as e:
-            self.record_fail("Error running exiqgrep: %s" % e)
-            return False
+            return self.record_fail("Error running exiqgrep: %s" % e)
 
     def describe(self):
         return "Checking the exim queue length is < %d" % self.max_length
@@ -239,16 +222,11 @@ class MonitorWindowsDHCPScope(Monitor):
             if matches:
                 clients = int(matches.group("clients"))
                 if clients > self.max_used:
-                    self.record_fail("%d clients in scope" % clients)
-                    return False
-                else:
-                    self.record_success("%d clients in scope" % clients)
-                    return True
-            self.record_fail("Error getting client count: no match")
-            return False
+                    return self.record_fail("%d clients in scope" % clients)
+                return self.record_success("%d clients in scope" % clients)
+            return self.record_fail("Error getting client count: no match")
         except Exception as e:
-            self.record_fail("Error getting client count: {0}".format(e))
-            return False
+            return self.record_fail("Error getting client count: {0}".format(e))
 
     def describe(self):
         return "Checking the DHCP scope has fewer than %d leases" % self.max_used

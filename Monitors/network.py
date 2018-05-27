@@ -101,23 +101,17 @@ class MonitorHTTP(Monitor):
             end_time = datetime.datetime.now()
             load_time = end_time - start_time
             if r.status_code not in self.allowed_codes:
-                self.record_fail("Got status '{0} {1}' instead of {2}".format(r.status_code, r.reason, self.allowed_codes))
-                return False
+                return self.record_fail("Got status '{0} {1}' instead of {2}".format(r.status_code, r.reason, self.allowed_codes))
             if self.regexp is None:
-                self.record_success("%s in %0.2fs" % (r.status_code, (load_time.seconds + (load_time.microseconds / 1000000.2))))
-                return True
+                return self.record_success("%s in %0.2fs" % (r.status_code, (load_time.seconds + (load_time.microseconds / 1000000.2))))
                 matches = self.regexp.search(r.text)
                 if matches:
-                    self.record_success("%s in %0.2fs" % (r.status_code, (load_time.seconds + (load_time.microseconds / 1000000.2))))
-                    return True
-                self.record_fail("Got '{0} {1}' but couldn't match /{2}/ in page.".format(r.status_code, r.reason, self.regexp_text))
-                return False
+                    return self.record_success("%s in %0.2fs" % (r.status_code, (load_time.seconds + (load_time.microseconds / 1000000.2))))
+                return self.record_fail("Got '{0} {1}' but couldn't match /{2}/ in page.".format(r.status_code, r.reason, self.regexp_text))
         except requests.exceptions.RequestException as e:
-            self.record_fail("Requests exception while opening URL: {0}".format(e))
-            return False
+            return self.record_fail("Requests exception while opening URL: {0}".format(e))
         except Exception as e:
-            self.record_fail("Exception while trying to open url: {0}".format(e))
-            return False
+            return self.record_fail("Exception while trying to open url: {0}".format(e))
 
     def describe(self):
         """Explains what we do."""
@@ -157,11 +151,9 @@ class MonitorTCP(Monitor):
             s.settimeout(5.0)
             s.connect((self.host, self.port))
         except Exception:
-            self.record_fail()
-            return False
+            return self.record_fail()
         s.close()
-        self.record_success()
-        return True
+        return self.record_success()
 
     def describe(self):
         """Explains what this instance is checking"""
@@ -235,16 +227,12 @@ class MonitorHost(Monitor):
                     if matches:
                         pingtime = matches.group("ms")
         except Exception as e:
-            self.record_fail(e)
-            return False
+            return self.record_fail(e)
         if success:
             if pingtime > 0:
-                self.record_success("%sms" % pingtime)
-            else:
-                self.record_success()
-            return True
-        self.record_fail()
-        return False
+                return self.record_success("%sms" % pingtime)
+            return self.record_success()
+        return self.record_fail()
 
     def describe(self):
         """Explains what this instance is checking"""
