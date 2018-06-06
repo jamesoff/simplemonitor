@@ -5,7 +5,7 @@ import socket
 import os
 import logging
 import sys
-import multiprocessing as mp 
+import multiprocessing as mp
 
 """
 Notes:
@@ -25,6 +25,7 @@ APP_PATH = os.path.realpath(os.path.dirname(__file__))
 CONFIG = os.path.join(APP_PATH, 'monitor.ini')
 LOGFILE = os.path.join(APP_PATH, 'simplemonitor.log')
 
+
 # Setup Logging
 def configure_logger(logger, level=logging.DEBUG):
     logger.setLevel(level)
@@ -34,9 +35,11 @@ def configure_logger(logger, level=logging.DEBUG):
     fh.setFormatter(formatter)
     logger.addHandler(fh)
     return logger
-    
+
+
 def setup_logger(level=logging.DEBUG):
     return configure_logger(mp.get_logger(), level)
+
 
 LOGGER = setup_logger(logging.INFO)
 
@@ -66,7 +69,7 @@ class AppServerSvc (win32serviceutil.ServiceFramework):
         import servicemanager
         servicemanager.LogMsg(servicemanager.EVENTLOG_INFORMATION_TYPE,
                               servicemanager.PYS_SERVICE_STARTED,
-                              (self._svc_name_,''))
+                              (self._svc_name, ''))
 
         # Start monitor
         p_mon = mp.Process(target=run_monitor)
@@ -92,14 +95,15 @@ class AppServerSvc (win32serviceutil.ServiceFramework):
             except KeyboardInterrupt:
                 self.logger.warning("Interrupted {} service".format(self._svc_display_name_))
                 break
-            
+
         self.logger.info("Stopped {} service".format(self._svc_display_name_))
-      
+
 
 def run_monitor():
     import monitor
     sys.argv = ['monitor.py', "-vH", "--config={}".format(CONFIG)]
     monitor.main()
+
 
 if __name__ == '__main__':
     win32serviceutil.HandleCommandLine(AppServerSvc)
