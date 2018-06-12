@@ -104,10 +104,10 @@ class MonitorHTTP(Monitor):
                 return self.record_fail("Got status '{0} {1}' instead of {2}".format(r.status_code, r.reason, self.allowed_codes))
             if self.regexp is None:
                 return self.record_success("%s in %0.2fs" % (r.status_code, (load_time.seconds + (load_time.microseconds / 1000000.2))))
-                matches = self.regexp.search(r.text)
-                if matches:
-                    return self.record_success("%s in %0.2fs" % (r.status_code, (load_time.seconds + (load_time.microseconds / 1000000.2))))
-                return self.record_fail("Got '{0} {1}' but couldn't match /{2}/ in page.".format(r.status_code, r.reason, self.regexp_text))
+            matches = self.regexp.search(r.text)
+            if matches:
+                return self.record_success("%s in %0.2fs" % (r.status_code, (load_time.seconds + (load_time.microseconds / 1000000.2))))
+            return self.record_fail("Got '{0} {1}' but couldn't match /{2}/ in page.".format(r.status_code, r.reason, self.regexp_text))
         except requests.exceptions.RequestException as e:
             return self.record_fail("Requests exception while opening URL: {0}".format(e))
         except Exception as e:
