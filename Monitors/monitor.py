@@ -10,7 +10,6 @@ functions.
 
 """
 
-import socket
 import platform
 import sys
 import datetime
@@ -25,7 +24,7 @@ try:
 except ImportError:
     win32_available = False
 
-from util import get_config_option, MonitorConfigurationError
+from util import get_config_option, MonitorConfigurationError, short_hostname
 
 
 class Monitor:
@@ -121,7 +120,7 @@ class Monitor:
             minimum=0,
             default=0
         ))
-        self.running_on = self.short_hostname()
+        self.running_on = short_hostname()
         self.was_skipped = False
 
     @staticmethod
@@ -132,13 +131,6 @@ class Monitor:
     def set_recover_command(self, command):
         self.recover_command = command
 
-    def short_hostname(self):
-        """Get just our machine name.
-
-        TODO: This might actually be redundant. Python probably provides it's own version of this."""
-
-        return (socket.gethostname() + ".").split(".")[0]
-
     def set_remote_alerting(self, setting):
         """Configure ourselves to be remote alerting (or not)."""
         if setting == 1:
@@ -148,10 +140,9 @@ class Monitor:
 
     def is_remote(self):
         """Check if we're running on this machine, or if we're a remote instance."""
-        if self.running_on == self.short_hostname():
+        if self.running_on == short_hostname():
             return False
-        else:
-            return True
+        return True
 
     def run_test(self):
         """Override this method to perform the test."""

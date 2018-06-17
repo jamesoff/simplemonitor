@@ -16,7 +16,7 @@ try:
 except ImportError:
     from io import StringIO
 
-from util import format_datetime
+from util import format_datetime, short_hostname
 from .logger import Logger
 
 
@@ -197,10 +197,7 @@ class HTMLLogger(Logger):
         old_count = 0
         remote_count = 0
 
-        try:
-            my_host = socket.gethostname().split(".")[0]
-        except Exception:
-            my_host = socket.gethostname()
+        my_host = short_hostname
 
         try:
             temp_file = tempfile.mkstemp()

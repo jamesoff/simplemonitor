@@ -1,6 +1,7 @@
 """Utilities for SimpleMonitor."""
 
 import datetime
+import socket
 
 
 class MonitorConfigurationError(ValueError):
@@ -82,3 +83,11 @@ def format_datetime(the_datetime):
         the_datetime = the_datetime.replace(microsecond=0)
         return the_datetime.isoformat(' ')
     return the_datetime
+
+
+def short_hostname():
+    """Get just our machine name.
+
+    TODO: This might actually be redundant. Python probably provides it's own version of this."""
+
+    return (socket.gethostname() + ".").split(".")[0]
