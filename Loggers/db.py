@@ -70,11 +70,6 @@ class DBFullLogger(DBLogger):
 class DBStatusLogger(DBLogger):
     """Maintains status snapshot in db."""
 
-    def clear_results(self):
-        """Flush all status results."""
-        c = self.db_handle.cursor()
-        c.execute("DELETE FROM status")
-
     def save_result(self, monitor_name, monitor_type, monitor_params, monitor_result, monitor_info, hostname=""):
         if hostname == "":
             hostname = self.hostname
