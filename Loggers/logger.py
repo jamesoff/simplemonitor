@@ -1,5 +1,5 @@
 # coding=utf-8
-import datetime
+import logging
 
 from util import get_config_option, LoggerConfigurationError
 
@@ -16,6 +16,12 @@ class Logger(object):
     batch_data = {}
 
     def __init__(self, config_options):
+        self.name = Logger.get_config_option(
+            config_options,
+            '_name',
+            default='unnamed'
+        )
+        self.logger_logger = logging.getLogger('simplemonitor.logger-' + self.name)
         self.set_dependencies(Logger.get_config_option(
             config_options,
             'depend',
@@ -69,31 +75,11 @@ class Logger(object):
         """This is blank for the base class."""
         return
 
-    def get_downtime(self, monitor):
-        try:
-            downtime = datetime.datetime.utcnow() - monitor.first_failure_time()
-            seconds = downtime.seconds
-            if seconds > 3600:
-                hours = seconds / 3600
-                seconds = seconds - (hours * 3600)
-            else:
-                hours = 0
-            if seconds > 60:
-                minutes = seconds / 60
-                seconds = seconds - (minutes * 60)
-            else:
-                minutes = 0
-            return (downtime.days, hours, minutes, seconds)
-        except Exception:
-            return (0, 0, 0, 0)
+    def describe(self):
+        """Explain what this logger does.
+        We don't throw NotImplementedError here as it won't show up until something breaks,
+        and we don't want to randomly die then."""
+        return "(Logger did not write an auto-biography.)"
 
-    def format_datetime(self, dt):
-        """Return an isoformat()-like datetime without the microseconds."""
-        if dt is None:
-            return ""
-
-        if isinstance(dt, datetime.datetime):
-            dt = dt.replace(microsecond=0)
-            return dt.isoformat(' ')
-        else:
-            return dt
+    def __str__(self):
+        return self.describe()

@@ -1,9 +1,14 @@
 # coding=utf-8
-import sys
+
 import signal
 import copy
 import pickle
 import time
+import logging
+
+import Loggers
+
+module_logger = logging.getLogger('simplemonitor')
 
 
 class SimpleMonitor:
@@ -11,8 +16,6 @@ class SimpleMonitor:
     # TODO: move this outside into monitor.py?
     #      could give better control over restarting the listener thread
     need_hup = False
-    verbose = False
-    debug = False
 
     def __init__(self):
         """Main class turn on."""
@@ -29,7 +32,7 @@ class SimpleMonitor:
         try:
             signal.signal(signal.SIGHUP, self.hup_loggers)
         except Exception:
-            sys.stderr.write("Unable to trap SIGHUP... maybe it doesn't exist on this platform.\n")
+            module_logger.warning("Unable to trap SIGHUP... maybe it doesn't exist on this platform.\n")
 
     def hup_loggers(self, sig_number, stack_frame):
         """Handle a SIGHUP (rotate logfiles).
@@ -37,7 +40,7 @@ class SimpleMonitor:
         We set a variable to say we want to do this later (so it's done at the right time)."""
 
         self.need_hup = True
-        print("We get signal.")
+        module_logger.info("We get signal.")
 
     def add_monitor(self, name, monitor):
         self.monitors[name] = monitor
@@ -61,20 +64,12 @@ class SimpleMonitor:
         for k in list(self.monitors.keys()):
             for dependency in self.monitors[k]._dependencies:
                 if dependency not in list(self.monitors.keys()):
-                    print("Configuration error: dependency %s of monitor %s is not defined!" % (dependency, k))
+                    module_logger.critical("Configuration error: dependency %s of monitor %s is not defined!", dependency, k)
                     ok = False
         return ok
 
-    def set_verbosity(self, verbose, debug):
-        self.verbose = verbose
-        self.debug = debug
-        if self.debug:
-            self.verbose = True
-
     def run_tests(self):
         self.reset_monitors()
-        verbose = self.verbose
-        debug = self.debug
 
         joblist = list(self.monitors.keys())
         new_joblist = []
@@ -84,31 +79,25 @@ class SimpleMonitor:
 
         while len(joblist) > 0:
             new_joblist = []
-            if debug:
-                print("\nStarting loop:", joblist)
+            module_logger.debug("Starting loop with joblist %s", joblist)
             for monitor in joblist:
-                if debug:
-                    print("Trying: %s" % monitor)
+                module_logger.debug("Trying monitor: %s", monitor)
                 if len(self.monitors[monitor].get_dependencies()) > 0:
                     # this monitor has outstanding deps, put it on the new joblist for next loop
                     new_joblist.append(monitor)
-                    if debug:
-                        print("added %s to new joblist, is now" % monitor, new_joblist)
+                    module_logger.debug("Added %s to new joblist, is now %s", monitor, new_joblist)
                     for dep in self.monitors[monitor].get_dependencies():
-                        if debug:
-                            print("  considering %s's dependency %s" % (monitor, dep), failed)
+                        module_logger.debug("considering %s's dependency %s (failed monitors: %s)", monitor, dep, failed)
                         if dep in failed:
                             # oh wait, actually one of its deps failed, so we'll never be able to run it
-                            if verbose:
-                                print("Doesn't look like %s worked, skipping %s" % (dep, monitor))
+                            module_logger.info("Doesn't look like %s worked, skipping %s", dep, monitor)
                             failed.append(monitor)
                             self.monitors[monitor].record_skip(dep)
                             try:
                                 new_joblist.remove(monitor)
                             except Exception:
-                                print("Exception caught while trying to remove monitor %s with failed deps from new joblist." % monitor)
-                                if debug:
-                                    print("new_joblist is currently", new_joblist)
+                                module_logger.exception("Exception caught while trying to remove monitor %s with failed deps from new joblist.", monitor)
+                                module_logger.debug("new_joblist is currently: %s", new_joblist)
                             break
                     continue
                 try:
@@ -121,27 +110,21 @@ class SimpleMonitor:
                     else:
                         not_run = True
                         self.monitors[monitor].record_skip(None)
-                        if verbose:
-                            print("Not run: %s" % monitor)
+                        module_logger.info("Not run: %s", monitor)
                 except Exception as e:
-                    if verbose:
-                        sys.stderr.write("Monitor %s threw exception during run_test(): %s\n" % (monitor, e))
+                    module_logger.exception("Monitor %s threw exception during run_test()", monitor)
                 if self.monitors[monitor].get_error_count() > 0:
                     if self.monitors[monitor].virtual_fail_count() == 0:
-                        if verbose:
-                            print("Warning: %s" % monitor)
+                        module_logger.warning("monitor failed but within tolerance: %s", monitor)
                     else:
-                        if verbose:
-                            print("Fail: %s (%s)" % (monitor, self.monitors[monitor].last_result))
+                        module_logger.error("monitor failed: %s (%s)", monitor, self.monitors[monitor].last_result)
                     failed.append(monitor)
                 else:
-                    if verbose and not not_run:
-                        print("Passed: %s" % monitor)
+                    if not not_run:
+                        module_logger.info("monitor passed: %s", monitor)
                     for monitor2 in joblist:
                         self.monitors[monitor2].dependency_succeeded(monitor)
             joblist = copy.copy(new_joblist)
-        if verbose:
-            print()
 
     def log_result(self, logger):
         """Use the given logger object to log our state."""
@@ -151,49 +134,48 @@ class SimpleMonitor:
             self.monitors[key].log_result(key, logger)
         try:
             for key in list(self.remote_monitors.keys()):
-                print('remote logging for {0}'.format(key))
+                module_logger.info('remote logging for %s', key)
                 self.remote_monitors[key].log_result(key, logger)
         except Exception:
-            print("exception while logging remote monitors")
+            module_logger.exception("exception while logging remote monitors")
         logger.end_batch()
 
     def do_alert(self, alerter):
         """Use the given alerter object to send an alert, if needed."""
         alerter.check_dependencies(self.failed + self.still_failing + self.skipped)
         for key in list(self.monitors.keys()):
-            if self.debug:
-                print("{0}({1}) -> {2}({3})".format(self.monitors[key].name, self.monitors[key].group, alerter.name, alerter.groups))
             # Don't generate alerts for monitors which want it done remotely
             if self.monitors[key].remote_alerting:
                 # TODO: could potentially disable alerts by setting a monitor to remote alerting, but not having anywhere to send it!
-                if self.debug:
-                    print("skipping alert for monitor %s as it wants remote alerting" % key)
+                module_logger.debug("skipping alert for monitor %s as it wants remote alerting", key)
                 continue
+            module_logger.debug("considering alert for monitor %s (group: %s) with alerter %s (groups: %s)",
+                                self.monitors[key].name,
+                                self.monitors[key].group,
+                                alerter.name,
+                                alerter.groups
+                                )
             try:
                 if self.monitors[key].group in alerter.groups:
                     # Only notifications for services that have it enabled
                     if self.monitors[key].notify:
-                        if self.debug:
-                            print("  - Notifying alerter: {0}".format(alerter.name))
+                        module_logger.debug("notifying alerter %s", alerter.name)
                         alerter.send_alert(key, self.monitors[key])
                     else:
-                        if self.debug:
-                            print("  - Skipping alerters: Monitor Disabled")
+                        module_logger.info("skipping alerters for disabled monitor %s", key)
                 else:
-                    if self.debug:
-                        print(" - Skipping alerter: {0}".format(alerter.name))
+                    module_logger.info("skipping alerter %s as monitor is not in group", alerter.name)
             except Exception as e:
-                print("exception caught while alerting for %s: %s" % (key, e))
+                module_logger.exception("exception caught while alerting for %s", key)
         for key in list(self.remote_monitors.keys()):
             try:
                 if self.remote_monitors[key].remote_alerting:
                     alerter.send_alert(key, self.remote_monitors[key])
                 else:
-                    if self.debug:
-                        print("not alerting for monitor %s as it doesn't want remote alerts" % key)
+                    module_logger.debug("not alerting for monitor %s as it doesn't want remote alerts", key)
                     continue
             except Exception as e:
-                print("exception caught while alerting for %s: %s" % (key, e))
+                module_logger.exception("exception caught while alerting for %s", key)
 
     def count_monitors(self):
         """Gets the number of monitors we have defined."""
@@ -203,7 +185,10 @@ class SimpleMonitor:
         self.alerters[name] = alerter
 
     def add_logger(self, name, logger):
-        self.loggers[name] = logger
+        if isinstance(logger, Loggers.logger.Logger):
+            self.loggers[name] = logger
+        else:
+            module_logger.critical('Failed to add logger because it is not the right type')
 
     def do_alerts(self):
         for key in list(self.alerters.keys()):
@@ -215,7 +200,7 @@ class SimpleMonitor:
 
     def do_logs(self):
         if self.need_hup:
-            print("Processing HUP.")
+            module_logger.info("Processing HUP.")
             for logger in self.loggers:
                 self.loggers[logger].hup()
             self.need_hup = False
@@ -225,6 +210,5 @@ class SimpleMonitor:
 
     def update_remote_monitor(self, data, hostname):
         for monitor in list(data.keys()):
-            if self.debug:
-                print("trying remote monitor %s" % monitor)
+            module_logger.info("trying remote monitor %s", monitor)
             self.remote_monitors[monitor] = pickle.loads(data[monitor])

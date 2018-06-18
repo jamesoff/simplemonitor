@@ -2,7 +2,7 @@
 import subprocess
 import shlex
 
-from util import AlerterConfigurationError
+from util import AlerterConfigurationError, format_datetime
 from .alerter import Alerter
 
 
@@ -33,7 +33,7 @@ class ExecuteAlerter(Alerter):
     def send_alert(self, name, monitor):
         type_ = self.should_alert(monitor)
         command = None
-        (days, hours, minutes, seconds) = self.get_downtime(monitor)
+        (days, hours, minutes, seconds) = monitor.get_downtime()
         if monitor.is_remote():
             host = monitor.running_on
         else:
@@ -49,7 +49,7 @@ class ExecuteAlerter(Alerter):
             if self.catchup_command == 'fail_command':
                 command = self.fail_command
         else:
-            print("Unknown alert type %s" % type_)
+            self.alerter_logger.error("Unknown alert type %s", type_)
             return
 
         if command is None:
@@ -62,7 +62,7 @@ class ExecuteAlerter(Alerter):
             hours=hours,
             minutes=minutes,
             seconds=seconds,
-            failed_at=self.format_datetime(monitor.first_failure_time()),
+            failed_at=format_datetime(monitor.first_failure_time()),
             virtual_fail_count=monitor.virtual_fail_count(),
             info=monitor.get_result(),
             description=monitor.describe(),
@@ -70,14 +70,12 @@ class ExecuteAlerter(Alerter):
         )
 
         if not self.dry_run:
-            if self.debug:
-                print("About to execute command: %s" % command)
+            self.alerter_logger.debug("About to execute command: %s", command)
             try:
                 subprocess.call(shlex.split(command))
             except Exception as e:
-                print("Exception encountered running command: %s" % command)
-                print(e)
+                self.alerter_logger.exception("Exception encountered running command: %s", command)
             if self.debug:
-                print("Command has finished.")
+                self.alerter_logger.debug("Command has finished.")
         else:
-            print("Would run command: %s" % command)
+            self.alerter_logger.info("Would run command: %s", command)

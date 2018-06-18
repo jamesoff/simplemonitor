@@ -1,5 +1,8 @@
 """Utilities for SimpleMonitor."""
 
+import datetime
+import socket
+
 
 class MonitorConfigurationError(ValueError):
     """A config error for a Monitor"""
@@ -13,6 +16,11 @@ class AlerterConfigurationError(ValueError):
 
 class LoggerConfigurationError(ValueError):
     """A config error for a Logger"""
+    pass
+
+
+class SimpleMonitorConfigurationError(ValueError):
+    """A general config error"""
     pass
 
 
@@ -64,3 +72,22 @@ def get_config_option(config_options, key, **kwargs):
         if allowed_values is not None and value not in allowed_values:
             raise exception('config option {0} needs to be one of {1}'.format(key, allowed_values))
     return value
+
+
+def format_datetime(the_datetime):
+    """Return an isoformat()-like datetime without the microseconds."""
+    if the_datetime is None:
+        return ""
+
+    if isinstance(the_datetime, datetime.datetime):
+        the_datetime = the_datetime.replace(microsecond=0)
+        return the_datetime.isoformat(' ')
+    return the_datetime
+
+
+def short_hostname():
+    """Get just our machine name.
+
+    TODO: This might actually be redundant. Python probably provides it's own version of this."""
+
+    return (socket.gethostname() + ".").split(".")[0]

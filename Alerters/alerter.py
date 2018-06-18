@@ -2,6 +2,7 @@
 """A collection of alerters for SimpleMonitor."""
 
 import datetime
+import logging
 
 from socket import gethostname
 
@@ -33,9 +34,12 @@ class Alerter:
     support_catchup = False
     ooh_recovery = False
 
+    type = 'unknown'
+
     def __init__(self, config_options=None):
         if config_options is None:
             config_options = {}
+        self.alerter_logger = logging.getLogger('simplemonitor.alerter-' + self.type)
         self.available = True
         self.set_dependencies(Alerter.get_config_option(
             config_options,
@@ -133,17 +137,12 @@ class Alerter:
                 (datetime.datetime.utcnow() - datetime.timedelta(minutes=1)).time(),
                 (datetime.datetime.utcnow() + datetime.timedelta(minutes=1)).time()
             ]
-            print("debug: set times for alerter to", self.time_info)
+            self.alerter_logger.debug("set times for alerter to %s", self.time_info)
 
     @staticmethod
     def get_config_option(config_options, key, **kwargs):
         kwargs['exception'] = AlerterConfigurationError
         return get_config_option(config_options, key, **kwargs)
-
-    def format_datetime(self, dt):
-        """Return an isoformat()-like datetime without the microseconds."""
-        dt = dt.replace(microsecond=0)
-        return dt.isoformat(" ")
 
     def set_dependencies(self, dependency_list):
         """Record which monitors we depend on.
@@ -178,8 +177,7 @@ class Alerter:
             out_of_hours = True
 
         if monitor.virtual_fail_count() > 0:
-            if self.debug:
-                print("alerter %s: monitor %s has failed" % (self.name, monitor.name))
+            self.alerter_logger.debug("monitor %s has failed", monitor.name)
             # Monitor has failed (not just first time)
             if self.delay_notification:
                 if not out_of_hours:
@@ -187,11 +185,10 @@ class Alerter:
                         try:
                             self.ooh_failures.remove(monitor.name)
                         except Exception:
-                            print("Warning: Couldn't remove %s from OOH list; will maybe generate too many alerts." % monitor.name)
+                            self.alerter_logger.warning("couldn't remove %s from OOH list; will maybe generate too many alerts.", monitor.name)
                         if self.support_catchup:
                             return "catchup"
-                        else:
-                            return "failure"
+                        return "failure"
             if monitor.virtual_fail_count() == self.limit or (self.repeat and (monitor.virtual_fail_count() % self.limit == 0)):
                 # This is the first time or nth time we've failed
                 if out_of_hours:
@@ -218,24 +215,6 @@ class Alerter:
         """Abstract function to do the alerting."""
         raise NotImplementedError
 
-    def get_downtime(self, monitor):
-        try:
-            downtime = datetime.datetime.utcnow() - monitor.first_failure_time()
-            seconds = downtime.seconds
-            if seconds > 3600:
-                hours = seconds / 3600
-                seconds = seconds - (hours * 3600)
-            else:
-                hours = 0
-            if seconds > 60:
-                minutes = seconds / 60
-                seconds = seconds - (minutes * 60)
-            else:
-                minutes = 0
-            return (downtime.days, hours, minutes, seconds)
-        except Exception:
-            return (0, 0, 0, 0)
-
     def allowed_today(self):
         """Check if today is an allowed day for an alert."""
         if datetime.datetime.now().weekday() not in self.days:
@@ -258,5 +237,5 @@ class Alerter:
             else:
                 return True
         else:
-            print("This should never happen! Unknown times_type in alerter.")
+            self.alerter_logger.error("this should never happen! Unknown times_type in alerter")
             return True

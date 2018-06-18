@@ -7,6 +7,7 @@ except ImportError:
 
 import os
 
+from util import format_datetime
 from .alerter import Alerter
 
 
@@ -14,11 +15,11 @@ class SESAlerter(Alerter):
     """Send email alerts using Amazon's SES service."""
 
     def __init__(self, config_options):
+        Alerter.__init__(self, config_options)
         if not boto3_available:
-            print("Boto3 package is not available, cannot use SESAlerter.")
+            self.alerter_logger.critical("boto3 package is not available, cannot use SESAlerter.")
             return
 
-        Alerter.__init__(self, config_options)
         self.from_addr = Alerter.get_config_option(
             config_options,
             'from',
@@ -49,7 +50,7 @@ class SESAlerter(Alerter):
         """Send the email."""
 
         type = self.should_alert(monitor)
-        (days, hours, minutes, seconds) = self.get_downtime(monitor)
+        (days, hours, minutes, seconds) = monitor.get_downtime()
 
         if monitor.is_remote():
             host = " on %s " % monitor.running_on
@@ -71,7 +72,7 @@ class SESAlerter(Alerter):
             Description: %s""" % (
                 name,
                 host,
-                self.format_datetime(monitor.first_failure_time()),
+                format_datetime(monitor.first_failure_time()),
                 days, hours, minutes, seconds,
                 monitor.virtual_fail_count(),
                 monitor.get_result(),
@@ -85,14 +86,14 @@ class SESAlerter(Alerter):
 
         elif type == "success":
             message = {'Subject': {'Data': "[%s] Monitor %s succeeded" % (self.hostname, name)}}
-            message['Body'] = {'Text': {'Data': "Monitor %s%s is back up.\nOriginally failed at: %s\nDowntime: %d+%02d:%02d:%02d\nDescription: %s" % (name, host, self.format_datetime(monitor.first_failure_time()), days, hours, minutes, seconds, monitor.describe())}}
+            message['Body'] = {'Text': {'Data': "Monitor %s%s is back up.\nOriginally failed at: %s\nDowntime: %d+%02d:%02d:%02d\nDescription: %s" % (name, host, format_datetime(monitor.first_failure_time()), days, hours, minutes, seconds, monitor.describe())}}
 
         elif type == "catchup":
             message = {'Subject': {'Data': "[%s] Monitor %s failed earlier!" % (self.hostname, name)}}
-            message['Body'] = {'Text': {'Data': "Monitor %s%s failed earlier while this alerter was out of hours.\nFailed at: %s\nVirtual failure count: %d\nAdditional info: %s\nDescription: %s" % (name, host, self.format_datetime(monitor.first_failure_time()), monitor.virtual_fail_count(), monitor.get_result(), monitor.describe())}}
+            message['Body'] = {'Text': {'Data': "Monitor %s%s failed earlier while this alerter was out of hours.\nFailed at: %s\nVirtual failure count: %d\nAdditional info: %s\nDescription: %s" % (name, host, format_datetime(monitor.first_failure_time()), monitor.virtual_fail_count(), monitor.get_result(), monitor.describe())}}
 
         else:
-            print("Unknown alert type %s" % type)
+            self.alerter_logger.critical("Unknown alert type %s", type)
             return
 
         mail['Message'] = message
@@ -102,9 +103,9 @@ class SESAlerter(Alerter):
                 client = boto3.client('ses', **self.ses_client_params)
                 client.send_email(**mail)
             except Exception as e:
-                print("Couldn't send mail: %s" % e)
+                self.alerter_logger.exception("couldn't send mail")
                 self.available = False
         else:
-            print("dry_run: would send email:")
-            print("Subject: %s" % message['Subject']['Data'])
-            print("Body: %s" % message['Body']['Text']['Data'])
+            self.alerter_logger.info("dry_run: would send email:")
+            self.alerter_logger.info("    Subject: %s", message['Subject']['Data'])
+            self.alerter_logger.info("    Body: %s", message['Body']['Text']['Data'])

@@ -10,13 +10,13 @@ functions.
 
 """
 
-import socket
 import platform
 import sys
 import datetime
 import time
 import copy
 import subprocess
+import logging
 
 try:
     import win32api  # noqa: F401
@@ -24,7 +24,7 @@ try:
 except ImportError:
     win32_available = False
 
-from util import get_config_option, MonitorConfigurationError
+from util import get_config_option, MonitorConfigurationError, short_hostname
 
 
 class Monitor:
@@ -71,6 +71,8 @@ class Monitor:
         """What's that coming over the hill? Is a monitor?"""
         if config_options is None:
             config_options = {}
+        self.name = name
+        self.monitor_logger = logging.getLogger('simplemonitor.monitor-' + self.name)
         self.set_dependencies(Monitor.get_config_option(
             config_options,
             'depend',
@@ -118,8 +120,8 @@ class Monitor:
             minimum=0,
             default=0
         ))
-        self.running_on = self.short_hostname()
-        self.name = name
+        self.running_on = short_hostname()
+        self.was_skipped = False
 
     @staticmethod
     def get_config_option(config_options, key, **kwargs):
@@ -128,13 +130,6 @@ class Monitor:
 
     def set_recover_command(self, command):
         self.recover_command = command
-
-    def short_hostname(self):
-        """Get just our machine name.
-
-        TODO: This might actually be redundant. Python probably provides it's own version of this."""
-
-        return (socket.gethostname() + ".").split(".")[0]
 
     def set_remote_alerting(self, setting):
         """Configure ourselves to be remote alerting (or not)."""
@@ -145,10 +140,9 @@ class Monitor:
 
     def is_remote(self):
         """Check if we're running on this machine, or if we're a remote instance."""
-        if self.running_on == self.short_hostname():
+        if self.running_on == short_hostname():
             return False
-        else:
-            return True
+        return True
 
     def run_test(self):
         """Override this method to perform the test."""
@@ -274,6 +268,7 @@ class Monitor:
         self.success_count = 0
         self.tests_run += 1
         self.was_skipped = False
+        return False
 
     def record_success(self, message=""):
         """Update internal state to show we had a success."""
@@ -286,6 +281,7 @@ class Monitor:
         self.tests_run += 1
         self.was_skipped = False
         self.last_result = message
+        return True
 
     def record_skip(self, which_dep):
         """Record that we were skipped.
@@ -299,6 +295,7 @@ class Monitor:
         else:
             # we were skipped because of the gap value
             self.was_skipped = True
+        return True
 
     def skipped(self):
         if self.was_skipped:
@@ -406,6 +403,37 @@ class Monitor:
         """ any post config setup needed """
         pass
 
+    def __getstate__(self):
+        """Loggers (the Python kind, not the SimpleMonitor kind) can't be pickled.
+        In order to work around that, we omit them when getting pickled (for
+        being sent over the network).
+        """
+        pickle_dict = dict(self.__dict__)
+        del pickle_dict['monitor_logger']
+        return pickle_dict
+
+    def __setstate__(self, state):
+        self._set_monitor_logger()
+
+    def _set_monitor_logger(self):
+        self.monitor_logger = logging.getLogger('simplemonitor.monitor-' + self.name)
+
+    def get_downtime(self):
+        try:
+            downtime = datetime.datetime.utcnow() - self.first_failure_time()
+            downtime_seconds = downtime.seconds
+            (hours, minutes) = (0, 0)
+            if downtime_seconds > 3600:
+                (hours, downtime_seconds) = divmod(downtime_seconds, 3600)
+            if downtime_seconds > 60:
+                (minutes, downtime_seconds) = divmod(downtime_seconds, 60)
+            return (downtime.days, hours, minutes, downtime_seconds)
+        except TypeError:
+            return (0, 0, 0, 0)
+
+    def __str__(self):
+        return self.describe()
+
 
 class MonitorFail(Monitor):
     """A monitor which always fails.
@@ -426,7 +454,7 @@ class MonitorFail(Monitor):
 
     def run_test(self):
         """Always fails."""
-        print("error_count = %d, interval = %d --> %d" % (self.error_count, self.interval, self.error_count % self.interval))
+        self.monitor_logger.info("error_count = %d, interval = %d --> %d", self.error_count, self.interval, self.error_count % self.interval)
         if (self.interval == 0) or (self.error_count == 0) or (self.error_count % self.interval != 0):
             self.record_fail("This monitor always fails.")
             return False

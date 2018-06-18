@@ -16,6 +16,7 @@ try:
 except ImportError:
     from io import StringIO
 
+from util import format_datetime, short_hostname
 from .logger import Logger
 
 
@@ -76,13 +77,13 @@ class FileLogger(Logger):
         if dateformat == 'timestamp':
             datestring = str(int(time.time()))
         elif dateformat == 'iso8601':
-            datestring = self.format_datetime(datetime.datetime.now())
+            datestring = format_datetime(datetime.datetime.now())
         try:
             if monitor.virtual_fail_count() > 0:
                 self.file_handle.write("%s %s: failed since %s; VFC=%d (%s) (%0.3fs)" % (
                     datestring,
                     name,
-                    self.format_datetime(monitor.first_failure_time()),
+                    format_datetime(monitor.first_failure_time()),
                     monitor.virtual_fail_count(),
                     monitor.get_result(),
                     monitor.last_run_duration
@@ -98,7 +99,7 @@ class FileLogger(Logger):
             if not self.buffered:
                 self.file_handle.flush()
         except Exception as e:
-            print("Error writing to logfile %s: %s" % (self.filename, e))
+            self.logger_logger.exception("Error writing to logfile %s", self.filename)
 
     def hup(self):
         """Close and reopen log file."""
@@ -107,6 +108,9 @@ class FileLogger(Logger):
             self.file_handle = open(self.filename, "a+")
         except Exception as e:
             raise RuntimeError("Couldn't reopen log file %s after HUP: %s" % (self.filename, e))
+
+    def describe(self):
+        return "Writing log file to {0}".format(self.filename)
 
 
 class HTMLLogger(Logger):
@@ -118,13 +122,6 @@ class HTMLLogger(Logger):
 
     def __init__(self, config_options={}):
         Logger.__init__(self, config_options)
-        try:
-            self.filename = config_options["filename"]
-            self.header = config_options["header"]
-            self.footer = config_options["footer"]
-            self.folder = config_options["folder"]
-        except Exception:
-            print("Missing required value for HTML Logger")
         self.filename = Logger.get_config_option(
             config_options,
             'filename',
@@ -152,17 +149,17 @@ class HTMLLogger(Logger):
 
     def save_result2(self, name, monitor):
         if not self.doing_batch:
-            print("HTMLLogger.save_result2() called while not doing batch.")
+            self.logger_logger.error("HTMLLogger.save_result2() called while not doing batch.")
             return
         if monitor.virtual_fail_count() == 0:
             status = True
         else:
             status = False
         if not status:
-            fail_time = self.format_datetime(monitor.first_failure_time())
+            fail_time = format_datetime(monitor.first_failure_time())
             fail_count = monitor.virtual_fail_count()
             fail_data = monitor.get_result()
-            downtime = self.get_downtime(monitor)
+            downtime = monitor.get_downtime()
         else:
             fail_time = ""
             fail_count = 0
@@ -200,10 +197,7 @@ class HTMLLogger(Logger):
         old_count = 0
         remote_count = 0
 
-        try:
-            my_host = socket.gethostname().split(".")[0]
-        except Exception:
-            my_host = socket.gethostname()
+        my_host = short_hostname
 
         try:
             temp_file = tempfile.mkstemp()
@@ -266,7 +260,7 @@ class HTMLLogger(Logger):
                 output.write("""<td>%s</td>
                 <td>%s</td>""" % (
                     self.batch_data[entry]["failures"],
-                    self.format_datetime(self.batch_data[entry]["last_failure"])
+                    format_datetime(self.batch_data[entry]["last_failure"])
                 )
                 )
             if self.batch_data[entry]["host"] == my_host:
@@ -302,18 +296,21 @@ class HTMLLogger(Logger):
             os.chmod(file_name, stat.S_IREAD | stat.S_IWRITE | stat.S_IRGRP | stat.S_IROTH)
             shutil.move(file_name, os.path.join(self.folder, self.filename))
         except Exception as e:
-            print("problem closing temporary file for HTML output %s" % e)
+            self.logger_logger.exception("problem closing temporary file for HTML output")
 
     def parse_file(self, file_handle):
         lines = []
         for line in file_handle:
-            line = line.replace("_NOW_", self.format_datetime(datetime.datetime.now()))
+            line = line.replace("_NOW_", format_datetime(datetime.datetime.now()))
             line = line.replace("_HOST_", socket.gethostname())
             line = line.replace("_COUNTS_", self.count_data)
             line = line.replace("_TIMESTAMP_", str(int(time.time())))
             line = line.replace("_STATUS_", self.status)
             lines.append(line)
         return lines
+
+    def describe(self):
+        return "Writing HTML page to {0}".format(self.filename)
 
 
 class MonitorResult(object):
@@ -363,7 +360,7 @@ class JsonLogger(Logger):
 
     def save_result2(self, name, monitor):
         result = MonitorResult()
-        result.first_failure_time = self.format_datetime(monitor.first_failure_time())
+        result.first_failure_time = format_datetime(monitor.first_failure_time())
         result.virtual_fail_count = monitor.virtual_fail_count()
         result.last_run_duration = monitor.last_run_duration
         result.result = monitor.get_result()
@@ -377,7 +374,7 @@ class JsonLogger(Logger):
 
     def process_batch(self):
         payload = MonitorJsonPayload()
-        payload.generated = self.format_datetime(datetime.datetime.now())
+        payload.generated = format_datetime(datetime.datetime.now())
         payload.monitors = self.batch_data
 
         with open(self.filename, 'w') as outfile:
@@ -387,3 +384,6 @@ class JsonLogger(Logger):
                       ensure_ascii=False,
                       cls=PayloadEncoder)
         self.batch_data = {}
+
+    def describe(self):
+        return "Writing JSON file to {0}".format(self.filename)

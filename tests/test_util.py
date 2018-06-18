@@ -1,4 +1,5 @@
 import unittest
+import datetime
 import util
 
 
@@ -125,3 +126,11 @@ class TestUtil(unittest.TestCase):
                 required_type='str',
                 allow_empty=False
             )
+
+    def test_Format(self):
+        self.assertEqual(util.format_datetime(None), "")
+        self.assertEqual(util.format_datetime("a string"), "a string")
+        self.assertEqual(
+            util.format_datetime(datetime.datetime(2018, 5, 8, 13, 37, 0)),
+            "2018-05-08 13:37:00"
+        )

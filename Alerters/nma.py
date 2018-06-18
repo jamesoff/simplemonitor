@@ -1,5 +1,6 @@
 import requests
 
+from util import format_datetime
 from .alerter import Alerter
 
 
@@ -40,15 +41,14 @@ class NMAAlerter(Alerter):
         message = ""
         url = ""
 
-        (days, hours, minutes, seconds) = self.get_downtime(monitor)
+        (days, hours, minutes, seconds) = monitor.get_downtime()
         if type == "":
             return
         elif type == "catchup":
-            (days, hours, minutes, seconds) = self.get_downtime(monitor)
             message = "catchup: %s failed on %s at %s (%d+%02d:%02d:%02d)\n%s" % (
                 name,
                 monitor.running_on,
-                self.format_datetime(monitor.first_failure_time()),
+                format_datetime(monitor.first_failure_time()),
                 days, hours, minutes, seconds,
                 monitor.get_result())
             url = "https://{}/publicapi/notify".format(self.api_host)
@@ -59,11 +59,10 @@ class NMAAlerter(Alerter):
                 'event': "%s: %s" % (name, monitor.get_result())
             }
         elif type == "failure":
-            (days, hours, minutes, seconds) = self.get_downtime(monitor)
             message = "%s failed on %s at %s (%d+%02d:%02d:%02d)\n%s" % (
                 name,
                 monitor.running_on,
-                self.format_datetime(monitor.first_failure_time()),
+                format_datetime(monitor.first_failure_time()),
                 days, hours, minutes, seconds,
                 monitor.get_result())
             url = "https://{}/publicapi/notify".format(self.api_host)
@@ -85,15 +84,12 @@ class NMAAlerter(Alerter):
                 r = requests.get(url, params=params)
                 s = r.text
                 if not s.startswith('<?xml version="1.0" encoding="UTF-8"?><nma><success code="200"'):
-                    print("Unable to send NMA: %s (%s)" % (s.split("|")[0], s.split("|")[1]))
-                    print("URL: %s, PARAMS: %s" % (url, params))
+                    self.alerter_logger.error("Unable to send NMA: %s (%s)", s.split("|")[0], s.split("|")[1])
+                    self.alerter_logger.error("URL: %s, PARAMS: %s", url, params)
                     self.available = False
             except Exception as e:
-                print("NMA sending failed")
-                print(e)
-                print(url)
-                print(params)
+                self.alerter_logger.exception("NMA sending failed")
                 self.available = False
         else:
-            print("dry_run: would send NMA: %s" % url)
+            self.alerter_logger.info("dry_run: would send NMA: %s", url)
         return

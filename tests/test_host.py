@@ -33,6 +33,8 @@ class TestHostMonitors(unittest.TestCase):
         self.assertIsInstance(m, Monitors.host.MonitorDiskSpace)
 
     def test_DiskSpace_size_to_bytes(self):
+        self.assertEqual(None, Monitors.host._size_string_to_bytes(None))
+
         size = Monitors.host._size_string_to_bytes('10G')
         self.assertEqual(size, 10737418240, 'Failed to convert 10G to bytes')
 
