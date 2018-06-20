@@ -1,4 +1,5 @@
 # coding=utf-8
+"""Execution logic for SimpleMonitor."""
 
 import signal
 import copy
@@ -31,7 +32,7 @@ class SimpleMonitor:
 
         try:
             signal.signal(signal.SIGHUP, self.hup_loggers)
-        except Exception:
+        except ValueError:
             module_logger.warning("Unable to trap SIGHUP... maybe it doesn't exist on this platform.\n")
 
     def hup_loggers(self, sig_number, stack_frame):
