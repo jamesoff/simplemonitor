@@ -1,7 +1,10 @@
+"""A version of ConfigParser which can interpolate environment values into both
+property keys and values."""
+
 import os
 import re
-
 import sys
+
 if sys.version_info[0] == 2:
     from ConfigParser import ConfigParser
 else:
@@ -25,9 +28,9 @@ class EnvironmentAwareConfigParser(ConfigParser):
             pass
         ConfigParser.__init__(self, *args, **kwargs)
 
-    def read(self, filenames):
+    def read(self, filenames, encoding=None):
         """Load a config file and do environment variable interpolation on the section names."""
-        result = ConfigParser.read(self, filenames)
+        result = ConfigParser.read(self, filenames, encoding)
         for section in self.sections():
             original_section = section
             matches = self.r.search(section)
@@ -47,6 +50,7 @@ class EnvironmentAwareConfigParser(ConfigParser):
         return result
 
     def get(self, *args, **kwargs):
+        """Get a value from the config"""
         if sys.version_info[0] > 2:
             return ConfigParser.get(self, *args, **kwargs)
         result = ConfigParser.get(self, *args, **kwargs)
@@ -61,6 +65,8 @@ class EnvironmentAwareConfigParser(ConfigParser):
 
 if sys.version_info[0] > 2:
     class EnvironmentAwareInterpolation(BasicInterpolation):
+        """A subclass of ConfigParser which allows %env:VAR% interpolation via the
+        get method."""
         r = re.compile('%env:([a-zA-Z0-9_]+)%')
 
         def before_get(self, parser, section, option, value, defaults):
