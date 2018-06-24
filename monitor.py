@@ -7,11 +7,10 @@ import sys
 import time
 import logging
 
-from envconfig import EnvironmentAwareConfigParser
-
+from socket import gethostname
 from optparse import OptionParser, SUPPRESS_HELP
 
-from socket import gethostname
+from envconfig import EnvironmentAwareConfigParser
 
 import Monitors.monitor
 import Monitors.network
@@ -49,6 +48,7 @@ main_logger = logging.getLogger('simplemonitor')
 
 
 def get_config_dict(config, monitor):
+    """Fetch a config section as a dictionary. This is a needed for Py2."""
     options = config.items(monitor)
     ret = {}
     for (key, value) in options:
@@ -56,7 +56,7 @@ def get_config_dict(config, monitor):
     return ret
 
 
-def load_monitors(m, filename):
+def load_monitors(monitor_instance, filename):
     """Load all the monitors from the config file and return a populated SimpleMonitor."""
     config = EnvironmentAwareConfigParser()
     config.read(filename)
@@ -136,7 +136,7 @@ def load_monitors(m, filename):
 
         elif monitor_type == "compound":
             new_monitor = Monitors.compound.CompoundMonitor(monitor, config_options)
-            new_monitor.set_mon_refs(m)
+            new_monitor.set_mon_refs(monitor_instance)
 
         elif monitor_type == 'dns':
             new_monitor = Monitors.network.MonitorDNS(monitor, config_options)
@@ -151,15 +151,15 @@ def load_monitors(m, filename):
             continue
 
         main_logger.info("Adding %s monitor %s: %s", monitor_type, monitor, new_monitor)
-        m.add_monitor(monitor, new_monitor)
+        monitor_instance.add_monitor(monitor, new_monitor)
 
-    for i in list(m.monitors.keys()):
-        m.monitors[i].post_config_setup()
-    main_logger.info('--- Loaded %d monitors', m.count_monitors())
-    return m
+    for i in list(monitor_instance.monitors.keys()):
+        monitor_instance.monitors[i].post_config_setup()
+    main_logger.info('--- Loaded %d monitors', monitor_instance.count_monitors())
+    return monitor_instance
 
 
-def load_loggers(m, config):
+def load_loggers(monitor_instance, config):
     """Load the loggers listed in the config object."""
 
     if config.has_option("reporting", "loggers"):
@@ -191,13 +191,13 @@ def load_loggers(m, config):
             main_logger.error("Creating logger %s failed!", new_logger)
             continue
         main_logger.info("Adding %s logger %s: %s", logger_type, config_logger, new_logger)
-        m.add_logger(config_logger, new_logger)
+        monitor_instance.add_logger(config_logger, new_logger)
         del new_logger
-    main_logger.info('--- Loaded %d loggers', len(m.loggers))
-    return m
+    main_logger.info('--- Loaded %d loggers', len(monitor_instance.loggers))
+    return monitor_instance
 
 
-def load_alerters(m, config):
+def load_alerters(monitor_instance, config):
     """Load the alerters listed in the config object."""
     if config.has_option("reporting", "alerters"):
         alerters = config.get("reporting", "alerters").split(",")
@@ -235,10 +235,10 @@ def load_alerters(m, config):
             continue
         main_logger.info("Adding %s alerter %s", alerter_type, alerter)
         new_alerter.name = alerter
-        m.add_alerter(alerter, new_alerter)
+        monitor_instance.add_alerter(alerter, new_alerter)
         del new_alerter
-    main_logger.info('--- Loaded %d alerters', len(m.alerters))
-    return m
+    main_logger.info('--- Loaded %d alerters', len(monitor_instance.alerters))
+    return monitor_instance
 
 
 def main():
@@ -253,7 +253,13 @@ def main():
     parser.add_option("-d", "--debug", dest="debug", default=False, action="store_true", help=SUPPRESS_HELP)
     parser.add_option("-f", "--config", dest="config", default="monitor.ini", help="configuration file")
     parser.add_option("-H", "--no-heartbeat", action="store_true", dest="no_heartbeat", default=False, help="Omit printing the '.' character when running checks")
-    parser.add_option('-1', '--one-shot', action='store_true', dest='one_shot', default=False, help='Run the monitors once only, without alerting. Require monitors without "fail" in the name to succeed. Exit zero or non-zero accordingly.')
+    parser.add_option(
+        '-1', '--one-shot',
+        action='store_true',
+        dest='one_shot',
+        default=False,
+        help='Run the monitors once only, without alerting.Require monitors without "fail" in the name to succeed.Exit zero or non-zero accordingly.'
+    )
     parser.add_option('--loops', dest='loops', default=-1, help=SUPPRESS_HELP, type=int)
     parser.add_option('-l', '--log-level', dest="loglevel", default="warn", help="Log level: critical, error, warn, info, debug")
     parser.add_option('-C', '--no-colour', '--no-color', action='store_true', dest='no_colour', default=False, help='Do not colourise log output')
