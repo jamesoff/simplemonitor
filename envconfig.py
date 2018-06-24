@@ -28,9 +28,9 @@ class EnvironmentAwareConfigParser(ConfigParser):
             pass
         ConfigParser.__init__(self, *args, **kwargs)
 
-    def read(self, filenames, encoding=None):
+    def read(self, filenames):
         """Load a config file and do environment variable interpolation on the section names."""
-        result = ConfigParser.read(self, filenames, encoding)
+        result = ConfigParser.read(self, filenames)
         for section in self.sections():
             original_section = section
             matches = self.r.search(section)
