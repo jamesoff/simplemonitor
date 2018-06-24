@@ -325,3 +325,39 @@ class SimpleMonitor:
         for i in list(self.monitors.keys()):
             self.monitors[i].post_config_setup()
         module_logger.info('--- Loaded %d monitors', self.count_monitors())
+
+    def load_loggers(self, config):
+        """Load the loggers listed in the config object."""
+
+        if config.has_option("reporting", "loggers"):
+            loggers = config.get("reporting", "loggers").split(",")
+        else:
+            loggers = []
+
+        module_logger.info('=== Loading loggers')
+        for config_logger in loggers:
+            logger_type = config.get(config_logger, "type")
+            config_options = get_config_dict(config, config_logger)
+            config_options['_name'] = config_logger
+            if logger_type == "db":
+                new_logger = Loggers.db.DBFullLogger(config_options)
+            elif logger_type == "dbstatus":
+                new_logger = Loggers.db.DBStatusLogger(config_options)
+            elif logger_type == "logfile":
+                new_logger = Loggers.file.FileLogger(config_options)
+            elif logger_type == "html":
+                new_logger = Loggers.file.HTMLLogger(config_options)
+            elif logger_type == "network":
+                new_logger = Loggers.network.NetworkLogger(config_options)
+            elif logger_type == "json":
+                new_logger = Loggers.file.JsonLogger(config_options)
+            else:
+                module_logger.error("Unknown logger logger_type %s", logger_type)
+                continue
+            if new_logger is None:
+                module_logger.error("Creating logger %s failed!", new_logger)
+                continue
+            module_logger.info("Adding %s logger %s: %s", logger_type, config_logger, new_logger)
+            self.add_logger(config_logger, new_logger)
+            del new_logger
+        module_logger.info('--- Loaded %d loggers', len(self.loggers))
