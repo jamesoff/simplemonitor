@@ -7,11 +7,10 @@ import sys
 import time
 import logging
 
-from envconfig import EnvironmentAwareConfigParser
-
 from optparse import OptionParser, SUPPRESS_HELP
 
-from socket import gethostname
+from envconfig import EnvironmentAwareConfigParser
+from util import get_config_dict
 
 import Monitors.monitor
 import Monitors.network
@@ -48,118 +47,7 @@ VERSION = "1.7"
 main_logger = logging.getLogger('simplemonitor')
 
 
-def get_config_dict(config, monitor):
-    options = config.items(monitor)
-    ret = {}
-    for (key, value) in options:
-        ret[key] = value
-    return ret
-
-
-def load_monitors(m, filename):
-    """Load all the monitors from the config file and return a populated SimpleMonitor."""
-    config = EnvironmentAwareConfigParser()
-    config.read(filename)
-    monitors = config.sections()
-    if "defaults" in monitors:
-        default_config = get_config_dict(config, "defaults")
-        monitors.remove("defaults")
-    else:
-        default_config = {}
-
-    myhostname = gethostname().lower()
-
-    main_logger.info('=== Loading monitors')
-    for monitor in monitors:
-        if config.has_option(monitor, "runon"):
-            if myhostname != config.get(monitor, "runon").lower():
-                main_logger.warning("Ignoring monitor %s because it's only for host %s", monitor, config.get(monitor, "runon"))
-                continue
-        monitor_type = config.get(monitor, "type")
-        new_monitor = None
-        config_options = default_config.copy()
-        config_options.update(get_config_dict(config, monitor))
-
-        if monitor_type == "host":
-            new_monitor = Monitors.network.MonitorHost(monitor, config_options)
-
-        elif monitor_type == "service":
-            new_monitor = Monitors.service.MonitorService(monitor, config_options)
-
-        elif monitor_type == "tcp":
-            new_monitor = Monitors.network.MonitorTCP(monitor, config_options)
-
-        elif monitor_type == "rc":
-            new_monitor = Monitors.service.MonitorRC(monitor, config_options)
-
-        elif monitor_type == "diskspace":
-            new_monitor = Monitors.host.MonitorDiskSpace(monitor, config_options)
-
-        elif monitor_type == "http":
-            new_monitor = Monitors.network.MonitorHTTP(monitor, config_options)
-
-        elif monitor_type == "apcupsd":
-            new_monitor = Monitors.host.MonitorApcupsd(monitor, config_options)
-
-        elif monitor_type == "svc":
-            new_monitor = Monitors.service.MonitorSvc(monitor, config_options)
-
-        elif monitor_type == "backup":
-            new_monitor = Monitors.file.MonitorBackup(monitor, config_options)
-
-        elif monitor_type == "portaudit":
-            new_monitor = Monitors.host.MonitorPortAudit(monitor, config_options)
-
-        elif monitor_type == "pkgaudit":
-            new_monitor = Monitors.host.MonitorPkgAudit(monitor, config_options)
-
-        elif monitor_type == "loadavg":
-            new_monitor = Monitors.host.MonitorLoadAvg(monitor, config_options)
-
-        elif monitor_type == "eximqueue":
-            new_monitor = Monitors.service.MonitorEximQueue(monitor, config_options)
-
-        elif monitor_type == "windowsdhcp":
-            new_monitor = Monitors.service.MonitorWindowsDHCPScope(monitor, config_options)
-
-        elif monitor_type == "zap":
-            new_monitor = Monitors.host.MonitorZap(monitor, config_options)
-
-        elif monitor_type == "fail":
-            new_monitor = Monitors.monitor.MonitorFail(monitor, config_options)
-
-        elif monitor_type == "null":
-            new_monitor = Monitors.monitor.MonitorNull(monitor, config_options)
-
-        elif monitor_type == "filestat":
-            new_monitor = Monitors.host.MonitorFileStat(monitor, config_options)
-
-        elif monitor_type == "compound":
-            new_monitor = Monitors.compound.CompoundMonitor(monitor, config_options)
-            new_monitor.set_mon_refs(m)
-
-        elif monitor_type == 'dns':
-            new_monitor = Monitors.network.MonitorDNS(monitor, config_options)
-
-        elif monitor_type == 'command':
-            new_monitor = Monitors.host.MonitorCommand(monitor, config_options)
-
-        else:
-            main_logger.error("Unknown type %s for monitor %s", monitor_type, monitor)
-            continue
-        if new_monitor is None:
-            continue
-
-        main_logger.info("Adding %s monitor %s: %s", monitor_type, monitor, new_monitor)
-        m.add_monitor(monitor, new_monitor)
-
-    for i in list(m.monitors.keys()):
-        m.monitors[i].post_config_setup()
-    main_logger.info('--- Loaded %d monitors', m.count_monitors())
-    return m
-
-
-def load_loggers(m, config):
+def load_loggers(monitor_instance, config):
     """Load the loggers listed in the config object."""
 
     if config.has_option("reporting", "loggers"):
@@ -191,13 +79,13 @@ def load_loggers(m, config):
             main_logger.error("Creating logger %s failed!", new_logger)
             continue
         main_logger.info("Adding %s logger %s: %s", logger_type, config_logger, new_logger)
-        m.add_logger(config_logger, new_logger)
+        monitor_instance.add_logger(config_logger, new_logger)
         del new_logger
-    main_logger.info('--- Loaded %d loggers', len(m.loggers))
-    return m
+    main_logger.info('--- Loaded %d loggers', len(monitor_instance.loggers))
+    return monitor_instance
 
 
-def load_alerters(m, config):
+def load_alerters(monitor_instance, config):
     """Load the alerters listed in the config object."""
     if config.has_option("reporting", "alerters"):
         alerters = config.get("reporting", "alerters").split(",")
@@ -235,10 +123,10 @@ def load_alerters(m, config):
             continue
         main_logger.info("Adding %s alerter %s", alerter_type, alerter)
         new_alerter.name = alerter
-        m.add_alerter(alerter, new_alerter)
+        monitor_instance.add_alerter(alerter, new_alerter)
         del new_alerter
-    main_logger.info('--- Loaded %d alerters', len(m.alerters))
-    return m
+    main_logger.info('--- Loaded %d alerters', len(monitor_instance.alerters))
+    return monitor_instance
 
 
 def main():
@@ -253,7 +141,13 @@ def main():
     parser.add_option("-d", "--debug", dest="debug", default=False, action="store_true", help=SUPPRESS_HELP)
     parser.add_option("-f", "--config", dest="config", default="monitor.ini", help="configuration file")
     parser.add_option("-H", "--no-heartbeat", action="store_true", dest="no_heartbeat", default=False, help="Omit printing the '.' character when running checks")
-    parser.add_option('-1', '--one-shot', action='store_true', dest='one_shot', default=False, help='Run the monitors once only, without alerting. Require monitors without "fail" in the name to succeed. Exit zero or non-zero accordingly.')
+    parser.add_option(
+        '-1', '--one-shot',
+        action='store_true',
+        dest='one_shot',
+        default=False,
+        help='Run the monitors once only, without alerting.Require monitors without "fail" in the name to succeed.Exit zero or non-zero accordingly.'
+    )
     parser.add_option('--loops', dest='loops', default=-1, help=SUPPRESS_HELP, type=int)
     parser.add_option('-l', '--log-level', dest="loglevel", default="warn", help="Log level: critical, error, warn, info, debug")
     parser.add_option('-C', '--no-colour', '--no-color', action='store_true', dest='no_colour', default=False, help='Do not colourise log output')
@@ -341,7 +235,7 @@ def main():
 
     m = SimpleMonitor()
 
-    m = load_monitors(m, monitors_file)
+    m.load_monitors(monitors_file)
 
     count = m.count_monitors()
     if count == 0:

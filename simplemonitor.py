@@ -6,8 +6,18 @@ import copy
 import pickle
 import time
 import logging
+from socket import gethostname
 
 import Loggers
+import Monitors.monitor
+import Monitors.network
+import Monitors.service
+import Monitors.host
+import Monitors.file
+import Monitors.compound
+
+from envconfig import EnvironmentAwareConfigParser
+from util import get_config_dict
 
 module_logger = logging.getLogger('simplemonitor')
 
@@ -58,7 +68,8 @@ class SimpleMonitor:
 
     def reset_monitors(self):
         """Clear all the monitors' dependency info back to default."""
-        [self.monitors[key].reset_dependencies() for key in list(self.monitors.keys())]
+        for key in list(self.monitors.keys()):
+            self.monitors[key].reset_dependencies()
 
     def verify_dependencies(self):
         ok = True
@@ -78,7 +89,7 @@ class SimpleMonitor:
 
         not_run = False
 
-        while len(joblist) > 0:
+        while joblist:
             new_joblist = []
             module_logger.debug("Starting loop with joblist %s", joblist)
             for monitor in joblist:
@@ -213,3 +224,104 @@ class SimpleMonitor:
         for monitor in list(data.keys()):
             module_logger.info("trying remote monitor %s", monitor)
             self.remote_monitors[monitor] = pickle.loads(data[monitor])
+
+    def load_monitors(self, filename):
+        """Load all the monitors from the config file and return a populated SimpleMonitor."""
+        config = EnvironmentAwareConfigParser()
+        config.read(filename)
+        monitors = config.sections()
+        if "defaults" in monitors:
+            default_config = get_config_dict(config, "defaults")
+            monitors.remove("defaults")
+        else:
+            default_config = {}
+
+        myhostname = gethostname().lower()
+
+        module_logger.info('=== Loading monitors')
+        for monitor in monitors:
+            if config.has_option(monitor, "runon"):
+                if myhostname != config.get(monitor, "runon").lower():
+                    module_logger.warning("Ignoring monitor %s because it's only for host %s", monitor, config.get(monitor, "runon"))
+                    continue
+            monitor_type = config.get(monitor, "type")
+            new_monitor = None
+            config_options = default_config.copy()
+            config_options.update(get_config_dict(config, monitor))
+
+            if monitor_type == "host":
+                new_monitor = Monitors.network.MonitorHost(monitor, config_options)
+
+            elif monitor_type == "service":
+                new_monitor = Monitors.service.MonitorService(monitor, config_options)
+
+            elif monitor_type == "tcp":
+                new_monitor = Monitors.network.MonitorTCP(monitor, config_options)
+
+            elif monitor_type == "rc":
+                new_monitor = Monitors.service.MonitorRC(monitor, config_options)
+
+            elif monitor_type == "diskspace":
+                new_monitor = Monitors.host.MonitorDiskSpace(monitor, config_options)
+
+            elif monitor_type == "http":
+                new_monitor = Monitors.network.MonitorHTTP(monitor, config_options)
+
+            elif monitor_type == "apcupsd":
+                new_monitor = Monitors.host.MonitorApcupsd(monitor, config_options)
+
+            elif monitor_type == "svc":
+                new_monitor = Monitors.service.MonitorSvc(monitor, config_options)
+
+            elif monitor_type == "backup":
+                new_monitor = Monitors.file.MonitorBackup(monitor, config_options)
+
+            elif monitor_type == "portaudit":
+                new_monitor = Monitors.host.MonitorPortAudit(monitor, config_options)
+
+            elif monitor_type == "pkgaudit":
+                new_monitor = Monitors.host.MonitorPkgAudit(monitor, config_options)
+
+            elif monitor_type == "loadavg":
+                new_monitor = Monitors.host.MonitorLoadAvg(monitor, config_options)
+
+            elif monitor_type == "eximqueue":
+                new_monitor = Monitors.service.MonitorEximQueue(monitor, config_options)
+
+            elif monitor_type == "windowsdhcp":
+                new_monitor = Monitors.service.MonitorWindowsDHCPScope(monitor, config_options)
+
+            elif monitor_type == "zap":
+                new_monitor = Monitors.host.MonitorZap(monitor, config_options)
+
+            elif monitor_type == "fail":
+                new_monitor = Monitors.monitor.MonitorFail(monitor, config_options)
+
+            elif monitor_type == "null":
+                new_monitor = Monitors.monitor.MonitorNull(monitor, config_options)
+
+            elif monitor_type == "filestat":
+                new_monitor = Monitors.host.MonitorFileStat(monitor, config_options)
+
+            elif monitor_type == "compound":
+                new_monitor = Monitors.compound.CompoundMonitor(monitor, config_options)
+                new_monitor.set_mon_refs(self)
+
+            elif monitor_type == 'dns':
+                new_monitor = Monitors.network.MonitorDNS(monitor, config_options)
+
+            elif monitor_type == 'command':
+                new_monitor = Monitors.host.MonitorCommand(monitor, config_options)
+
+            else:
+                module_logger.error("Unknown type %s for monitor %s", monitor_type, monitor)
+                continue
+            if new_monitor is None:
+                continue
+
+            module_logger.info("Adding %s monitor %s: %s", monitor_type, monitor, new_monitor)
+            self.add_monitor(monitor, new_monitor)
+
+        for i in list(self.monitors.keys()):
+            self.monitors[i].post_config_setup()
+        module_logger.info('--- Loaded %d monitors', self.count_monitors())
