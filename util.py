@@ -91,3 +91,12 @@ def short_hostname():
     TODO: This might actually be redundant. Python probably provides it's own version of this."""
 
     return (socket.gethostname() + ".").split(".")[0]
+
+
+def get_config_dict(config, monitor):
+    """Fetch a config section as a dictionary. This is a needed for Py2."""
+    options = config.items(monitor)
+    ret = {}
+    for (key, value) in options:
+        ret[key] = value
+    return ret
