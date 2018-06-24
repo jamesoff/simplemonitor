@@ -8,14 +8,27 @@ import time
 import logging
 from socket import gethostname
 
-import Loggers
+import Loggers.db
+import Loggers.file
+import Loggers.network
+
+import Alerters.bulksms
+import Alerters.execute
+import Alerters.fortysixelks
+import Alerters.mail
+import Alerters.nma
+import Alerters.pushbullet
+import Alerters.pushover
+import Alerters.ses
+import Alerters.slack
+import Alerters.syslogger
+
 import Monitors.monitor
 import Monitors.network
 import Monitors.service
 import Monitors.host
 import Monitors.file
 import Monitors.compound
-import Alerters
 
 from envconfig import EnvironmentAwareConfigParser
 from util import get_config_dict
