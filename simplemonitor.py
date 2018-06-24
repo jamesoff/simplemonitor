@@ -15,6 +15,7 @@ import Monitors.service
 import Monitors.host
 import Monitors.file
 import Monitors.compound
+import Alerters
 
 from envconfig import EnvironmentAwareConfigParser
 from util import get_config_dict
@@ -361,3 +362,43 @@ class SimpleMonitor:
             self.add_logger(config_logger, new_logger)
             del new_logger
         module_logger.info('--- Loaded %d loggers', len(self.loggers))
+
+    def load_alerters(monitor_instance, config):
+        """Load the alerters listed in the config object."""
+        if config.has_option("reporting", "alerters"):
+            alerters = config.get("reporting", "alerters").split(",")
+        else:
+            alerters = []
+
+        module_logger.info('=== Loading alerters')
+        for alerter in alerters:
+            alerter_type = config.get(alerter, "type")
+            config_options = get_config_dict(config, alerter)
+            if alerter_type == "email":
+                new_alerter = Alerters.mail.EMailAlerter(config_options)
+            elif alerter_type == "ses":
+                new_alerter = Alerters.ses.SESAlerter(config_options)
+            elif alerter_type == "bulksms":
+                new_alerter = Alerters.bulksms.BulkSMSAlerter(config_options)
+            elif alerter_type == "46elks":
+                new_alerter = Alerters.fortysixelks.FortySixElksAlerter(config_options)
+            elif alerter_type == "syslog":
+                new_alerter = Alerters.syslogger.SyslogAlerter(config_options)
+            elif alerter_type == "execute":
+                new_alerter = Alerters.execute.ExecuteAlerter(config_options)
+            elif alerter_type == "slack":
+                new_alerter = Alerters.slack.SlackAlerter(config_options)
+            elif alerter_type == "pushover":
+                new_alerter = Alerters.pushover.PushoverAlerter(config_options)
+            elif alerter_type == "nma":
+                new_alerter = Alerters.nma.NMAAlerter(config_options)
+            elif alerter_type == "pushbullet":
+                new_alerter = Alerters.pushbullet.PushbulletAlerter(config_options)
+            else:
+                module_logger.error("Unknown alerter type %s", alerter_type)
+                continue
+            module_logger.info("Adding %s alerter %s", alerter_type, alerter)
+            new_alerter.name = alerter
+            monitor_instance.add_alerter(alerter, new_alerter)
+            del new_alerter
+        module_logger.info('--- Loaded %d alerters', len(monitor_instance.alerters))

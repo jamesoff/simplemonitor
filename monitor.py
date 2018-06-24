@@ -10,32 +10,10 @@ import logging
 from optparse import OptionParser, SUPPRESS_HELP
 
 from envconfig import EnvironmentAwareConfigParser
-from util import get_config_dict
-
-import Monitors.monitor
-import Monitors.network
-import Monitors.service
-import Monitors.host
-import Monitors.file
-import Monitors.compound
 
 from simplemonitor import SimpleMonitor
 
-import Loggers.file
-import Loggers.db
 import Loggers.network
-
-import Alerters.mail
-import Alerters.ses
-import Alerters.bulksms
-import Alerters.fortysixelks
-import Alerters.syslogger
-import Alerters.execute
-import Alerters.slack
-import Alerters.pushover
-import Alerters.nma
-import Alerters.pushbullet
-import Alerters.telegram
 
 try:
     import colorlog
@@ -45,50 +23,6 @@ except ImportError:
 VERSION = "1.7"
 
 main_logger = logging.getLogger('simplemonitor')
-
-
-def load_alerters(monitor_instance, config):
-    """Load the alerters listed in the config object."""
-    if config.has_option("reporting", "alerters"):
-        alerters = config.get("reporting", "alerters").split(",")
-    else:
-        alerters = []
-
-    main_logger.info('=== Loading alerters')
-    for alerter in alerters:
-        alerter_type = config.get(alerter, "type")
-        config_options = get_config_dict(config, alerter)
-        if alerter_type == "email":
-            new_alerter = Alerters.mail.EMailAlerter(config_options)
-        elif alerter_type == "ses":
-            new_alerter = Alerters.ses.SESAlerter(config_options)
-        elif alerter_type == "bulksms":
-            new_alerter = Alerters.bulksms.BulkSMSAlerter(config_options)
-        elif alerter_type == "46elks":
-            new_alerter = Alerters.fortysixelks.FortySixElksAlerter(config_options)
-        elif alerter_type == "syslog":
-            new_alerter = Alerters.syslogger.SyslogAlerter(config_options)
-        elif alerter_type == "execute":
-            new_alerter = Alerters.execute.ExecuteAlerter(config_options)
-        elif alerter_type == "slack":
-            new_alerter = Alerters.slack.SlackAlerter(config_options)
-        elif alerter_type == "pushover":
-            new_alerter = Alerters.pushover.PushoverAlerter(config_options)
-        elif alerter_type == "nma":
-            new_alerter = Alerters.nma.NMAAlerter(config_options)
-        elif alerter_type == "pushbullet":
-            new_alerter = Alerters.pushbullet.PushbulletAlerter(config_options)
-        elif alerter_type == "telegram":
-            new_alerter = Alerters.telegram.TelegramAlerter(config_options)
-        else:
-            main_logger.error("Unknown alerter type %s", alerter_type)
-            continue
-        main_logger.info("Adding %s alerter %s", alerter_type, alerter)
-        new_alerter.name = alerter
-        monitor_instance.add_alerter(alerter, new_alerter)
-        del new_alerter
-    main_logger.info('--- Loaded %d alerters', len(monitor_instance.alerters))
-    return monitor_instance
 
 
 def main():
@@ -205,7 +139,7 @@ def main():
         sys.exit(2)
 
     m.load_loggers(config)
-    m = load_alerters(m, config)
+    m.load_alerters(config)
 
     try:
         if config.get("monitor", "remote") == "1":
