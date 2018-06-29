@@ -417,3 +417,15 @@ class SimpleMonitor:
             monitor_instance.add_alerter(alerter, new_alerter)
             del new_alerter
         module_logger.info('--- Loaded %d alerters', len(monitor_instance.alerters))
+
+    def run_loop(self):
+        """Run the complete monitor loop once."""
+        module_logger.debug('Running tests')
+        self.run_tests()
+        module_logger.debug('Running recovery')
+        self.do_recovery()
+        module_logger.debug('Running alerts')
+        self.do_alerts()
+        module_logger.debug('Running logs')
+        self.do_logs()
+        module_logger.debug('Loop complete')
