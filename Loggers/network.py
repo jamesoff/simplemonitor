@@ -57,7 +57,10 @@ class NetworkLogger(Logger):
             return
         self.logger_logger.debug("network logger: %s %s", name, monitor)
         try:
-            self.batch_data[monitor.name] = pickle.dumps(monitor)
+            if monitor.type == 'compound':
+                self.logger_logger.error('not pickling compound monitor - currently incompatible with network loggers')
+            else:
+                self.batch_data[monitor.name] = pickle.dumps(monitor)
         except Exception:
             self.logger_logger.exception('Failed to pickle monitor %s', name)
 
@@ -69,8 +72,8 @@ class NetworkLogger(Logger):
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.connect((self.host, self.port))
             s.send(send_bytes)
-        except Exception as e:
-            self.logger_logger.error("Failed to send network data")
+        except Exception:
+            self.logger_logger.exception("Failed to send network data")
         finally:
             s.close()
 
