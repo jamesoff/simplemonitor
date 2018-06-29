@@ -9,6 +9,35 @@ import time
 from .logger import Logger
 from socket import gethostname
 
+CREATE_SQL = [
+    """
+-- sqlite3 schema for monitor.db
+-- version 1
+CREATE TABLE IF NOT EXISTS results(
+result_id integer primary key,
+monitor_host varchar(50),
+monitor_name varchar(50),
+monitor_type varchar(50),
+monitor_params varchar(100),
+monitor_result int,
+timestamp int,
+monitor_info varchar(255));
+
+CREATE TABLE IF NOT EXISTS status (
+monitor_host varchar(50),
+monitor_name varchar(50),
+monitor_result int,
+monitor_info varchar(255));
+
+CREATE TABLE IF NOT EXISTS monitor_schema (
+    k varchar(50) primary key,
+    v varchar(255)
+);
+
+INSERT OR IGNORE INTO monitor_schema (k, v) VALUES ('monitor_schema_version', 1)
+"""
+]
+
 
 class DBLogger(Logger):
     """Abstract class which uses a sqlite3 backend."""
@@ -29,7 +58,40 @@ class DBLogger(Logger):
         )
 
         self.db_handle = sqlite3.connect(self.db_path, isolation_level=None)
+        self.db_handle.row_factory = sqlite3.Row
         self.connected = True
+        self.check_schema()
+
+    def check_schema(self):
+        """Create tables if needed, and check the schema."""
+        self.db_handle.executescript(CREATE_SQL[0])
+        cursor = self.db_handle.cursor()
+        current_schema = None
+        expected_schema = len(CREATE_SQL)
+        for row in cursor.execute("SELECT v AS value FROM monitor_schema where k = 'monitor_schema_version'"):
+            current_schema = int(row["value"])
+        if current_schema is None:
+            self.logger_logger.error("Could not check current schema version! Expect weirdness.")
+            return
+        if current_schema < expected_schema:
+            self.logger_logger.warning("Schema for %s is out of date: current is %d, latest is %d.", self.db_path, current_schema, expected_schema)
+            self.roll_schema_forward(current_schema)
+        elif current_schema > expected_schema:
+            self.logger_logger.critical("Schema for %s is newer than this code! Cannot use this database file.", self.db_path)
+            self.connected = False
+        else:
+            self.logger_logger.debug("Schema for %s is current", self.db_path)
+
+    def roll_schema_forward(self, start):
+        for sql in CREATE_SQL[start:]:
+            self.logger_logger.info("Applying SQL schema update")
+            self.logger_logger.debug(sql)
+            try:
+                self.db_handle.executescript(sql)
+            except Exception:
+                self.logger_logger.exception("Failed to apply schema update")
+                self.logger_logger.critical("Cannot use this DB logger until schema is fixed!")
+                self.connected = False
 
 
 class DBFullLogger(DBLogger):
