@@ -18,6 +18,7 @@ class SESAlerter(Alerter):
         Alerter.__init__(self, config_options)
         if not boto3_available:
             self.alerter_logger.critical("boto3 package is not available, cannot use SESAlerter.")
+            self.available = False
             return
 
         self.from_addr = Alerter.get_config_option(
