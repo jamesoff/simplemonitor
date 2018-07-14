@@ -13,6 +13,9 @@ htmlcov/
 .coverage
 .idea/
 html/status.html
+html/index.html
 monitor.db
 monitor?.log
 monitor2.db
+_monitor-export/
+venv/

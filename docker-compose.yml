@@ -1,0 +1,26 @@
+version: '2'
+
+services:
+  monitor:
+    build:
+      context: ./
+      dockerfile: ./docker/monitor.Dockerfile
+    volumes:
+      - http-content:/code/html
+      - ./_monitor-export:/code/monitor-export
+    restart: always
+    depends_on:
+      - webserver
+
+  webserver:
+    build:
+      context: ./
+      dockerfile: ./docker/webserver.Dockerfile
+    ports:
+      - "8000:80"
+    volumes:
+      - http-content:/usr/share/nginx/html
+    restart: always
+
+volumes:
+  http-content:
