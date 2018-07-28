@@ -69,6 +69,10 @@
         desc: If set to false, no SSL hostname verification will be made. Use with the https protocol and self-signed certificates.
         required: 'no'
         default: 'True'
+      - name: timeout
+        desc: The timeout for the HTTP request to complete
+        required: 'no'
+        default: '5'
 - name: dns
   oneline: Attempts to resolve a DNS record, and optionally checks the result. Requires the DNS utility `dig` to be in the `$PATH`.
   params:
