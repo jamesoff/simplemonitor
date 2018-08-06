@@ -1,0 +1,13 @@
+# environment specific
+# + + + + + + + + + + + + + + + + + + + +
+.idea/
+venv/
+
+# python specific
+# + + + + + + + + + + + + + + + + + + + +
+*.pyc
+
+# volumes
+# + + + + + + + + + + + + + + + + + + + +
+_monitor-export
+
