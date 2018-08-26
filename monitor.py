@@ -36,6 +36,7 @@ import Alerters.slack
 import Alerters.pushover
 import Alerters.nma
 import Alerters.pushbullet
+import Alerters.telegram
 
 try:
     import colorlog
@@ -227,6 +228,8 @@ def load_alerters(m, config):
             new_alerter = Alerters.nma.NMAAlerter(config_options)
         elif alerter_type == "pushbullet":
             new_alerter = Alerters.pushbullet.PushbulletAlerter(config_options)
+        elif alerter_type == "telegram":
+            new_alerter = Alerters.telegram.TelegramAlerter(config_options)
         else:
             main_logger.error("Unknown alerter type %s", alerter_type)
             continue
