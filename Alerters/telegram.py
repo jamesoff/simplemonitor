@@ -31,10 +31,10 @@ class TelegramAlerter(Alerter):
         """Send a push notification."""
 
         r = requests.post('https://api.telegram.org/bot{}/sendMessage'.format(self.telegram_token),
-                            data={
-                                "chat_id": self.telegram_chatid,
-                                "text": body,
-                            })
+                          data={
+                              "chat_id": self.telegram_chatid,
+                              "text": body,
+        })
         if not r.status_code == requests.codes.ok:
             raise RuntimeError("Unable to send telegram notification")
 
@@ -49,7 +49,6 @@ class TelegramAlerter(Alerter):
         else:
             host = " on host %s" % self.hostname
 
-        subject = ""
         body = ""
 
         if type == "":
@@ -89,7 +88,7 @@ Description: %s""" % (
         if not self.dry_run:
             try:
                 self.send_telegram_notification(body)
-            except Exception as e:
+            except Exception:
                 self.alerter_logger.exception("Couldn't send push notification")
                 self.available = False
         else:
