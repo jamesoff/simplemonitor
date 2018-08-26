@@ -6,6 +6,9 @@ import os
 import sys
 import time
 import logging
+import gc
+import resource
+import tracemalloc
 
 from envconfig import EnvironmentAwareConfigParser
 
@@ -45,6 +48,7 @@ except ImportError:
 VERSION = "1.7"
 
 main_logger = logging.getLogger('simplemonitor')
+tracemalloc.start()
 
 
 def get_config_dict(config, monitor):
@@ -240,6 +244,7 @@ def load_alerters(m, config):
 
 def main():
     """This is where it happens \o/"""
+    #gc.set_debug(gc.DEBUG_LEAK)
 
     parser = OptionParser()
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False, help=SUPPRESS_HELP)
@@ -388,7 +393,7 @@ def main():
     heartbeat = 0
 
     loops = int(options.loops)
-
+    memory_use = 0
     while loop:
         try:
             if loops > 0:
@@ -396,10 +401,29 @@ def main():
                 if loops == 0:
                     main_logger.warning('Ran out of loop counter, will stop after this one')
                     loop = False
+            new_memory_use = int(resource.getrusage(resource.RUSAGE_SELF)[2])
+            main_logger.debug('Before tests, %d' % (new_memory_use - memory_use))
+            memory_use = new_memory_use
             m.run_tests()
+
+            new_memory_use = int(resource.getrusage(resource.RUSAGE_SELF)[2])
+            main_logger.debug('After tests, %d' % (new_memory_use - memory_use))
+            memory_use = new_memory_use
             m.do_recovery()
+
+            new_memory_use = int(resource.getrusage(resource.RUSAGE_SELF)[2])
+            main_logger.debug('After recovery, %d' % (new_memory_use - memory_use))
+            memory_use = new_memory_use
             m.do_alerts()
+
+            new_memory_use = int(resource.getrusage(resource.RUSAGE_SELF)[2])
+            main_logger.debug('After alerts, %d' % (new_memory_use - memory_use))
+            memory_use = new_memory_use
             m.do_logs()
+
+            new_memory_use = int(resource.getrusage(resource.RUSAGE_SELF)[2])
+            main_logger.debug('After log, %d' % (new_memory_use - memory_use))
+            memory_use = new_memory_use
 
             if not options.quiet and not options.verbose and not options.no_heartbeat:
                 heartbeat += 1
@@ -470,6 +494,12 @@ def main():
             print("Not all non-'fail' succeeded, or not all 'fail' monitors failed.")
             sys.exit(1)
 
+    snapshot = tracemalloc.take_snapshot()
+    top_stats = snapshot.statistics('lineno')
+
+    print("[ Top 10 ]")
+    for stat in top_stats[:10]:
+        print(stat)
     logging.shutdown()
 
 

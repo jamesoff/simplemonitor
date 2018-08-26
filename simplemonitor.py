@@ -5,10 +5,14 @@ import copy
 import pickle
 import time
 import logging
+import resource
+import tracemalloc
 
 import Loggers
 
 module_logger = logging.getLogger('simplemonitor')
+
+tracemalloc.start()
 
 
 class SimpleMonitor:
@@ -76,6 +80,8 @@ class SimpleMonitor:
         failed = []
 
         not_run = False
+        memory_use = int(resource.getrusage(resource.RUSAGE_SELF)[2])
+        new_memory_use = 0
 
         while len(joblist) > 0:
             new_joblist = []
@@ -104,7 +110,16 @@ class SimpleMonitor:
                     if self.monitors[monitor].should_run():
                         not_run = False
                         start_time = time.time()
+                        new_memory_use = int(resource.getrusage(resource.RUSAGE_SELF)[2])
+                        snapshot1 = tracemalloc.take_snapshot()
                         self.monitors[monitor].run_test()
+                        snapshot2 = tracemalloc.take_snapshot()
+                        top_stats = snapshot2.compare_to(snapshot1, 'lineno')
+                        print("[ Top 10 differences ]")
+                        for stat in top_stats[:10]:
+                            print(stat)
+                        module_logger.debug('After running this monitor, %d' % (new_memory_use - memory_use))
+                        memory_use = new_memory_use
                         end_time = time.time()
                         self.monitors[monitor].last_run_duration = end_time - start_time
                     else:
