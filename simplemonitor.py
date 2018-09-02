@@ -22,6 +22,7 @@ import Alerters.pushover
 import Alerters.ses
 import Alerters.slack
 import Alerters.syslogger
+import Alerters.telegram
 
 import Monitors.monitor
 import Monitors.network
