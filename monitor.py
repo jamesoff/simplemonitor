@@ -7,7 +7,6 @@ import sys
 import time
 import logging
 
-from socket import gethostname
 from optparse import OptionParser, SUPPRESS_HELP
 
 from envconfig import EnvironmentAwareConfigParser
