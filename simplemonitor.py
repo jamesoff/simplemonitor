@@ -210,5 +210,6 @@ class SimpleMonitor:
 
     def update_remote_monitor(self, data, hostname):
         for monitor in list(data.keys()):
-            module_logger.info("trying remote monitor %s", monitor)
-            self.remote_monitors[monitor] = pickle.loads(data[monitor])
+            module_logger.info("updating remote monitor %s", monitor)
+            remote_monitor = pickle.loads(data[monitor])
+            self.remote_monitors[monitor] = remote_monitor

@@ -413,6 +413,7 @@ class Monitor:
         return pickle_dict
 
     def __setstate__(self, state):
+        self.__dict__.update(state)
         self._set_monitor_logger()
 
     def _set_monitor_logger(self):
