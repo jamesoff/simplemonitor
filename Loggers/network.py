@@ -126,7 +126,10 @@ class Listener(Thread):
                     my_digest = mac.digest()
                 except IndexError:
                     raise ValueError('Did not receive any or enough data from %s', addr[0])
-                self.logger.debug("Computed my digest to be %s; remote is %s", my_digest.hex(), their_digest.hex())
+                if type(my_digest) is str:
+                    self.logger.debug("Computed my digest to be %s; remote is %s", my_digest, their_digest)
+                else:
+                    self.logger.debug("Computed my digest to be %s; remote is %s", my_digest.hex(), their_digest.hex())
                 if not hmac.compare_digest(their_digest, my_digest):
                     raise Exception("Mismatched MAC for network logging data from %s\nMismatched key? Old version of SimpleMonitor?\n" % addr[0])
                 result = pickle.loads(pickled)
