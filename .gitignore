@@ -20,3 +20,4 @@ monitor2.db
 _monitor-export/
 venv/
 env/
+*.vscode
