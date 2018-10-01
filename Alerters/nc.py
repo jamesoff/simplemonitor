@@ -19,11 +19,20 @@ class NotificationCenterAlerter(Alerter):
     def send_alert(self, name, monitor):
         """Send the message."""
 
-        type = self.should_alert(monitor)
+        alert_type = self.should_alert(monitor)
+        message = ""
 
-        if type == "":
+        if alert_type == "":
             return
-        elif type == "failure":
-            pync.notify('Monitor failed!', title="SimpleMonitor -{}".format(name))
+        elif alert_type == "failure":
+            message = "Monitor {} failed!".format(name)
+        elif alert_type == "success":
+            message = "Monitor {} succeeded.".format(name)
         else:
-            pass
+            self.alerter_logger.error("Unknown alert type: {}".format(alert_type))
+            return
+
+        if not self.dry_run:
+            pync.notify(message=message, title="SimpleMonitor")
+        else:
+            self.alerter_logger.info("dry_run: would send message: {}".format(message))
