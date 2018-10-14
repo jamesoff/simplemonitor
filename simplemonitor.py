@@ -2,7 +2,6 @@
 
 import signal
 import copy
-import pickle
 import time
 import logging
 
@@ -209,7 +208,8 @@ class SimpleMonitor:
             self.log_result(self.loggers[key])
 
     def update_remote_monitor(self, data, hostname):
-        for monitor in list(data.keys()):
-            module_logger.info("updating remote monitor %s", monitor)
-            remote_monitor = pickle.loads(data[monitor])
+        for (name, state) in data.items():
+            module_logger.info("updating remote monitor %s", name)
+            remote_monitor = get_monitor_class(state['cls']) \
+                    .from_python_dict(state['data'])
             self.remote_monitors[monitor] = remote_monitor

@@ -1,5 +1,7 @@
 """Utilities for SimpleMonitor."""
 
+import re
+import json
 import datetime
 import socket
 
@@ -91,3 +93,39 @@ def short_hostname():
     TODO: This might actually be redundant. Python probably provides it's own version of this."""
 
     return (socket.gethostname() + ".").split(".")[0]
+
+
+DATETIME_MAGIC_TOKEN = '__simplemonitor_datetime'
+FORMAT = '%Y-%m-%d %H:%M:%S.%f'
+ 
+class JSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            return {DATETIME_MAGIC_TOKEN: obj.strftime(FORMAT)}
+        return super(JSONEncoder, self).default(self, obj)
+ 
+ 
+class JSONDecoder(json.JSONDecoder):
+    def __init__(self, *args, **kwargs):
+        self._original_object_pairs_hook = kwargs.pop('object_pairs_hook', None)
+        kwargs['object_pairs_hook'] = self.object_pairs_hook
+        super(JSONDecoder, self).__init__(*args, **kwargs)
+
+    _datetime_re = re.compile(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{6}')
+ 
+    def object_pairs_hook(self, obj):
+        if len(obj) == 1 and obj[0][0] == DATETIME_MAGIC_TOKEN and \
+                isinstance(obj[0][1], str) and \
+                self._datetime_re.match(obj[0][1]):
+            return datetime.datetime.strptime(obj[0][1], FORMAT)
+        elif self._original_object_pairs_hook:
+            return self._original_object_pairs_hook(obj)
+        else:
+            return dict(obj)
+ 
+def json_dumps(data):
+    return JSONEncoder().encode(data)
+ 
+def json_loads(string):
+    return JSONDecoder().decode(string)
+
