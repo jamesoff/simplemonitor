@@ -67,12 +67,13 @@ class NetworkLogger(Logger):
             mac = hmac.new(self.key, p)
             send_bytes = struct.pack('B', mac.digest_size) + mac.digest() + p
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.connect((self.host, self.port))
-            s.send(send_bytes)
+            try:
+                s.connect((self.host, self.port))
+                s.send(send_bytes)
+            finally:
+                s.close()
         except Exception as e:
             self.logger_logger.error("Failed to send network data")
-        finally:
-            s.close()
 
 
 class Listener(Thread):
