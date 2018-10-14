@@ -97,14 +97,14 @@ def short_hostname():
 
 DATETIME_MAGIC_TOKEN = '__simplemonitor_datetime'
 FORMAT = '%Y-%m-%d %H:%M:%S.%f'
- 
+
 class JSONEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, datetime):
             return {DATETIME_MAGIC_TOKEN: obj.strftime(FORMAT)}
         return super(JSONEncoder, self).default(self, obj)
- 
- 
+
+
 class JSONDecoder(json.JSONDecoder):
     def __init__(self, *args, **kwargs):
         self._original_object_pairs_hook = kwargs.pop('object_pairs_hook', None)
@@ -112,7 +112,7 @@ class JSONDecoder(json.JSONDecoder):
         super(JSONDecoder, self).__init__(*args, **kwargs)
 
     _datetime_re = re.compile(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{6}')
- 
+
     def object_pairs_hook(self, obj):
         if len(obj) == 1 and obj[0][0] == DATETIME_MAGIC_TOKEN and \
                 isinstance(obj[0][1], str) and \
@@ -122,10 +122,9 @@ class JSONDecoder(json.JSONDecoder):
             return self._original_object_pairs_hook(obj)
         else:
             return dict(obj)
- 
+
 def json_dumps(data):
     return JSONEncoder().encode(data)
- 
+
 def json_loads(string):
     return JSONDecoder().decode(string)
-

@@ -342,7 +342,14 @@ def main():
 
     main_logger.info("Loading monitor config from %s", monitors_file)
 
-    m = SimpleMonitor()
+    try:
+        allow_pickle = config.getboolean("monitor", "allow_pickle",
+                fallback='true')
+    except ValueError:
+        main_logger.critical('allow_pickle should be "true" or "false".')
+        sys.exit(1)
+
+    m = SimpleMonitor(allow_pickle=allow_pickle)
 
     m = load_monitors(m, monitors_file)
 
@@ -384,7 +391,8 @@ def main():
     if enable_remote:
         if not options.quiet:
             main_logger.info("Starting remote listener thread")
-        remote_listening_thread = Loggers.network.Listener(m, remote_port, key)
+        remote_listening_thread = Loggers.network.Listener(
+                m, remote_port, key, allow_pickle=allow_pickle)
         remote_listening_thread.daemon = True
         remote_listening_thread.start()
 
@@ -424,7 +432,8 @@ def main():
         if loop and enable_remote:
             if not remote_listening_thread.isAlive():
                 main_logger.error("Listener thread died :(")
-                remote_listening_thread = Loggers.network.Listener(m, remote_port, key)
+                remote_listening_thread = Loggers.network.Listener(
+                        m, remote_port, key, allow_pickle=allow_pickle)
                 remote_listening_thread.start()
 
         if options.one_shot:

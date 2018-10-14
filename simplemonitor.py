@@ -2,6 +2,7 @@
 
 import signal
 import copy
+import pickle
 import time
 import logging
 
@@ -16,8 +17,9 @@ class SimpleMonitor:
     #      could give better control over restarting the listener thread
     need_hup = False
 
-    def __init__(self):
+    def __init__(self, allow_pickle=True):
         """Main class turn on."""
+        self.allow_pickle = allow_pickle
         self.monitors = {}
         self.failed = []
         self.still_failing = []
@@ -210,6 +212,20 @@ class SimpleMonitor:
     def update_remote_monitor(self, data, hostname):
         for (name, state) in data.items():
             module_logger.info("updating remote monitor %s", name)
-            remote_monitor = get_monitor_class(state['cls']) \
-                    .from_python_dict(state['data'])
+            if isinstance(state, dict):
+                remote_monitor = get_monitor_class(state['cls']) \
+                        .from_python_dict(state['data'])
+            elif self.allow_pickle:
+                # Fallback for old remote monitors
+                try:
+                    remote_monitor = pickle.loads(state)
+                except pickle.UnpicklingError:
+                    main_logger.critical('Could not unpickle monitor %s', name)
+            else:
+                main_logger.critical(
+                        'Could not deserialize state of monitor %s. '
+                        'If the remote host uses an old version of '
+                        'simplemonitor, you need to set allow_pickle = true '
+                        'in the [monitor] section.',
+                        name)
             self.remote_monitors[monitor] = remote_monitor

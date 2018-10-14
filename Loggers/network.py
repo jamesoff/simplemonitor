@@ -1,4 +1,5 @@
 # coding=utf-8
+import pickle
 import socket
 import sys
 import hmac
@@ -83,7 +84,7 @@ class Listener(Thread):
 
     Here seemed a reasonable place to put it."""
 
-    def __init__(self, simplemonitor, port, key=None):
+    def __init__(self, simplemonitor, port, key=None, allow_pickle=True):
         """Set up the thread.
 
         simplemonitor is a SimpleMonitor object which we will put our results into.
@@ -91,6 +92,7 @@ class Listener(Thread):
         if key is None or key == "":
             raise util.LoggerConfigurationError("Network logger key is missing")
         Thread.__init__(self)
+        self.allow_pickle = allow_pickle
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.bind(('', port))
         self.simplemonitor = simplemonitor
@@ -135,7 +137,10 @@ class Listener(Thread):
                     self.logger.debug("Computed my digest to be %s; remote is %s", my_digest.hex(), their_digest.hex())
                 if not hmac.compare_digest(their_digest, my_digest):
                     raise Exception("Mismatched MAC for network logging data from %s\nMismatched key? Old version of SimpleMonitor?\n" % addr[0])
-                result = util.json_loads(serialized)
+                try:
+                    result = util.json_loads(serialized)
+                except json.JSONDecodeError:
+                    result = pickle.loads(serialized)
                 try:
                     self.simplemonitor.update_remote_monitor(result, addr[0])
                 except Exception as e:
