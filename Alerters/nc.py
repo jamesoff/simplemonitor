@@ -8,6 +8,7 @@ import platform
 
 from .alerter import Alerter
 
+
 class NotificationCenterAlerter(Alerter):
     """Send alerts to the Mac OS X Notification Center."""
 
