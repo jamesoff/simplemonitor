@@ -1,7 +1,7 @@
 try:
     import pync
     pync_available = True
-except ImportError:
+except Exception:
     pync_available = False
 
 import platform
