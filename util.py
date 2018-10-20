@@ -101,7 +101,7 @@ FORMAT = '%Y-%m-%d %H:%M:%S.%f'
 
 class JSONEncoder(json.JSONEncoder):
     def default(self, obj):
-        if isinstance(obj, datetime):
+        if isinstance(obj, datetime.datetime):
             return {DATETIME_MAGIC_TOKEN: obj.strftime(FORMAT)}
         return super(JSONEncoder, self).default(self, obj)
 
