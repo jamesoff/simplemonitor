@@ -1,6 +1,7 @@
 # coding=utf-8
 import pickle
 import socket
+import json
 import sys
 import hmac
 import struct
@@ -122,7 +123,7 @@ class Listener(Thread):
                 self.logger.debug("Finished receiving from %s", addr[0])
                 try:
                     # first byte is the size of the MAC
-                    mac_size = serizialized[0]
+                    mac_size = serialized[0]
                     # then the MAC
                     their_digest = serialized[1:mac_size + 1]
                     # then the rest is the serialized data

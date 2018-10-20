@@ -33,7 +33,7 @@ def _check_is_monitor_subclass(cls):
                          'of %s.Monitor') % (mod, mod))
 
 _monitor_classes = {}
-def register_monitor(cls):
+def register(cls):
     """Decorator for monitor classes."""
     _check_is_monitor_subclass(cls)
     _monitor_classes[cls.__name__] = cls
@@ -439,7 +439,8 @@ class Monitor:
 
     @classmethod
     def from_python_dict(cls, d):
-        monitor = cls()
+        monitor = Monitor()
+        monitor.__class__ = cls
         monitor.__setstate__(d)
         return monitor
 
@@ -460,6 +461,7 @@ class Monitor:
         return self.describe()
 
 
+@register
 class MonitorFail(Monitor):
     """A monitor which always fails.
 
@@ -494,6 +496,7 @@ class MonitorFail(Monitor):
         return (self.interval,)
 
 
+@register
 class MonitorNull(Monitor):
     """A monitor which always passes."""
 

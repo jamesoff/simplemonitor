@@ -11,7 +11,7 @@ try:
 except ImportError:
     win32_available = False
 
-from .monitor import Monitor
+from .monitor import Monitor, register
 
 
 def _size_string_to_bytes(s):
@@ -51,6 +51,7 @@ def _bytes_to_size_string(b):
         return str(b)
 
 
+@register
 class MonitorDiskSpace(Monitor):
     """Make sure we have enough disk space."""
 
@@ -92,6 +93,7 @@ class MonitorDiskSpace(Monitor):
         return (self.limit, self.partition)
 
 
+@register
 class MonitorFileStat(Monitor):
     """Make sure a file exists, isn't too old and/or isn't too small."""
 
@@ -144,6 +146,7 @@ class MonitorFileStat(Monitor):
         return (self.filename, self.minsize, self.maxage)
 
 
+@register
 class MonitorApcupsd(Monitor):
     """Monitor an APC UPS (with apcupsd) to make sure it's ONLINE.
 
@@ -210,6 +213,7 @@ class MonitorApcupsd(Monitor):
         return (self.path, )
 
 
+@register
 class MonitorPortAudit(Monitor):
     """Check a host doesn't have outstanding security issues."""
 
@@ -256,6 +260,7 @@ class MonitorPortAudit(Monitor):
             return self.record_fail("Could not run portaudit: %s" % e)
 
 
+@register
 class MonitorPkgAudit(Monitor):
     """Check a host doesn't have outstanding security issues."""
 
@@ -301,6 +306,7 @@ class MonitorPkgAudit(Monitor):
             return self.record_fail("Could not run pkg: %s" % e)
 
 
+@register
 class MonitorLoadAvg(Monitor):
     """Check a host's load average isn't too high."""
 
@@ -351,6 +357,7 @@ class MonitorLoadAvg(Monitor):
         return (self.which, self.max)
 
 
+@register
 class MonitorZap(Monitor):
     """Checks a Zap channel to make sure it is ok"""
 
@@ -389,6 +396,7 @@ class MonitorZap(Monitor):
         return (self.span, )
 
 
+@register
 class MonitorCommand(Monitor):
     """Check the output of a command.
 

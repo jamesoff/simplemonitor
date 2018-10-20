@@ -9,9 +9,10 @@ import subprocess
 import requests
 from requests.auth import HTTPBasicAuth
 
-from .monitor import Monitor
+from .monitor import Monitor, register
 
 
+@register
 class MonitorHTTP(Monitor):
     """Check an HTTP server is working right.
 
@@ -125,6 +126,7 @@ class MonitorHTTP(Monitor):
         return (self.url, self.regexp_text, self.allowed_codes)
 
 
+@register
 class MonitorTCP(Monitor):
     """TCP port monitor"""
 
@@ -163,6 +165,7 @@ class MonitorTCP(Monitor):
         return (self.host, self.port)
 
 
+@register
 class MonitorHost(Monitor):
     """Ping a host to make sure it's up"""
 
@@ -242,6 +245,7 @@ class MonitorHost(Monitor):
         return (self.host, )
 
 
+@register
 class MonitorDNS(Monitor):
     """Monitor DNS server."""
 
