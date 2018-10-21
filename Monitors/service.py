@@ -4,6 +4,12 @@ import re
 import os
 import subprocess
 import sys
+import time
+
+try:
+    import pydbus
+except ImportError:
+    pydbus = None
 
 from util import MonitorConfigurationError
 
@@ -148,6 +154,64 @@ class MonitorRC(Monitor):
     def describe(self):
         """Explains what this instance is checking."""
         return "Checks service %s is running" % self.script_path
+
+
+class MonitorSystemdUnit(Monitor):
+    """Monitor a systemd unit.
+
+    This monitor checks the state of the unit as given by
+    /org/freedesktop/systemd1/ListUnits
+    and reports failure if it is not one of the expected states.
+    """
+
+    type = "systemd-unit"
+
+    # A cached shared by all instances of MonitorSystemdUnit, so a single
+    # call is done for all monitors at once.
+    _listunit_cache = []
+    _listunit_cache_expiry = 0
+    CACHE_LIFETIME = 1  # in seconds
+
+    def __init__(self, name, config_options):
+        Monitor.__init__(self, name, config_options)
+        if not pydbus:
+            self.alerter_logger.critical("pydbus package is not available, cannot use MonitorSystemdUnit.")
+            return
+        self.unit_name = Monitor.get_config_option(config_options, 'name', required=True)
+        self.want_load_states = Monitor.get_config_option(config_options, 'load_states', required_type='[str]', default=['loaded'])
+        self.want_active_states = Monitor.get_config_option(config_options, 'active_states', required_type='[str]', default=['active', 'reloading'])
+        self.want_sub_states = Monitor.get_config_option(config_options, 'sub_states', required_type='[str]', default=[])
+
+    @classmethod
+    def _list_units(cls):
+        if cls._listunit_cache_expiry < time.time():
+            bus = pydbus.SystemBus()
+            systemd = bus.get(".systemd1")
+            cls._listunit_cache_expiry = time.time() + cls.CACHE_LIFETIME
+            cls._listunit_cache = list(systemd.ListUnits())
+        return cls._listunit_cache
+
+    def run_test(self):
+        """Check the service is in the desired state."""
+        for unit in self._list_units():
+            (name, desc, load_state, active_state, sub_state, follower, unit_path, job_id, job_type, job_path) = unit
+            if name == self.unit_name:
+                break
+        else:
+            return self.record_fail("No unit %s" % self.unit_name)
+
+        if self.want_load_states and load_state not in self.want_load_states:
+            return self.record_fail("Load state: {0} (wanted {1})".format(load_state, self.want_load_states))
+        if self.want_active_states and active_state not in self.want_active_states:
+            return self.record_fail("Active state: {0} (wanted {1})".format(active_state, self.want_active_states))
+        if self.want_sub_states and sub_state not in self.want_sub_states:
+            return self.record_fail("Sub state: {0} (wanted {1})".format(sub_state, self.want_sub_states))
+
+    def get_params(self):
+        return (self.unit_name, self.want_load_states, self.want_active_states, self.want_sub_states)
+
+    def describe(self):
+        return "Checks unit %s is running" % self.script_path
 
 
 class MonitorEximQueue(Monitor):
