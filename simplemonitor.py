@@ -215,20 +215,20 @@ class SimpleMonitor:
             module_logger.info("updating remote monitor %s", name)
             if isinstance(state, dict):
                 remote_monitor = Monitors.monitor.get_class(state['cls']) \
-                        .from_python_dict(state['data'])
+                    .from_python_dict(state['data'])
                 self.remote_monitors[name] = remote_monitor
             elif self.allow_pickle:
                 # Fallback for old remote monitors
                 try:
                     remote_monitor = pickle.loads(state)
                 except pickle.UnpicklingError:
-                    main_logger.critical('Could not unpickle monitor %s', name)
+                    module_logger.critical('Could not unpickle monitor %s', name)
                 else:
                     self.remote_monitors[name] = remote_monitor
             else:
-                main_logger.critical(
-                        'Could not deserialize state of monitor %s. '
-                        'If the remote host uses an old version of '
-                        'simplemonitor, you need to set allow_pickle = true '
-                        'in the [monitor] section.',
-                        name)
+                module_logger.critical(
+                    'Could not deserialize state of monitor %s. '
+                    'If the remote host uses an old version of '
+                    'simplemonitor, you need to set allow_pickle = true '
+                    'in the [monitor] section.',
+                    name)

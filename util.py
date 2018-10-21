@@ -99,6 +99,7 @@ def short_hostname():
 DATETIME_MAGIC_TOKEN = '__simplemonitor_datetime'
 FORMAT = '%Y-%m-%d %H:%M:%S.%f'
 
+
 class JSONEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, datetime.datetime):
@@ -123,6 +124,7 @@ class JSONDecoder(json.JSONDecoder):
             return self._original_object_pairs_hook(obj)
         else:
             return dict(obj)
+
 
 if sys.version_info >= (3,):
     def json_dumps(data):

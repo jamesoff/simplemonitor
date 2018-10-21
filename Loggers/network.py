@@ -59,9 +59,9 @@ class NetworkLogger(Logger):
         self.logger_logger.debug("network logger: %s %s", name, monitor)
         try:
             self.batch_data[monitor.name] = {
-                    'cls': monitor.__class__.__name__,
-                    'data': monitor.to_python_dict(),
-                    }
+                'cls': monitor.__class__.__name__,
+                'data': monitor.to_python_dict(),
+            }
         except Exception:
             self.logger_logger.exception('Failed to serialize monitor %s', name)
 

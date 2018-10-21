@@ -26,21 +26,27 @@ except ImportError:
 
 from util import get_config_option, MonitorConfigurationError, short_hostname
 
+
 def _check_is_monitor_subclass(cls):
     if not issubclass(cls, Monitor):
         mod = 'simplemonitor.Monitors.monitor'
         raise TypeError(('%s.register may only be used on subclasses '
                          'of %s.Monitor') % (mod, mod))
 
+
 _monitor_classes = {}
+
+
 def register(cls):
     """Decorator for monitor classes."""
     _check_is_monitor_subclass(cls)
     _monitor_classes[cls.__name__] = cls
     return cls
 
+
 def get_class(name):
     return _monitor_classes[name]
+
 
 class Monitor:
     """Simple monitor. This class is abstract."""
