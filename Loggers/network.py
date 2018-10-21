@@ -1,13 +1,17 @@
 # coding=utf-8
 import pickle
 import socket
-import json
 import sys
 import hmac
 import struct
 import logging
 
 import util
+
+if sys.version_info[0] >= 3:
+    from json import JSONDecodeError
+else:
+    JSONDecodeError = ValueError
 
 # From the docs:
 #  Threads interact strangely with interrupts: the KeyboardInterrupt exception
@@ -140,7 +144,7 @@ class Listener(Thread):
                     raise Exception("Mismatched MAC for network logging data from %s\nMismatched key? Old version of SimpleMonitor?\n" % addr[0])
                 try:
                     result = util.json_loads(serialized)
-                except json.JSONDecodeError:
+                except JSONDecodeError:
                     result = pickle.loads(serialized)
                 try:
                     self.simplemonitor.update_remote_monitor(result, addr[0])
