@@ -58,7 +58,7 @@ class MonitorFileUpdate(Monitor):
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
         self.path = Monitor.get_config_option(config_options, 'path', required=True)
-        max_age = Monitor.get_config_option(config_options, 'max_age', required_type='int', default=60*60*24)
+        max_age = Monitor.get_config_option(config_options, 'max_age', required_type='int', default=60 * 60 * 24)
         self.max_age = datetime.timedelta(seconds=max_age)
 
     def run_test(self):
