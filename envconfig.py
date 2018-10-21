@@ -1,12 +1,35 @@
 import os
 import re
+import functools
 
 import sys
 if sys.version_info[0] == 2:
-    from ConfigParser import ConfigParser
+    from ConfigParser import ConfigParser, NoSectionError, NoOptionError
 else:
-    from configparser import ConfigParser
+    from configparser import ConfigParser, NoSectionError, NoOptionError
     from configparser import BasicInterpolation
+
+
+# Unique object, which replaces a default config value
+_NO_FALLBACK = object()
+
+
+if sys.version_info[0] == 2:
+    def with_fallback(f):
+        @functools.wraps(f)
+        def newf(*args, **kwargs):
+            fallback = kwargs.pop('fallback', _NO_FALLBACK)
+            try:
+                return f(*args, **kwargs)
+            except (NoSectionError, NoOptionError):
+                if fallback is _NO_FALLBACK:
+                    raise
+                else:
+                    return fallback
+        return newf
+else:
+    def with_fallback(f):
+        return f
 
 
 class EnvironmentAwareConfigParser(ConfigParser):
@@ -46,6 +69,7 @@ class EnvironmentAwareConfigParser(ConfigParser):
                 self.remove_section(original_section)
         return result
 
+    @with_fallback
     def get(self, *args, **kwargs):
         if sys.version_info[0] > 2:
             return ConfigParser.get(self, *args, **kwargs)
@@ -57,6 +81,19 @@ class EnvironmentAwareConfigParser(ConfigParser):
                 result = result.replace(matches.group(0), os.environ[env_key])
             matches = self.r.match(result)
         return result
+
+    if sys.version_info[0] == 2:
+        @with_fallback
+        def getint(self, *args, **kwargs):
+            return ConfigParser.getint(self, *args, **kwargs)
+
+        @with_fallback
+        def getfloat(self, *args, **kwargs):
+            return ConfigParser.getfloat(self, *args, **kwargs)
+
+        @with_fallback
+        def getboolean(self, *args, **kwargs):
+            return ConfigParser.getboolean(self, *args, **kwargs)
 
 
 if sys.version_info[0] > 2:

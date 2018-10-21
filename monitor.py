@@ -344,7 +344,7 @@ def main():
 
     try:
         allow_pickle = config.getboolean("monitor", "allow_pickle",
-                                         default='true')
+                                         fallback='true')
     except ValueError:
         main_logger.critical('allow_pickle should be "true" or "false".')
         sys.exit(1)
