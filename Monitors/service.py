@@ -1,4 +1,5 @@
 # coding=utf-8
+import fnmatch
 import platform
 import re
 import os
@@ -193,19 +194,26 @@ class MonitorSystemdUnit(Monitor):
 
     def run_test(self):
         """Check the service is in the desired state."""
+        nb_matches = 0
         for unit in self._list_units():
             (name, desc, load_state, active_state, sub_state, follower, unit_path, job_id, job_type, job_path) = unit
-            if name == self.unit_name:
-                break
-        else:
+            if fnmatch.fnmatch(name, self.unit_name):
+                self._check_unit(name, load_state, active_state, sub_state)
+                nb_matches += 1
+
+        if nb_matches == 0:
             return self.record_fail("No unit %s" % self.unit_name)
 
+    def _check_unit(self, name, load_state, active_state, sub_state):
         if self.want_load_states and load_state not in self.want_load_states:
-            return self.record_fail("Load state: {0} (wanted {1})".format(load_state, self.want_load_states))
+            return self.record_fail("Unit {0} has load state: {1} (wanted {2})".format(
+                name, load_state, self.want_load_states))
         if self.want_active_states and active_state not in self.want_active_states:
-            return self.record_fail("Active state: {0} (wanted {1})".format(active_state, self.want_active_states))
+            return self.record_fail("Unit {0} has active state: {1} (wanted {2})".format(
+                name, active_state, self.want_active_states))
         if self.want_sub_states and sub_state not in self.want_sub_states:
-            return self.record_fail("Sub state: {0} (wanted {1})".format(sub_state, self.want_sub_states))
+            return self.record_fail("Unit {0} has sub state: {0} (wanted {2})".format(
+                name, sub_state, self.want_sub_states))
 
     def get_params(self):
         return (self.unit_name, self.want_load_states, self.want_active_states, self.want_sub_states)
