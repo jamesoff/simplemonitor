@@ -108,6 +108,9 @@ def load_monitors(m, filename):
         elif monitor_type == "backup":
             new_monitor = Monitors.file.MonitorBackup(monitor, config_options)
 
+        elif monitor_type == "file-update":
+            new_monitor = Monitors.file.MonitorFileUpdate(monitor, config_options)
+
         elif monitor_type == "portaudit":
             new_monitor = Monitors.host.MonitorPortAudit(monitor, config_options)
 

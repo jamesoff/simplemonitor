@@ -85,6 +85,17 @@ def format_datetime(the_datetime):
     return the_datetime
 
 
+def format_timedelta(the_timedelta):
+    """Return an isoformat()-like timedelta without the microseconds."""
+    if the_timedelta is None:
+        return ""
+
+    if isinstance(the_timedelta, datetime.timedelta):
+        the_timedelta -= datetime.timedelta(microseconds=the_timedelta.microseconds)
+
+    return the_timedelta
+
+
 def short_hostname():
     """Get just our machine name.
 
