@@ -137,4 +137,6 @@ else:
         return JSONEncoder().encode(data)
 
     def json_loads(string):
+        if isinstance(string, bytearray):
+            string = string.decode('ascii')
         return JSONDecoder().decode(string)
