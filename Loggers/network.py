@@ -8,6 +8,10 @@ import logging
 
 import util
 
+from threading import Thread
+
+from .logger import Logger
+
 if sys.version_info[0] >= 3:
     from json import JSONDecodeError
 else:
@@ -17,10 +21,6 @@ else:
 #  Threads interact strangely with interrupts: the KeyboardInterrupt exception
 #  will be received by an arbitrary thread. (When the signal module is
 #  available, interrupts always go to the main thread.)
-
-from threading import Thread
-
-from .logger import Logger
 
 
 class NetworkLogger(Logger):
