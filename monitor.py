@@ -93,6 +93,9 @@ def load_monitors(m, filename):
         elif monitor_type == "rc":
             new_monitor = Monitors.service.MonitorRC(monitor, config_options)
 
+        elif monitor_type == "systemd-unit":
+            new_monitor = Monitors.service.MonitorSystemdUnit(monitor, config_options)
+
         elif monitor_type == "diskspace":
             new_monitor = Monitors.host.MonitorDiskSpace(monitor, config_options)
 
