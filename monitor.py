@@ -248,7 +248,7 @@ def load_alerters(m, config):
 
 
 def main():
-    """This is where it happens \o/"""
+    r"""This is where it happens \o/"""
 
     parser = OptionParser()
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False, help=SUPPRESS_HELP)

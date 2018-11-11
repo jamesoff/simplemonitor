@@ -194,16 +194,16 @@ class MonitorHost(Monitor):
         platform = sys.platform
         if platform in ['win32', 'cygwin']:
             self.ping_command = "ping -n 1 -w " + ping_ms + " %s"
-            self.ping_regexp = 'Reply from [0-9a-f:.]+:.+time[=<]\d+ms'
-            self.time_regexp = "Average = (?P<ms>\d+)ms"
+            self.ping_regexp = r'Reply from [0-9a-f:.]+:.+time[=<]\d+ms'
+            self.time_regexp = r"Average = (?P<ms>\d+)ms"
         elif platform.startswith('freebsd') or platform.startswith('darwin'):
             self.ping_command = "ping -c1 -t" + ping_ttl + " %s"
             self.ping_regexp = "bytes from"
-            self.time_regexp = "min/avg/max/stddev = [\d.]+/(?P<ms>[\d.]+)/"
+            self.time_regexp = r"min/avg/max/stddev = [\d.]+/(?P<ms>[\d.]+)/"
         elif platform.startswith('linux'):
             self.ping_command = "ping -c1 -W" + ping_ttl + " %s"
             self.ping_regexp = "bytes from"
-            self.time_regexp = "min/avg/max/stddev = [\d.]+/(?P<ms>[\d.]+)/"
+            self.time_regexp = r"min/avg/max/stddev = [\d.]+/(?P<ms>[\d.]+)/"
         else:
             RuntimeError("Don't know how to run ping on this platform, help!")
 

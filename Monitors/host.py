@@ -218,7 +218,7 @@ class MonitorPortAudit(Monitor):
     """Check a host doesn't have outstanding security issues."""
 
     type = "portaudit"
-    regexp = re.compile("(\d+) problem\(s\) in your installed packages found")
+    regexp = re.compile(r"(\d+) problem\(s\) in your installed packages found")
     path = ""
 
     def __init__(self, name, config_options):
@@ -265,7 +265,7 @@ class MonitorPkgAudit(Monitor):
     """Check a host doesn't have outstanding security issues."""
 
     type = "pkgaudit"
-    regexp = re.compile("(\d+) problem\(s\) in the installed packages found")
+    regexp = re.compile(r"(\d+) problem\(s\) in the installed packages found")
     path = ""
 
     def __init__(self, name, config_options):

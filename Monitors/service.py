@@ -232,7 +232,7 @@ class MonitorEximQueue(Monitor):
 
     type = "eximqueue"
     max_length = 10
-    r = re.compile("(?P<count>\d+) matches out of (?P<total>\d+) messages")
+    r = re.compile(r"(?P<count>\d+) matches out of (?P<total>\d+) messages")
     path = "/usr/local/sbin"
 
     def __init__(self, name, config_options):
@@ -284,7 +284,7 @@ class MonitorWindowsDHCPScope(Monitor):
     max_used = 0
     scope = ""
     server = ""
-    r = re.compile("No of Clients\(version \d+\): (?P<clients>\d+) in the Scope")
+    r = re.compile(r"No of Clients\(version \d+\): (?P<clients>\d+) in the Scope")
 
     def __init__(self, name, config_options):
         if not self.is_windows(True):
