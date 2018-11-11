@@ -263,6 +263,7 @@ def main():
     parser.add_option('--loops', dest='loops', default=-1, help=SUPPRESS_HELP, type=int)
     parser.add_option('-l', '--log-level', dest="loglevel", default="warn", help="Log level: critical, error, warn, info, debug")
     parser.add_option('-C', '--no-colour', '--no-color', action='store_true', dest='no_colour', default=False, help='Do not colourise log output')
+    parser.add_option('--no-timestamps', action='store_true', dest='no_timestamps', default=False, help='Do not prefix log output with timestamps')
 
     (options, _) = parser.parse_args()
 
@@ -278,6 +279,11 @@ def main():
         print('Warning: --debug is deprecated; use --log-level=debug')
         options.loglevel = 'debug'
 
+    if options.no_timestamps:
+        logging_timestamp = ''
+    else:
+        logging_timestamp = '%(asctime)s '
+
     try:
         log_level = getattr(logging, options.loglevel.upper())
     except AttributeError:
@@ -285,11 +291,11 @@ def main():
         sys.exit(1)
 
     log_datefmt = '%Y-%m-%d %H:%M:%S'
-    log_plain_format = '%(asctime)s %(levelname)8s (%(name)s) %(message)s'
+    log_plain_format = logging_timestamp + '%(levelname)8s (%(name)s) %(message)s'
     if not options.no_colour:
         try:
             handler = colorlog.StreamHandler()
-            handler.setFormatter(colorlog.ColoredFormatter('%(asctime)s %(log_color)s%(levelname)8s%(reset)s (%(name)s) %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
+            handler.setFormatter(colorlog.ColoredFormatter(logging_timestamp + '%(log_color)s%(levelname)8s%(reset)s (%(name)s) %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
             main_logger.addHandler(handler)
         except NameError:
             logging.basicConfig(format=log_plain_format, datefmt=log_datefmt)
