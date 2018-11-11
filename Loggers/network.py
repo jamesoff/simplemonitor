@@ -57,7 +57,7 @@ class NetworkLogger(Logger):
         return "Sending monitor results to {0}:{1}".format(self.host, self.port)
 
     def save_result2(self, name, monitor):
-        if not self.doing_batch:
+        if not self.doing_batch:  # pragma: no cover
             self.logger_logger.error("NetworkLogger.save_result2() called while not doing batch.")
             return
         self.logger_logger.debug("network logger: %s %s", name, monitor)
@@ -134,7 +134,7 @@ class Listener(Thread):
                     serialized = serialized[mac_size + 1:]
                     mac = hmac.new(self.key, serialized)
                     my_digest = mac.digest()
-                except IndexError:
+                except IndexError:  # pragma: no cover
                     raise ValueError('Did not receive any or enough data from %s', addr[0])
                 if type(my_digest) is str:
                     self.logger.debug("Computed my digest to be %s; remote is %s", my_digest, their_digest)

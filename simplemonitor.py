@@ -33,7 +33,7 @@ class SimpleMonitor:
 
         try:
             signal.signal(signal.SIGHUP, self.hup_loggers)
-        except Exception:
+        except Exception:  # pragma: no cover
             module_logger.warning("Unable to trap SIGHUP... maybe it doesn't exist on this platform.\n")
 
     def hup_loggers(self, sig_number, stack_frame):
@@ -138,7 +138,7 @@ class SimpleMonitor:
             for key in list(self.remote_monitors.keys()):
                 module_logger.info('remote logging for %s', key)
                 self.remote_monitors[key].log_result(key, logger)
-        except Exception:
+        except Exception:  # pragma: no cover
             module_logger.exception("exception while logging remote monitors")
         logger.end_batch()
 
@@ -167,7 +167,7 @@ class SimpleMonitor:
                         module_logger.info("skipping alerters for disabled monitor %s", key)
                 else:
                     module_logger.info("skipping alerter %s as monitor is not in group", alerter.name)
-            except Exception:
+            except Exception:  # pragma: no cover
                 module_logger.exception("exception caught while alerting for %s", key)
         for key in list(self.remote_monitors.keys()):
             try:
@@ -176,7 +176,7 @@ class SimpleMonitor:
                 else:
                     module_logger.debug("not alerting for monitor %s as it doesn't want remote alerts", key)
                     continue
-            except Exception:
+            except Exception:  # pragma: no cover
                 module_logger.exception("exception caught while alerting for %s", key)
 
     def count_monitors(self):
