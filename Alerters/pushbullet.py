@@ -85,7 +85,7 @@ class PushbulletAlerter(Alerter):
         if not self.dry_run:
             try:
                 self.send_pushbullet_notification(subject, body)
-            except Exception as e:
+            except Exception:
                 self.alerter_logger.exception("Couldn't send push notification")
                 self.available = False
         else:

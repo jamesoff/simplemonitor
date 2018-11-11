@@ -87,7 +87,7 @@ class NMAAlerter(Alerter):
                     self.alerter_logger.error("Unable to send NMA: %s (%s)", s.split("|")[0], s.split("|")[1])
                     self.alerter_logger.error("URL: %s, PARAMS: %s", url, params)
                     self.available = False
-            except Exception as e:
+            except Exception:
                 self.alerter_logger.exception("NMA sending failed")
                 self.available = False
         else:

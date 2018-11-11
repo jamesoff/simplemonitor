@@ -114,7 +114,7 @@ class BulkSMSAlerter(Alerter):
                 if not s.startswith("0"):
                     self.alerter_logger.error("Unable to send SMS: %s (%s)", s.split("|")[0], s.split("|")[1])
                     self.available = False
-            except Exception as e:
+            except Exception:
                 self.alerter_logger.exception("SMS sending failed")
                 self.available = False
         else:

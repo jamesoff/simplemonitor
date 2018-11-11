@@ -128,7 +128,7 @@ class SlackAlerter(Alerter):
                 r = requests.post(self.url, json=message_json)
                 if not r.status_code == 200:
                     self.alerter_logger.error("POST to slack webhook failed: %s", r)
-            except Exception as e:
+            except Exception:
                 self.alerter_logger.exception("Failed to post to slack webhook")
                 self.available = False
         else:

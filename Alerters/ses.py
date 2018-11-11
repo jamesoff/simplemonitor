@@ -102,7 +102,7 @@ class SESAlerter(Alerter):
             try:
                 client = boto3.client('ses', **self.ses_client_params)
                 client.send_email(**mail)
-            except Exception as e:
+            except Exception:
                 self.alerter_logger.exception("couldn't send mail")
                 self.available = False
         else:

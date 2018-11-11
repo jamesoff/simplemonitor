@@ -124,7 +124,7 @@ class EMailAlerter(Alerter):
                     server.login(self.username, self.password)
                 server.sendmail(self.from_addr, self.to_addr, message.as_string())
                 server.quit()
-            except Exception as e:
+            except Exception:
                 self.alerter_logger.exception("couldn't send mail")
                 self.available = False
         else:

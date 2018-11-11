@@ -73,7 +73,7 @@ class ExecuteAlerter(Alerter):
             self.alerter_logger.debug("About to execute command: %s", command)
             try:
                 subprocess.call(shlex.split(command))
-            except Exception as e:
+            except Exception:
                 self.alerter_logger.exception("Exception encountered running command: %s", command)
             if self.debug:
                 self.alerter_logger.debug("Command has finished.")

@@ -148,9 +148,9 @@ class Listener(Thread):
                     result = pickle.loads(serialized)
                 try:
                     self.simplemonitor.update_remote_monitor(result, addr[0])
-                except Exception as e:
+                except Exception:
                     self.logger.exception('Error adding remote monitor')
-            except socket.error as e:
+            except socket.error:
                 fail_info = sys.exc_info()
                 try:
                     if fail_info[1][0] == 4:
