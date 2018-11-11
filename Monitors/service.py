@@ -14,9 +14,10 @@ except ImportError:
 
 from util import MonitorConfigurationError
 
-from .monitor import Monitor
+from .monitor import Monitor, register
 
 
+@register
 class MonitorSvc(Monitor):
     """Monitor a service handled by daemontools."""
 
@@ -48,6 +49,7 @@ class MonitorSvc(Monitor):
         return (self.path, )
 
 
+@register
 class MonitorService(Monitor):
     """Monitor a Windows service"""
 
@@ -106,6 +108,7 @@ class MonitorService(Monitor):
         return (self.host, self.service_name, self.want_state)
 
 
+@register
 class MonitorRC(Monitor):
     """Monitor a service handled by an rc.d script.
 
@@ -157,6 +160,7 @@ class MonitorRC(Monitor):
         return "Checks service %s is running" % self.script_path
 
 
+@register
 class MonitorSystemdUnit(Monitor):
     """Monitor a systemd unit.
 
@@ -222,12 +226,13 @@ class MonitorSystemdUnit(Monitor):
         return "Checks unit %s is running" % self.script_path
 
 
+@register
 class MonitorEximQueue(Monitor):
     """Make sure an exim queue isn't too big."""
 
     type = "eximqueue"
     max_length = 10
-    r = re.compile("(?P<count>\d+) matches out of (?P<total>\d+) messages")
+    r = re.compile(r"(?P<count>\d+) matches out of (?P<total>\d+) messages")
     path = "/usr/local/sbin"
 
     def __init__(self, name, config_options):
@@ -268,6 +273,7 @@ class MonitorEximQueue(Monitor):
         return (self.max_length, )
 
 
+@register
 class MonitorWindowsDHCPScope(Monitor):
     """Checks a Windows DHCP scope to make sure it has sufficient free IPs in the pool."""
 
@@ -278,7 +284,7 @@ class MonitorWindowsDHCPScope(Monitor):
     max_used = 0
     scope = ""
     server = ""
-    r = re.compile("No of Clients\(version \d+\): (?P<clients>\d+) in the Scope")
+    r = re.compile(r"No of Clients\(version \d+\): (?P<clients>\d+) in the Scope")
 
     def __init__(self, name, config_options):
         if not self.is_windows(True):

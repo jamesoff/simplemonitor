@@ -7,7 +7,7 @@ import logging
 import sys
 import multiprocessing as mp
 
-"""
+r"""
 Notes:
 
 This service expects the 'monitor.ini' file to exist in the same directory.

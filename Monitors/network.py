@@ -9,9 +9,10 @@ import subprocess
 import requests
 from requests.auth import HTTPBasicAuth
 
-from .monitor import Monitor
+from .monitor import Monitor, register
 
 
+@register
 class MonitorHTTP(Monitor):
     """Check an HTTP server is working right.
 
@@ -125,6 +126,7 @@ class MonitorHTTP(Monitor):
         return (self.url, self.regexp_text, self.allowed_codes)
 
 
+@register
 class MonitorTCP(Monitor):
     """TCP port monitor"""
 
@@ -163,6 +165,7 @@ class MonitorTCP(Monitor):
         return (self.host, self.port)
 
 
+@register
 class MonitorHost(Monitor):
     """Ping a host to make sure it's up"""
 
@@ -191,16 +194,16 @@ class MonitorHost(Monitor):
         platform = sys.platform
         if platform in ['win32', 'cygwin']:
             self.ping_command = "ping -n 1 -w " + ping_ms + " %s"
-            self.ping_regexp = 'Reply from [0-9a-f:.]+:.+time[=<]\d+ms'
-            self.time_regexp = "Average = (?P<ms>\d+)ms"
+            self.ping_regexp = r'Reply from [0-9a-f:.]+:.+time[=<]\d+ms'
+            self.time_regexp = r"Average = (?P<ms>\d+)ms"
         elif platform.startswith('freebsd') or platform.startswith('darwin'):
             self.ping_command = "ping -c1 -t" + ping_ttl + " %s"
             self.ping_regexp = "bytes from"
-            self.time_regexp = "min/avg/max/stddev = [\d.]+/(?P<ms>[\d.]+)/"
+            self.time_regexp = r"min/avg/max/stddev = [\d.]+/(?P<ms>[\d.]+)/"
         elif platform.startswith('linux'):
             self.ping_command = "ping -c1 -W" + ping_ttl + " %s"
             self.ping_regexp = "bytes from"
-            self.time_regexp = "min/avg/max/stddev = [\d.]+/(?P<ms>[\d.]+)/"
+            self.time_regexp = r"min/avg/max/stddev = [\d.]+/(?P<ms>[\d.]+)/"
         else:
             RuntimeError("Don't know how to run ping on this platform, help!")
 
@@ -242,6 +245,7 @@ class MonitorHost(Monitor):
         return (self.host, )
 
 
+@register
 class MonitorDNS(Monitor):
     """Monitor DNS server."""
 

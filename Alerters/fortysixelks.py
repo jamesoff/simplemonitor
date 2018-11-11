@@ -122,7 +122,7 @@ class FortySixElksAlerter(Alerter):
                 if s['status'] not in ('created', 'delivered'):
                     self.alerter_logger.error("Unable to send SMS: %s", s)
                     self.available = False
-            except Exception as e:
+            except Exception:
                 self.alerter_logger.exception("SMS sending failed")
                 self.available = False
         else:

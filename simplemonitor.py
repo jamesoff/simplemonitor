@@ -7,6 +7,7 @@ import time
 import logging
 
 import Loggers
+import Monitors
 
 module_logger = logging.getLogger('simplemonitor')
 
@@ -17,8 +18,9 @@ class SimpleMonitor:
     #      could give better control over restarting the listener thread
     need_hup = False
 
-    def __init__(self):
+    def __init__(self, allow_pickle=True):
         """Main class turn on."""
+        self.allow_pickle = allow_pickle
         self.monitors = {}
         self.failed = []
         self.still_failing = []
@@ -31,7 +33,7 @@ class SimpleMonitor:
 
         try:
             signal.signal(signal.SIGHUP, self.hup_loggers)
-        except Exception:
+        except Exception:  # pragma: no cover
             module_logger.warning("Unable to trap SIGHUP... maybe it doesn't exist on this platform.\n")
 
     def hup_loggers(self, sig_number, stack_frame):
@@ -111,7 +113,7 @@ class SimpleMonitor:
                         not_run = True
                         self.monitors[monitor].record_skip(None)
                         module_logger.info("Not run: %s", monitor)
-                except Exception as e:
+                except Exception:
                     module_logger.exception("Monitor %s threw exception during run_test()", monitor)
                 if self.monitors[monitor].get_error_count() > 0:
                     if self.monitors[monitor].virtual_fail_count() == 0:
@@ -136,7 +138,7 @@ class SimpleMonitor:
             for key in list(self.remote_monitors.keys()):
                 module_logger.info('remote logging for %s', key)
                 self.remote_monitors[key].log_result(key, logger)
-        except Exception:
+        except Exception:  # pragma: no cover
             module_logger.exception("exception while logging remote monitors")
         logger.end_batch()
 
@@ -165,7 +167,7 @@ class SimpleMonitor:
                         module_logger.info("skipping alerters for disabled monitor %s", key)
                 else:
                     module_logger.info("skipping alerter %s as monitor is not in group", alerter.name)
-            except Exception as e:
+            except Exception:  # pragma: no cover
                 module_logger.exception("exception caught while alerting for %s", key)
         for key in list(self.remote_monitors.keys()):
             try:
@@ -174,7 +176,7 @@ class SimpleMonitor:
                 else:
                     module_logger.debug("not alerting for monitor %s as it doesn't want remote alerts", key)
                     continue
-            except Exception as e:
+            except Exception:  # pragma: no cover
                 module_logger.exception("exception caught while alerting for %s", key)
 
     def count_monitors(self):
@@ -209,7 +211,24 @@ class SimpleMonitor:
             self.log_result(self.loggers[key])
 
     def update_remote_monitor(self, data, hostname):
-        for monitor in list(data.keys()):
-            module_logger.info("updating remote monitor %s", monitor)
-            remote_monitor = pickle.loads(data[monitor])
-            self.remote_monitors[monitor] = remote_monitor
+        for (name, state) in data.items():
+            module_logger.info("updating remote monitor %s", name)
+            if isinstance(state, dict):
+                remote_monitor = Monitors.monitor.get_class(state['cls']) \
+                    .from_python_dict(state['data'])
+                self.remote_monitors[name] = remote_monitor
+            elif self.allow_pickle:
+                # Fallback for old remote monitors
+                try:
+                    remote_monitor = pickle.loads(state)
+                except pickle.UnpicklingError:
+                    module_logger.critical('Could not unpickle monitor %s', name)
+                else:
+                    self.remote_monitors[name] = remote_monitor
+            else:
+                module_logger.critical(
+                    'Could not deserialize state of monitor %s. '
+                    'If the remote host uses an old version of '
+                    'simplemonitor, you need to set allow_pickle = true '
+                    'in the [monitor] section.',
+                    name)

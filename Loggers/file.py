@@ -98,7 +98,7 @@ class FileLogger(Logger):
 
             if not self.buffered:
                 self.file_handle.flush()
-        except Exception as e:
+        except Exception:
             self.logger_logger.exception("Error writing to logfile %s", self.filename)
 
     def hup(self):
@@ -295,7 +295,7 @@ class HTMLLogger(Logger):
             file_handle.close()
             os.chmod(file_name, stat.S_IREAD | stat.S_IWRITE | stat.S_IRGRP | stat.S_IROTH)
             shutil.move(file_name, os.path.join(self.folder, self.filename))
-        except Exception as e:
+        except Exception:
             self.logger_logger.exception("problem closing temporary file for HTML output")
 
     def parse_file(self, file_handle):

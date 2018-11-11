@@ -248,7 +248,7 @@ def load_alerters(m, config):
 
 
 def main():
-    """This is where it happens \o/"""
+    r"""This is where it happens \o/"""
 
     parser = OptionParser()
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False, help=SUPPRESS_HELP)
@@ -345,7 +345,14 @@ def main():
 
     main_logger.info("Loading monitor config from %s", monitors_file)
 
-    m = SimpleMonitor()
+    try:
+        allow_pickle = config.getboolean("monitor", "allow_pickle",
+                                         fallback='true')
+    except ValueError:
+        main_logger.critical('allow_pickle should be "true" or "false".')
+        sys.exit(1)
+
+    m = SimpleMonitor(allow_pickle=allow_pickle)
 
     m = load_monitors(m, monitors_file)
 
@@ -386,8 +393,13 @@ def main():
 
     if enable_remote:
         if not options.quiet:
-            main_logger.info("Starting remote listener thread")
-        remote_listening_thread = Loggers.network.Listener(m, remote_port, key)
+            if not allow_pickle:
+                allowing_pickle = "not "
+            else:
+                allowing_pickle = ""
+            main_logger.info("Starting remote listener thread ({0}allowing pickle data)".format(allowing_pickle))
+        remote_listening_thread = Loggers.network.Listener(
+            m, remote_port, key, allow_pickle=allow_pickle)
         remote_listening_thread.daemon = True
         remote_listening_thread.start()
 
@@ -421,13 +433,14 @@ def main():
             if not options.quiet:
                 print("\n--> EJECT EJECT")
             loop = False
-        except Exception as e:
+        except Exception:
             sys.exc_info()
             main_logger.exception("Caught unhandled exception during main loop")
         if loop and enable_remote:
             if not remote_listening_thread.isAlive():
                 main_logger.error("Listener thread died :(")
-                remote_listening_thread = Loggers.network.Listener(m, remote_port, key)
+                remote_listening_thread = Loggers.network.Listener(
+                    m, remote_port, key, allow_pickle=allow_pickle)
                 remote_listening_thread.start()
 
         if options.one_shot:
@@ -447,13 +460,13 @@ def main():
     if pidfile:
         try:
             os.unlink(pidfile)
-        except Exception as e:
+        except Exception:
             main_logger.error("Couldn't remove pidfile!")
 
     if not options.quiet:
         main_logger.info("Finished.")
 
-    if options.one_shot:
+    if options.one_shot:  # pragma: no cover
         ok = True
         print('\n--> One-shot results:')
         for monitor in sorted(m.monitors.keys()):

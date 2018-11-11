@@ -27,6 +27,27 @@ except ImportError:
 from util import get_config_option, MonitorConfigurationError, short_hostname
 
 
+def _check_is_monitor_subclass(cls):
+    if not issubclass(cls, Monitor):
+        mod = 'simplemonitor.Monitors.monitor'
+        raise TypeError(('%s.register may only be used on subclasses '
+                         'of %s.Monitor') % (mod, mod))
+
+
+_monitor_classes = {}
+
+
+def register(cls):
+    """Decorator for monitor classes."""
+    _check_is_monitor_subclass(cls)
+    _monitor_classes[cls.__name__] = cls
+    return cls
+
+
+def get_class(name):
+    return _monitor_classes[name]
+
+
 class Monitor:
     """Simple monitor. This class is abstract."""
 
@@ -404,13 +425,13 @@ class Monitor:
         pass
 
     def __getstate__(self):
-        """Loggers (the Python kind, not the SimpleMonitor kind) can't be pickled.
-        In order to work around that, we omit them when getting pickled (for
+        """Loggers (the Python kind, not the SimpleMonitor kind) can't be serialized.
+        In order to work around that, we omit them when getting serialized (for
         being sent over the network).
         """
-        pickle_dict = dict(self.__dict__)
-        del pickle_dict['monitor_logger']
-        return pickle_dict
+        serialize_dict = dict(self.__dict__)
+        del serialize_dict['monitor_logger']
+        return serialize_dict
 
     def __setstate__(self, state):
         self.__dict__.update(state)
@@ -418,6 +439,16 @@ class Monitor:
 
     def _set_monitor_logger(self):
         self.monitor_logger = logging.getLogger('simplemonitor.monitor-' + self.name)
+
+    def to_python_dict(self):
+        return self.__getstate__()
+
+    @classmethod
+    def from_python_dict(cls, d):
+        monitor = Monitor()
+        monitor.__class__ = cls
+        monitor.__setstate__(d)
+        return monitor
 
     def get_downtime(self):
         try:
@@ -436,6 +467,7 @@ class Monitor:
         return self.describe()
 
 
+@register
 class MonitorFail(Monitor):
     """A monitor which always fails.
 
@@ -470,6 +502,7 @@ class MonitorFail(Monitor):
         return (self.interval,)
 
 
+@register
 class MonitorNull(Monitor):
     """A monitor which always passes."""
 
