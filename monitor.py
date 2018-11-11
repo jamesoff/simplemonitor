@@ -433,7 +433,7 @@ def main():
             if not options.quiet:
                 print("\n--> EJECT EJECT")
             loop = False
-        except Exception as e:
+        except Exception:
             sys.exc_info()
             main_logger.exception("Caught unhandled exception during main loop")
         if loop and enable_remote:
@@ -460,7 +460,7 @@ def main():
     if pidfile:
         try:
             os.unlink(pidfile)
-        except Exception as e:
+        except Exception:
             main_logger.error("Couldn't remove pidfile!")
 
     if not options.quiet:

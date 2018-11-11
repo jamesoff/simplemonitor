@@ -113,7 +113,7 @@ class SimpleMonitor:
                         not_run = True
                         self.monitors[monitor].record_skip(None)
                         module_logger.info("Not run: %s", monitor)
-                except Exception as e:
+                except Exception:
                     module_logger.exception("Monitor %s threw exception during run_test()", monitor)
                 if self.monitors[monitor].get_error_count() > 0:
                     if self.monitors[monitor].virtual_fail_count() == 0:
@@ -167,7 +167,7 @@ class SimpleMonitor:
                         module_logger.info("skipping alerters for disabled monitor %s", key)
                 else:
                     module_logger.info("skipping alerter %s as monitor is not in group", alerter.name)
-            except Exception as e:
+            except Exception:
                 module_logger.exception("exception caught while alerting for %s", key)
         for key in list(self.remote_monitors.keys()):
             try:
@@ -176,7 +176,7 @@ class SimpleMonitor:
                 else:
                     module_logger.debug("not alerting for monitor %s as it doesn't want remote alerts", key)
                     continue
-            except Exception as e:
+            except Exception:
                 module_logger.exception("exception caught while alerting for %s", key)
 
     def count_monitors(self):
