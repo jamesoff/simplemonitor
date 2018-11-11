@@ -466,7 +466,7 @@ def main():
     if not options.quiet:
         main_logger.info("Finished.")
 
-    if options.one_shot:
+    if options.one_shot:  # pragma: no cover
         ok = True
         print('\n--> One-shot results:')
         for monitor in sorted(m.monitors.keys()):
