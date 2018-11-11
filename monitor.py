@@ -393,7 +393,11 @@ def main():
 
     if enable_remote:
         if not options.quiet:
-            main_logger.info("Starting remote listener thread")
+            if not allow_pickle:
+                allowing_pickle = "not "
+            else:
+                allowing_pickle = ""
+            main_logger.info("Starting remote listener thread ({0}allowing pickle data)".format(allowing_pickle))
         remote_listening_thread = Loggers.network.Listener(
             m, remote_port, key, allow_pickle=allow_pickle)
         remote_listening_thread.daemon = True

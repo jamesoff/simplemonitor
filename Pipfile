@@ -13,6 +13,7 @@ pync = {version = ">=2.0.3", sys_platform = "== 'darwin'"}
 [dev-packages]
 "flake8" = "*"
 codecov = "*"
+coverage = "*"
 
 [requires]
 python_version = "3.6"
