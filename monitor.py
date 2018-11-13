@@ -89,6 +89,7 @@ def load_monitors(m, filename):
                 monitor_type, ', '.join(Monitors.monitor.all_types()))
             continue
         new_monitor = cls(monitor, config_options)
+        new_monitor.set_mon_refs(m)
 
         main_logger.info("Adding %s monitor %s: %s", monitor_type, monitor, new_monitor)
         m.add_monitor(monitor, new_monitor)

@@ -229,6 +229,11 @@ class Monitor:
         """Override this method to return a list of parameters (for logging)"""
         raise NotImplementedError
 
+    def set_mon_refs(self, mmm):
+        """Called with a reference to the list of all monitors.
+        Only used by CompoundMonitor for now."""
+        pass
+
     def set_tolerance(self, tolerance):
         """Set our tolerance."""
         self.tolerance = tolerance
