@@ -6,7 +6,7 @@ except ImportError:
     sqlite_available = False
 
 import time
-from .logger import Logger
+from .logger import Logger, register
 from socket import gethostname
 
 
@@ -32,8 +32,11 @@ class DBLogger(Logger):
         self.connected = True
 
 
+@register
 class DBFullLogger(DBLogger):
     """Logs results to a sqlite3 db."""
+
+    type = "db"
 
     def save_result(self, monitor_name, monitor_type, monitor_params, monitor_result, monitor_info, hostname=""):
         """Write to the database."""
@@ -67,8 +70,11 @@ class DBFullLogger(DBLogger):
         return "Logging results to {0}".format(self.db_path)
 
 
+@register
 class DBStatusLogger(DBLogger):
     """Maintains status snapshot in db."""
+
+    type = "dbstatuslogger"
 
     def save_result(self, monitor_name, monitor_type, monitor_params, monitor_result, monitor_info, hostname=""):
         if hostname == "":

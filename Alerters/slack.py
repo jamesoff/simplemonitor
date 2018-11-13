@@ -5,11 +5,14 @@ except ImportError:
     requests_available = False
 
 from util import format_datetime
-from .alerter import Alerter
+from .alerter import Alerter, register
 
 
+@register
 class SlackAlerter(Alerter):
     """Send alerts to a Slack webhook."""
+
+    type = "slack"
 
     channel = None
     username = None

@@ -10,7 +10,7 @@ import util
 
 from threading import Thread
 
-from .logger import Logger
+from .logger import Logger, register
 
 if sys.version_info[0] >= 3:
     from json import JSONDecodeError
@@ -23,9 +23,11 @@ else:
 #  available, interrupts always go to the main thread.)
 
 
+@register
 class NetworkLogger(Logger):
     """Send our results over the network to another instance."""
 
+    type = "network"
     supports_batch = True
 
     def __init__(self, config_options):
@@ -61,9 +63,13 @@ class NetworkLogger(Logger):
             self.logger_logger.error("NetworkLogger.save_result2() called while not doing batch.")
             return
         self.logger_logger.debug("network logger: %s %s", name, monitor)
+        if monitor.type == "unknown":
+            self.logger_logger.error(
+                "Cannot serialize monitor %s, has type 'unknown'." % name)
+            return
         try:
             self.batch_data[monitor.name] = {
-                'cls': monitor.__class__.__name__,
+                'cls_type': monitor.type,
                 'data': monitor.to_python_dict(),
             }
         except Exception:

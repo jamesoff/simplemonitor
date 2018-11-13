@@ -214,7 +214,7 @@ class SimpleMonitor:
         for (name, state) in data.items():
             module_logger.info("updating remote monitor %s", name)
             if isinstance(state, dict):
-                remote_monitor = Monitors.monitor.get_class(state['cls']) \
+                remote_monitor = Monitors.monitor.get_class(state['cls_type']) \
                     .from_python_dict(state['data'])
                 self.remote_monitors[name] = remote_monitor
             elif self.allow_pickle:

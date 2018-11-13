@@ -6,11 +6,14 @@ except Exception:
 
 import platform
 
-from .alerter import Alerter
+from .alerter import Alerter, register
 
 
+@register
 class NotificationCenterAlerter(Alerter):
     """Send alerts to the Mac OS X Notification Center."""
+
+    type = "nc"
 
     def __init__(self, config_options):
         Alerter.__init__(self, config_options)

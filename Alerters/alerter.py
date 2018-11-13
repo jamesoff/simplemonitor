@@ -7,11 +7,13 @@ import logging
 from socket import gethostname
 
 from util import get_config_option, AlerterConfigurationError
+from util import subclass_dict_handler
 
 
 class Alerter:
     """Abstract class basis for alerters."""
 
+    type = "unknown"
     dependencies = []
     hostname = gethostname()
     available = False
@@ -239,3 +241,7 @@ class Alerter:
         else:
             self.alerter_logger.error("this should never happen! Unknown times_type in alerter")
             return True
+
+
+(register, get_class, all_types) = subclass_dict_handler(
+    'simplemonitor.Alerters.alerter', Alerter)

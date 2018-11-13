@@ -140,3 +140,27 @@ else:
         if isinstance(string, bytearray):
             string = string.decode('ascii')
         return JSONDecoder().decode(string)
+
+
+def subclass_dict_handler(mod, base_cls):
+    def _check_is_subclass(cls):
+        if not issubclass(cls, base_cls):
+            raise TypeError(('%s.register may only be used on subclasses '
+                             'of %s.%s') % (mod, mod, base_cls.__name__))
+
+    _subclasses = {}
+
+    def register(cls):
+        """Decorator for monitor classes."""
+        _check_is_subclass(cls)
+        assert cls.type != "unknown", cls
+        _subclasses[cls.type] = cls
+        return cls
+
+    def get_class(type_):
+        return _subclasses[type_]
+
+    def all_types():
+        return list(_subclasses)
+
+    return (register, get_class, all_types)
