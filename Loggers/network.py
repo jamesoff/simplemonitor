@@ -103,9 +103,8 @@ class Listener(Thread):
             raise util.LoggerConfigurationError("Network logger key is missing")
         Thread.__init__(self)
         self.allow_pickle = allow_pickle
-        # On Linux, if /proc/sys/net/ipv6/bindv6only=0 (the default), then
-        # the following line also binds on IPv4.
         self.sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+        self.sock.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, False)
         self.sock.bind(('', port))
         self.simplemonitor = simplemonitor
         self.key = bytearray(key, 'utf-8')
