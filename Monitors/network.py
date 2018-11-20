@@ -212,21 +212,21 @@ class MonitorHost(Monitor):
             'host',
             required=True
         )
+        self.r = re.compile(self.ping_regexp)
+        self.r2 = re.compile(self.time_regexp)
 
     def run_test(self):
-        r = re.compile(self.ping_regexp)
-        r2 = re.compile(self.time_regexp)
         success = False
         pingtime = 0.0
         try:
             cmd = (self.ping_command % self.host).split(' ')
             output = subprocess.check_output(cmd)
             for line in str(output).split("\n"):
-                matches = r.search(line)
+                matches = self.r.search(line)
                 if matches:
                     success = True
                 else:
-                    matches = r2.search(line)
+                    matches = self.r2.search(line)
                     if matches:
                         pingtime = matches.group("ms")
         except Exception as e:
