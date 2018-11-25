@@ -81,7 +81,6 @@ class NetworkLogger(Logger):
                 except socket.error:
                     s.close()
                     s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
-                    s.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, False)
                     s.connect((self.host, self.port))
                 s.send(send_bytes)
             finally:
