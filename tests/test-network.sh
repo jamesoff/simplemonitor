@@ -1,42 +1,36 @@
 #!/usr/bin/env bash
 
-set -ex
+set -exu
 
-rm -f network.log
+run_test() {
+	server_config=$1
+	client_config=$2
 
-# start the master instance
-COVERAGE_FILE=.coverage.1 coverage run --debug=dataio monitor.py -f tests/network/master/monitor.ini -d --loops=2 &
-sleep 1
+	echo "==> Running network test with server config $server_config and client config $client_config"
 
-# run the client instance
-COVERAGE_FILE=.coverage.2 coverage run --debug=dataio monitor.py -f tests/network/client/monitor.ini -1 -d
+	rm -f network.log
 
-# let them run
-sleep 15
+	# start the master instance
+	COVERAGE_FILE=.coverage.1 coverage run --debug=dataio monitor.py -f "tests/network/master/$server_config" -d --loops=2 &
+	sleep 1
 
-# make sure the client reached the master
-grep test2 network.log
+	# run the client instance
+	COVERAGE_FILE=.coverage.2 coverage run --debug=dataio monitor.py -f "tests/network/client/$client_config" -1 -d
 
-wait
+	# let them run
+	sleep 15
 
-coverage combine --append
+	# make sure the client reached the master
+	grep test2 network.log
 
-### Test disabling pickle
-rm -f network.log
+	wait
 
-# start the master instance
-COVERAGE_FILE=.coverage.1 coverage run --debug=dataio monitor.py -f tests/network/master/monitor-no-pickle.ini -d --loops=2 &
-sleep 1
+	coverage combine --append
 
-# run the client instance
-COVERAGE_FILE=.coverage.2 coverage run --debug=dataio monitor.py -f tests/network/client/monitor.ini -1 -d
+	echo "==> Completed network test"
+	echo
+}
 
-# let them run
-sleep 15
-
-# make sure the client reached the master
-grep test2 network.log
-
-wait
-
-coverage combine --append
+run_test monitor.ini monitor.ini
+run_test monitor-no-pickle.ini monitor.ini
+run_test monitor.ini monitor-ipv6.ini
