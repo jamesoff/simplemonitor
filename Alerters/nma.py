@@ -1,13 +1,16 @@
 import requests
 
 from util import format_datetime
-from .alerter import Alerter
+from .alerter import Alerter, register
 
 
+@register
 class NMAAlerter(Alerter):
     """Send Push alerts using NMA service.
 
     Subscription required, see http://www.notifymyandroid.com/"""
+
+    type = "nma"
 
     def __init__(self, config_options):
         Alerter.__init__(self, config_options)

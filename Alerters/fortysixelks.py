@@ -5,13 +5,16 @@ except ImportError:
     requests_available = False
 
 from util import AlerterConfigurationError, format_datetime
-from .alerter import Alerter
+from .alerter import Alerter, register
 
 
+@register
 class FortySixElksAlerter(Alerter):
     """Send SMS alerts using the 46elks SMS service.
 
     Account required, see https://www.46elks.com/"""
+
+    type = "46elks"
 
     def __init__(self, config_options):
         Alerter.__init__(self, config_options)

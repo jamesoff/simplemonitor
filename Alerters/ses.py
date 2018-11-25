@@ -8,11 +8,14 @@ except ImportError:
 import os
 
 from util import format_datetime
-from .alerter import Alerter
+from .alerter import Alerter, register
 
 
+@register
 class SESAlerter(Alerter):
     """Send email alerts using Amazon's SES service."""
+
+    type = "ses"
 
     def __init__(self, config_options):
         Alerter.__init__(self, config_options)

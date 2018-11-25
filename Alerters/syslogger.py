@@ -4,10 +4,12 @@ try:
 except ImportError:
     pass
 
-from .alerter import Alerter
+from .alerter import Alerter, register
 
 
+@register
 class SyslogAlerter(Alerter):
+    type = "syslog"
 
     def send_alert(self, name, monitor):
         type = self.should_alert(monitor)

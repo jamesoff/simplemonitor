@@ -3,13 +3,16 @@
 import requests
 
 from util import format_datetime
-from .alerter import Alerter
+from .alerter import Alerter, register
 
 
+@register
 class BulkSMSAlerter(Alerter):
     """Send SMS alerts using the BulkSMS service.
 
     Subscription required, see http://www.bulksms.co.uk"""
+
+    type = "bulksms"
 
     def __init__(self, config_options):
         Alerter.__init__(self, config_options)

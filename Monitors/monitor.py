@@ -25,27 +25,7 @@ except ImportError:
     win32_available = False
 
 from util import get_config_option, MonitorConfigurationError, short_hostname
-
-
-def _check_is_monitor_subclass(cls):
-    if not issubclass(cls, Monitor):
-        mod = 'simplemonitor.Monitors.monitor'
-        raise TypeError(('%s.register may only be used on subclasses '
-                         'of %s.Monitor') % (mod, mod))
-
-
-_monitor_classes = {}
-
-
-def register(cls):
-    """Decorator for monitor classes."""
-    _check_is_monitor_subclass(cls)
-    _monitor_classes[cls.__name__] = cls
-    return cls
-
-
-def get_class(name):
-    return _monitor_classes[name]
+from util import subclass_dict_handler
 
 
 class Monitor:
@@ -248,6 +228,11 @@ class Monitor:
     def get_params(self):
         """Override this method to return a list of parameters (for logging)"""
         raise NotImplementedError
+
+    def set_mon_refs(self, mmm):
+        """Called with a reference to the list of all monitors.
+        Only used by CompoundMonitor for now."""
+        pass
 
     def set_tolerance(self, tolerance):
         """Set our tolerance."""
@@ -465,6 +450,10 @@ class Monitor:
 
     def __str__(self):
         return self.describe()
+
+
+(register, get_class, all_types) = subclass_dict_handler(
+    'simplemonitor.Monitors.monitor', Monitor)
 
 
 @register

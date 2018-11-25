@@ -17,11 +17,12 @@ except ImportError:
     from io import StringIO
 
 from util import format_datetime, short_hostname
-from .logger import Logger
+from .logger import Logger, register
 
 
+@register
 class FileLogger(Logger):
-
+    type = "logfile"
     filename = ""
     only_failures = False
     buffered = True
@@ -113,9 +114,11 @@ class FileLogger(Logger):
         return "Writing log file to {0}".format(self.filename)
 
 
+@register
 class HTMLLogger(Logger):
     """A batching logger which writes a simple HTML page of the current state."""
 
+    type = "html"
     supports_batch = True
     filename = ""
     count_data = ""
@@ -344,8 +347,9 @@ class PayloadEncoder(json.JSONEncoder):
             return json.JSONEncoder.default(self, obj.__dict__)
 
 
+@register
 class JsonLogger(Logger):
-
+    type = "json"
     filename = ""
     supports_batch = True
 

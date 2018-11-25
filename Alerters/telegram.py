@@ -2,11 +2,14 @@
 import requests
 
 from util import format_datetime
-from .alerter import Alerter
+from .alerter import Alerter, register
 
 
+@register
 class TelegramAlerter(Alerter):
     """Send push notification via Telegram."""
+
+    type = "telegram"
 
     def __init__(self, config_options):
         Alerter.__init__(self, config_options)

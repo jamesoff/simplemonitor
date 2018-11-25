@@ -81,78 +81,15 @@ def load_monitors(m, filename):
         config_options = default_config.copy()
         config_options.update(get_config_dict(config, monitor))
 
-        if monitor_type == "host":
-            new_monitor = Monitors.network.MonitorHost(monitor, config_options)
-
-        elif monitor_type == "service":
-            new_monitor = Monitors.service.MonitorService(monitor, config_options)
-
-        elif monitor_type == "tcp":
-            new_monitor = Monitors.network.MonitorTCP(monitor, config_options)
-
-        elif monitor_type == "rc":
-            new_monitor = Monitors.service.MonitorRC(monitor, config_options)
-
-        elif monitor_type == "systemd-unit":
-            new_monitor = Monitors.service.MonitorSystemdUnit(monitor, config_options)
-
-        elif monitor_type == "diskspace":
-            new_monitor = Monitors.host.MonitorDiskSpace(monitor, config_options)
-
-        elif monitor_type == "http":
-            new_monitor = Monitors.network.MonitorHTTP(monitor, config_options)
-
-        elif monitor_type == "apcupsd":
-            new_monitor = Monitors.host.MonitorApcupsd(monitor, config_options)
-
-        elif monitor_type == "svc":
-            new_monitor = Monitors.service.MonitorSvc(monitor, config_options)
-
-        elif monitor_type == "backup":
-            new_monitor = Monitors.file.MonitorBackup(monitor, config_options)
-
-        elif monitor_type == "portaudit":
-            new_monitor = Monitors.host.MonitorPortAudit(monitor, config_options)
-
-        elif monitor_type == "pkgaudit":
-            new_monitor = Monitors.host.MonitorPkgAudit(monitor, config_options)
-
-        elif monitor_type == "loadavg":
-            new_monitor = Monitors.host.MonitorLoadAvg(monitor, config_options)
-
-        elif monitor_type == "eximqueue":
-            new_monitor = Monitors.service.MonitorEximQueue(monitor, config_options)
-
-        elif monitor_type == "windowsdhcp":
-            new_monitor = Monitors.service.MonitorWindowsDHCPScope(monitor, config_options)
-
-        elif monitor_type == "zap":
-            new_monitor = Monitors.host.MonitorZap(monitor, config_options)
-
-        elif monitor_type == "fail":
-            new_monitor = Monitors.monitor.MonitorFail(monitor, config_options)
-
-        elif monitor_type == "null":
-            new_monitor = Monitors.monitor.MonitorNull(monitor, config_options)
-
-        elif monitor_type == "filestat":
-            new_monitor = Monitors.host.MonitorFileStat(monitor, config_options)
-
-        elif monitor_type == "compound":
-            new_monitor = Monitors.compound.CompoundMonitor(monitor, config_options)
-            new_monitor.set_mon_refs(m)
-
-        elif monitor_type == 'dns':
-            new_monitor = Monitors.network.MonitorDNS(monitor, config_options)
-
-        elif monitor_type == 'command':
-            new_monitor = Monitors.host.MonitorCommand(monitor, config_options)
-
-        else:
-            main_logger.error("Unknown type %s for monitor %s", monitor_type, monitor)
+        try:
+            cls = Monitors.monitor.get_class(monitor_type)
+        except KeyError:
+            main_logger.error(
+                "Unknown monitor type %s; valid types are: %s",
+                monitor_type, ', '.join(Monitors.monitor.all_types()))
             continue
-        if new_monitor is None:
-            continue
+        new_monitor = cls(monitor, config_options)
+        new_monitor.set_mon_refs(m)
 
         main_logger.info("Adding %s monitor %s: %s", monitor_type, monitor, new_monitor)
         m.add_monitor(monitor, new_monitor)
@@ -176,24 +113,14 @@ def load_loggers(m, config):
         logger_type = config.get(config_logger, "type")
         config_options = get_config_dict(config, config_logger)
         config_options['_name'] = config_logger
-        if logger_type == "db":
-            new_logger = Loggers.db.DBFullLogger(config_options)
-        elif logger_type == "dbstatus":
-            new_logger = Loggers.db.DBStatusLogger(config_options)
-        elif logger_type == "logfile":
-            new_logger = Loggers.file.FileLogger(config_options)
-        elif logger_type == "html":
-            new_logger = Loggers.file.HTMLLogger(config_options)
-        elif logger_type == "network":
-            new_logger = Loggers.network.NetworkLogger(config_options)
-        elif logger_type == "json":
-            new_logger = Loggers.file.JsonLogger(config_options)
-        else:
-            main_logger.error("Unknown logger logger_type %s", logger_type)
+        try:
+            logger_cls = Loggers.logger.get_class(logger_type)
+        except KeyError:
+            main_logger.error(
+                "Unknown logger type %s; valid types are: %s",
+                logger_type, ', '.join(Loggers.logger.all_types()))
             continue
-        if new_logger is None:
-            main_logger.error("Creating logger %s failed!", new_logger)
-            continue
+        new_logger = logger_cls(config_options)
         main_logger.info("Adding %s logger %s: %s", logger_type, config_logger, new_logger)
         m.add_logger(config_logger, new_logger)
         del new_logger
@@ -212,33 +139,14 @@ def load_alerters(m, config):
     for alerter in alerters:
         alerter_type = config.get(alerter, "type")
         config_options = get_config_dict(config, alerter)
-        if alerter_type == "email":
-            new_alerter = Alerters.mail.EMailAlerter(config_options)
-        elif alerter_type == "ses":
-            new_alerter = Alerters.ses.SESAlerter(config_options)
-        elif alerter_type == "bulksms":
-            new_alerter = Alerters.bulksms.BulkSMSAlerter(config_options)
-        elif alerter_type == "46elks":
-            new_alerter = Alerters.fortysixelks.FortySixElksAlerter(config_options)
-        elif alerter_type == "syslog":
-            new_alerter = Alerters.syslogger.SyslogAlerter(config_options)
-        elif alerter_type == "execute":
-            new_alerter = Alerters.execute.ExecuteAlerter(config_options)
-        elif alerter_type == "slack":
-            new_alerter = Alerters.slack.SlackAlerter(config_options)
-        elif alerter_type == "pushover":
-            new_alerter = Alerters.pushover.PushoverAlerter(config_options)
-        elif alerter_type == "nma":
-            new_alerter = Alerters.nma.NMAAlerter(config_options)
-        elif alerter_type == "pushbullet":
-            new_alerter = Alerters.pushbullet.PushbulletAlerter(config_options)
-        elif alerter_type == "telegram":
-            new_alerter = Alerters.telegram.TelegramAlerter(config_options)
-        elif alerter_type == "nc":
-            new_alerter = Alerters.nc.NotificationCenterAlerter(config_options)
-        else:
-            main_logger.error("Unknown alerter type %s", alerter_type)
+        try:
+            alerter_cls = Alerters.alerter.get_class(alerter_type)
+        except KeyError:
+            main_logger.error(
+                "Unknown alerter type %s; valid types are: %s",
+                alerter_type, ', '.join(Alerters.alerter.all_types()))
             continue
+        new_alerter = alerter_cls(config_options)
         main_logger.info("Adding %s alerter %s", alerter_type, alerter)
         new_alerter.name = alerter
         m.add_alerter(alerter, new_alerter)
