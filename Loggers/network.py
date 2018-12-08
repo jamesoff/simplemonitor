@@ -91,8 +91,8 @@ class NetworkLogger(Logger):
                 s.send(send_bytes)
             finally:
                 s.close()
-        except Exception as e:
-            self.logger_logger.error("Failed to send network data: %s", e)
+        except Exception:
+            self.logger_logger.exception("Failed to send network data")
 
 
 class Listener(Thread):

@@ -101,10 +101,14 @@ FORMAT = '%Y-%m-%d %H:%M:%S.%f'
 
 
 class JSONEncoder(json.JSONEncoder):
+    _regexp_type = type(re.compile(''))
+
     def default(self, obj):
         if isinstance(obj, datetime.datetime):
             return {DATETIME_MAGIC_TOKEN: obj.strftime(FORMAT)}
-        return super(JSONEncoder, self).default(self, obj)
+        if isinstance(obj, self._regexp_type):
+            return None
+        return super(JSONEncoder, self).default(obj)
 
 
 class JSONDecoder(json.JSONDecoder):

@@ -174,6 +174,8 @@ class MonitorHost(Monitor):
     ping_regexp = ""
     type = "host"
     time_regexp = ""
+    r = None
+    r2 = None
 
     def __init__(self, name, config_options):
         """
@@ -212,12 +214,16 @@ class MonitorHost(Monitor):
             'host',
             required=True
         )
-        self.r = re.compile(self.ping_regexp)
-        self.r2 = re.compile(self.time_regexp)
 
     def run_test(self):
         success = False
         pingtime = 0.0
+
+        if self.r is None:
+            self.monitor_logger.debug('Creating pre-compiled regexp')
+            self.r = re.compile(self.ping_regexp)
+            self.r2 = re.compile(self.time_regexp)
+
         try:
             cmd = (self.ping_command % self.host).split(' ')
             output = subprocess.check_output(cmd)
