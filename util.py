@@ -107,7 +107,7 @@ class JSONEncoder(json.JSONEncoder):
         if isinstance(obj, datetime.datetime):
             return {DATETIME_MAGIC_TOKEN: obj.strftime(FORMAT)}
         if isinstance(obj, self._regexp_type):
-            return None
+            return "<removed compiled regexp object>"
         return super(JSONEncoder, self).default(obj)
 
 
