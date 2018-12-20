@@ -22,6 +22,7 @@ run_test() {
 
 	# make sure the client reached the master
 	grep test2 network.log
+	grep test3 network.log
 
 	wait
 
