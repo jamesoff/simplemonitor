@@ -70,6 +70,8 @@ class FileLogger(Logger):
             default='timestamp'
         )
 
+        self.file_handle.write("%s: simplemonitor starting" % self._get_datestring())
+
     def _get_datestring(self):
         if self.dateformat == 'iso8601':
             return format_datetime(datetime.datetime.now())
