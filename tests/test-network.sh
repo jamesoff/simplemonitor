@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 
 set -exu
+without_coverage=${WITHOUT_COVERAGE:-0}
+
+if [[ $without_coverage -eq 1 ]]; then
+	my_command="python"
+else
+	my_command="coverage run --debug=dataio"
+fi
 
 run_test() {
 	server_config=$1
@@ -11,11 +18,11 @@ run_test() {
 	rm -f network.log
 
 	# start the master instance
-	COVERAGE_FILE=.coverage.1 coverage run --debug=dataio monitor.py -f "tests/network/master/$server_config" -d --loops=2 &
+	COVERAGE_FILE=.coverage.1 $my_command monitor.py -f "tests/network/master/$server_config" -d --loops=2 &
 	sleep 1
 
 	# run the client instance
-	COVERAGE_FILE=.coverage.2 coverage run --debug=dataio monitor.py -f "tests/network/client/$client_config" -1 -d
+	COVERAGE_FILE=.coverage.2 $my_command monitor.py -f "tests/network/client/$client_config" -1 -d
 
 	# let them run
 	sleep 15
@@ -26,7 +33,9 @@ run_test() {
 
 	wait
 
-	coverage combine --append
+	if [[ $without_coverage -ne 1 ]]; then
+		coverage combine --append
+	fi
 
 	echo "==> Completed network test"
 	echo
