@@ -1,15 +1,23 @@
 # coding=utf-8
+import fnmatch
 import platform
 import re
 import os
 import subprocess
 import sys
+import time
+
+try:
+    import pydbus
+except ImportError:
+    pydbus = None
 
 from util import MonitorConfigurationError
 
-from .monitor import Monitor
+from .monitor import Monitor, register
 
 
+@register
 class MonitorSvc(Monitor):
     """Monitor a service handled by daemontools."""
 
@@ -41,6 +49,7 @@ class MonitorSvc(Monitor):
         return (self.path, )
 
 
+@register
 class MonitorService(Monitor):
     """Monitor a Windows service"""
 
@@ -99,6 +108,7 @@ class MonitorService(Monitor):
         return (self.host, self.service_name, self.want_state)
 
 
+@register
 class MonitorRC(Monitor):
     """Monitor a service handled by an rc.d script.
 
@@ -150,12 +160,79 @@ class MonitorRC(Monitor):
         return "Checks service %s is running" % self.script_path
 
 
+@register
+class MonitorSystemdUnit(Monitor):
+    """Monitor a systemd unit.
+
+    This monitor checks the state of the unit as given by
+    /org/freedesktop/systemd1/ListUnits
+    and reports failure if it is not one of the expected states.
+    """
+
+    type = "systemd-unit"
+
+    # A cached shared by all instances of MonitorSystemdUnit, so a single
+    # call is done for all monitors at once.
+    _listunit_cache = []
+    _listunit_cache_expiry = 0
+    CACHE_LIFETIME = 1  # in seconds
+
+    def __init__(self, name, config_options):
+        Monitor.__init__(self, name, config_options)
+        if not pydbus:
+            self.alerter_logger.critical("pydbus package is not available, cannot use MonitorSystemdUnit.")
+            return
+        self.unit_name = Monitor.get_config_option(config_options, 'name', required=True)
+        self.want_load_states = Monitor.get_config_option(config_options, 'load_states', required_type='[str]', default=['loaded'])
+        self.want_active_states = Monitor.get_config_option(config_options, 'active_states', required_type='[str]', default=['active', 'reloading'])
+        self.want_sub_states = Monitor.get_config_option(config_options, 'sub_states', required_type='[str]', default=[])
+
+    @classmethod
+    def _list_units(cls):
+        if cls._listunit_cache_expiry < time.time():
+            bus = pydbus.SystemBus()
+            systemd = bus.get(".systemd1")
+            cls._listunit_cache_expiry = time.time() + cls.CACHE_LIFETIME
+            cls._listunit_cache = list(systemd.ListUnits())
+        return cls._listunit_cache
+
+    def run_test(self):
+        """Check the service is in the desired state."""
+        nb_matches = 0
+        for unit in self._list_units():
+            (name, desc, load_state, active_state, sub_state, follower, unit_path, job_id, job_type, job_path) = unit
+            if fnmatch.fnmatch(name, self.unit_name):
+                self._check_unit(name, load_state, active_state, sub_state)
+                nb_matches += 1
+
+        if nb_matches == 0:
+            return self.record_fail("No unit %s" % self.unit_name)
+
+    def _check_unit(self, name, load_state, active_state, sub_state):
+        if self.want_load_states and load_state not in self.want_load_states:
+            return self.record_fail("Unit {0} has load state: {1} (wanted {2})".format(
+                name, load_state, self.want_load_states))
+        if self.want_active_states and active_state not in self.want_active_states:
+            return self.record_fail("Unit {0} has active state: {1} (wanted {2})".format(
+                name, active_state, self.want_active_states))
+        if self.want_sub_states and sub_state not in self.want_sub_states:
+            return self.record_fail("Unit {0} has sub state: {0} (wanted {2})".format(
+                name, sub_state, self.want_sub_states))
+
+    def get_params(self):
+        return (self.unit_name, self.want_load_states, self.want_active_states, self.want_sub_states)
+
+    def describe(self):
+        return "Checks unit %s is running" % self.script_path
+
+
+@register
 class MonitorEximQueue(Monitor):
     """Make sure an exim queue isn't too big."""
 
     type = "eximqueue"
     max_length = 10
-    r = re.compile("(?P<count>\d+) matches out of (?P<total>\d+) messages")
+    r = re.compile(r"(?P<count>\d+) matches out of (?P<total>\d+) messages")
     path = "/usr/local/sbin"
 
     def __init__(self, name, config_options):
@@ -196,6 +273,7 @@ class MonitorEximQueue(Monitor):
         return (self.max_length, )
 
 
+@register
 class MonitorWindowsDHCPScope(Monitor):
     """Checks a Windows DHCP scope to make sure it has sufficient free IPs in the pool."""
 
@@ -206,7 +284,7 @@ class MonitorWindowsDHCPScope(Monitor):
     max_used = 0
     scope = ""
     server = ""
-    r = re.compile("No of Clients\(version \d+\): (?P<clients>\d+) in the Scope")
+    r = re.compile(r"No of Clients\(version \d+\): (?P<clients>\d+) in the Scope")
 
     def __init__(self, name, config_options):
         if not self.is_windows(True):

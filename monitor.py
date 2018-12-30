@@ -37,6 +37,7 @@ import Alerters.pushover
 import Alerters.nma
 import Alerters.pushbullet
 import Alerters.telegram
+import Alerters.nc
 
 try:
     import colorlog
@@ -80,75 +81,15 @@ def load_monitors(m, filename):
         config_options = default_config.copy()
         config_options.update(get_config_dict(config, monitor))
 
-        if monitor_type == "host":
-            new_monitor = Monitors.network.MonitorHost(monitor, config_options)
-
-        elif monitor_type == "service":
-            new_monitor = Monitors.service.MonitorService(monitor, config_options)
-
-        elif monitor_type == "tcp":
-            new_monitor = Monitors.network.MonitorTCP(monitor, config_options)
-
-        elif monitor_type == "rc":
-            new_monitor = Monitors.service.MonitorRC(monitor, config_options)
-
-        elif monitor_type == "diskspace":
-            new_monitor = Monitors.host.MonitorDiskSpace(monitor, config_options)
-
-        elif monitor_type == "http":
-            new_monitor = Monitors.network.MonitorHTTP(monitor, config_options)
-
-        elif monitor_type == "apcupsd":
-            new_monitor = Monitors.host.MonitorApcupsd(monitor, config_options)
-
-        elif monitor_type == "svc":
-            new_monitor = Monitors.service.MonitorSvc(monitor, config_options)
-
-        elif monitor_type == "backup":
-            new_monitor = Monitors.file.MonitorBackup(monitor, config_options)
-
-        elif monitor_type == "portaudit":
-            new_monitor = Monitors.host.MonitorPortAudit(monitor, config_options)
-
-        elif monitor_type == "pkgaudit":
-            new_monitor = Monitors.host.MonitorPkgAudit(monitor, config_options)
-
-        elif monitor_type == "loadavg":
-            new_monitor = Monitors.host.MonitorLoadAvg(monitor, config_options)
-
-        elif monitor_type == "eximqueue":
-            new_monitor = Monitors.service.MonitorEximQueue(monitor, config_options)
-
-        elif monitor_type == "windowsdhcp":
-            new_monitor = Monitors.service.MonitorWindowsDHCPScope(monitor, config_options)
-
-        elif monitor_type == "zap":
-            new_monitor = Monitors.host.MonitorZap(monitor, config_options)
-
-        elif monitor_type == "fail":
-            new_monitor = Monitors.monitor.MonitorFail(monitor, config_options)
-
-        elif monitor_type == "null":
-            new_monitor = Monitors.monitor.MonitorNull(monitor, config_options)
-
-        elif monitor_type == "filestat":
-            new_monitor = Monitors.host.MonitorFileStat(monitor, config_options)
-
-        elif monitor_type == "compound":
-            new_monitor = Monitors.compound.CompoundMonitor(monitor, config_options)
-            new_monitor.set_mon_refs(m)
-
-        elif monitor_type == 'dns':
-            new_monitor = Monitors.network.MonitorDNS(monitor, config_options)
-
-        elif monitor_type == 'command':
-            new_monitor = Monitors.host.MonitorCommand(monitor, config_options)
-
-        else:
-            main_logger.error("Unknown type %s for monitor %s", monitor_type, monitor)
+        try:
+            cls = Monitors.monitor.get_class(monitor_type)
+        except KeyError:
+            main_logger.error(
+                "Unknown monitor type %s; valid types are: %s",
+                monitor_type, ', '.join(Monitors.monitor.all_types()))
             continue
-        if new_monitor is None:
-            continue
+        new_monitor = cls(monitor, config_options)
+        new_monitor.set_mon_refs(m)
 
         main_logger.info("Adding %s monitor %s: %s", monitor_type, monitor, new_monitor)
         m.add_monitor(monitor, new_monitor)
@@ -172,24 +113,14 @@ def load_loggers(m, config):
         logger_type = config.get(config_logger, "type")
         config_options = get_config_dict(config, config_logger)
         config_options['_name'] = config_logger
-        if logger_type == "db":
-            new_logger = Loggers.db.DBFullLogger(config_options)
-        elif logger_type == "dbstatus":
-            new_logger = Loggers.db.DBStatusLogger(config_options)
-        elif logger_type == "logfile":
-            new_logger = Loggers.file.FileLogger(config_options)
-        elif logger_type == "html":
-            new_logger = Loggers.file.HTMLLogger(config_options)
-        elif logger_type == "network":
-            new_logger = Loggers.network.NetworkLogger(config_options)
-        elif logger_type == "json":
-            new_logger = Loggers.file.JsonLogger(config_options)
-        else:
-            main_logger.error("Unknown logger logger_type %s", logger_type)
+        try:
+            logger_cls = Loggers.logger.get_class(logger_type)
+        except KeyError:
+            main_logger.error(
+                "Unknown logger type %s; valid types are: %s",
+                logger_type, ', '.join(Loggers.logger.all_types()))
             continue
-        if new_logger is None:
-            main_logger.error("Creating logger %s failed!", new_logger)
-            continue
+        new_logger = logger_cls(config_options)
         main_logger.info("Adding %s logger %s: %s", logger_type, config_logger, new_logger)
         m.add_logger(config_logger, new_logger)
         del new_logger
@@ -208,31 +139,14 @@ def load_alerters(m, config):
     for alerter in alerters:
         alerter_type = config.get(alerter, "type")
         config_options = get_config_dict(config, alerter)
-        if alerter_type == "email":
-            new_alerter = Alerters.mail.EMailAlerter(config_options)
-        elif alerter_type == "ses":
-            new_alerter = Alerters.ses.SESAlerter(config_options)
-        elif alerter_type == "bulksms":
-            new_alerter = Alerters.bulksms.BulkSMSAlerter(config_options)
-        elif alerter_type == "46elks":
-            new_alerter = Alerters.fortysixelks.FortySixElksAlerter(config_options)
-        elif alerter_type == "syslog":
-            new_alerter = Alerters.syslogger.SyslogAlerter(config_options)
-        elif alerter_type == "execute":
-            new_alerter = Alerters.execute.ExecuteAlerter(config_options)
-        elif alerter_type == "slack":
-            new_alerter = Alerters.slack.SlackAlerter(config_options)
-        elif alerter_type == "pushover":
-            new_alerter = Alerters.pushover.PushoverAlerter(config_options)
-        elif alerter_type == "nma":
-            new_alerter = Alerters.nma.NMAAlerter(config_options)
-        elif alerter_type == "pushbullet":
-            new_alerter = Alerters.pushbullet.PushbulletAlerter(config_options)
-        elif alerter_type == "telegram":
-            new_alerter = Alerters.telegram.TelegramAlerter(config_options)
-        else:
-            main_logger.error("Unknown alerter type %s", alerter_type)
+        try:
+            alerter_cls = Alerters.alerter.get_class(alerter_type)
+        except KeyError:
+            main_logger.error(
+                "Unknown alerter type %s; valid types are: %s",
+                alerter_type, ', '.join(Alerters.alerter.all_types()))
             continue
+        new_alerter = alerter_cls(config_options)
         main_logger.info("Adding %s alerter %s", alerter_type, alerter)
         new_alerter.name = alerter
         m.add_alerter(alerter, new_alerter)
@@ -242,7 +156,7 @@ def load_alerters(m, config):
 
 
 def main():
-    """This is where it happens \o/"""
+    r"""This is where it happens \o/"""
 
     parser = OptionParser()
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False, help=SUPPRESS_HELP)
@@ -257,6 +171,7 @@ def main():
     parser.add_option('--loops', dest='loops', default=-1, help=SUPPRESS_HELP, type=int)
     parser.add_option('-l', '--log-level', dest="loglevel", default="warn", help="Log level: critical, error, warn, info, debug")
     parser.add_option('-C', '--no-colour', '--no-color', action='store_true', dest='no_colour', default=False, help='Do not colourise log output')
+    parser.add_option('--no-timestamps', action='store_true', dest='no_timestamps', default=False, help='Do not prefix log output with timestamps')
 
     (options, _) = parser.parse_args()
 
@@ -272,6 +187,11 @@ def main():
         print('Warning: --debug is deprecated; use --log-level=debug')
         options.loglevel = 'debug'
 
+    if options.no_timestamps:
+        logging_timestamp = ''
+    else:
+        logging_timestamp = '%(asctime)s '
+
     try:
         log_level = getattr(logging, options.loglevel.upper())
     except AttributeError:
@@ -279,11 +199,11 @@ def main():
         sys.exit(1)
 
     log_datefmt = '%Y-%m-%d %H:%M:%S'
-    log_plain_format = '%(asctime)s %(levelname)8s (%(name)s) %(message)s'
+    log_plain_format = logging_timestamp + '%(levelname)8s (%(name)s) %(message)s'
     if not options.no_colour:
         try:
             handler = colorlog.StreamHandler()
-            handler.setFormatter(colorlog.ColoredFormatter('%(asctime)s %(log_color)s%(levelname)8s%(reset)s (%(name)s) %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
+            handler.setFormatter(colorlog.ColoredFormatter(logging_timestamp + '%(log_color)s%(levelname)8s%(reset)s (%(name)s) %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
             main_logger.addHandler(handler)
         except NameError:
             logging.basicConfig(format=log_plain_format, datefmt=log_datefmt)
@@ -339,7 +259,14 @@ def main():
 
     main_logger.info("Loading monitor config from %s", monitors_file)
 
-    m = SimpleMonitor()
+    try:
+        allow_pickle = config.getboolean("monitor", "allow_pickle",
+                                         fallback='true')
+    except ValueError:
+        main_logger.critical('allow_pickle should be "true" or "false".')
+        sys.exit(1)
+
+    m = SimpleMonitor(allow_pickle=allow_pickle)
 
     m = load_monitors(m, monitors_file)
 
@@ -380,8 +307,13 @@ def main():
 
     if enable_remote:
         if not options.quiet:
-            main_logger.info("Starting remote listener thread")
-        remote_listening_thread = Loggers.network.Listener(m, remote_port, key)
+            if not allow_pickle:
+                allowing_pickle = "not "
+            else:
+                allowing_pickle = ""
+            main_logger.info("Starting remote listener thread ({0}allowing pickle data)".format(allowing_pickle))
+        remote_listening_thread = Loggers.network.Listener(
+            m, remote_port, key, allow_pickle=allow_pickle)
         remote_listening_thread.daemon = True
         remote_listening_thread.start()
 
@@ -415,13 +347,14 @@ def main():
             if not options.quiet:
                 print("\n--> EJECT EJECT")
             loop = False
-        except Exception as e:
+        except Exception:
             sys.exc_info()
             main_logger.exception("Caught unhandled exception during main loop")
         if loop and enable_remote:
             if not remote_listening_thread.isAlive():
                 main_logger.error("Listener thread died :(")
-                remote_listening_thread = Loggers.network.Listener(m, remote_port, key)
+                remote_listening_thread = Loggers.network.Listener(
+                    m, remote_port, key, allow_pickle=allow_pickle)
                 remote_listening_thread.start()
 
         if options.one_shot:
@@ -441,13 +374,13 @@ def main():
     if pidfile:
         try:
             os.unlink(pidfile)
-        except Exception as e:
+        except Exception:
             main_logger.error("Couldn't remove pidfile!")
 
     if not options.quiet:
         main_logger.info("Finished.")
 
-    if options.one_shot:
+    if options.one_shot:  # pragma: no cover
         ok = True
         print('\n--> One-shot results:')
         for monitor in sorted(m.monitors.keys()):

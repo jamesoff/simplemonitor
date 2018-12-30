@@ -1,13 +1,16 @@
 import requests
 
 from util import format_datetime
-from .alerter import Alerter
+from .alerter import Alerter, register
 
 
+@register
 class NMAAlerter(Alerter):
     """Send Push alerts using NMA service.
 
     Subscription required, see http://www.notifymyandroid.com/"""
+
+    type = "nma"
 
     def __init__(self, config_options):
         Alerter.__init__(self, config_options)
@@ -87,7 +90,7 @@ class NMAAlerter(Alerter):
                     self.alerter_logger.error("Unable to send NMA: %s (%s)", s.split("|")[0], s.split("|")[1])
                     self.alerter_logger.error("URL: %s, PARAMS: %s", url, params)
                     self.available = False
-            except Exception as e:
+            except Exception:
                 self.alerter_logger.exception("NMA sending failed")
                 self.available = False
         else:

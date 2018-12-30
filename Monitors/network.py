@@ -9,9 +9,10 @@ import subprocess
 import requests
 from requests.auth import HTTPBasicAuth
 
-from .monitor import Monitor
+from .monitor import Monitor, register
 
 
+@register
 class MonitorHTTP(Monitor):
     """Check an HTTP server is working right.
 
@@ -125,6 +126,7 @@ class MonitorHTTP(Monitor):
         return (self.url, self.regexp_text, self.allowed_codes)
 
 
+@register
 class MonitorTCP(Monitor):
     """TCP port monitor"""
 
@@ -163,6 +165,7 @@ class MonitorTCP(Monitor):
         return (self.host, self.port)
 
 
+@register
 class MonitorHost(Monitor):
     """Ping a host to make sure it's up"""
 
@@ -171,6 +174,8 @@ class MonitorHost(Monitor):
     ping_regexp = ""
     type = "host"
     time_regexp = ""
+    r = ""
+    r2 = ""
 
     def __init__(self, name, config_options):
         """
@@ -191,16 +196,16 @@ class MonitorHost(Monitor):
         platform = sys.platform
         if platform in ['win32', 'cygwin']:
             self.ping_command = "ping -n 1 -w " + ping_ms + " %s"
-            self.ping_regexp = 'Reply from [0-9a-f:.]+:.+time[=<]\d+ms'
-            self.time_regexp = "Average = (?P<ms>\d+)ms"
+            self.ping_regexp = r'Reply from [0-9a-f:.]+:.+time[=<]\d+ms'
+            self.time_regexp = r"Average = (?P<ms>\d+)ms"
         elif platform.startswith('freebsd') or platform.startswith('darwin'):
             self.ping_command = "ping -c1 -t" + ping_ttl + " %s"
             self.ping_regexp = "bytes from"
-            self.time_regexp = "min/avg/max/stddev = [\d.]+/(?P<ms>[\d.]+)/"
+            self.time_regexp = r"min/avg/max/stddev = [\d.]+/(?P<ms>[\d.]+)/"
         elif platform.startswith('linux'):
             self.ping_command = "ping -c1 -W" + ping_ttl + " %s"
             self.ping_regexp = "bytes from"
-            self.time_regexp = "min/avg/max/stddev = [\d.]+/(?P<ms>[\d.]+)/"
+            self.time_regexp = r"min/avg/max/stddev = [\d.]+/(?P<ms>[\d.]+)/"
         else:
             RuntimeError("Don't know how to run ping on this platform, help!")
 
@@ -211,19 +216,23 @@ class MonitorHost(Monitor):
         )
 
     def run_test(self):
-        r = re.compile(self.ping_regexp)
-        r2 = re.compile(self.time_regexp)
         success = False
         pingtime = 0.0
+
+        if isinstance(self.r, str):
+            self.monitor_logger.debug('Creating pre-compiled regexp')
+            self.r = re.compile(self.ping_regexp)
+            self.r2 = re.compile(self.time_regexp)
+
         try:
             cmd = (self.ping_command % self.host).split(' ')
             output = subprocess.check_output(cmd)
             for line in str(output).split("\n"):
-                matches = r.search(line)
+                matches = self.r.search(line)
                 if matches:
                     success = True
                 else:
-                    matches = r2.search(line)
+                    matches = self.r2.search(line)
                     if matches:
                         pingtime = matches.group("ms")
         except Exception as e:
@@ -242,6 +251,7 @@ class MonitorHost(Monitor):
         return (self.host, )
 
 
+@register
 class MonitorDNS(Monitor):
     """Monitor DNS server."""
 

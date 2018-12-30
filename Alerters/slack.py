@@ -5,11 +5,14 @@ except ImportError:
     requests_available = False
 
 from util import format_datetime
-from .alerter import Alerter
+from .alerter import Alerter, register
 
 
+@register
 class SlackAlerter(Alerter):
     """Send alerts to a Slack webhook."""
+
+    type = "slack"
 
     channel = None
     username = None
@@ -128,7 +131,7 @@ class SlackAlerter(Alerter):
                 r = requests.post(self.url, json=message_json)
                 if not r.status_code == 200:
                     self.alerter_logger.error("POST to slack webhook failed: %s", r)
-            except Exception as e:
+            except Exception:
                 self.alerter_logger.exception("Failed to post to slack webhook")
                 self.available = False
         else:

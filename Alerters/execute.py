@@ -3,11 +3,14 @@ import subprocess
 import shlex
 
 from util import AlerterConfigurationError, format_datetime
-from .alerter import Alerter
+from .alerter import Alerter, register
 
 
+@register
 class ExecuteAlerter(Alerter):
     """Execute an external command when a monitor fails or recovers."""
+
+    type = "execute"
 
     def __init__(self, config_options):
         Alerter.__init__(self, config_options)
@@ -73,7 +76,7 @@ class ExecuteAlerter(Alerter):
             self.alerter_logger.debug("About to execute command: %s", command)
             try:
                 subprocess.call(shlex.split(command))
-            except Exception as e:
+            except Exception:
                 self.alerter_logger.exception("Exception encountered running command: %s", command)
             if self.debug:
                 self.alerter_logger.debug("Command has finished.")

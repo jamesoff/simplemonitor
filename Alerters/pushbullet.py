@@ -1,11 +1,14 @@
 import requests
 
 from util import format_datetime
-from .alerter import Alerter
+from .alerter import Alerter, register
 
 
+@register
 class PushbulletAlerter(Alerter):
     """Send push notification via Pushbullet."""
+
+    type = "pushbullet"
 
     def __init__(self, config_options):
         Alerter.__init__(self, config_options)
@@ -85,7 +88,7 @@ class PushbulletAlerter(Alerter):
         if not self.dry_run:
             try:
                 self.send_pushbullet_notification(subject, body)
-            except Exception as e:
+            except Exception:
                 self.alerter_logger.exception("Couldn't send push notification")
                 self.available = False
         else:

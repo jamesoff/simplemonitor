@@ -2,10 +2,13 @@
 import logging
 
 from util import get_config_option, LoggerConfigurationError
+from util import subclass_dict_handler
 
 
 class Logger(object):
     """Abstract class basis for loggers."""
+
+    type = "unknown"
 
     dependencies = []
 
@@ -83,3 +86,7 @@ class Logger(object):
 
     def __str__(self):
         return self.describe()
+
+
+(register, get_class, all_types) = subclass_dict_handler(
+    'simplemonitor.Loggers.logger', Logger)

@@ -3,13 +3,16 @@
 import requests
 
 from util import format_datetime
-from .alerter import Alerter
+from .alerter import Alerter, register
 
 
+@register
 class BulkSMSAlerter(Alerter):
     """Send SMS alerts using the BulkSMS service.
 
     Subscription required, see http://www.bulksms.co.uk"""
+
+    type = "bulksms"
 
     def __init__(self, config_options):
         Alerter.__init__(self, config_options)
@@ -114,7 +117,7 @@ class BulkSMSAlerter(Alerter):
                 if not s.startswith("0"):
                     self.alerter_logger.error("Unable to send SMS: %s (%s)", s.split("|")[0], s.split("|")[1])
                     self.available = False
-            except Exception as e:
+            except Exception:
                 self.alerter_logger.exception("SMS sending failed")
                 self.available = False
         else:

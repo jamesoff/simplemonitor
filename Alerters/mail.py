@@ -8,11 +8,14 @@ except ImportError:
     from email.mime.text import MIMEText
 
 from util import format_datetime
-from .alerter import Alerter
+from .alerter import Alerter, register
 
 
+@register
 class EMailAlerter(Alerter):
     """Send email alerts using SMTP to a mail server."""
+
+    type = "email"
 
     def __init__(self, config_options):
         Alerter.__init__(self, config_options)
@@ -124,7 +127,7 @@ class EMailAlerter(Alerter):
                     server.login(self.username, self.password)
                 server.sendmail(self.from_addr, self.to_addr, message.as_string())
                 server.quit()
-            except Exception as e:
+            except Exception:
                 self.alerter_logger.exception("couldn't send mail")
                 self.available = False
         else:

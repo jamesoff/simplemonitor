@@ -5,10 +5,12 @@ import os
 import os.path
 import time
 
-from .monitor import Monitor
+from .monitor import Monitor, register
 
 
+@register
 class MonitorBackup(Monitor):
+    type = "backup"
     filename = os.path.join("C:\\", "Program Files", "VERITAS", "Backup Exec", "status.txt")
 
     def run_test(self):

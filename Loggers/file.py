@@ -17,11 +17,12 @@ except ImportError:
     from io import StringIO
 
 from util import format_datetime, short_hostname
-from .logger import Logger
+from .logger import Logger, register
 
 
+@register
 class FileLogger(Logger):
-
+    type = "logfile"
     filename = ""
     only_failures = False
     buffered = True
@@ -63,25 +64,27 @@ class FileLogger(Logger):
 
         self.dateformat = Logger.get_config_option(
             config_options,
-            'dateformat'
+            'dateformat',
+            required_type='str',
+            allowed_values=['timestamp', 'iso8601'],
+            default='timestamp'
         )
+
+        self.file_handle.write("%s: simplemonitor starting" % self._get_datestring())
+
+    def _get_datestring(self):
+        if self.dateformat == 'iso8601':
+            return format_datetime(datetime.datetime.now())
+        return str(int(time.time()))
 
     def save_result2(self, name, monitor):
         if self.only_failures and monitor.virtual_fail_count() == 0:
             return
 
-        dateformat = 'timestamp'
-        if self.dateformat == 'iso8601':
-            dateformat = 'iso8601'
-
-        if dateformat == 'timestamp':
-            datestring = str(int(time.time()))
-        elif dateformat == 'iso8601':
-            datestring = format_datetime(datetime.datetime.now())
         try:
             if monitor.virtual_fail_count() > 0:
                 self.file_handle.write("%s %s: failed since %s; VFC=%d (%s) (%0.3fs)" % (
-                    datestring,
+                    self._get_datestring(),
                     name,
                     format_datetime(monitor.first_failure_time()),
                     monitor.virtual_fail_count(),
@@ -90,7 +93,7 @@ class FileLogger(Logger):
                 ))
             else:
                 self.file_handle.write("%s %s: ok (%0.3fs)" % (
-                    datestring,
+                    self._get_datestring(),
                     name,
                     monitor.last_run_duration
                 ))
@@ -98,7 +101,7 @@ class FileLogger(Logger):
 
             if not self.buffered:
                 self.file_handle.flush()
-        except Exception as e:
+        except Exception:
             self.logger_logger.exception("Error writing to logfile %s", self.filename)
 
     def hup(self):
@@ -113,9 +116,11 @@ class FileLogger(Logger):
         return "Writing log file to {0}".format(self.filename)
 
 
+@register
 class HTMLLogger(Logger):
     """A batching logger which writes a simple HTML page of the current state."""
 
+    type = "html"
     supports_batch = True
     filename = ""
     count_data = ""
@@ -295,7 +300,7 @@ class HTMLLogger(Logger):
             file_handle.close()
             os.chmod(file_name, stat.S_IREAD | stat.S_IWRITE | stat.S_IRGRP | stat.S_IROTH)
             shutil.move(file_name, os.path.join(self.folder, self.filename))
-        except Exception as e:
+        except Exception:
             self.logger_logger.exception("problem closing temporary file for HTML output")
 
     def parse_file(self, file_handle):
@@ -344,8 +349,9 @@ class PayloadEncoder(json.JSONEncoder):
             return json.JSONEncoder.default(self, obj.__dict__)
 
 
+@register
 class JsonLogger(Logger):
-
+    type = "json"
     filename = ""
     supports_batch = True
 

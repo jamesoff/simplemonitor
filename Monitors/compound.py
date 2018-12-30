@@ -1,9 +1,10 @@
 # coding=utf-8
 """compound checks (logical and of failure of multiple probes) for SimpleMonitor."""
 
-from .monitor import Monitor
+from .monitor import Monitor, register
 
 
+@register
 class CompoundMonitor(Monitor):
     """Combine (logical-and) multiple failures for emergency escalation.
 

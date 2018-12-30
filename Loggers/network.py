@@ -8,19 +8,26 @@ import logging
 
 import util
 
+from threading import Thread
+
+from .logger import Logger, register
+
+if sys.version_info[0] >= 3:
+    from json import JSONDecodeError
+else:
+    JSONDecodeError = ValueError
+
 # From the docs:
 #  Threads interact strangely with interrupts: the KeyboardInterrupt exception
 #  will be received by an arbitrary thread. (When the signal module is
 #  available, interrupts always go to the main thread.)
 
-from threading import Thread
 
-from .logger import Logger
-
-
+@register
 class NetworkLogger(Logger):
     """Send our results over the network to another instance."""
 
+    type = "network"
     supports_batch = True
 
     def __init__(self, config_options):
@@ -52,27 +59,40 @@ class NetworkLogger(Logger):
         return "Sending monitor results to {0}:{1}".format(self.host, self.port)
 
     def save_result2(self, name, monitor):
-        if not self.doing_batch:
+        if not self.doing_batch:  # pragma: no cover
             self.logger_logger.error("NetworkLogger.save_result2() called while not doing batch.")
             return
         self.logger_logger.debug("network logger: %s %s", name, monitor)
+        if monitor.type == "unknown":
+            self.logger_logger.error(
+                "Cannot serialize monitor %s, has type 'unknown'." % name)
+            return
         try:
-            self.batch_data[monitor.name] = pickle.dumps(monitor)
+            self.batch_data[monitor.name] = {
+                'cls_type': monitor.type,
+                'data': monitor.to_python_dict(),
+            }
         except Exception:
-            self.logger_logger.exception('Failed to pickle monitor %s', name)
+            self.logger_logger.exception('Failed to serialize monitor %s', name)
 
     def process_batch(self):
         try:
-            p = pickle.dumps(self.batch_data)
+            p = util.json_dumps(self.batch_data)
             mac = hmac.new(self.key, p)
             send_bytes = struct.pack('B', mac.digest_size) + mac.digest() + p
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.connect((self.host, self.port))
-            s.send(send_bytes)
-        except Exception as e:
-            self.logger_logger.error("Failed to send network data")
-        finally:
-            s.close()
+            try:
+                try:
+                    s.connect((self.host, self.port))
+                except socket.error:
+                    s.close()
+                    s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+                    s.connect((self.host, self.port))
+                s.send(send_bytes)
+            finally:
+                s.close()
+        except Exception:
+            self.logger_logger.exception("Failed to send network data")
 
 
 class Listener(Thread):
@@ -80,7 +100,7 @@ class Listener(Thread):
 
     Here seemed a reasonable place to put it."""
 
-    def __init__(self, simplemonitor, port, key=None):
+    def __init__(self, simplemonitor, port, key=None, allow_pickle=True):
         """Set up the thread.
 
         simplemonitor is a SimpleMonitor object which we will put our results into.
@@ -88,7 +108,9 @@ class Listener(Thread):
         if key is None or key == "":
             raise util.LoggerConfigurationError("Network logger key is missing")
         Thread.__init__(self)
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.allow_pickle = allow_pickle
+        self.sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+        self.sock.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, False)
         self.sock.bind(('', port))
         self.simplemonitor = simplemonitor
         self.key = bytearray(key, 'utf-8')
@@ -107,24 +129,24 @@ class Listener(Thread):
                 self.sock.listen(5)
                 conn, addr = self.sock.accept()
                 self.logger.debug("Got connection from %s", addr[0])
-                pickled = bytearray()
+                serialized = bytearray()
                 while 1:
                     data = conn.recv(1024)
                     if not data:
                         break
-                    pickled = pickled + data
+                    serialized += data
                 conn.close()
                 self.logger.debug("Finished receiving from %s", addr[0])
                 try:
                     # first byte is the size of the MAC
-                    mac_size = pickled[0]
+                    mac_size = serialized[0]
                     # then the MAC
-                    their_digest = pickled[1:mac_size + 1]
-                    # then the rest is the pickled data
-                    pickled = pickled[mac_size + 1:]
-                    mac = hmac.new(self.key, pickled)
+                    their_digest = serialized[1:mac_size + 1]
+                    # then the rest is the serialized data
+                    serialized = serialized[mac_size + 1:]
+                    mac = hmac.new(self.key, serialized)
                     my_digest = mac.digest()
-                except IndexError:
+                except IndexError:  # pragma: no cover
                     raise ValueError('Did not receive any or enough data from %s', addr[0])
                 if type(my_digest) is str:
                     self.logger.debug("Computed my digest to be %s; remote is %s", my_digest, their_digest)
@@ -132,12 +154,15 @@ class Listener(Thread):
                     self.logger.debug("Computed my digest to be %s; remote is %s", my_digest.hex(), their_digest.hex())
                 if not hmac.compare_digest(their_digest, my_digest):
                     raise Exception("Mismatched MAC for network logging data from %s\nMismatched key? Old version of SimpleMonitor?\n" % addr[0])
-                result = pickle.loads(pickled)
+                try:
+                    result = util.json_loads(serialized)
+                except JSONDecodeError:
+                    result = pickle.loads(serialized)
                 try:
                     self.simplemonitor.update_remote_monitor(result, addr[0])
-                except Exception as e:
+                except Exception:
                     self.logger.exception('Error adding remote monitor')
-            except socket.error as e:
+            except socket.error:
                 fail_info = sys.exc_info()
                 try:
                     if fail_info[1][0] == 4:
