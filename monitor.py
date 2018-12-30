@@ -13,6 +13,8 @@ from optparse import OptionParser, SUPPRESS_HELP
 
 from socket import gethostname
 
+from util import get_config_dict
+
 import Monitors.monitor
 import Monitors.network
 import Monitors.service
@@ -47,14 +49,6 @@ except ImportError:
 VERSION = "1.7"
 
 main_logger = logging.getLogger('simplemonitor')
-
-
-def get_config_dict(config, monitor):
-    options = config.items(monitor)
-    ret = {}
-    for (key, value) in options:
-        ret[key] = value
-    return ret
 
 
 def load_monitors(m, filename):

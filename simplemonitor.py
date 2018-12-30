@@ -60,7 +60,8 @@ class SimpleMonitor:
 
     def reset_monitors(self):
         """Clear all the monitors' dependency info back to default."""
-        [self.monitors[key].reset_dependencies() for key in list(self.monitors.keys())]
+        for key in list(self.monitors.keys()):
+            self.monitors[key].reset_dependencies()
 
     def verify_dependencies(self):
         ok = True
@@ -80,7 +81,7 @@ class SimpleMonitor:
 
         not_run = False
 
-        while len(joblist) > 0:
+        while joblist:
             new_joblist = []
             module_logger.debug("Starting loop with joblist %s", joblist)
             for monitor in joblist:
