@@ -234,3 +234,15 @@ class SimpleMonitor:
                     'simplemonitor, you need to set allow_pickle = true '
                     'in the [monitor] section.',
                     name)
+
+    def run_loop(self):
+        """Run the complete monitor loop once."""
+        module_logger.debug('Running tests')
+        self.run_tests()
+        module_logger.debug('Running recovery')
+        self.do_recovery()
+        module_logger.debug('Running alerts')
+        self.do_alerts()
+        module_logger.debug('Running logs')
+        self.do_logs()
+        module_logger.debug('Loop complete')
