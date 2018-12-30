@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 
 set -exu
+without_coverage=${WITHOUT_COVERAGE:-0}
 
-if [[ ${WITHOUT_COVERAGE:-0} -eq 1 ]]; then
+if [[ $without_coverage -eq 1 ]]; then
 	my_command="python"
 else
 	my_command="coverage run --debug=dataio"
@@ -32,7 +33,7 @@ run_test() {
 
 	wait
 
-	if [[ $WITHOUT_COVERAGE -ne 1 ]]; then
+	if [[ $without_coverage -ne 1 ]]; then
 		coverage combine --append
 	fi
 
