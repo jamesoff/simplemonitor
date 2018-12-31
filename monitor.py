@@ -13,6 +13,8 @@ from optparse import OptionParser, SUPPRESS_HELP
 
 from socket import gethostname
 
+from util import get_config_dict
+
 import Monitors.monitor
 import Monitors.network
 import Monitors.service
@@ -47,14 +49,6 @@ except ImportError:
 VERSION = "1.7"
 
 main_logger = logging.getLogger('simplemonitor')
-
-
-def get_config_dict(config, monitor):
-    options = config.items(monitor)
-    ret = {}
-    for (key, value) in options:
-        ret[key] = value
-    return ret
 
 
 def load_monitors(m, filename):
@@ -331,21 +325,16 @@ def main():
                 if loops == 0:
                     main_logger.warning('Ran out of loop counter, will stop after this one')
                     loop = False
-            m.run_tests()
-            m.do_recovery()
-            m.do_alerts()
-            m.do_logs()
+            m.run_loop()
 
-            if not options.quiet and not options.verbose and not options.no_heartbeat:
+            if options.loglevel in ['error', 'critical', 'warn'] and not options.no_heartbeat:
                 heartbeat += 1
                 if heartbeat == 2:
                     sys.stdout.write(".")
                     sys.stdout.flush()
                     heartbeat = 0
         except KeyboardInterrupt:
-
-            if not options.quiet:
-                print("\n--> EJECT EJECT")
+            main_logger.info('Received ^C')
             loop = False
         except Exception:
             sys.exc_info()
@@ -361,7 +350,8 @@ def main():
             break
 
         try:
-            time.sleep(interval)
+            if loop:
+                time.sleep(interval)
         except Exception:
             main_logger.info("Quitting")
             loop = False

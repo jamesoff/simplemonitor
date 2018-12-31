@@ -96,6 +96,14 @@ def short_hostname():
     return (socket.gethostname() + ".").split(".")[0]
 
 
+def get_config_dict(config, monitor):
+    options = config.items(monitor)
+    ret = {}
+    for (key, value) in options:
+        ret[key] = value
+    return ret
+
+
 DATETIME_MAGIC_TOKEN = '__simplemonitor_datetime'
 FORMAT = '%Y-%m-%d %H:%M:%S.%f'
 

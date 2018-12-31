@@ -68,10 +68,13 @@ class NetworkLogger(Logger):
                 "Cannot serialize monitor %s, has type 'unknown'." % name)
             return
         try:
-            self.batch_data[monitor.name] = {
-                'cls_type': monitor.type,
-                'data': monitor.to_python_dict(),
-            }
+            if monitor.type == 'compound':
+                self.logger_logger.error('not pickling compound monitor - currently incompatible with network loggers')
+            else:
+                self.batch_data[monitor.name] = {
+                    'cls_type': monitor.type,
+                    'data': monitor.to_python_dict(),
+                }
         except Exception:
             self.logger_logger.exception('Failed to serialize monitor %s', name)
 

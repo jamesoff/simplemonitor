@@ -1,4 +1,5 @@
 # coding=utf-8
+"""Execution logic for SimpleMonitor."""
 
 import signal
 import copy
@@ -33,7 +34,7 @@ class SimpleMonitor:
 
         try:
             signal.signal(signal.SIGHUP, self.hup_loggers)
-        except Exception:  # pragma: no cover
+        except ValueError:  # pragma: no cover
             module_logger.warning("Unable to trap SIGHUP... maybe it doesn't exist on this platform.\n")
 
     def hup_loggers(self, sig_number, stack_frame):
@@ -59,7 +60,8 @@ class SimpleMonitor:
 
     def reset_monitors(self):
         """Clear all the monitors' dependency info back to default."""
-        [self.monitors[key].reset_dependencies() for key in list(self.monitors.keys())]
+        for key in list(self.monitors.keys()):
+            self.monitors[key].reset_dependencies()
 
     def verify_dependencies(self):
         ok = True
@@ -79,7 +81,7 @@ class SimpleMonitor:
 
         not_run = False
 
-        while len(joblist) > 0:
+        while joblist:
             new_joblist = []
             module_logger.debug("Starting loop with joblist %s", joblist)
             for monitor in joblist:
@@ -232,3 +234,15 @@ class SimpleMonitor:
                     'simplemonitor, you need to set allow_pickle = true '
                     'in the [monitor] section.',
                     name)
+
+    def run_loop(self):
+        """Run the complete monitor loop once."""
+        module_logger.debug('Running tests')
+        self.run_tests()
+        module_logger.debug('Running recovery')
+        self.do_recovery()
+        module_logger.debug('Running alerts')
+        self.do_alerts()
+        module_logger.debug('Running logs')
+        self.do_logs()
+        module_logger.debug('Loop complete')
