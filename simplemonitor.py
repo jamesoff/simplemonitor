@@ -36,6 +36,8 @@ class SimpleMonitor:
             signal.signal(signal.SIGHUP, self.hup_loggers)
         except ValueError:  # pragma: no cover
             module_logger.warning("Unable to trap SIGHUP... maybe it doesn't exist on this platform.\n")
+        except AttributeError:  # pragma: no cover
+            module_logger.warning("Unable to trap SIGHUP... maybe it doesn't exist on this platform.\n")
 
     def hup_loggers(self, sig_number, stack_frame):
         """Handle a SIGHUP (rotate logfiles).
