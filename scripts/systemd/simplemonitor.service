@@ -1,0 +1,11 @@
+[Unit]
+Description=monitoring service
+After=network.target
+
+[Service]
+WorkingDirectory=/root/simplemonitor
+ExecStart=/usr/bin/python3 /root/simplemonitor/monitor.py
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
