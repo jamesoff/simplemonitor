@@ -21,7 +21,6 @@ The types of alerter are:
 * [46elks](#46elks): Sends notifications via the [46elks](https://46elks.com) service
 * [pushbullet](#pushbullet): Sends notifications via [Pushbullet](https://www.pushbullet.com)
 * [pushover](#pushover): Sends notifications via [Pushover](https://pushover.net)
-* [nma](#nma): Sends notifications via [Notify My Android](http://www.notifymyandroid.com)
 
 ## Defining an alerter
 The section name should be the name of your alerter. This is the name you should give in the "alerters" setting in the reporting section of the main configuration. All alerters share these settings:
