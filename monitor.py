@@ -36,7 +36,6 @@ import Alerters.syslogger
 import Alerters.execute
 import Alerters.slack
 import Alerters.pushover
-import Alerters.nma
 import Alerters.pushbullet
 import Alerters.telegram
 import Alerters.nc
