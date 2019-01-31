@@ -202,7 +202,7 @@ class HTMLLogger(Logger):
         old_count = 0
         remote_count = 0
 
-        my_host = short_hostname
+        my_host = short_hostname()
 
         try:
             temp_file = tempfile.mkstemp()
