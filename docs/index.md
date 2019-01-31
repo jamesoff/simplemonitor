@@ -22,7 +22,7 @@ SimpleMonitor is a Python script which monitors hosts and network connectivity. 
 * Windows DHCP scope (available IPs)
 * APC UPS monitoring (requires apcupsd to be installed and configured)
 * Running an arbitary command and checking the output
-* A monitor which is a compond of a number of the above
+* A monitor which is a compound of a number of the above
 
 Adding more monitor types is quite simple if you are able to code in Python.
 
