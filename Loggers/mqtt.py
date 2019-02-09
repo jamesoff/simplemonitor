@@ -69,7 +69,7 @@ class MQTTLogger(Logger):
 
         topic = "{root}/simplemonitor_{monitor}/state".format(root=self.topic_root, monitor=monitor.name)
         self.logger_logger.debug("{monitor} failed {n} times".format(monitor=monitor.name, n=monitor.virtual_fail_count()))
-        payload = 'ON' if monitor.virtual_fail_count() == 0 else 'OFF'
+        payload = 'ON' if monitor.virtual_fail_count() == 0 and not monitor.was_skipped else 'OFF'
         try:
             paho.mqtt.publish.single(topic, payload=payload, retain=True, hostname=self.host, client_id="simplemonitor_{monitor}".format(monitor=monitor.name))
         except Exception as e:
