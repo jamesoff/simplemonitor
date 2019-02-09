@@ -112,8 +112,12 @@ class Listener(Thread):
             raise util.LoggerConfigurationError("Network logger key is missing")
         Thread.__init__(self)
         self.allow_pickle = allow_pickle
-        self.sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
-        self.sock.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, False)
+        # try IPv6 and fallback to IPv4
+        try:
+            self.sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+            self.sock.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, False)
+        except OSError:
+            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.bind(('', port))
         self.simplemonitor = simplemonitor
         self.key = bytearray(key, 'utf-8')
