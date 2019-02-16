@@ -89,7 +89,10 @@ class MQTTLogger(Logger):
         if self.only_failures and monitor.virtual_fail_count() == 0:
             return
 
-        topic = "{root}/simplemonitor_{monitor}/state".format(root=self.topic, monitor=monitor.name)
+        if self.hass:
+            topic = "{root}/simplemonitor_{monitor}/state".format(root=self.topic, monitor=monitor.name)
+        else:
+            topic = "{root}/{monitor}".format(root=self.topic, monitor=monitor.name)
         self.logger_logger.debug("{monitor} failed {n} times".format(monitor=monitor.name, n=monitor.virtual_fail_count()))
         payload = 'ON' if monitor.virtual_fail_count() == 0 and not monitor.was_skipped else 'OFF'
         try:
