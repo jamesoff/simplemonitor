@@ -290,7 +290,7 @@ class MonitorDNS(Monitor):
             result = result.strip()
             if result is None or result == '':
                 return self.record_fail("failed to resolve %s" % self.path)
-            if self.desired_val and result != self.desired_val:
+            if self.desired_val and set(result.split('\n')) != set(self.desired_val.split('\n')):
                 return self.record_fail("resolved DNS record is unexpected: %s != %s" % (self.desired_val, result))
             return self.record_success()
         except subprocess.CalledProcessError as e:
