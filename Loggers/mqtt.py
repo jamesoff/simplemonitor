@@ -10,8 +10,6 @@ import sys
 try:
     import paho.mqtt.publish
     mqtt_available = True
-except ModuleNotFoundError:
-    mqtt_available = False
 except ImportError:
     mqtt_available = False
 import json
