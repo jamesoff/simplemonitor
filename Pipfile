@@ -9,6 +9,7 @@ requests = ">=2.10.0"
 pyOpenSSL = "*"
 colorlog = "*"
 pync = {version = ">=2.0.3", sys_platform = "== 'darwin'"}
+paho-mqtt = "*"
 
 [dev-packages]
 "flake8" = "*"
