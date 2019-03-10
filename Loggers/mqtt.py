@@ -7,7 +7,13 @@
 # contact: dev@swtk.info
 
 import sys
-import paho.mqtt.publish
+try:
+    import paho.mqtt.publish
+    mqtt_available = True
+except ModuleNotFoundError:
+    mqtt_available = False
+except ImportError:
+    mqtt_available = False
 import json
 
 from .logger import Logger, register
@@ -28,6 +34,10 @@ class MQTTLogger(Logger):
         # early check for Python version, only 3.x is supported (by me at least :))
         if sys.version_info[0] != 3:
             self.logger_logger.error("only supported on Python 3")
+            return
+
+        if not mqtt_available:
+            self.logger_logger.error("Missing paho.mqtt module!")
             return
 
         # TODO: add configuration for authenticated calls, port, will, etc.
