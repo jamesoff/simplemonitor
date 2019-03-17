@@ -10,7 +10,7 @@ python:
 install:
     - pip install pipenv
     - if [[ "$TRAVIS_PYTHON_VERSION" != "2.7" ]]; then pipenv install --dev; fi
-    - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then pipenv install --dev --two; fi
+    - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then pipenv install --dev --two --skip-lock; fi
 before_script:
     - rm -f monitor.db monitor2.db
     - sqlite3 monitor.db < monitor.sql

@@ -27,6 +27,7 @@ from simplemonitor import SimpleMonitor
 import Loggers.file
 import Loggers.db
 import Loggers.network
+import Loggers.mqtt
 
 import Alerters.mail
 import Alerters.ses
