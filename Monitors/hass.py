@@ -2,9 +2,6 @@
 """ File-based monitors for SimpleMonitor. """
 
 import requests
-import os
-import os.path
-import time
 
 from .monitor import Monitor, register
 
@@ -48,7 +45,7 @@ class Sensor(Monitor):
             if not call.ok:
                 raise ValueError(call.text)
             r = call.json()
-            self.monitor_logger.debug("retrieved JSON: %s" % r)
+            self.monitor_logger.debug("retrieved JSON: %s", r)
         except Exception as e:
             # a general issue getting to the API
             # nothing special to report, this monitor should be configured to be dependent of general hass API availability
