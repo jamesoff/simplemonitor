@@ -1,5 +1,5 @@
 # coding=utf-8
-""" File-based monitors for SimpleMonitor. """
+""" Home Automation monitors for SimpleMonitor. """
 
 import requests
 
@@ -7,7 +7,7 @@ from .monitor import Monitor, register
 
 
 @register
-class Sensor(Monitor):
+class MonitorSensor(Monitor):
     type = "hass_sensor"
 
     def __init__(self, name, config_options):
@@ -29,7 +29,7 @@ class Sensor(Monitor):
         )
 
     def describe(self):
-        return "monitor the existance of a sensor"
+        return "monitor the existence of a sensor"
 
     def run_test(self):
         try:
@@ -59,3 +59,6 @@ class Sensor(Monitor):
                 return self.record_success()
             else:
                 return self.record_fail("sensor not found in hass")
+
+    def get_params(self):
+        return (self.url, self.sensor)
