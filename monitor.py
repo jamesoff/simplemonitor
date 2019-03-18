@@ -21,6 +21,7 @@ import Monitors.service
 import Monitors.host
 import Monitors.file
 import Monitors.compound
+import Monitors.hass
 
 from simplemonitor import SimpleMonitor
 
