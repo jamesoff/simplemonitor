@@ -125,7 +125,7 @@ class EMailAlerter(Alerter):
 
                 if self.username is not None:
                     server.login(self.username, self.password)
-                server.sendmail(self.from_addr, self.to_addr, message.as_string())
+                server.sendmail(self.from_addr, self.to_addr.split(';'), message.as_string())
                 server.quit()
             except Exception:
                 self.alerter_logger.exception("couldn't send mail")
