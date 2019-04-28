@@ -116,7 +116,9 @@ The following variables will be replaced in the string when the command is execu
 * info: the additional information the monitor recorded about its status
 * description: a description of what the monitor is checking for
 
-You may need to quote parameters - e.g. `fail_command=say "Oh no, monitor {name} has failed at {failed_at}"`
+You may need to quote parameters - e.g. `fail_command=say "Oh no, monitor {name} has failed at {failed_at}"`.
+
+The commands are executed directly by Python. If you require shell features, such as piping, then you should use something like `/bin/bash -c "/usr/bin/printf \"The simplemonitor for {name} has failed on {hostname}.\n\nTime: {failed_at}\nInfo: {info}\n\" | /usr/bin/mailx -A gmail -s \"PROBLEM: simplemonitor {name} has failed on {hostname}.\" email@address"`.
 
 ## <a name="slack"></a>Slack alerters
 
