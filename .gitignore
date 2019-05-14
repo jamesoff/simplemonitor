@@ -24,3 +24,6 @@ env/
 *.swp
 docs/.sass-cache
 docs/vendor
+monitor.log
+monitor.pid
+output.json
