@@ -75,9 +75,9 @@ delay=1
 
 | setting | description | required | default |
 |---|---|---|---|
-|host|the email server to send the message to (via SMTP). You can set multiple addresses separated by ; .|yes| |
+|host|the email server to send the message to (via SMTP).|yes| |
 |from|the email address the email should come from.|yes| |
-|to|the email address to email should go to.|yes| |
+|to|the email address to email should go to. You can set multiple addresses separated by ;|yes| |
 |username|username to log into the SMTP server|no| |
 |password|password to log into the SMTP server|no| |
 |ssl|`starttls` to use StartTLS; `yes` to use SMTP_SSL (untested); otherwise no SSL is used at all|no| |
