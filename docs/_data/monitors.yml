@@ -152,3 +152,17 @@
       desc: Number of monitors which should fail for this monitor to fail too
       default: all
       required: 'no'
+- name: filestat
+  oneline: Examine size and age of a file
+  params:
+    - name: filename
+      desc: The path to the file to monitor
+      required: 'yes'
+    - name: maxage
+      desc: Maximum allowed age of the file in seconds
+      required: 'no'
+      default: None; age is ignored
+    - name: minsize
+      desc: Minimum allowed size of the file in bytes; can be expressed using "KB" etc suffixes
+      required: 'no'
+      default: None; size is ignored
