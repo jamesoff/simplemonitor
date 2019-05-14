@@ -14,6 +14,7 @@ The types of loggers are:
 * [html](#html): Writes an HTML file showing the status of all monitors (including remote ones).
 * [network](#network): Sends status of all monitors to a remote host.
 * [json](#json): Writes a JSON file describing the state of all the monitors
+* [mqtt](#mqtt): Send monitor state via MQTT
 
 ## Defining a logger
 
