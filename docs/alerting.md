@@ -21,6 +21,7 @@ The types of alerter are:
 * [46elks](#46elks): Sends notifications via the [46elks](https://46elks.com) service
 * [pushbullet](#pushbullet): Sends notifications via [Pushbullet](https://www.pushbullet.com)
 * [pushover](#pushover): Sends notifications via [Pushover](https://pushover.net)
+* [nc](#nc): Sends notifications via macOS Notification Center
 
 ## Defining an alerter
 The section name should be the name of your alerter. This is the name you should give in the "alerters" setting in the reporting section of the main configuration. All alerters share these settings:
@@ -186,3 +187,9 @@ You will need to be registered at [pushover](https://pushover.net).
 |---|---|---|---|
 |user|your pushover username| yes | |
 |token|your pushover token| yes | |
+
+## <a name="nc"></a>nc alerters
+
+Publish alerts to the macOS Notification Center. Only for macOS. Requires the `pync` package.
+
+No configuration options.
