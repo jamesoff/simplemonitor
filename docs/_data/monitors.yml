@@ -166,3 +166,15 @@
       desc: Minimum allowed size of the file in bytes; can be expressed using "KB" etc suffixes
       required: 'no'
       default: None; size is ignored
+- name: hass_sensor
+  oneline: Monitor the existence of a home automation sensor
+  params:
+    - name: url
+      desc: The API URL for the monitor
+      required: 'yes'
+    - name: sensor
+      desc: Name of the sensor
+      required: 'yes'
+    - name: token
+      desc: API token for the sensor
+      required: 'yes'
