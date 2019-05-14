@@ -178,3 +178,22 @@
     - name: token
       desc: API token for the sensor
       required: 'yes'
+- name: 'null'
+  oneline: Monitor which always passes. Use for testing.
+- name: systemd-unit
+  oneline: Monitor a systemd unit status
+  params:
+    - name: name
+      desc: The name of the unit to monitor
+      required: 'yes'
+    - name: load_states
+      desc: Comma-separated list of desired load states for the unit
+      required: 'no'
+      default: "`loaded`"
+    - name: active_states
+      desc: Comma-separated list of desired active states for the unit
+      required: 'no'
+      default: "`active, reloading`"
+    - name: sub_states
+      desc: Comma-separates list of desired sub states for the unit
+      required: 'no'
