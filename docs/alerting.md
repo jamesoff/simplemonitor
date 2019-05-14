@@ -137,6 +137,8 @@ This alerter requires the `requests` library to be installed.  You can install i
 | setting | description | required | default |
 |---|---|---|---|
 |url|The Slack webhook URL as configured on your account|yes| |
+|channel|The channel to send to|no|uses the channel configured on the webhook|
+|username|A username to send to|no| |
 
 ## <a name="ses"></a>ses alerters
 
@@ -193,3 +195,12 @@ You will need to be registered at [pushover](https://pushover.net).
 Publish alerts to the macOS Notification Center. Only for macOS. Requires the `pync` package.
 
 No configuration options.
+
+## <a name="telegram"></a>telegram alerters
+
+Send alerts to a Telegram chat.
+
+| setting | description | required | default |
+|---|---|---|---|
+|token|The token to access telegram|yes| |
+|chat_id|The chat to send to|yes| |
