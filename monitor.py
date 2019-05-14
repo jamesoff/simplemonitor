@@ -167,8 +167,19 @@ def main():
     parser.add_option('-l', '--log-level', dest="loglevel", default="warn", help="Log level: critical, error, warn, info, debug")
     parser.add_option('-C', '--no-colour', '--no-color', action='store_true', dest='no_colour', default=False, help='Do not colourise log output')
     parser.add_option('--no-timestamps', action='store_true', dest='no_timestamps', default=False, help='Do not prefix log output with timestamps')
+    parser.add_option('--dump-known-resources', action='store_true', dest='dump_resources', default=False, help=SUPPRESS_HELP)
 
     (options, _) = parser.parse_args()
+
+    if options.dump_resources:
+        import pprint
+        print("Monitors:")
+        pprint.pprint(sorted(Monitors.monitor.all_types()), compact=True)
+        print("Loggers:")
+        pprint.pprint(sorted(Loggers.logger.all_types()), compact=True)
+        print("Alerters:")
+        pprint.pprint(sorted(Alerters.alerter.all_types()), compact=True)
+        sys.exit(0)
 
     if options.quiet:
         print('Warning: --quiet is deprecated; use --log-level=critical')
