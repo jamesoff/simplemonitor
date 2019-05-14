@@ -136,7 +136,7 @@ class DBFullLogger(DBLogger):
 class DBStatusLogger(DBLogger):
     """Maintains status snapshot in db."""
 
-    type = "dbstatuslogger"
+    type = "dbstatus"
 
     def save_result(self, monitor_name, monitor_type, monitor_params, monitor_result, monitor_info, hostname=""):
         if hostname == "":
