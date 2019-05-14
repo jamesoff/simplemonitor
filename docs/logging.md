@@ -52,6 +52,7 @@ The header and footer files do not necessarily need to be in the publicly access
 The supplied header file includes JavaScript to notify you if the page either doesn’t auto-refresh, or if SimpleMonitor has stopped updating it. This requires your machine running SimpleMonitor and the machine you are browsing from to agree on what the time is (timezone doesn’t matter)!
 
 ### <a name="network"></a>network logger
+
 This logger is used to send status reports of all monitors to a remote instance. The remote instance must be configured to listen for connections. The *key* parameter is a shared secret used to generate a hash of the network traffic so the receiving instance knows to trust the data. (Note that the traffic is not encrypted, just given a hash.)
 
 | setting | description | required | default |
@@ -66,3 +67,13 @@ This logger is used to send status reports of all monitors to a remote instance.
 |---|---|---|---|
 |filename|the path of the JSON file to write.|yes| |
 
+### <a name="mqtt"></a>mqtt logger
+
+| setting | description | required | default |
+|---|---|---|---|
+|host|The host to connect to|yes| |
+|port|The port to connect on|no|1883|
+|hass|Specific configuration for Home Assistant MQTT discovery|no|false|
+|topic|The topic to post to|false|`simplemonitor` (`homeassistant/binary_sensor` if hass is set)|
+
+See <https://www.home-assistant.io/docs/mqtt/discovery/> for more information on HASS/
