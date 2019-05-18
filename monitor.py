@@ -47,7 +47,7 @@ try:
 except ImportError:
     pass
 
-VERSION = "1.7"
+VERSION = "1.8"
 
 main_logger = logging.getLogger('simplemonitor')
 
