@@ -12,8 +12,19 @@ mkdir "$BUILDDIR"
 
 echo "--> Copying files"
 
-cp -v ../*.py ../monitor.sql ../LICENCE ../README.md ../CHANGELOG "$BUILDDIR"
-cp -rv ../Monitors ../Alerters ../Loggers ../html "$BUILDDIR"
+cp -v \
+	../*.py \
+	../LICENCE \
+	../README.md \
+	../CHANGELOG \
+	"$BUILDDIR"
+cp -rv \
+	../Monitors \
+	../Alerters \
+	../Loggers \
+	../html \
+	../docker \
+	"$BUILDDIR"
 
 echo
 echo "--> Tidying up"
