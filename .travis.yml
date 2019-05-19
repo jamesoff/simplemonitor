@@ -1,22 +1,21 @@
 ---
-dist: trusty
+dist: xenial
 sudo: required
 language: python
 python:
-    - "2.7"
     - "3.5"
     - "3.6"
-    - "3.7-dev"
+    - "3.7"
+    - "3.8-dev"
 install:
     - pip install pipenv
-    - if [[ "$TRAVIS_PYTHON_VERSION" != "2.7" ]]; then pipenv install --dev; fi
-    - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then pipenv install --dev --two --skip-lock; fi
+    - pipenv install --dev
 before_script:
     - rm -f monitor.db monitor2.db
     - sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0
     - sudo sysctl -w net.ipv6.conf.lo.disable_ipv6=0
 script:
-    - if [[ "$TRAVIS_PYTHON_VERSION" != "2.7" ]]; then pipenv run flake8 --ignore=E501,W503,E203 *.py Alerters/ Monitors/ Loggers/; fi
+    - pipenv run flake8 --ignore=E501,W503,E203 *.py Alerters/ Monitors/ Loggers/
     - pipenv run env PATH=$PWD/tests/mocks:$PATH coverage run monitor.py -1 -v -d -f tests/monitor.ini
     - pipenv run env TEST_VALUE=myenv coverage run --append monitor.py -t -f tests/monitor-env.ini
     - pipenv run coverage run --append -m unittest discover -s tests
@@ -25,5 +24,4 @@ after_success:
     - pipenv run codecov
 matrix:
   allow_failures:
-    - python: "3.6"
-    - python: "3.7-dev"
+    - python: "3.8-dev"
