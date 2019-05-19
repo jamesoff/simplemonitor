@@ -4,6 +4,7 @@ import os
 
 os.environ["TEST_VALUE"] = "test1"
 
+
 class TestEnvConfig(unittest.TestCase):
 
     def test_EnvConfig(self):

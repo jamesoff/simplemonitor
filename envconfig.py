@@ -1,10 +1,7 @@
 import os
 import re
-import functools
 
-import sys
-
-from configparser import ConfigParser, NoSectionError, NoOptionError
+from configparser import ConfigParser
 from configparser import BasicInterpolation
 
 
