@@ -16,18 +16,15 @@ class CompoundMonitor(Monitor):
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
         self.monitors = Monitor.get_config_option(
-            config_options,
-            'monitors',
-            required_type='[str]',
-            required=True,
-            default=[]
+            config_options, "monitors", required_type="[str]", required=True, default=[]
         )
-        self.min_fail = Monitor.get_config_option(config_options,
-                                                  'min_fail',
-                                                  required_type='int',
-                                                  default=len(self.monitors),
-                                                  minimum=1
-                                                  )
+        self.min_fail = Monitor.get_config_option(
+            config_options,
+            "min_fail",
+            required_type="int",
+            default=len(self.monitors),
+            minimum=1,
+        )
         self.m = -1
         self.mt = None
 
@@ -38,14 +35,16 @@ class CompoundMonitor(Monitor):
         for i in self.monitors:
             if self.m[i].get_success_count() > 0 and self.m[i].tests_run > 0:
                 failcount -= 1
-        return (failcount > 0)
+        return failcount > 0
 
     def describe(self):
         """Explains what we do."""
-        return "Checking that these monitors all succeeded: {0}".format(", ".join(self.monitors))
+        return "Checking that these monitors all succeeded: {0}".format(
+            ", ".join(self.monitors)
+        )
 
     def get_params(self):
-        return (self.monitors)
+        return self.monitors
 
     def set_mon_refs(self, mmm):
         """ stash a ref to the global monitor list so we can examine later """
@@ -85,6 +84,8 @@ class CompoundMonitor(Monitor):
         failcount = self.fail_count()
         monitorcount = self.monitors.__len__()
         if failcount > 0:
-            return "{0} of {1} services failed. Fail after: {2}".format(failcount, monitorcount, self.min_fail)
+            return "{0} of {1} services failed. Fail after: {2}".format(
+                failcount, monitorcount, self.min_fail
+            )
         else:
             return "All {0} services OK".format(monitorcount)

@@ -49,7 +49,7 @@ except ImportError:
 
 VERSION = "1.8"
 
-main_logger = logging.getLogger('simplemonitor')
+main_logger = logging.getLogger("simplemonitor")
 
 
 def load_monitors(m, filename):
@@ -65,11 +65,15 @@ def load_monitors(m, filename):
 
     myhostname = gethostname().lower()
 
-    main_logger.info('=== Loading monitors')
+    main_logger.info("=== Loading monitors")
     for monitor in monitors:
         if config.has_option(monitor, "runon"):
             if myhostname != config.get(monitor, "runon").lower():
-                main_logger.warning("Ignoring monitor %s because it's only for host %s", monitor, config.get(monitor, "runon"))
+                main_logger.warning(
+                    "Ignoring monitor %s because it's only for host %s",
+                    monitor,
+                    config.get(monitor, "runon"),
+                )
                 continue
         monitor_type = config.get(monitor, "type")
         new_monitor = None
@@ -81,7 +85,9 @@ def load_monitors(m, filename):
         except KeyError:
             main_logger.error(
                 "Unknown monitor type %s; valid types are: %s",
-                monitor_type, ', '.join(Monitors.monitor.all_types()))
+                monitor_type,
+                ", ".join(Monitors.monitor.all_types()),
+            )
             continue
         new_monitor = cls(monitor, config_options)
         new_monitor.set_mon_refs(m)
@@ -91,7 +97,7 @@ def load_monitors(m, filename):
 
     for i in list(m.monitors.keys()):
         m.monitors[i].post_config_setup()
-    main_logger.info('--- Loaded %d monitors', m.count_monitors())
+    main_logger.info("--- Loaded %d monitors", m.count_monitors())
     return m
 
 
@@ -103,23 +109,27 @@ def load_loggers(m, config):
     else:
         loggers = []
 
-    main_logger.info('=== Loading loggers')
+    main_logger.info("=== Loading loggers")
     for config_logger in loggers:
         logger_type = config.get(config_logger, "type")
         config_options = get_config_dict(config, config_logger)
-        config_options['_name'] = config_logger
+        config_options["_name"] = config_logger
         try:
             logger_cls = Loggers.logger.get_class(logger_type)
         except KeyError:
             main_logger.error(
                 "Unknown logger type %s; valid types are: %s",
-                logger_type, ', '.join(Loggers.logger.all_types()))
+                logger_type,
+                ", ".join(Loggers.logger.all_types()),
+            )
             continue
         new_logger = logger_cls(config_options)
-        main_logger.info("Adding %s logger %s: %s", logger_type, config_logger, new_logger)
+        main_logger.info(
+            "Adding %s logger %s: %s", logger_type, config_logger, new_logger
+        )
         m.add_logger(config_logger, new_logger)
         del new_logger
-    main_logger.info('--- Loaded %d loggers', len(m.loggers))
+    main_logger.info("--- Loaded %d loggers", len(m.loggers))
     return m
 
 
@@ -130,7 +140,7 @@ def load_alerters(m, config):
     else:
         alerters = []
 
-    main_logger.info('=== Loading alerters')
+    main_logger.info("=== Loading alerters")
     for alerter in alerters:
         alerter_type = config.get(alerter, "type")
         config_options = get_config_dict(config, alerter)
@@ -139,14 +149,16 @@ def load_alerters(m, config):
         except KeyError:
             main_logger.error(
                 "Unknown alerter type %s; valid types are: %s",
-                alerter_type, ', '.join(Alerters.alerter.all_types()))
+                alerter_type,
+                ", ".join(Alerters.alerter.all_types()),
+            )
             continue
         new_alerter = alerter_cls(config_options)
         main_logger.info("Adding %s alerter %s", alerter_type, alerter)
         new_alerter.name = alerter
         m.add_alerter(alerter, new_alerter)
         del new_alerter
-    main_logger.info('--- Loaded %d alerters', len(m.alerters))
+    main_logger.info("--- Loaded %d alerters", len(m.alerters))
     return m
 
 
@@ -154,25 +166,109 @@ def main():
     r"""This is where it happens \o/"""
 
     parser = OptionParser()
-    parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False, help=SUPPRESS_HELP)
-    parser.add_option("-q", "--quiet", action="store_true", dest="quiet", default=False, help=SUPPRESS_HELP)
-    parser.add_option("-t", "--test", action="store_true", dest="test", default=False, help="Test config and exit")
-    parser.add_option("-p", "--pidfile", dest="pidfile", default=None, help="Write PID into this file")
-    parser.add_option("-N", "--no-network", dest="no_network", default=False, action="store_true", help="Disable network listening socket")
-    parser.add_option("-d", "--debug", dest="debug", default=False, action="store_true", help=SUPPRESS_HELP)
-    parser.add_option("-f", "--config", dest="config", default="monitor.ini", help="configuration file")
-    parser.add_option("-H", "--no-heartbeat", action="store_true", dest="no_heartbeat", default=False, help="Omit printing the '.' character when running checks")
-    parser.add_option('-1', '--one-shot', action='store_true', dest='one_shot', default=False, help='Run the monitors once only, without alerting. Require monitors without "fail" in the name to succeed. Exit zero or non-zero accordingly.')
-    parser.add_option('--loops', dest='loops', default=-1, help=SUPPRESS_HELP, type=int)
-    parser.add_option('-l', '--log-level', dest="loglevel", default="warn", help="Log level: critical, error, warn, info, debug")
-    parser.add_option('-C', '--no-colour', '--no-color', action='store_true', dest='no_colour', default=False, help='Do not colourise log output')
-    parser.add_option('--no-timestamps', action='store_true', dest='no_timestamps', default=False, help='Do not prefix log output with timestamps')
-    parser.add_option('--dump-known-resources', action='store_true', dest='dump_resources', default=False, help=SUPPRESS_HELP)
+    parser.add_option(
+        "-v",
+        "--verbose",
+        action="store_true",
+        dest="verbose",
+        default=False,
+        help=SUPPRESS_HELP,
+    )
+    parser.add_option(
+        "-q",
+        "--quiet",
+        action="store_true",
+        dest="quiet",
+        default=False,
+        help=SUPPRESS_HELP,
+    )
+    parser.add_option(
+        "-t",
+        "--test",
+        action="store_true",
+        dest="test",
+        default=False,
+        help="Test config and exit",
+    )
+    parser.add_option(
+        "-p", "--pidfile", dest="pidfile", default=None, help="Write PID into this file"
+    )
+    parser.add_option(
+        "-N",
+        "--no-network",
+        dest="no_network",
+        default=False,
+        action="store_true",
+        help="Disable network listening socket",
+    )
+    parser.add_option(
+        "-d",
+        "--debug",
+        dest="debug",
+        default=False,
+        action="store_true",
+        help=SUPPRESS_HELP,
+    )
+    parser.add_option(
+        "-f",
+        "--config",
+        dest="config",
+        default="monitor.ini",
+        help="configuration file",
+    )
+    parser.add_option(
+        "-H",
+        "--no-heartbeat",
+        action="store_true",
+        dest="no_heartbeat",
+        default=False,
+        help="Omit printing the '.' character when running checks",
+    )
+    parser.add_option(
+        "-1",
+        "--one-shot",
+        action="store_true",
+        dest="one_shot",
+        default=False,
+        help='Run the monitors once only, without alerting. Require monitors without "fail" in the name to succeed. Exit zero or non-zero accordingly.',
+    )
+    parser.add_option("--loops", dest="loops", default=-1, help=SUPPRESS_HELP, type=int)
+    parser.add_option(
+        "-l",
+        "--log-level",
+        dest="loglevel",
+        default="warn",
+        help="Log level: critical, error, warn, info, debug",
+    )
+    parser.add_option(
+        "-C",
+        "--no-colour",
+        "--no-color",
+        action="store_true",
+        dest="no_colour",
+        default=False,
+        help="Do not colourise log output",
+    )
+    parser.add_option(
+        "--no-timestamps",
+        action="store_true",
+        dest="no_timestamps",
+        default=False,
+        help="Do not prefix log output with timestamps",
+    )
+    parser.add_option(
+        "--dump-known-resources",
+        action="store_true",
+        dest="dump_resources",
+        default=False,
+        help=SUPPRESS_HELP,
+    )
 
     (options, _) = parser.parse_args()
 
     if options.dump_resources:
         import pprint
+
         print("Monitors:")
         pprint.pprint(sorted(Monitors.monitor.all_types()), compact=True)
         print("Loggers:")
@@ -182,46 +278,52 @@ def main():
         sys.exit(0)
 
     if options.quiet:
-        print('Warning: --quiet is deprecated; use --log-level=critical')
-        options.loglevel = 'critical'
+        print("Warning: --quiet is deprecated; use --log-level=critical")
+        options.loglevel = "critical"
 
     if options.verbose:
-        print('Warning: --verbose is deprecated; use --log-level=info')
-        options.loglevel = 'info'
+        print("Warning: --verbose is deprecated; use --log-level=info")
+        options.loglevel = "info"
 
     if options.debug:
-        print('Warning: --debug is deprecated; use --log-level=debug')
-        options.loglevel = 'debug'
+        print("Warning: --debug is deprecated; use --log-level=debug")
+        options.loglevel = "debug"
 
     if options.no_timestamps:
-        logging_timestamp = ''
+        logging_timestamp = ""
     else:
-        logging_timestamp = '%(asctime)s '
+        logging_timestamp = "%(asctime)s "
 
     try:
         log_level = getattr(logging, options.loglevel.upper())
     except AttributeError:
-        print('Log level {0} is unknown'.format(options.loglevel))
+        print("Log level {0} is unknown".format(options.loglevel))
         sys.exit(1)
 
-    log_datefmt = '%Y-%m-%d %H:%M:%S'
-    log_plain_format = logging_timestamp + '%(levelname)8s (%(name)s) %(message)s'
+    log_datefmt = "%Y-%m-%d %H:%M:%S"
+    log_plain_format = logging_timestamp + "%(levelname)8s (%(name)s) %(message)s"
     if not options.no_colour:
         try:
             handler = colorlog.StreamHandler()
-            handler.setFormatter(colorlog.ColoredFormatter(logging_timestamp + '%(log_color)s%(levelname)8s%(reset)s (%(name)s) %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
+            handler.setFormatter(
+                colorlog.ColoredFormatter(
+                    logging_timestamp
+                    + "%(log_color)s%(levelname)8s%(reset)s (%(name)s) %(message)s",
+                    datefmt="%Y-%m-%d %H:%M:%S",
+                )
+            )
             main_logger.addHandler(handler)
         except NameError:
             logging.basicConfig(format=log_plain_format, datefmt=log_datefmt)
-            main_logger.error('Could not enable colorlog')
+            main_logger.error("Could not enable colorlog")
     else:
         logging.basicConfig(format=log_plain_format, datefmt=log_datefmt)
 
     main_logger.setLevel(log_level)
 
     if not options.quiet:
-        main_logger.info('=== SimpleMonitor v%s', VERSION)
-        main_logger.info('Loading main config from %s', options.config)
+        main_logger.info("=== SimpleMonitor v%s", VERSION)
+        main_logger.info("Loading main config from %s", options.config)
 
     config = EnvironmentAwareConfigParser()
     if not os.path.exists(options.config):
@@ -230,14 +332,16 @@ def main():
     try:
         config.read(options.config)
     except Exception as e:
-        main_logger.critical('Unable to read configuration file')
+        main_logger.critical("Unable to read configuration file")
         main_logger.critical(e)
         sys.exit(1)
 
     try:
         interval = config.getint("monitor", "interval")
     except Exception:
-        main_logger.critical('Missing [monitor] section from config file, or missing the "interval" setting in it')
+        main_logger.critical(
+            'Missing [monitor] section from config file, or missing the "interval" setting in it'
+        )
         sys.exit(1)
 
     pidfile = None
@@ -266,8 +370,7 @@ def main():
     main_logger.info("Loading monitor config from %s", monitors_file)
 
     try:
-        allow_pickle = config.getboolean("monitor", "allow_pickle",
-                                         fallback='true')
+        allow_pickle = config.getboolean("monitor", "allow_pickle", fallback="true")
     except ValueError:
         main_logger.critical('allow_pickle should be "true" or "false".')
         sys.exit(1)
@@ -304,7 +407,9 @@ def main():
         sys.exit(0)
 
     if options.one_shot:
-        main_logger.warning("One-shot mode: expecting monitors without 'fail' in the name to succeed, and with to fail. Will exit zero or non-zero accordingly.")
+        main_logger.warning(
+            "One-shot mode: expecting monitors without 'fail' in the name to succeed, and with to fail. Will exit zero or non-zero accordingly."
+        )
 
     try:
         key = config.get("monitor", "key")
@@ -317,14 +422,21 @@ def main():
                 allowing_pickle = "not "
             else:
                 allowing_pickle = ""
-            main_logger.info("Starting remote listener thread ({0}allowing pickle data)".format(allowing_pickle))
+            main_logger.info(
+                "Starting remote listener thread ({0}allowing pickle data)".format(
+                    allowing_pickle
+                )
+            )
         remote_listening_thread = Loggers.network.Listener(
-            m, remote_port, key, allow_pickle=allow_pickle)
+            m, remote_port, key, allow_pickle=allow_pickle
+        )
         remote_listening_thread.daemon = True
         remote_listening_thread.start()
 
     if not options.quiet:
-        main_logger.info("=== Starting... (loop runs every %ds) Hit ^C to stop", interval)
+        main_logger.info(
+            "=== Starting... (loop runs every %ds) Hit ^C to stop", interval
+        )
     loop = True
     heartbeat = 0
 
@@ -335,18 +447,23 @@ def main():
             if loops > 0:
                 loops -= 1
                 if loops == 0:
-                    main_logger.warning('Ran out of loop counter, will stop after this one')
+                    main_logger.warning(
+                        "Ran out of loop counter, will stop after this one"
+                    )
                     loop = False
             m.run_loop()
 
-            if options.loglevel in ['error', 'critical', 'warn'] and not options.no_heartbeat:
+            if (
+                options.loglevel in ["error", "critical", "warn"]
+                and not options.no_heartbeat
+            ):
                 heartbeat += 1
                 if heartbeat == 2:
                     sys.stdout.write(".")
                     sys.stdout.flush()
                     heartbeat = 0
         except KeyboardInterrupt:
-            main_logger.info('Received ^C')
+            main_logger.info("Received ^C")
             loop = False
         except Exception:
             sys.exc_info()
@@ -355,7 +472,8 @@ def main():
             if not remote_listening_thread.isAlive():
                 main_logger.error("Listener thread died :(")
                 remote_listening_thread = Loggers.network.Listener(
-                    m, remote_port, key, allow_pickle=allow_pickle)
+                    m, remote_port, key, allow_pickle=allow_pickle
+                )
                 remote_listening_thread.start()
 
         if options.one_shot:
@@ -370,7 +488,7 @@ def main():
 
     if enable_remote:
         remote_listening_thread.running = False
-        main_logger.info('Waiting for listener thread to exit')
+        main_logger.info("Waiting for listener thread to exit")
         remote_listening_thread.join(0)
 
     if pidfile:
@@ -384,7 +502,7 @@ def main():
 
     if options.one_shot:  # pragma: no cover
         ok = True
-        print('\n--> One-shot results:')
+        print("\n--> One-shot results:")
         for monitor in sorted(m.monitors.keys()):
             if "fail" in monitor:
                 if m.monitors[monitor].error_count == 0:

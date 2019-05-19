@@ -16,22 +16,20 @@ class ExecuteAlerter(Alerter):
         Alerter.__init__(self, config_options)
 
         self.fail_command = Alerter.get_config_option(
-            config_options,
-            'fail_command',
-            allow_empty=False
+            config_options, "fail_command", allow_empty=False
         )
         self.success_command = Alerter.get_config_option(
-            config_options,
-            'success_command',
-            allow_empty=False
+            config_options, "success_command", allow_empty=False
         )
         self.catchup_command = Alerter.get_config_option(
-            config_options,
-            'catchup_command',
-            allow_empty=False
+            config_options, "catchup_command", allow_empty=False
         )
-        if self.fail_command is None and self.success_command is None and self.catchup_command is None:
-            raise AlerterConfigurationError('execute alerter has no commands defined')
+        if (
+            self.fail_command is None
+            and self.success_command is None
+            and self.catchup_command is None
+        ):
+            raise AlerterConfigurationError("execute alerter has no commands defined")
 
     def send_alert(self, name, monitor):
         type_ = self.should_alert(monitor)
@@ -49,7 +47,7 @@ class ExecuteAlerter(Alerter):
         elif type_ == "success":
             command = self.success_command
         elif type_ == "catchup":
-            if self.catchup_command == 'fail_command':
+            if self.catchup_command == "fail_command":
                 command = self.fail_command
         else:
             self.alerter_logger.error("Unknown alert type %s", type_)
@@ -69,7 +67,7 @@ class ExecuteAlerter(Alerter):
             virtual_fail_count=monitor.virtual_fail_count(),
             info=monitor.get_result(),
             description=monitor.describe(),
-            last_virtual_fail_count=monitor.last_virtual_fail_count()
+            last_virtual_fail_count=monitor.last_virtual_fail_count(),
         )
 
         if not self.dry_run:
@@ -77,7 +75,9 @@ class ExecuteAlerter(Alerter):
             try:
                 subprocess.call(shlex.split(command))
             except Exception:
-                self.alerter_logger.exception("Exception encountered running command: %s", command)
+                self.alerter_logger.exception(
+                    "Exception encountered running command: %s", command
+                )
             if self.debug:
                 self.alerter_logger.debug("Command has finished.")
         else:

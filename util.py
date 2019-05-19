@@ -9,71 +9,87 @@ import socket
 
 class MonitorConfigurationError(ValueError):
     """A config error for a Monitor"""
+
     pass
 
 
 class AlerterConfigurationError(ValueError):
     """A config error for an Alerter"""
+
     pass
 
 
 class LoggerConfigurationError(ValueError):
     """A config error for a Logger"""
+
     pass
 
 
 class SimpleMonitorConfigurationError(ValueError):
     """A general config error"""
+
     pass
 
 
 def get_config_option(config_options, key, **kwargs):
     """Get a value out of a dict, with possible default, required type and requiredness."""
-    exception = kwargs.get('exception', ValueError)
+    exception = kwargs.get("exception", ValueError)
 
     if not isinstance(config_options, dict):
-        raise exception('config_options should be a dict')
+        raise exception("config_options should be a dict")
 
-    default = kwargs.get('default', None)
-    required = kwargs.get('required', False)
+    default = kwargs.get("default", None)
+    required = kwargs.get("required", False)
     value = config_options.get(key, default)
     if required and value is None:
-        raise exception('config option {0} is missing and is required'.format(key))
-    required_type = kwargs.get('required_type', 'str')
-    allowed_values = kwargs.get('allowed_values', None)
-    allow_empty = kwargs.get('allow_empty', True)
+        raise exception("config option {0} is missing and is required".format(key))
+    required_type = kwargs.get("required_type", "str")
+    allowed_values = kwargs.get("allowed_values", None)
+    allow_empty = kwargs.get("allow_empty", True)
     if isinstance(value, str) and required_type:
-        if required_type == 'str' and value == '' and not allow_empty:
-            raise exception('config option {0} cannot be empty'.format(key))
-        if required_type in ['int', 'float']:
+        if required_type == "str" and value == "" and not allow_empty:
+            raise exception("config option {0} cannot be empty".format(key))
+        if required_type in ["int", "float"]:
             try:
-                if required_type == 'int':
+                if required_type == "int":
                     value = int(value)
                 else:
                     value = float(value)
             except ValueError:
-                raise exception('config option {0} needs to be an {1}'.format(key, required_type))
-            minimum = kwargs.get('minimum')
+                raise exception(
+                    "config option {0} needs to be an {1}".format(key, required_type)
+                )
+            minimum = kwargs.get("minimum")
             if minimum is not None and value < minimum:
-                raise exception('config option {0} needs to be >= {1}'.format(key, minimum))
-            maximum = kwargs.get('maximum')
+                raise exception(
+                    "config option {0} needs to be >= {1}".format(key, minimum)
+                )
+            maximum = kwargs.get("maximum")
             if maximum is not None and value > maximum:
-                raise exception('config option {0} needs to be <= {1}'.format(key, maximum))
-        if required_type == '[int]':
+                raise exception(
+                    "config option {0} needs to be <= {1}".format(key, maximum)
+                )
+        if required_type == "[int]":
             try:
                 value = [int(x) for x in value.split(",")]
             except ValueError:
-                raise exception('config option {0} needs to be a list of int[int,...]'.format(key))
-        if required_type == 'bool':
-            value = bool(value.lower() in ['1', 'true', 'yes'])
-        if required_type == '[str]':
+                raise exception(
+                    "config option {0} needs to be a list of int[int,...]".format(key)
+                )
+        if required_type == "bool":
+            value = bool(value.lower() in ["1", "true", "yes"])
+        if required_type == "[str]":
             value = [x.strip() for x in value.split(",")]
     if isinstance(value, list) and allowed_values:
         if not all([x in allowed_values for x in value]):
-            raise exception('config option {0} needs to be one of {1}'.format(key, allowed_values))
+            raise exception(
+                "config option {0} needs to be one of {1}".format(key, allowed_values)
+            )
     else:
         if allowed_values is not None and value not in allowed_values:
-            raise exception('config option {0} needs to be one of {1}'.format(key, allowed_values))
+            raise exception(
+                "config option {0} needs to be one of {1}".format(key, allowed_values)
+            )
     return value
 
 
@@ -84,7 +100,7 @@ def format_datetime(the_datetime):
 
     if isinstance(the_datetime, datetime.datetime):
         the_datetime = the_datetime.replace(microsecond=0)
-        return the_datetime.isoformat(' ')
+        return the_datetime.isoformat(" ")
     return the_datetime
 
 
@@ -104,12 +120,12 @@ def get_config_dict(config, monitor):
     return ret
 
 
-DATETIME_MAGIC_TOKEN = '__simplemonitor_datetime'
-FORMAT = '%Y-%m-%d %H:%M:%S.%f'
+DATETIME_MAGIC_TOKEN = "__simplemonitor_datetime"
+FORMAT = "%Y-%m-%d %H:%M:%S.%f"
 
 
 class JSONEncoder(json.JSONEncoder):
-    _regexp_type = type(re.compile(''))
+    _regexp_type = type(re.compile(""))
 
     def default(self, obj):
         if isinstance(obj, datetime.datetime):
@@ -121,16 +137,19 @@ class JSONEncoder(json.JSONEncoder):
 
 class JSONDecoder(json.JSONDecoder):
     def __init__(self, *args, **kwargs):
-        self._original_object_pairs_hook = kwargs.pop('object_pairs_hook', None)
-        kwargs['object_pairs_hook'] = self.object_pairs_hook
+        self._original_object_pairs_hook = kwargs.pop("object_pairs_hook", None)
+        kwargs["object_pairs_hook"] = self.object_pairs_hook
         super(JSONDecoder, self).__init__(*args, **kwargs)
 
-    _datetime_re = re.compile(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{6}')
+    _datetime_re = re.compile(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{6}")
 
     def object_pairs_hook(self, obj):
-        if len(obj) == 1 and obj[0][0] == DATETIME_MAGIC_TOKEN and \
-                isinstance(obj[0][1], str) and \
-                self._datetime_re.match(obj[0][1]):
+        if (
+            len(obj) == 1
+            and obj[0][0] == DATETIME_MAGIC_TOKEN
+            and isinstance(obj[0][1], str)
+            and self._datetime_re.match(obj[0][1])
+        ):
             return datetime.datetime.strptime(obj[0][1], FORMAT)
         elif self._original_object_pairs_hook:
             return self._original_object_pairs_hook(obj)
@@ -139,26 +158,32 @@ class JSONDecoder(json.JSONDecoder):
 
 
 if sys.version_info >= (3,):
+
     def json_dumps(data):
-        return JSONEncoder().encode(data).encode('ascii')
+        return JSONEncoder().encode(data).encode("ascii")
 
     def json_loads(string):
-        return JSONDecoder().decode(string.decode('ascii'))
+        return JSONDecoder().decode(string.decode("ascii"))
+
+
 else:
+
     def json_dumps(data):
         return JSONEncoder().encode(data)
 
     def json_loads(string):
         if isinstance(string, bytearray):
-            string = string.decode('ascii')
+            string = string.decode("ascii")
         return JSONDecoder().decode(string)
 
 
 def subclass_dict_handler(mod, base_cls):
     def _check_is_subclass(cls):
         if not issubclass(cls, base_cls):
-            raise TypeError(('%s.register may only be used on subclasses '
-                             'of %s.%s') % (mod, mod, base_cls.__name__))
+            raise TypeError(
+                ("%s.register may only be used on subclasses " "of %s.%s")
+                % (mod, mod, base_cls.__name__)
+            )
 
     _subclasses = {}
 

@@ -28,7 +28,7 @@ class Alerter:
     verbose = False
 
     dry_run = False
-    groups = ['default']
+    groups = ["default"]
 
     delay_notification = False
     ooh_failures = []
@@ -36,114 +36,84 @@ class Alerter:
     support_catchup = False
     ooh_recovery = False
 
-    type = 'unknown'
+    type = "unknown"
 
     def __init__(self, config_options=None):
         if config_options is None:
             config_options = {}
-        self.alerter_logger = logging.getLogger('simplemonitor.alerter-' + self.type)
+        self.alerter_logger = logging.getLogger("simplemonitor.alerter-" + self.type)
         self.available = True
-        self.set_dependencies(Alerter.get_config_option(
-            config_options,
-            'depend',
-            required_type='[str]',
-            default=[]
-        ))
+        self.set_dependencies(
+            Alerter.get_config_option(
+                config_options, "depend", required_type="[str]", default=[]
+            )
+        )
         self.limit = Alerter.get_config_option(
-            config_options,
-            'limit',
-            required_type='int',
-            minimum=1,
-            default=1
+            config_options, "limit", required_type="int", minimum=1, default=1
         )
         self.repeat = Alerter.get_config_option(
-            config_options,
-            'repeat',
-            required_type='int',
-            default=0,
-            minimum=0
+            config_options, "repeat", required_type="int", default=0, minimum=0
         )
-        self.set_groups(Alerter.get_config_option(
-            config_options,
-            'groups',
-            required_type='[str]',
-            default=['default']
-        ))
+        self.set_groups(
+            Alerter.get_config_option(
+                config_options, "groups", required_type="[str]", default=["default"]
+            )
+        )
         self.times_type = Alerter.get_config_option(
             config_options,
-            'times_type',
-            required_type='str',
-            allowed_values=['always', 'only', 'not'],
-            default='always'
+            "times_type",
+            required_type="str",
+            allowed_values=["always", "only", "not"],
+            default="always",
         )
-        if self.times_type in ['only', 'not']:
+        if self.times_type in ["only", "not"]:
             time_lower = Alerter.get_config_option(
-                config_options,
-                'time_lower',
-                required_type='str',
-                required=True
+                config_options, "time_lower", required_type="str", required=True
             )
             time_upper = Alerter.get_config_option(
-                config_options,
-                'time_upper',
-                required_type='str',
-                required=True
+                config_options, "time_upper", required_type="str", required=True
             )
             try:
                 time_info = [
                     datetime.time(
-                        int(time_lower.split(":")[0]),
-                        int(time_lower.split(":")[1])
+                        int(time_lower.split(":")[0]), int(time_lower.split(":")[1])
                     ),
                     datetime.time(
-                        int(time_upper.split(":")[0]),
-                        int(time_upper.split(":")[1])
-                    )
+                        int(time_upper.split(":")[0]), int(time_upper.split(":")[1])
+                    ),
                 ]
                 self.time_info = time_info
             except Exception:
                 raise RuntimeError("error processing time limit definition")
         self.days = Alerter.get_config_option(
             config_options,
-            'days',
-            required_type='[int]',
+            "days",
+            required_type="[int]",
             allowed_values=list(range(0, 7)),
-            default=list(range(0, 7))
+            default=list(range(0, 7)),
         )
         self.delay_notification = Alerter.get_config_option(
-            config_options,
-            'delay',
-            required_type='bool',
-            default=False
+            config_options, "delay", required_type="bool", default=False
         )
         self.dry_run = Alerter.get_config_option(
-            config_options,
-            'dry_run',
-            required_type='bool',
-            default=False
+            config_options, "dry_run", required_type="bool", default=False
         )
         self.ooh_recovery = Alerter.get_config_option(
-            config_options,
-            'ooh_recovery',
-            required_type='bool',
-            default=False
+            config_options, "ooh_recovery", required_type="bool", default=False
         )
 
         if Alerter.get_config_option(
-            config_options,
-            'debug_times',
-            required_type=bool,
-            default=False
+            config_options, "debug_times", required_type=bool, default=False
         ):
             self.time_info = [
                 (datetime.datetime.utcnow() - datetime.timedelta(minutes=1)).time(),
-                (datetime.datetime.utcnow() + datetime.timedelta(minutes=1)).time()
+                (datetime.datetime.utcnow() + datetime.timedelta(minutes=1)).time(),
             ]
             self.alerter_logger.debug("set times for alerter to %s", self.time_info)
 
     @staticmethod
     def get_config_option(config_options, key, **kwargs):
-        kwargs['exception'] = AlerterConfigurationError
+        kwargs["exception"] = AlerterConfigurationError
         return get_config_option(config_options, key, **kwargs)
 
     def set_dependencies(self, dependency_list):
@@ -187,11 +157,16 @@ class Alerter:
                         try:
                             self.ooh_failures.remove(monitor.name)
                         except Exception:
-                            self.alerter_logger.warning("couldn't remove %s from OOH list; will maybe generate too many alerts.", monitor.name)
+                            self.alerter_logger.warning(
+                                "couldn't remove %s from OOH list; will maybe generate too many alerts.",
+                                monitor.name,
+                            )
                         if self.support_catchup:
                             return "catchup"
                         return "failure"
-            if monitor.virtual_fail_count() == self.limit or (self.repeat and (monitor.virtual_fail_count() % self.limit == 0)):
+            if monitor.virtual_fail_count() == self.limit or (
+                self.repeat and (monitor.virtual_fail_count() % self.limit == 0)
+            ):
                 # This is the first time or nth time we've failed
                 if out_of_hours:
                     if monitor.name not in self.ooh_failures:
@@ -199,7 +174,9 @@ class Alerter:
                         return ""
                 return "failure"
             return ""
-        elif monitor.all_better_now() and monitor.last_virtual_fail_count() >= self.limit:
+        elif (
+            monitor.all_better_now() and monitor.last_virtual_fail_count() >= self.limit
+        ):
             try:
                 self.ooh_failures.remove(monitor.name)
             except Exception:
@@ -239,9 +216,12 @@ class Alerter:
             else:
                 return True
         else:
-            self.alerter_logger.error("this should never happen! Unknown times_type in alerter")
+            self.alerter_logger.error(
+                "this should never happen! Unknown times_type in alerter"
+            )
             return True
 
 
 (register, get_class, all_types) = subclass_dict_handler(
-    'simplemonitor.Alerters.alerter', Alerter)
+    "simplemonitor.Alerters.alerter", Alerter
+)

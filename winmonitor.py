@@ -22,8 +22,8 @@ setx /M PATH "%PATH%;c:\Python;c:\Python\scripts;c:\Python\Lib\site-packages\pyw
 
 # Change this to the location of your config file, if required
 APP_PATH = os.path.realpath(os.path.dirname(__file__))
-CONFIG = os.path.join(APP_PATH, 'monitor.ini')
-LOGFILE = os.path.join(APP_PATH, 'simplemonitor.log')
+CONFIG = os.path.join(APP_PATH, "monitor.ini")
+LOGFILE = os.path.join(APP_PATH, "simplemonitor.log")
 
 
 # Setup Logging
@@ -31,7 +31,9 @@ def configure_logger(logger, level=logging.DEBUG):
     logger.setLevel(level)
     fh = logging.FileHandler(LOGFILE)
     fh.setLevel(level)
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    formatter = logging.Formatter(
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
     fh.setFormatter(formatter)
     logger.addHandler(fh)
     return logger
@@ -44,7 +46,7 @@ def setup_logger(level=logging.DEBUG):
 LOGGER = setup_logger(logging.INFO)
 
 
-class AppServerSvc (win32serviceutil.ServiceFramework):
+class AppServerSvc(win32serviceutil.ServiceFramework):
     _svc_name_ = "SimpleMonitor"
     _svc_display_name_ = "SimpleMonitor"
     _svc_description_ = "A service wrapper for the python SimpleMonitor program"
@@ -67,9 +69,12 @@ class AppServerSvc (win32serviceutil.ServiceFramework):
     def SvcDoRun(self):
         self.logger.info("Starting {} service".format(self._svc_display_name_))
         import servicemanager
-        servicemanager.LogMsg(servicemanager.EVENTLOG_INFORMATION_TYPE,
-                              servicemanager.PYS_SERVICE_STARTED,
-                              (self._svc_name, ''))
+
+        servicemanager.LogMsg(
+            servicemanager.EVENTLOG_INFORMATION_TYPE,
+            servicemanager.PYS_SERVICE_STARTED,
+            (self._svc_name, ""),
+        )
 
         # Start monitor
         p_mon = mp.Process(target=run_monitor)
@@ -93,7 +98,9 @@ class AppServerSvc (win32serviceutil.ServiceFramework):
                     break
                 self.logger.debug("Still running...")
             except KeyboardInterrupt:
-                self.logger.warning("Interrupted {} service".format(self._svc_display_name_))
+                self.logger.warning(
+                    "Interrupted {} service".format(self._svc_display_name_)
+                )
                 break
 
         self.logger.info("Stopped {} service".format(self._svc_display_name_))
@@ -101,9 +108,10 @@ class AppServerSvc (win32serviceutil.ServiceFramework):
 
 def run_monitor():
     import monitor
-    sys.argv = ['monitor.py', "-vH", "--config={}".format(CONFIG)]
+
+    sys.argv = ["monitor.py", "-vH", "--config={}".format(CONFIG)]
     monitor.main()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     win32serviceutil.HandleCommandLine(AppServerSvc)

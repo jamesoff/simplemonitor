@@ -1,5 +1,6 @@
 try:
     import pync
+
     pync_available = True
 except Exception:
     pync_available = False
@@ -18,12 +19,16 @@ class NotificationCenterAlerter(Alerter):
     def __init__(self, config_options):
         Alerter.__init__(self, config_options)
         if not pync_available:
-            self.alerter_logger.critical("Pync package is not available, which is necessary to use NotificationCenterAlerter.")
+            self.alerter_logger.critical(
+                "Pync package is not available, which is necessary to use NotificationCenterAlerter."
+            )
             self.alerter_logger.critical("Try: pip install -r requirements.txt")
             return
 
         if platform.system() != "Darwin":
-            self.alerter_logger.critical("This alerter (currently) only works on Mac OS X!")
+            self.alerter_logger.critical(
+                "This alerter (currently) only works on Mac OS X!"
+            )
             return
 
     def send_alert(self, name, monitor):

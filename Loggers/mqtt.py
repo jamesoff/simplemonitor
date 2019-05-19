@@ -7,8 +7,10 @@
 # contact: dev@swtk.info
 
 import sys
+
 try:
     import paho.mqtt.publish
+
     mqtt_available = True
 except ImportError:
     mqtt_available = False
@@ -40,36 +42,33 @@ class MQTTLogger(Logger):
 
         # TODO: add configuration for authenticated calls, port, will, etc.
         self.host = Logger.get_config_option(
-            config_options,
-            'host',
-            required=True,
-            allow_empty=False
+            config_options, "host", required=True, allow_empty=False
         )
         self.port = Logger.get_config_option(
             config_options,
-            'port',
+            "port",
             required=False,
             allow_empty=False,
-            required_type='int',
-            default=1883
+            required_type="int",
+            default=1883,
         )
         # specif configuration for Home Assistant MQTT discovery
         # https://www.home-assistant.io/docs/mqtt/discovery/
         self.hass = Logger.get_config_option(
             config_options,
-            'hass',
+            "hass",
             required=False,
             allow_empty=False,
-            required_type='bool',
-            default=False
+            required_type="bool",
+            default=False,
         )
         # topic to send information to
         self.topic = Logger.get_config_option(
             config_options,
-            'topic',
+            "topic",
             required=False,
             allow_empty=False,
-            default="simplemonitor" if not self.hass else "homeassistant/binary_sensor"
+            default="simplemonitor" if not self.hass else "homeassistant/binary_sensor",
         )
 
         # registry of monitors which registered with HA
@@ -82,34 +81,64 @@ class MQTTLogger(Logger):
         if self.hass:
             if monitor.name not in self.registered:
                 try:
-                    paho.mqtt.publish.single("{root}/simplemonitor_{monitor}/config".format(root=self.topic, monitor=monitor.name),
-                                             payload=json.dumps({"name": monitor.name}),
-                                             retain=True,
-                                             hostname=self.host,
-                                             client_id="simplemonitor_{monitor}".format(monitor=monitor.name)
-                                             )
+                    paho.mqtt.publish.single(
+                        "{root}/simplemonitor_{monitor}/config".format(
+                            root=self.topic, monitor=monitor.name
+                        ),
+                        payload=json.dumps({"name": monitor.name}),
+                        retain=True,
+                        hostname=self.host,
+                        client_id="simplemonitor_{monitor}".format(
+                            monitor=monitor.name
+                        ),
+                    )
                 except Exception as e:
-                    self.logger_logger.error("cannot send {device} to MQTT: {e}".format(device=monitor.name, e=e))
+                    self.logger_logger.error(
+                        "cannot send {device} to MQTT: {e}".format(
+                            device=monitor.name, e=e
+                        )
+                    )
                 else:
                     self.registered.append(monitor.name)
-                    self.logger_logger.debug("registered {device} in MQTT".format(device=monitor.name))
+                    self.logger_logger.debug(
+                        "registered {device} in MQTT".format(device=monitor.name)
+                    )
 
         if self.only_failures and monitor.virtual_fail_count() == 0:
             return
 
         if self.hass:
-            topic = "{root}/simplemonitor_{monitor}/state".format(root=self.topic, monitor=monitor.name)
+            topic = "{root}/simplemonitor_{monitor}/state".format(
+                root=self.topic, monitor=monitor.name
+            )
         else:
             topic = "{root}/{monitor}".format(root=self.topic, monitor=monitor.name)
-        self.logger_logger.debug("{monitor} failed {n} times".format(monitor=monitor.name, n=monitor.virtual_fail_count()))
-        payload = 'ON' if monitor.virtual_fail_count() == 0 and not monitor.was_skipped else 'OFF'
+        self.logger_logger.debug(
+            "{monitor} failed {n} times".format(
+                monitor=monitor.name, n=monitor.virtual_fail_count()
+            )
+        )
+        payload = (
+            "ON"
+            if monitor.virtual_fail_count() == 0 and not monitor.was_skipped
+            else "OFF"
+        )
         try:
-            paho.mqtt.publish.single(topic, payload=payload, retain=True, hostname=self.host, client_id="simplemonitor_{monitor}".format(monitor=monitor.name))
+            paho.mqtt.publish.single(
+                topic,
+                payload=payload,
+                retain=True,
+                hostname=self.host,
+                client_id="simplemonitor_{monitor}".format(monitor=monitor.name),
+            )
         except Exception as e:
-            self.logger_logger.error("cannot send state {payload} to {topic}: {e}").format(payload=payload, topic=topic,
-                                                                                           e=e)
+            self.logger_logger.error(
+                "cannot send state {payload} to {topic}: {e}"
+            ).format(payload=payload, topic=topic, e=e)
         else:
-            self.logger_logger.debug("state {state} sent to {topic}".format(state=payload, topic=topic))
+            self.logger_logger.debug(
+                "state {state} sent to {topic}".format(state=payload, topic=topic)
+            )
 
     def describe(self):
         return "Sends monitoring status to a MQTT broker"

@@ -20,6 +20,7 @@ import logging
 
 try:
     import win32api  # noqa: F401
+
     win32_available = True
 except ImportError:
     win32_available = False
@@ -46,7 +47,7 @@ class Monitor:
 
     urgent = 1
     notify = True
-    group = 'default'
+    group = "default"
 
     failures = 0
     last_failure = None
@@ -73,60 +74,49 @@ class Monitor:
         if config_options is None:
             config_options = {}
         self.name = name
-        self.monitor_logger = logging.getLogger('simplemonitor.monitor-' + self.name)
-        self.set_dependencies(Monitor.get_config_option(
-            config_options,
-            'depend',
-            required_type='[str]',
-            default=list()
-        ))
-        self.set_urgency(Monitor.get_config_option(
-            config_options,
-            'urgent',
-            required_type='bool',
-            default=True
-        ))
-        self.set_notify(Monitor.get_config_option(
-            config_options,
-            'notify',
-            required_type='bool',
-            default=True
-        ))
-        self.set_group(Monitor.get_config_option(
-            config_options,
-            'group',
-            default='default'
-        ))
-        self.set_tolerance(Monitor.get_config_option(
-            config_options,
-            'tolerance',
-            required_type='int',
-            default=0,
-            minimum=0
-        ))
-        self.set_remote_alerting(Monitor.get_config_option(
-            config_options,
-            'remote_alert',
-            required_type='bool',
-            default=False
-        ))
-        self.set_recover_command(Monitor.get_config_option(
-            config_options,
-            'recover_command'
-        ))
-        self.set_gap(Monitor.get_config_option(
-            config_options,
-            'gap',
-            required_type='int',
-            minimum=0,
-            default=0
-        ))
+        self.monitor_logger = logging.getLogger("simplemonitor.monitor-" + self.name)
+        self.set_dependencies(
+            Monitor.get_config_option(
+                config_options, "depend", required_type="[str]", default=list()
+            )
+        )
+        self.set_urgency(
+            Monitor.get_config_option(
+                config_options, "urgent", required_type="bool", default=True
+            )
+        )
+        self.set_notify(
+            Monitor.get_config_option(
+                config_options, "notify", required_type="bool", default=True
+            )
+        )
+        self.set_group(
+            Monitor.get_config_option(config_options, "group", default="default")
+        )
+        self.set_tolerance(
+            Monitor.get_config_option(
+                config_options, "tolerance", required_type="int", default=0, minimum=0
+            )
+        )
+        self.set_remote_alerting(
+            Monitor.get_config_option(
+                config_options, "remote_alert", required_type="bool", default=False
+            )
+        )
+        self.set_recover_command(
+            Monitor.get_config_option(config_options, "recover_command")
+        )
+        self.set_gap(
+            Monitor.get_config_option(
+                config_options, "gap", required_type="int", minimum=0, default=0
+            )
+        )
         self.running_on = short_hostname()
         self.was_skipped = False
 
     @staticmethod
     def get_config_option(config_options, key, **kwargs):
-        kwargs['exception'] = MonitorConfigurationError
+        kwargs["exception"] = MonitorConfigurationError
         return get_config_option(config_options, key, **kwargs)
 
     def set_recover_command(self, command):
@@ -213,7 +203,9 @@ class Monitor:
             logger.save_result2(name, self)
         except Exception as e:
             sys.stderr.write("%s\n" % e)
-            logger.save_result(name, self.type, self.get_params(), result, self.last_result)
+            logger.save_result(
+                name, self.type, self.get_params(), result, self.last_result
+            )
 
     def send_alert(self, name, alerter):
         """Send an alert when we first fail.
@@ -323,7 +315,11 @@ class Monitor:
         except Exception:
             pass
 
-        if self.last_error_count >= self.tolerance and self.success_count == 1 and not self.was_skipped:
+        if (
+            self.last_error_count >= self.tolerance
+            and self.success_count == 1
+            and not self.was_skipped
+        ):
             return True
         else:
             return False
@@ -397,7 +393,7 @@ class Monitor:
             return
 
         try:
-            p = subprocess.Popen(self.recover_command.split(' '))
+            p = subprocess.Popen(self.recover_command.split(" "))
             p.wait()
             self.recover_info = "Command executed and returned %d" % p.returncode
         except Exception as e:
@@ -415,7 +411,7 @@ class Monitor:
         being sent over the network).
         """
         serialize_dict = dict(self.__dict__)
-        del serialize_dict['monitor_logger']
+        del serialize_dict["monitor_logger"]
         return serialize_dict
 
     def __setstate__(self, state):
@@ -423,7 +419,7 @@ class Monitor:
         self._set_monitor_logger()
 
     def _set_monitor_logger(self):
-        self.monitor_logger = logging.getLogger('simplemonitor.monitor-' + self.name)
+        self.monitor_logger = logging.getLogger("simplemonitor.monitor-" + self.name)
 
     def to_python_dict(self):
         return self.__getstate__()
@@ -453,7 +449,8 @@ class Monitor:
 
 
 (register, get_class, all_types) = subclass_dict_handler(
-    'simplemonitor.Monitors.monitor', Monitor)
+    "simplemonitor.Monitors.monitor", Monitor
+)
 
 
 @register
@@ -467,17 +464,22 @@ class MonitorFail(Monitor):
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
         self.interval = Monitor.get_config_option(
-            config_options,
-            'interval',
-            required_type='int',
-            minimum=1,
-            default=5
+            config_options, "interval", required_type="int", minimum=1, default=5
         )
 
     def run_test(self):
         """Always fails."""
-        self.monitor_logger.info("error_count = %d, interval = %d --> %d", self.error_count, self.interval, self.error_count % self.interval)
-        if (self.interval == 0) or (self.error_count == 0) or (self.error_count % self.interval != 0):
+        self.monitor_logger.info(
+            "error_count = %d, interval = %d --> %d",
+            self.error_count,
+            self.interval,
+            self.error_count % self.interval,
+        )
+        if (
+            (self.interval == 0)
+            or (self.error_count == 0)
+            or (self.error_count % self.interval != 0)
+        ):
             self.record_fail("This monitor always fails.")
             return False
         else:

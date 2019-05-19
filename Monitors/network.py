@@ -32,85 +32,96 @@ class MonitorHTTP(Monitor):
 
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
-        self.url = Monitor.get_config_option(config_options, 'url', required=True)
+        self.url = Monitor.get_config_option(config_options, "url", required=True)
 
-        regexp = Monitor.get_config_option(config_options, 'regexp')
+        regexp = Monitor.get_config_option(config_options, "regexp")
         if regexp is not None:
             self.regexp = re.compile(regexp)
             self.regexp_text = regexp
         if not regexp:
             self.allowed_codes = Monitor.get_config_option(
-                config_options,
-                'allowed_codes',
-                default=[200],
-                required_type='[int]'
+                config_options, "allowed_codes", default=[200], required_type="[int]"
             )
         else:
             self.allowed_codes = [200]
 
         # optionnal - for HTTPS client authentication only
         # in this case, certfile is required
-        self.certfile = config_options.get('certfile')
-        self.keyfile = config_options.get('keyfile')
+        self.certfile = config_options.get("certfile")
+        self.keyfile = config_options.get("keyfile")
         if self.certfile and not self.keyfile:
             self.keyfile = self.certfile
         if not self.certfile and self.keyfile:
-            raise ValueError('config option keyfile is set but certfile is not')
+            raise ValueError("config option keyfile is set but certfile is not")
 
         self.verify_hostname = Monitor.get_config_option(
-            config_options,
-            'verify_hostname',
-            default=True,
-            required_type='bool'
+            config_options, "verify_hostname", default=True, required_type="bool"
         )
 
         self.request_timeout = Monitor.get_config_option(
-            config_options,
-            'timeout',
-            default=5,
-            required_type='int'
+            config_options, "timeout", default=5, required_type="int"
         )
 
-        self.username = config_options.get('username')
-        self.password = config_options.get('password')
+        self.username = config_options.get("username")
+        self.password = config_options.get("password")
 
     def run_test(self):
         start_time = datetime.datetime.now()
         end_time = None
         try:
             if self.certfile is None and self.username is None:
-                r = requests.get(self.url,
-                                 timeout=self.request_timeout,
-                                 verify=self.verify_hostname
-                                 )
+                r = requests.get(
+                    self.url, timeout=self.request_timeout, verify=self.verify_hostname
+                )
             elif self.certfile is None and self.username is not None:
-                r = requests.get(self.url,
-                                 timeout=self.request_timeout,
-                                 auth=HTTPBasicAuth(
-                                     self.username,
-                                     self.password
-                                 ),
-                                 verify=self.verify_hostname
-                                 )
+                r = requests.get(
+                    self.url,
+                    timeout=self.request_timeout,
+                    auth=HTTPBasicAuth(self.username, self.password),
+                    verify=self.verify_hostname,
+                )
             else:
-                r = requests.get(self.url,
-                                 timeout=self.request_timeout,
-                                 cert=(self.certfile, self.keyfile),
-                                 verify=self.verify_hostname
-                                 )
+                r = requests.get(
+                    self.url,
+                    timeout=self.request_timeout,
+                    cert=(self.certfile, self.keyfile),
+                    verify=self.verify_hostname,
+                )
 
             end_time = datetime.datetime.now()
             load_time = end_time - start_time
             if r.status_code not in self.allowed_codes:
-                return self.record_fail("Got status '{0} {1}' instead of {2}".format(r.status_code, r.reason, self.allowed_codes))
+                return self.record_fail(
+                    "Got status '{0} {1}' instead of {2}".format(
+                        r.status_code, r.reason, self.allowed_codes
+                    )
+                )
             if self.regexp is None:
-                return self.record_success("%s in %0.2fs" % (r.status_code, (load_time.seconds + (load_time.microseconds / 1000000.2))))
+                return self.record_success(
+                    "%s in %0.2fs"
+                    % (
+                        r.status_code,
+                        (load_time.seconds + (load_time.microseconds / 1000000.2)),
+                    )
+                )
             matches = self.regexp.search(r.text)
             if matches:
-                return self.record_success("%s in %0.2fs" % (r.status_code, (load_time.seconds + (load_time.microseconds / 1000000.2))))
-            return self.record_fail("Got '{0} {1}' but couldn't match /{2}/ in page.".format(r.status_code, r.reason, self.regexp_text))
+                return self.record_success(
+                    "%s in %0.2fs"
+                    % (
+                        r.status_code,
+                        (load_time.seconds + (load_time.microseconds / 1000000.2)),
+                    )
+                )
+            return self.record_fail(
+                "Got '{0} {1}' but couldn't match /{2}/ in page.".format(
+                    r.status_code, r.reason, self.regexp_text
+                )
+            )
         except requests.exceptions.RequestException as e:
-            return self.record_fail("Requests exception while opening URL: {0}".format(e))
+            return self.record_fail(
+                "Requests exception while opening URL: {0}".format(e)
+            )
         except Exception as e:
             return self.record_fail("Exception while trying to open url: {0}".format(e))
 
@@ -119,7 +130,10 @@ class MonitorHTTP(Monitor):
         if self.regexp is None:
             message = "Checking that accessing %s returns HTTP/200 OK" % self.url
         else:
-            message = "Checking that accessing %s returns HTTP/200 OK and that /%s/ matches the page" % (self.url, self.regexp_text)
+            message = (
+                "Checking that accessing %s returns HTTP/200 OK and that /%s/ matches the page"
+                % (self.url, self.regexp_text)
+            )
         return message
 
     def get_params(self):
@@ -137,13 +151,9 @@ class MonitorTCP(Monitor):
     def __init__(self, name, config_options):
         """Constructor"""
         Monitor.__init__(self, name, config_options)
-        self.host = Monitor.get_config_option(config_options, 'host', required=True)
+        self.host = Monitor.get_config_option(config_options, "host", required=True)
         self.port = Monitor.get_config_option(
-            config_options,
-            'port',
-            required=True,
-            required_type='int',
-            minimum=0
+            config_options, "port", required=True, required_type="int", minimum=0
         )
 
     def run_test(self):
@@ -185,47 +195,39 @@ class MonitorHost(Monitor):
         """
         Monitor.__init__(self, name, config_options)
         ping_ttl = Monitor.get_config_option(
-            config_options,
-            'ping_ttl',
-            required_type='int',
-            minimum=0,
-            default=5
+            config_options, "ping_ttl", required_type="int", minimum=0, default=5
         )
         ping_ms = str(ping_ttl * 1000)
         ping_ttl = str(ping_ttl)
         platform = sys.platform
-        if platform in ['win32', 'cygwin']:
+        if platform in ["win32", "cygwin"]:
             self.ping_command = "ping -n 1 -w " + ping_ms + " %s"
-            self.ping_regexp = r'Reply from [0-9a-f:.]+:.+time[=<]\d+ms'
+            self.ping_regexp = r"Reply from [0-9a-f:.]+:.+time[=<]\d+ms"
             self.time_regexp = r"Average = (?P<ms>\d+)ms"
-        elif platform.startswith('freebsd') or platform.startswith('darwin'):
+        elif platform.startswith("freebsd") or platform.startswith("darwin"):
             self.ping_command = "ping -c1 -t" + ping_ttl + " %s"
             self.ping_regexp = "bytes from"
             self.time_regexp = r"min/avg/max/stddev = [\d.]+/(?P<ms>[\d.]+)/"
-        elif platform.startswith('linux'):
+        elif platform.startswith("linux"):
             self.ping_command = "ping -c1 -W" + ping_ttl + " %s"
             self.ping_regexp = "bytes from"
             self.time_regexp = r"min/avg/max/stddev = [\d.]+/(?P<ms>[\d.]+)/"
         else:
             RuntimeError("Don't know how to run ping on this platform, help!")
 
-        self.host = Monitor.get_config_option(
-            config_options,
-            'host',
-            required=True
-        )
+        self.host = Monitor.get_config_option(config_options, "host", required=True)
 
     def run_test(self):
         success = False
         pingtime = 0.0
 
         if isinstance(self.r, str):
-            self.monitor_logger.debug('Creating pre-compiled regexp')
+            self.monitor_logger.debug("Creating pre-compiled regexp")
             self.r = re.compile(self.ping_regexp)
             self.r2 = re.compile(self.time_regexp)
 
         try:
-            cmd = (self.ping_command % self.host).split(' ')
+            cmd = (self.ping_command % self.host).split(" ")
             output = subprocess.check_output(cmd)
             for line in str(output).split("\n"):
                 matches = self.r.search(line)
@@ -248,58 +250,61 @@ class MonitorHost(Monitor):
         return "checking host %s is pingable" % self.host
 
     def get_params(self):
-        return (self.host, )
+        return (self.host,)
 
 
 @register
 class MonitorDNS(Monitor):
     """Monitor DNS server."""
 
-    type = 'dns'
-    path = ''
-    command = 'dig'
+    type = "dns"
+    path = ""
+    command = "dig"
 
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
-        self.path = Monitor.get_config_option(
-            config_options,
-            'record',
-            required=True
-        )
+        self.path = Monitor.get_config_option(config_options, "record", required=True)
 
-        self.desired_val = Monitor.get_config_option(config_options, 'desired_val')
+        self.desired_val = Monitor.get_config_option(config_options, "desired_val")
 
-        self.server = Monitor.get_config_option(config_options, 'server')
+        self.server = Monitor.get_config_option(config_options, "server")
 
         self.params = [self.command]
 
         if self.server:
             self.params.append("@%s" % self.server)
 
-        self.rectype = Monitor.get_config_option(config_options, 'record_type')
+        self.rectype = Monitor.get_config_option(config_options, "record_type")
         if self.rectype:
-            self.params.append('-t')
-            self.params.append(config_options['record_type'])
+            self.params.append("-t")
+            self.params.append(config_options["record_type"])
 
         self.params.append(self.path)
-        self.params.append('+short')
+        self.params.append("+short")
 
     def run_test(self):
         try:
-            result = subprocess.check_output(self.params).decode('utf-8')
+            result = subprocess.check_output(self.params).decode("utf-8")
             result = result.strip()
-            if result is None or result == '':
+            if result is None or result == "":
                 return self.record_fail("failed to resolve %s" % self.path)
-            if self.desired_val and set(result.split('\n')) != set(self.desired_val.split('\n')):
-                return self.record_fail("resolved DNS record is unexpected: %s != %s" % (self.desired_val, result))
+            if self.desired_val and set(result.split("\n")) != set(
+                self.desired_val.split("\n")
+            ):
+                return self.record_fail(
+                    "resolved DNS record is unexpected: %s != %s"
+                    % (self.desired_val, result)
+                )
             return self.record_success()
         except subprocess.CalledProcessError as e:
-            return self.record_fail("Command '%s' exited non-zero (%d)" % (
-                ' '.join(self.params),
-                e.returncode
-            ))
+            return self.record_fail(
+                "Command '%s' exited non-zero (%d)"
+                % (" ".join(self.params), e.returncode)
+            )
         except Exception as e:
-            return self.record_fail("Exception while executing '%s': %s" % (' '.join(self.params), e))
+            return self.record_fail(
+                "Exception while executing '%s': %s" % (" ".join(self.params), e)
+            )
 
     def describe(self):
         if self.desired_val:
@@ -315,8 +320,8 @@ class MonitorDNS(Monitor):
         if self.server:
             very_end_part = " at %s" % self.server
         else:
-            very_end_part = ''
+            very_end_part = ""
         return "Checking that DNS %s %s%s" % (mid_part, end_part, very_end_part)
 
     def get_params(self):
-        return (self.path, )
+        return (self.path,)

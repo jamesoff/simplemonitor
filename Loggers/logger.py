@@ -19,22 +19,17 @@ class Logger(object):
     batch_data = {}
 
     def __init__(self, config_options):
-        self.name = Logger.get_config_option(
-            config_options,
-            '_name',
-            default='unnamed'
+        self.name = Logger.get_config_option(config_options, "_name", default="unnamed")
+        self.logger_logger = logging.getLogger("simplemonitor.logger-" + self.name)
+        self.set_dependencies(
+            Logger.get_config_option(
+                config_options, "depend", required_type="[str]", default=[]
+            )
         )
-        self.logger_logger = logging.getLogger('simplemonitor.logger-' + self.name)
-        self.set_dependencies(Logger.get_config_option(
-            config_options,
-            'depend',
-            required_type='[str]',
-            default=[]
-        ))
 
     @staticmethod
     def get_config_option(config_options, key, **kwargs):
-        kwargs['exception'] = LoggerConfigurationError
+        kwargs["exception"] = LoggerConfigurationError
         return get_config_option(config_options, key, **kwargs)
 
     def hup(self):
@@ -89,4 +84,5 @@ class Logger(object):
 
 
 (register, get_class, all_types) = subclass_dict_handler(
-    'simplemonitor.Loggers.logger', Logger)
+    "simplemonitor.Loggers.logger", Logger
+)

@@ -1,6 +1,7 @@
 # coding=utf-8
 try:
     import sqlite3
+
     sqlite_available = True
 except ImportError:
     sqlite_available = False
@@ -51,10 +52,7 @@ class DBLogger(Logger):
         if not sqlite_available:
             raise RuntimeError("SQLite module not loaded.")
         self.db_path = Logger.get_config_option(
-            config_options,
-            'db_path',
-            required=True,
-            allow_empty=False
+            config_options, "db_path", required=True, allow_empty=False
         )
 
         self.db_handle = sqlite3.connect(self.db_path, isolation_level=None)
@@ -68,16 +66,28 @@ class DBLogger(Logger):
         cursor = self.db_handle.cursor()
         current_schema = None
         expected_schema = len(CREATE_SQL)
-        for row in cursor.execute("SELECT v AS value FROM monitor_schema where k = 'monitor_schema_version'"):
+        for row in cursor.execute(
+            "SELECT v AS value FROM monitor_schema where k = 'monitor_schema_version'"
+        ):
             current_schema = int(row["value"])
         if current_schema is None:
-            self.logger_logger.error("Could not check current schema version! Expect weirdness.")
+            self.logger_logger.error(
+                "Could not check current schema version! Expect weirdness."
+            )
             return
         if current_schema < expected_schema:
-            self.logger_logger.warning("Schema for %s is out of date: current is %d, latest is %d.", self.db_path, current_schema, expected_schema)
+            self.logger_logger.warning(
+                "Schema for %s is out of date: current is %d, latest is %d.",
+                self.db_path,
+                current_schema,
+                expected_schema,
+            )
             self.roll_schema_forward(current_schema)
         elif current_schema > expected_schema:
-            self.logger_logger.critical("Schema for %s is newer than this code! Cannot use this database file.", self.db_path)
+            self.logger_logger.critical(
+                "Schema for %s is newer than this code! Cannot use this database file.",
+                self.db_path,
+            )
             self.connected = False
         else:
             self.logger_logger.debug("Schema for %s is current", self.db_path)
@@ -90,7 +100,9 @@ class DBLogger(Logger):
                 self.db_handle.executescript(sql)
             except Exception:
                 self.logger_logger.exception("Failed to apply schema update")
-                self.logger_logger.critical("Cannot use this DB logger until schema is fixed!")
+                self.logger_logger.critical(
+                    "Cannot use this DB logger until schema is fixed!"
+                )
                 self.connected = False
 
 
@@ -100,7 +112,15 @@ class DBFullLogger(DBLogger):
 
     type = "db"
 
-    def save_result(self, monitor_name, monitor_type, monitor_params, monitor_result, monitor_info, hostname=""):
+    def save_result(
+        self,
+        monitor_name,
+        monitor_type,
+        monitor_params,
+        monitor_result,
+        monitor_info,
+        hostname="",
+    ):
         """Write to the database."""
         if not self.connected:
             self.logger_logger.warning("cannot send results, a dependency failed")
@@ -114,11 +134,21 @@ class DBFullLogger(DBLogger):
         if hostname == "":
             hostname = self.hostname
 
-        params = (hostname, monitor_name, monitor_type, join_string.join([str(x) for x in monitor_params]), monitor_result, timestamp, monitor_info)
+        params = (
+            hostname,
+            monitor_name,
+            monitor_type,
+            join_string.join([str(x) for x in monitor_params]),
+            monitor_result,
+            timestamp,
+            monitor_info,
+        )
         try:
             c.execute(sql, params)
         except sqlite3.OperationalError as e:
-            self.logger_logger.critical("sqlite failed to write to database: %s", e.message)
+            self.logger_logger.critical(
+                "sqlite failed to write to database: %s", e.message
+            )
 
     def save_result2(self, name, monitor):
         """new interface."""
@@ -126,7 +156,9 @@ class DBFullLogger(DBLogger):
             result = 1
         else:
             result = 0
-        self.save_result(name, monitor.type, monitor.get_params(), result, monitor.describe())
+        self.save_result(
+            name, monitor.type, monitor.get_params(), result, monitor.describe()
+        )
 
     def describe(self):
         return "Logging results to {0}".format(self.db_path)
@@ -138,15 +170,31 @@ class DBStatusLogger(DBLogger):
 
     type = "dbstatus"
 
-    def save_result(self, monitor_name, monitor_type, monitor_params, monitor_result, monitor_info, hostname=""):
+    def save_result(
+        self,
+        monitor_name,
+        monitor_type,
+        monitor_params,
+        monitor_result,
+        monitor_info,
+        hostname="",
+    ):
         if hostname == "":
             hostname = self.hostname
         c = self.db_handle.cursor()
         try:
-            c.execute("DELETE FROM status WHERE monitor_host = ? AND monitor_name = ?", (self.hostname, monitor_name))
-            c.execute("REPLACE INTO status (monitor_host, monitor_name, monitor_result, monitor_info) VALUES (?, ?, ?, ?)", (hostname, monitor_name, monitor_result, monitor_info))
+            c.execute(
+                "DELETE FROM status WHERE monitor_host = ? AND monitor_name = ?",
+                (self.hostname, monitor_name),
+            )
+            c.execute(
+                "REPLACE INTO status (monitor_host, monitor_name, monitor_result, monitor_info) VALUES (?, ?, ?, ?)",
+                (hostname, monitor_name, monitor_result, monitor_info),
+            )
         except sqlite3.OperationalError as e:
-            self.logger_logger.critical("sqlite failed to write to database: %s", e.message)
+            self.logger_logger.critical(
+                "sqlite failed to write to database: %s", e.message
+            )
 
     def save_result2(self, name, monitor):
         """new interface."""
@@ -154,7 +202,9 @@ class DBStatusLogger(DBLogger):
             result = 1
         else:
             result = 0
-        self.save_result(name, monitor.type, monitor.get_params(), result, monitor.describe())
+        self.save_result(
+            name, monitor.type, monitor.get_params(), result, monitor.describe()
+        )
 
     def describe(self):
         return "Logging status to {0}".format(self.db_path)

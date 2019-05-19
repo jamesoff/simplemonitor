@@ -7,6 +7,7 @@ import sys
 
 try:
     import win32api
+
     win32_available = True
 except ImportError:
     win32_available = False
@@ -62,11 +63,17 @@ class MonitorDiskSpace(Monitor):
         if self.is_windows(allow_cygwin=False):
             self.use_statvfs = False
             if not win32_available:
-                raise RuntimeError("win32api is not available, but is needed for DiskSpace monitor.")
+                raise RuntimeError(
+                    "win32api is not available, but is needed for DiskSpace monitor."
+                )
         else:
             self.use_statvfs = True
-        self.partition = Monitor.get_config_option(config_options, 'partition', required=True)
-        self.limit = _size_string_to_bytes(Monitor.get_config_option(config_options, 'limit', required=True))
+        self.partition = Monitor.get_config_option(
+            config_options, "partition", required=True
+        )
+        self.limit = _size_string_to_bytes(
+            Monitor.get_config_option(config_options, "limit", required=True)
+        )
 
     def run_test(self):
         try:
@@ -82,12 +89,19 @@ class MonitorDiskSpace(Monitor):
             return self.record_fail("Couldn't get free disk space: %s" % e)
 
         if space <= self.limit:
-            return self.record_fail("%s free (%d%%)" % (_bytes_to_size_string(space), percent))
-        return self.record_success("%s free (%d%%)" % (_bytes_to_size_string(space), percent))
+            return self.record_fail(
+                "%s free (%d%%)" % (_bytes_to_size_string(space), percent)
+            )
+        return self.record_success(
+            "%s free (%d%%)" % (_bytes_to_size_string(space), percent)
+        )
 
     def describe(self):
         """Explains what we do."""
-        return "Checking for at least %s free space on %s" % (_bytes_to_size_string(self.limit), self.partition)
+        return "Checking for at least %s free space on %s" % (
+            _bytes_to_size_string(self.limit),
+            self.partition,
+        )
 
     def get_params(self):
         return (self.limit, self.partition)
@@ -104,16 +118,17 @@ class MonitorFileStat(Monitor):
 
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
-        self.maxage = Monitor.get_config_option(config_options, 'maxage', required_type='int', minimum=0)
+        self.maxage = Monitor.get_config_option(
+            config_options, "maxage", required_type="int", minimum=0
+        )
         self.minsize = Monitor.get_config_option(
-            config_options,
-            'minsize',
-            required_type='str',
-            allow_empty=False
+            config_options, "minsize", required_type="str", allow_empty=False
         )
         if self.minsize:
             self.minsize = _size_string_to_bytes(self.minsize)
-        self.filename = Monitor.get_config_option(config_options, 'filename', required=True)
+        self.filename = Monitor.get_config_option(
+            config_options, "filename", required=True
+        )
 
     def run_test(self):
         try:
@@ -123,13 +138,18 @@ class MonitorFileStat(Monitor):
 
         if self.minsize:
             if statinfo.st_size < self.minsize:
-                return self.record_fail("Size is %d, should be >= %d bytes" % (statinfo.st_size, self.minsize))
+                return self.record_fail(
+                    "Size is %d, should be >= %d bytes"
+                    % (statinfo.st_size, self.minsize)
+                )
 
         if self.maxage:
             now = time.time()
             diff = now - statinfo.st_mtime
             if diff > self.maxage:
-                return self.record_fail("Age is %d, should be < %d seconds" % (diff, self.maxage))
+                return self.record_fail(
+                    "Age is %d, should be < %d seconds" % (diff, self.maxage)
+                )
 
         return self.record_success()
 
@@ -161,7 +181,7 @@ class MonitorApcupsd(Monitor):
 
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
-        self.path = Monitor.get_config_option(config_options, 'path', default='')
+        self.path = Monitor.get_config_option(config_options, "path", default="")
 
     def run_test(self):
         info = {}
@@ -174,7 +194,7 @@ class MonitorApcupsd(Monitor):
                 executable = "apcaccess"
         try:
             output = subprocess.check_output(executable)
-            output = output.decode('utf-8')
+            output = output.decode("utf-8")
         except subprocess.CalledProcessError as e:
             output = e.output
         except OSError as e:
@@ -187,19 +207,21 @@ class MonitorApcupsd(Monitor):
                 bits = line.split(":")
                 info[bits[0].strip()] = bits[1].strip()
 
-        if 'STATUS' not in info:
+        if "STATUS" not in info:
             return self.record_fail("Could not get UPS status")
 
         if not info["STATUS"] == "ONLINE":
-            if 'TIMELEFT' in info:
-                return self.record_fail("%s: %s left" % (info["STATUS"], info["TIMELEFT"]))
+            if "TIMELEFT" in info:
+                return self.record_fail(
+                    "%s: %s left" % (info["STATUS"], info["TIMELEFT"])
+                )
             return self.record_fail(info["STATUS"])
 
         data = ""
-        if 'TIMELEFT' in info:
+        if "TIMELEFT" in info:
             data = "%s left" % (info["TIMELEFT"])
 
-        if 'LOADPCT' in info:
+        if "LOADPCT" in info:
             if data != "":
                 data += "; "
             data += "%s%% load" % info["LOADPCT"][0:4]
@@ -210,7 +232,7 @@ class MonitorApcupsd(Monitor):
         return "Monitoring UPS to make sure it's ONLINE."
 
     def get_params(self):
-        return (self.path, )
+        return (self.path,)
 
 
 @register
@@ -223,13 +245,13 @@ class MonitorPortAudit(Monitor):
 
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
-        self.path = Monitor.get_config_option(config_options, 'path', default='')
+        self.path = Monitor.get_config_option(config_options, "path", default="")
 
     def describe(self):
         return "Checking for insecure ports."
 
     def get_params(self):
-        return (self.path, )
+        return (self.path,)
 
     def run_test(self):
         try:
@@ -237,7 +259,9 @@ class MonitorPortAudit(Monitor):
             if self.path == "":
                 self.path = "/usr/local/sbin/portaudit"
             try:
-                output = subprocess.check_output([self.path, '-a', '-X', '1']).decode('utf-8')
+                output = subprocess.check_output([self.path, "-a", "-X", "1"]).decode(
+                    "utf-8"
+                )
             except subprocess.CalledProcessError as e:
                 output = e.output
             except OSError as e:
@@ -270,24 +294,26 @@ class MonitorPkgAudit(Monitor):
 
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
-        self.path = Monitor.get_config_option(config_options, 'path', default='')
+        self.path = Monitor.get_config_option(config_options, "path", default="")
 
     def describe(self):
         return "Checking for insecure packages."
 
     def get_params(self):
-        return (self.path, )
+        return (self.path,)
 
     def run_test(self):
         try:
             if self.path == "":
                 self.path = "/usr/local/sbin/pkg"
             try:
-                output = subprocess.check_output([self.path, 'audit']).decode('utf-8')
+                output = subprocess.check_output([self.path, "audit"]).decode("utf-8")
             except subprocess.CalledProcessError as e:
                 output = e.output
             except OSError as e:
-                return self.record_fail("Failed to run %s audit: {0} {1}".format(self.path, e))
+                return self.record_fail(
+                    "Failed to run %s audit: {0} {1}".format(self.path, e)
+                )
             except Exception as e:
                 return self.record_fail("Error running pkg audit: {0}".format(e))
 
@@ -321,18 +347,14 @@ class MonitorLoadAvg(Monitor):
             raise RuntimeError("loadavg monitor does not support Windows")
         self.which = Monitor.get_config_option(
             config_options,
-            'which',
-            required_type='int',
+            "which",
+            required_type="int",
             default=1,
             minimum=0,
-            maximum=2
+            maximum=2,
         )
         self.max = Monitor.get_config_option(
-            config_options,
-            'max',
-            required_type='float',
-            default=1.00,
-            minimum=0
+            config_options, "max", required_type="float", default=1.00, minimum=0
         )
 
     def describe(self):
@@ -368,11 +390,7 @@ class MonitorZap(Monitor):
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
         self.span = Monitor.get_config_option(
-            config_options,
-            'span',
-            required_type='int',
-            default=1,
-            minimum=1
+            config_options, "span", required_type="int", default=1, minimum=1
         )
 
     def run_test(self):
@@ -393,7 +411,7 @@ class MonitorZap(Monitor):
         return "Checking status of zap span %d is OK" % self.span
 
     def get_params(self):
-        return (self.span, )
+        return (self.span,)
 
 
 @register
@@ -416,30 +434,27 @@ class MonitorCommand(Monitor):
         Monitor.__init__(self, name, config_options)
 
         if sys.version_info[0] == 2 and sys.version_info[1] == 6:
-            self.monitor_logger.critical('Warning: Command monitors are unsupported on Python 2.6!')
+            self.monitor_logger.critical(
+                "Warning: Command monitors are unsupported on Python 2.6!"
+            )
             self.available = False
 
         self.result_regexp_text = Monitor.get_config_option(
-            config_options,
-            'result_regexp',
-            default=''
+            config_options, "result_regexp", default=""
         )
         self.result_max = Monitor.get_config_option(
-            config_options,
-            'result_max',
-            required_type='int'
+            config_options, "result_max", required_type="int"
         )
-        if self.result_regexp_text != '':
+        if self.result_regexp_text != "":
             self.result_regexp = re.compile(self.result_regexp_text)
             if self.result_max is not None:
-                self.monitor_logger.error('command monitors do not support result_regexp AND result_max settings simultaneously')
+                self.monitor_logger.error(
+                    "command monitors do not support result_regexp AND result_max settings simultaneously"
+                )
                 self.result_max = None
 
         command = Monitor.get_config_option(
-            config_options,
-            'command',
-            required=True,
-            allow_empty=False
+            config_options, "command", required=True, allow_empty=False
         )
         self.command = shlex.split(command)
 
@@ -449,15 +464,17 @@ class MonitorCommand(Monitor):
         try:
             out = subprocess.check_output(self.command)
             if self.result_regexp is not None:
-                out = out.decode('utf-8')
+                out = out.decode("utf-8")
                 matches = self.result_regexp.search(out)
                 if matches:
                     return self.record_success()
-                return self.record_fail('could not match regexp in out')
+                return self.record_fail("could not match regexp in out")
             elif self.result_max is not None:
                 outasinteger = int(out)
                 if outasinteger < self.result_max:
-                    return self.record_success("%s < %s" % (outasinteger, self.result_max))
+                    return self.record_success(
+                        "%s < %s" % (outasinteger, self.result_max)
+                    )
                 return self.record_fail("%s >= %s" % (outasinteger, self.result_max))
             return self.record_success()
         except Exception as e:
@@ -468,11 +485,17 @@ class MonitorCommand(Monitor):
     def describe(self):
         """Explains what this instance is checking"""
         if self.result_regexp is not None:
-            return "checking command \"%s\" match a regexp %s" % (" ".join(self.command), self.result_regexp_text)
+            return 'checking command "%s" match a regexp %s' % (
+                " ".join(self.command),
+                self.result_regexp_text,
+            )
         elif self.result_max is not None:
-            return "checking command \"%s\" returns a value < %d" % (" ".join(self.command), self.result_max)
+            return 'checking command "%s" returns a value < %d' % (
+                " ".join(self.command),
+                self.result_max,
+            )
         else:
-            return "checking command \"%s\" has return status 0" % " ".join(self.command)
+            return 'checking command "%s" has return status 0' % " ".join(self.command)
 
     def get_params(self):
         return (self.command, self.result_regexp_text, self.result_max)

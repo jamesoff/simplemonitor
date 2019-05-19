@@ -16,9 +16,6 @@ class SyslogAlerter(Alerter):
         if type == "failure":
             syslog.syslog(
                 syslog.LOG_WARNING | syslog.LOG_USER,
-                "Monitor %s failed %d times with message: %s" % (
-                    name,
-                    monitor.virtual_fail_count(),
-                    monitor.get_result()
-                )
+                "Monitor %s failed %d times with message: %s"
+                % (name, monitor.virtual_fail_count(), monitor.get_result()),
             )

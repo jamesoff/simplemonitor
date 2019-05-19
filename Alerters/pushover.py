@@ -15,16 +15,10 @@ class PushoverAlerter(Alerter):
         Alerter.__init__(self, config_options)
 
         self.pushover_token = Alerter.get_config_option(
-            config_options,
-            'token',
-            required=True,
-            allow_empty=False
+            config_options, "token", required=True, allow_empty=False
         )
         self.pushover_user = Alerter.get_config_option(
-            config_options,
-            'user',
-            required=True,
-            allow_empty=False
+            config_options, "user", required=True, allow_empty=False
         )
 
         self.support_catchup = True
@@ -32,13 +26,15 @@ class PushoverAlerter(Alerter):
     def send_pushover_notification(self, subject, body):
         """Send a push notification."""
 
-        requests.post('https://api.pushover.net/1/messages.json',
-                      data={
-                          "token": self.pushover_token,
-                          "user": self.pushover_user,
-                          "title": subject,
-                          "message": body,
-                      })
+        requests.post(
+            "https://api.pushover.net/1/messages.json",
+            data={
+                "token": self.pushover_token,
+                "user": self.pushover_user,
+                "title": subject,
+                "message": body,
+            },
+        )
 
     def send_alert(self, name, monitor):
         """Build up the content for the push notification."""
@@ -67,10 +63,14 @@ class PushoverAlerter(Alerter):
                 name,
                 host,
                 format_datetime(monitor.first_failure_time()),
-                days, hours, minutes, seconds,
+                days,
+                hours,
+                minutes,
+                seconds,
                 monitor.virtual_fail_count(),
                 monitor.get_result(),
-                monitor.describe())
+                monitor.describe(),
+            )
             try:
                 if monitor.recover_info != "":
                     body += "\nRecovery info: %s" % monitor.recover_info
@@ -79,11 +79,38 @@ class PushoverAlerter(Alerter):
 
         elif type == "success":
             subject = "[%s] Monitor %s succeeded" % (self.hostname, name)
-            body = "Monitor %s%s is back up.\nOriginally failed at: %s\nDowntime: %d+%02d:%02d:%02d\nDescription: %s" % (name, host, format_datetime(monitor.first_failure_time()), days, hours, minutes, seconds, monitor.describe())
+            body = (
+                "Monitor %s%s is back up.\nOriginally failed at: %s\nDowntime: %d+%02d:%02d:%02d\nDescription: %s"
+                % (
+                    name,
+                    host,
+                    format_datetime(monitor.first_failure_time()),
+                    days,
+                    hours,
+                    minutes,
+                    seconds,
+                    monitor.describe(),
+                )
+            )
 
         elif type == "catchup":
-            subject = "[%s] Monitor %s failed earlier!" % (self.from_addr, self.to_addr, self.hostname, name)
-            body = "Monitor %s%s failed earlier while this alerter was out of hours.\nFailed at: %s\nVirtual failure count: %d\nAdditional info: %s\nDescription: %s" % (name, host, format_datetime(monitor.first_failure_time()), monitor.virtual_fail_count(), monitor.get_result(), monitor.describe())
+            subject = "[%s] Monitor %s failed earlier!" % (
+                self.from_addr,
+                self.to_addr,
+                self.hostname,
+                name,
+            )
+            body = (
+                "Monitor %s%s failed earlier while this alerter was out of hours.\nFailed at: %s\nVirtual failure count: %d\nAdditional info: %s\nDescription: %s"
+                % (
+                    name,
+                    host,
+                    format_datetime(monitor.first_failure_time()),
+                    monitor.virtual_fail_count(),
+                    monitor.get_result(),
+                    monitor.describe(),
+                )
+            )
 
         else:
             self.alerter_logger.error("Unknown alert type %s", type)

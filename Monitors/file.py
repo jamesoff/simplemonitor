@@ -11,7 +11,9 @@ from .monitor import Monitor, register
 @register
 class MonitorBackup(Monitor):
     type = "backup"
-    filename = os.path.join("C:\\", "Program Files", "VERITAS", "Backup Exec", "status.txt")
+    filename = os.path.join(
+        "C:\\", "Program Files", "VERITAS", "Backup Exec", "status.txt"
+    )
 
     def run_test(self):
         if not os.path.exists(self.filename):

@@ -3,6 +3,7 @@ import re
 import functools
 
 import sys
+
 if sys.version_info[0] == 2:
     from ConfigParser import ConfigParser, NoSectionError, NoOptionError
 else:
@@ -15,10 +16,11 @@ _NO_FALLBACK = object()
 
 
 if sys.version_info[0] == 2:
+
     def with_fallback(f):
         @functools.wraps(f)
         def newf(*args, **kwargs):
-            fallback = kwargs.pop('fallback', _NO_FALLBACK)
+            fallback = kwargs.pop("fallback", _NO_FALLBACK)
             try:
                 return f(*args, **kwargs)
             except (NoSectionError, NoOptionError):
@@ -26,8 +28,12 @@ if sys.version_info[0] == 2:
                     raise
                 else:
                     return fallback
+
         return newf
+
+
 else:
+
     def with_fallback(f):
         return f
 
@@ -36,13 +42,13 @@ class EnvironmentAwareConfigParser(ConfigParser):
     """A subclass of ConfigParser which allows %env:VAR% interpolation via the
     get method."""
 
-    r = re.compile('%env:([a-zA-Z0-9_]+)%')
+    r = re.compile("%env:([a-zA-Z0-9_]+)%")
 
     def __init__(self, *args, **kwargs):
         """Init with our specific interpolation class (for Python 3)"""
         try:
             interpolation = EnvironmentAwareInterpolation()
-            kwargs['interpolation'] = interpolation
+            kwargs["interpolation"] = interpolation
         except Exception:
             # Python 2
             pass
@@ -59,7 +65,11 @@ class EnvironmentAwareConfigParser(ConfigParser):
                 if env_key in os.environ:
                     section = section.replace(matches.group(0), os.environ[env_key])
                 else:
-                    raise ValueError('Cannot find {0} in environment for config interpolation'.format(env_key))
+                    raise ValueError(
+                        "Cannot find {0} in environment for config interpolation".format(
+                            env_key
+                        )
+                    )
 
                 matches = self.r.search(section)
             if section != original_section:
@@ -83,6 +93,7 @@ class EnvironmentAwareConfigParser(ConfigParser):
         return result
 
     if sys.version_info[0] == 2:
+
         @with_fallback
         def getint(self, *args, **kwargs):
             return ConfigParser.getint(self, *args, **kwargs)
@@ -97,8 +108,9 @@ class EnvironmentAwareConfigParser(ConfigParser):
 
 
 if sys.version_info[0] > 2:
+
     class EnvironmentAwareInterpolation(BasicInterpolation):
-        r = re.compile('%env:([a-zA-Z0-9_]+)%')
+        r = re.compile("%env:([a-zA-Z0-9_]+)%")
 
         def before_get(self, parser, section, option, value, defaults):
             parser.get(section, option, raw=True, fallback=value)
@@ -109,7 +121,11 @@ if sys.version_info[0] > 2:
                 if env_key in os.environ:
                     value = value.replace(matches.group(0), os.environ[env_key])
                 else:
-                    raise ValueError('Cannot find {0} in environment for config interpolation'.format(env_key))
+                    raise ValueError(
+                        "Cannot find {0} in environment for config interpolation".format(
+                            env_key
+                        )
+                    )
                 matches = self.r.search(value)
                 if value == old_value:
                     break

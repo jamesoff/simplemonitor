@@ -15,17 +15,11 @@ class TelegramAlerter(Alerter):
         Alerter.__init__(self, config_options)
 
         self.telegram_token = Alerter.get_config_option(
-            config_options,
-            'token',
-            required=True,
-            allow_empty=False
+            config_options, "token", required=True, allow_empty=False
         )
 
         self.telegram_chatid = Alerter.get_config_option(
-            config_options,
-            'chat_id',
-            required=True,
-            allow_empty=False
+            config_options, "chat_id", required=True, allow_empty=False
         )
 
         self.support_catchup = True
@@ -33,11 +27,10 @@ class TelegramAlerter(Alerter):
     def send_telegram_notification(self, body):
         """Send a push notification."""
 
-        r = requests.post('https://api.telegram.org/bot{}/sendMessage'.format(self.telegram_token),
-                          data={
-                              "chat_id": self.telegram_chatid,
-                              "text": body,
-        })
+        r = requests.post(
+            "https://api.telegram.org/bot{}/sendMessage".format(self.telegram_token),
+            data={"chat_id": self.telegram_chatid, "text": body},
+        )
         if not r.status_code == requests.codes.ok:
             raise RuntimeError("Unable to send telegram notification")
 
@@ -63,8 +56,12 @@ Downtime: %d+%02d:%02d:%02d
 Description: %s""" % (
                 name,
                 format_datetime(monitor.first_failure_time()),
-                days, hours, minutes, seconds,
-                monitor.describe())
+                days,
+                hours,
+                minutes,
+                seconds,
+                monitor.describe(),
+            )
             try:
                 if monitor.recover_info != "":
                     body += "\nRecovery info: %s" % monitor.recover_info
@@ -76,13 +73,25 @@ Description: %s""" % (
 Originally failed at: %s
 Downtime: %d+%02d:%02d:%02d
 Description: %s""" % (
-                name, format_datetime(monitor.first_failure_time()),
-                days, hours, minutes, seconds,
-                monitor.describe())
+                name,
+                format_datetime(monitor.first_failure_time()),
+                days,
+                hours,
+                minutes,
+                seconds,
+                monitor.describe(),
+            )
 
         elif type == "catchup":
-            body = "Monitor %s%s failed earlier while this alerter was out of hours.\nFailed at: %s\nDescription: %s" % (
-                name, host, format_datetime(monitor.first_failure_time()), monitor.describe())
+            body = (
+                "Monitor %s%s failed earlier while this alerter was out of hours.\nFailed at: %s\nDescription: %s"
+                % (
+                    name,
+                    host,
+                    format_datetime(monitor.first_failure_time()),
+                    monitor.describe(),
+                )
+            )
 
         else:
             self.alerter_logger.error("Unknown alert type %s", type)

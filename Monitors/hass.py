@@ -12,21 +12,9 @@ class MonitorSensor(Monitor):
 
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
-        self.url = Monitor.get_config_option(
-            config_options,
-            'url',
-            required=True
-        )
-        self.sensor = Monitor.get_config_option(
-            config_options,
-            'sensor',
-            required=True
-        )
-        self.token = Monitor.get_config_option(
-            config_options,
-            'token',
-            default=None
-        )
+        self.url = Monitor.get_config_option(config_options, "url", required=True)
+        self.sensor = Monitor.get_config_option(config_options, "sensor", required=True)
+        self.token = Monitor.get_config_option(config_options, "token", default=None)
 
     def describe(self):
         return "monitor the existence of a sensor"
@@ -34,14 +22,16 @@ class MonitorSensor(Monitor):
     def run_test(self):
         try:
             # retrieve the status from hass API
-            self.monitor_logger.debug(requests.get('{}/api/states/{}'.format(
-                self.url,
-                self.sensor
-            )).text)
-            call = requests.get('{}/api/states/{}'.format(self.url, self.sensor),
-                                headers={
-                                    'Authorization': 'Bearer {}'.format(self.token),
-                                    'Content-Type': 'application/json'})
+            self.monitor_logger.debug(
+                requests.get("{}/api/states/{}".format(self.url, self.sensor)).text
+            )
+            call = requests.get(
+                "{}/api/states/{}".format(self.url, self.sensor),
+                headers={
+                    "Authorization": "Bearer {}".format(self.token),
+                    "Content-Type": "application/json",
+                },
+            )
             if not call.ok:
                 raise ValueError(call.text)
             r = call.json()
@@ -53,9 +43,11 @@ class MonitorSensor(Monitor):
         else:
             # we have a response from the API
             # now: is the sensor defined at all in hass? If not the answer is basically empty
-            if r.get('context'):
-                if r['state'] == "unavailable":
-                    return self.record_fail("the sensor exists but state is 'unavailable'")
+            if r.get("context"):
+                if r["state"] == "unavailable":
+                    return self.record_fail(
+                        "the sensor exists but state is 'unavailable'"
+                    )
                 return self.record_success()
             else:
                 return self.record_fail("sensor not found in hass")

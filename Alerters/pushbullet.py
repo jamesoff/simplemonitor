@@ -14,10 +14,7 @@ class PushbulletAlerter(Alerter):
         Alerter.__init__(self, config_options)
 
         self.pushbullet_token = Alerter.get_config_option(
-            config_options,
-            'token',
-            required=True,
-            allow_empty=False
+            config_options, "token", required=True, allow_empty=False
         )
 
         self.support_catchup = True
@@ -25,10 +22,12 @@ class PushbulletAlerter(Alerter):
     def send_pushbullet_notification(self, subject, body):
         """Send a push notification."""
 
-        _payload = {'type': 'note', 'title': subject, 'body': body}
-        _auth = requests.auth.HTTPBasicAuth(self.pushbullet_token, '')
+        _payload = {"type": "note", "title": subject, "body": body}
+        _auth = requests.auth.HTTPBasicAuth(self.pushbullet_token, "")
 
-        r = requests.post('https://api.pushbullet.com/v2/pushes', data=_payload, auth=_auth)
+        r = requests.post(
+            "https://api.pushbullet.com/v2/pushes", data=_payload, auth=_auth
+        )
         if not r.status_code == requests.codes.ok:
             raise RuntimeError("Unable to send Pushbullet notification")
 
@@ -59,10 +58,14 @@ class PushbulletAlerter(Alerter):
                 name,
                 host,
                 format_datetime(monitor.first_failure_time()),
-                days, hours, minutes, seconds,
+                days,
+                hours,
+                minutes,
+                seconds,
                 monitor.virtual_fail_count(),
                 monitor.get_result(),
-                monitor.describe())
+                monitor.describe(),
+            )
             try:
                 if monitor.recover_info != "":
                     body += "\nRecovery info: %s" % monitor.recover_info
@@ -71,15 +74,33 @@ class PushbulletAlerter(Alerter):
 
         elif type == "success":
             subject = "[%s] Monitor %s succeeded" % (self.hostname, name)
-            body = "Monitor %s%s is back up.\nOriginally failed at: %s\nDowntime: %d+%02d:%02d:%02d\nDescription: %s" % (
-                name, host, format_datetime(monitor.first_failure_time()), days, hours, minutes, seconds,
-                monitor.describe())
+            body = (
+                "Monitor %s%s is back up.\nOriginally failed at: %s\nDowntime: %d+%02d:%02d:%02d\nDescription: %s"
+                % (
+                    name,
+                    host,
+                    format_datetime(monitor.first_failure_time()),
+                    days,
+                    hours,
+                    minutes,
+                    seconds,
+                    monitor.describe(),
+                )
+            )
 
         elif type == "catchup":
             subject = "[%s] Monitor %s failed earlier!" % (self.hostname, name)
-            body = "Monitor %s%s failed earlier while this alerter was out of hours.\nFailed at: %s\nVirtual failure count: %d\nAdditional info: %s\nDescription: %s" % (
-                name, host, format_datetime(monitor.first_failure_time()), monitor.virtual_fail_count(),
-                monitor.get_result(), monitor.describe())
+            body = (
+                "Monitor %s%s failed earlier while this alerter was out of hours.\nFailed at: %s\nVirtual failure count: %d\nAdditional info: %s\nDescription: %s"
+                % (
+                    name,
+                    host,
+                    format_datetime(monitor.first_failure_time()),
+                    monitor.virtual_fail_count(),
+                    monitor.get_result(),
+                    monitor.describe(),
+                )
+            )
 
         else:
             self.alerter_logger.error("Unknown alert type %s", type)

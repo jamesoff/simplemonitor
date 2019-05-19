@@ -26,7 +26,7 @@ class MonitorSvc(Monitor):
 
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
-        self.path = Monitor.get_config_option(config_options, 'path', required=True)
+        self.path = Monitor.get_config_option(config_options, "path", required=True)
         self.params = ("svok %s" % self.path).split(" ")
 
     def run_test(self):
@@ -43,10 +43,12 @@ class MonitorSvc(Monitor):
             return self.record_fail("Exception while executing svok: %s" % e)
 
     def describe(self):
-        return "Checking that the supervise-managed service in %s is running." % self.path
+        return (
+            "Checking that the supervise-managed service in %s is running." % self.path
+        )
 
     def get_params(self):
-        return (self.path, )
+        return (self.path,)
 
 
 @register
@@ -61,37 +63,35 @@ class MonitorService(Monitor):
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
         self.service_name = Monitor.get_config_option(
-            config_options,
-            'service',
-            required=True
+            config_options, "service", required=True
         )
         self.want_state = Monitor.get_config_option(
-            config_options,
-            'state',
-            default='RUNNING'
+            config_options, "state", default="RUNNING"
         )
-        self.host = Monitor.get_config_option(
-            config_options,
-            'host',
-            default='.'
-        )
+        self.host = Monitor.get_config_option(config_options, "host", default=".")
 
         if self.want_state not in ["RUNNING", "STOPPED"]:
-            raise MonitorConfigurationError("invalid state {0} for MonitorService".format(self.want_state))
+            raise MonitorConfigurationError(
+                "invalid state {0} for MonitorService".format(self.want_state)
+            )
 
     def run_test(self):
         """Check the service is in the desired state"""
         r = re.compile("STATE +: [0-9]+ +%s" % self.want_state)
         try:
             if platform.system() == "CYGWIN_NT-6.0":
-                host = '\\\\\\\\' + self.host
+                host = "\\\\\\\\" + self.host
             elif platform.system() in ["Microsoft", "Windows"]:
-                host = '\\\\' + self.host
+                host = "\\\\" + self.host
             else:
                 # we need windows for sc
-                return self.record_fail("Cannot check for Windows services while running on a non-Windows platform.")
+                return self.record_fail(
+                    "Cannot check for Windows services while running on a non-Windows platform."
+                )
 
-            output = str(subprocess.check_output(['sc', host, 'query', self.service_name]))
+            output = str(
+                subprocess.check_output(["sc", host, "query", self.service_name])
+            )
             matches = r.search(output)
             if matches:
                 return self.record_success()
@@ -102,7 +102,10 @@ class MonitorService(Monitor):
 
     def describe(self):
         """Explains what this instance is checking"""
-        return "checking for service called %s in state %s" % (self.service_name, self.want_state)
+        return "checking for service called %s in state %s" % (
+            self.service_name,
+            self.want_state,
+        )
 
     def get_params(self):
         return (self.host, self.service_name, self.want_state)
@@ -123,9 +126,15 @@ class MonitorRC(Monitor):
         Change script path to /etc/rc.d/ to monitor base system services. If the
         script path ends with /, the service name is appended."""
         Monitor.__init__(self, name, config_options)
-        self.service_name = Monitor.get_config_option(config_options, 'service', required=True)
-        self.script_path = Monitor.get_config_option(config_options, 'path', default='/usr/local/etc/rc.d')
-        self.want_return_code = Monitor.get_config_option(config_options, 'return_code', required_type='int', default=0)
+        self.service_name = Monitor.get_config_option(
+            config_options, "service", required=True
+        )
+        self.script_path = Monitor.get_config_option(
+            config_options, "path", default="/usr/local/etc/rc.d"
+        )
+        self.want_return_code = Monitor.get_config_option(
+            config_options, "return_code", required_type="int", default=0
+        )
         if self.script_path.endswith("/"):
             self.script_path = self.script_path + self.service_name
         if not os.path.isfile(self.script_path):
@@ -141,7 +150,7 @@ class MonitorRC(Monitor):
             self.is_error = True
             return False
         try:
-            returncode = subprocess.check_call([self.script_path, 'status'])
+            returncode = subprocess.check_call([self.script_path, "status"])
             if returncode == self.want_return_code:
                 return self.record_success()
         except subprocess.CalledProcessError as e:
@@ -150,7 +159,9 @@ class MonitorRC(Monitor):
             returncode = -1
         except Exception as e:
             return self.record_fail("Exception while executing script: %s" % e)
-        return self.record_fail("Return code: %d (wanted %d)" % (returncode, self.want_return_code))
+        return self.record_fail(
+            "Return code: %d (wanted %d)" % (returncode, self.want_return_code)
+        )
 
     def get_params(self):
         return (self.service_name, self.want_return_code)
@@ -180,12 +191,25 @@ class MonitorSystemdUnit(Monitor):
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
         if not pydbus:
-            self.alerter_logger.critical("pydbus package is not available, cannot use MonitorSystemdUnit.")
+            self.alerter_logger.critical(
+                "pydbus package is not available, cannot use MonitorSystemdUnit."
+            )
             return
-        self.unit_name = Monitor.get_config_option(config_options, 'name', required=True)
-        self.want_load_states = Monitor.get_config_option(config_options, 'load_states', required_type='[str]', default=['loaded'])
-        self.want_active_states = Monitor.get_config_option(config_options, 'active_states', required_type='[str]', default=['active', 'reloading'])
-        self.want_sub_states = Monitor.get_config_option(config_options, 'sub_states', required_type='[str]', default=[])
+        self.unit_name = Monitor.get_config_option(
+            config_options, "name", required=True
+        )
+        self.want_load_states = Monitor.get_config_option(
+            config_options, "load_states", required_type="[str]", default=["loaded"]
+        )
+        self.want_active_states = Monitor.get_config_option(
+            config_options,
+            "active_states",
+            required_type="[str]",
+            default=["active", "reloading"],
+        )
+        self.want_sub_states = Monitor.get_config_option(
+            config_options, "sub_states", required_type="[str]", default=[]
+        )
 
     @classmethod
     def _list_units(cls):
@@ -200,7 +224,18 @@ class MonitorSystemdUnit(Monitor):
         """Check the service is in the desired state."""
         nb_matches = 0
         for unit in self._list_units():
-            (name, desc, load_state, active_state, sub_state, follower, unit_path, job_id, job_type, job_path) = unit
+            (
+                name,
+                desc,
+                load_state,
+                active_state,
+                sub_state,
+                follower,
+                unit_path,
+                job_id,
+                job_type,
+                job_path,
+            ) = unit
             if fnmatch.fnmatch(name, self.unit_name):
                 self._check_unit(name, load_state, active_state, sub_state)
                 nb_matches += 1
@@ -210,17 +245,31 @@ class MonitorSystemdUnit(Monitor):
 
     def _check_unit(self, name, load_state, active_state, sub_state):
         if self.want_load_states and load_state not in self.want_load_states:
-            return self.record_fail("Unit {0} has load state: {1} (wanted {2})".format(
-                name, load_state, self.want_load_states))
+            return self.record_fail(
+                "Unit {0} has load state: {1} (wanted {2})".format(
+                    name, load_state, self.want_load_states
+                )
+            )
         if self.want_active_states and active_state not in self.want_active_states:
-            return self.record_fail("Unit {0} has active state: {1} (wanted {2})".format(
-                name, active_state, self.want_active_states))
+            return self.record_fail(
+                "Unit {0} has active state: {1} (wanted {2})".format(
+                    name, active_state, self.want_active_states
+                )
+            )
         if self.want_sub_states and sub_state not in self.want_sub_states:
-            return self.record_fail("Unit {0} has sub state: {0} (wanted {2})".format(
-                name, sub_state, self.want_sub_states))
+            return self.record_fail(
+                "Unit {0} has sub state: {0} (wanted {2})".format(
+                    name, sub_state, self.want_sub_states
+                )
+            )
 
     def get_params(self):
-        return (self.unit_name, self.want_load_states, self.want_active_states, self.want_sub_states)
+        return (
+            self.unit_name,
+            self.want_load_states,
+            self.want_active_states,
+            self.want_sub_states,
+        )
 
     def describe(self):
         return "Checks unit %s is running" % self.script_path
@@ -237,18 +286,18 @@ class MonitorEximQueue(Monitor):
 
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
-        self.max_length = Monitor.get_config_option(config_options,
-                                                    'max_length',
-                                                    required_type='int',
-                                                    minimum=1
-                                                    )
-        path = Monitor.get_config_option(config_options, 'path', default='/usr/local/sbin')
+        self.max_length = Monitor.get_config_option(
+            config_options, "max_length", required_type="int", minimum=1
+        )
+        path = Monitor.get_config_option(
+            config_options, "path", default="/usr/local/sbin"
+        )
         self.path = os.path.join(path, "exiqgrep")
 
     def run_test(self):
         try:
             output = subprocess.check_output([self.path, "-xc"])
-            output = output.decode('utf-8')
+            output = output.decode("utf-8")
             for line in output.splitlines():
                 matches = self.r.match(line)
                 if matches:
@@ -270,7 +319,7 @@ class MonitorEximQueue(Monitor):
         return "Checking the exim queue length is < %d" % self.max_length
 
     def get_params(self):
-        return (self.max_length, )
+        return (self.max_length,)
 
 
 @register
@@ -290,12 +339,18 @@ class MonitorWindowsDHCPScope(Monitor):
         if not self.is_windows(True):
             raise RuntimeError("DHCPScope monitor requires a Windows platform.")
         Monitor.__init__(self, name, config_options)
-        self.max_used = Monitor.get_config_option(config_options, 'max_used', required_type='int', minimum=1)
-        self.scope = Monitor.get_config_option(config_options, 'scope', required=True)
+        self.max_used = Monitor.get_config_option(
+            config_options, "max_used", required_type="int", minimum=1
+        )
+        self.scope = Monitor.get_config_option(config_options, "scope", required=True)
 
     def run_test(self):
         try:
-            output = str(subprocess.check_output(["netsh", "dhcp", "server", "scope", self.scope, "show", "clients"]))
+            output = str(
+                subprocess.check_output(
+                    ["netsh", "dhcp", "server", "scope", self.scope, "show", "clients"]
+                )
+            )
             matches = self.r.search(output)
             if matches:
                 clients = int(matches.group("clients"))
