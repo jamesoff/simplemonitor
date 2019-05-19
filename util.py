@@ -1,7 +1,6 @@
 """Utilities for SimpleMonitor."""
 
 import re
-import sys
 import json
 import datetime
 import socket
@@ -157,24 +156,12 @@ class JSONDecoder(json.JSONDecoder):
             return dict(obj)
 
 
-if sys.version_info >= (3,):
-
-    def json_dumps(data):
-        return JSONEncoder().encode(data).encode("ascii")
-
-    def json_loads(string):
-        return JSONDecoder().decode(string.decode("ascii"))
+def json_dumps(data):
+    return JSONEncoder().encode(data).encode("ascii")
 
 
-else:
-
-    def json_dumps(data):
-        return JSONEncoder().encode(data)
-
-    def json_loads(string):
-        if isinstance(string, bytearray):
-            string = string.decode("ascii")
-        return JSONDecoder().decode(string)
+def json_loads(string):
+    return JSONDecoder().decode(string.decode("ascii"))
 
 
 def subclass_dict_handler(mod, base_cls):

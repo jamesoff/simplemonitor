@@ -12,10 +12,7 @@ from threading import Thread
 
 from .logger import Logger, register
 
-if sys.version_info[0] >= 3:
-    from json import JSONDecodeError
-else:
-    JSONDecodeError = ValueError
+from json import JSONDecodeError
 
 # From the docs:
 #  Threads interact strangely with interrupts: the KeyboardInterrupt exception

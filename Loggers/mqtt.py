@@ -6,8 +6,6 @@
 # Python 3 only
 # contact: dev@swtk.info
 
-import sys
-
 try:
     import paho.mqtt.publish
 
@@ -30,11 +28,6 @@ class MQTTLogger(Logger):
         if config_options is None:
             config_options = {}
         Logger.__init__(self, config_options)
-
-        # early check for Python version, only 3.x is supported (by me at least :))
-        if sys.version_info[0] != 3:
-            self.logger_logger.error("only supported on Python 3")
-            return
 
         if not mqtt_available:
             self.logger_logger.error("Missing paho.mqtt module!")

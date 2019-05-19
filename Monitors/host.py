@@ -3,7 +3,6 @@ import os
 import subprocess
 import time
 import shlex
-import sys
 
 try:
     import win32api
@@ -432,12 +431,6 @@ class MonitorCommand(Monitor):
 
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
-
-        if sys.version_info[0] == 2 and sys.version_info[1] == 6:
-            self.monitor_logger.critical(
-                "Warning: Command monitors are unsupported on Python 2.6!"
-            )
-            self.available = False
 
         self.result_regexp_text = Monitor.get_config_option(
             config_options, "result_regexp", default=""

@@ -1,19 +1,12 @@
 import sys
 import unittest
 
-try:
-    # python 3.4+ should use builtin unittest.mock not mock package
-    from unittest.mock import patch
-except ImportError:
-    from mock import patch
+from unittest.mock import patch
 
 import monitor
 import util
 
-if sys.version_info[0] == 2:
-    import ConfigParser as configparser
-else:
-    import configparser
+import configparser
 
 class TestMonitor(unittest.TestCase):
 
