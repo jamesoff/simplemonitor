@@ -19,6 +19,8 @@ from json import JSONDecodeError
 #  will be received by an arbitrary thread. (When the signal module is
 #  available, interrupts always go to the main thread.)
 
+_DIGEST_NAME = "md5"
+
 
 @register
 class NetworkLogger(Logger):
@@ -75,7 +77,7 @@ class NetworkLogger(Logger):
     def process_batch(self):
         try:
             p = util.json_dumps(self.batch_data)
-            mac = hmac.new(self.key, p)
+            mac = hmac.new(self.key, p, _DIGEST_NAME)
             send_bytes = struct.pack("B", mac.digest_size) + mac.digest() + p
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             try:
@@ -145,7 +147,7 @@ class Listener(Thread):
                     their_digest = serialized[1 : mac_size + 1]
                     # then the rest is the serialized data
                     serialized = serialized[mac_size + 1 :]
-                    mac = hmac.new(self.key, serialized)
+                    mac = hmac.new(self.key, serialized, _DIGEST_NAME)
                     my_digest = mac.digest()
                 except IndexError:  # pragma: no cover
                     raise ValueError(
