@@ -16,7 +16,7 @@ before_script:
     - sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0
     - sudo sysctl -w net.ipv6.conf.lo.disable_ipv6=0
 script:
-    - if [[ "$TRAVIS_PYTHON_VERSION" != "2.7" ]]; then pipenv run flake8 --ignore=E501 *.py Alerters/ Monitors/ Loggers/; fi
+    - if [[ "$TRAVIS_PYTHON_VERSION" != "2.7" ]]; then pipenv run flake8 --ignore=E501,W503,E203 *.py Alerters/ Monitors/ Loggers/; fi
     - pipenv run env PATH=$PWD/tests/mocks:$PATH coverage run monitor.py -1 -v -d -f tests/monitor.ini
     - pipenv run env TEST_VALUE=myenv coverage run --append monitor.py -t -f tests/monitor-env.ini
     - pipenv run coverage run --append -m unittest discover -s tests
