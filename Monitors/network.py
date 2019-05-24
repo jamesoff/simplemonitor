@@ -8,6 +8,7 @@ import datetime
 import subprocess
 import requests
 from requests.auth import HTTPBasicAuth
+from multiping import multi_ping
 
 from .monitor import Monitor, register
 
@@ -170,45 +171,18 @@ class MonitorHost(Monitor):
     """Ping a host to make sure it's up"""
 
     host = ""
-    ping_command = ""
-    ping_regexp = ""
     type = "host"
-    time_regexp = ""
-    r = ""
-    r2 = ""
+    ping_ttl = 5
 
     def __init__(self, name, config_options):
-        """
-        Note: We use -w/-t on Windows/POSIX to limit the amount of time we wait to 5 seconds.
-        This is to stop ping holding things up too much. A machine that can't ping back in <5s is
-        a machine in trouble anyway, so should probably count as a failure.
-        """
         Monitor.__init__(self, name, config_options)
-        ping_ttl = Monitor.get_config_option(
+        self.ping_ttl = Monitor.get_config_option(
             config_options,
             'ping_ttl',
             required_type='int',
             minimum=0,
             default=5
         )
-        ping_ms = str(ping_ttl * 1000)
-        ping_ttl = str(ping_ttl)
-        platform = sys.platform
-        if platform in ['win32', 'cygwin']:
-            self.ping_command = "ping -n 1 -w " + ping_ms + " %s"
-            self.ping_regexp = r'Reply from [0-9a-f:.]+:.+time[=<]\d+ms'
-            self.time_regexp = r"Average = (?P<ms>\d+)ms"
-        elif platform.startswith('freebsd') or platform.startswith('darwin'):
-            self.ping_command = "ping -c1 -t" + ping_ttl + " %s"
-            self.ping_regexp = "bytes from"
-            self.time_regexp = r"min/avg/max/stddev = [\d.]+/(?P<ms>[\d.]+)/"
-        elif platform.startswith('linux'):
-            self.ping_command = "ping -c1 -W" + ping_ttl + " %s"
-            self.ping_regexp = "bytes from"
-            self.time_regexp = r"min/avg/max/stddev = [\d.]+/(?P<ms>[\d.]+)/"
-        else:
-            RuntimeError("Don't know how to run ping on this platform, help!")
-
         self.host = Monitor.get_config_option(
             config_options,
             'host',
@@ -216,31 +190,11 @@ class MonitorHost(Monitor):
         )
 
     def run_test(self):
-        success = False
-        pingtime = 0.0
+        responses, _ = multi_ping([self.host], timeout=self.ping_ttl, retry=0)
 
-        if isinstance(self.r, str):
-            self.monitor_logger.debug('Creating pre-compiled regexp')
-            self.r = re.compile(self.ping_regexp)
-            self.r2 = re.compile(self.time_regexp)
+        if self.host in responses.keys():
+            return self.record_success("{}ms".format(responses[self.host]))
 
-        try:
-            cmd = (self.ping_command % self.host).split(' ')
-            output = subprocess.check_output(cmd)
-            for line in str(output).split("\n"):
-                matches = self.r.search(line)
-                if matches:
-                    success = True
-                else:
-                    matches = self.r2.search(line)
-                    if matches:
-                        pingtime = matches.group("ms")
-        except Exception as e:
-            return self.record_fail(e)
-        if success:
-            if pingtime > 0:
-                return self.record_success("%sms" % pingtime)
-            return self.record_success()
         return self.record_fail()
 
     def describe(self):
