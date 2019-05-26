@@ -344,11 +344,7 @@ def main():
         )
         sys.exit(1)
 
-    pidfile = None
-    try:
-        pidfile = config.get("monitor", "pidfile")
-    except Exception:
-        pass
+    pidfile = config.get("monitor", "pidfile", fallback=None)
 
     if options.pidfile:
         pidfile = options.pidfile
