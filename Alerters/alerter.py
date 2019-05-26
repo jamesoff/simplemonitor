@@ -179,7 +179,7 @@ class Alerter:
         ):
             try:
                 self.ooh_failures.remove(monitor.name)
-            except Exception:
+            except ValueError:
                 pass
             if out_of_hours:
                 if self.ooh_recovery:
