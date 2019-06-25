@@ -42,7 +42,6 @@ class Monitor:
     last_error_count = 0
     last_run_duration = 0
 
-    minimum_gap = 0
     last_run = 0
 
     urgent = 1
@@ -106,11 +105,10 @@ class Monitor:
         self.set_recover_command(
             Monitor.get_config_option(config_options, "recover_command")
         )
-        self.set_gap(
-            Monitor.get_config_option(
-                config_options, "gap", required_type="int", minimum=0, default=0
-            )
+        self.minimum_gap = Monitor.get_config_option(
+            config_options, "gap", required_type="int", minimum=0, default=0
         )
+
         self.running_on = short_hostname()
         self.was_skipped = False
 
@@ -230,10 +228,19 @@ class Monitor:
         """Set our tolerance."""
         self.tolerance = tolerance
 
-    def set_gap(self, gap):
-        """Set our minimum gap."""
-        if gap and gap >= 0:
-            self.minimum_gap = int(gap)
+    @property
+    def minimum_gap(self):
+        """Minimum gap between runs of the monitor."""
+        return self._minimum_gap
+
+    @minimum_gap.setter
+    def minimum_gap(self, gap):
+        if isinstance(gap, int):
+            if gap < 0:
+                raise ValueError("gap must be at least 0")
+            self._minimum_gap = int(gap)
+        else:
+            raise TypeError("gap must be an integer")
 
     def describe(self):
         """Explain what this monitor does.
