@@ -379,17 +379,11 @@ def main():
     m = load_loggers(m, config)
     m = load_alerters(m, config)
 
-    try:
-        if config.get("monitor", "remote") == "1":
-            if not options.no_network:
-                enable_remote = True
-                remote_port = int(config.get("monitor", "remote_port"))
-            else:
-                enable_remote = False
-        else:
-            enable_remote = False
-    except Exception:
-        enable_remote = False
+    enable_remote = False
+    if config.get("monitor", "remote", "0") == "1":
+        if not options.no_network:
+            enable_remote = True
+            remote_port = int(config.get("monitor", "remote_port"))
 
     if not m.verify_dependencies():
         sys.exit(1)
