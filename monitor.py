@@ -358,7 +358,7 @@ def main():
             main_logger.error("Couldn't write to pidfile!")
             pidfile = None
 
-    monitors_file = config.get("monitor", "monitors", "monitors.ini")
+    monitors_file = config.get("monitor", "monitors", fallback="monitors.ini")
     main_logger.info("Loading monitor config from %s", monitors_file)
 
     try:
@@ -380,7 +380,7 @@ def main():
     m = load_alerters(m, config)
 
     enable_remote = False
-    if config.get("monitor", "remote", "0") == "1":
+    if config.get("monitor", "remote", fallback="0") == "1":
         if not options.no_network:
             enable_remote = True
             remote_port = int(config.get("monitor", "remote_port"))
