@@ -384,6 +384,7 @@ def main():
         if not options.no_network:
             enable_remote = True
             remote_port = int(config.get("monitor", "remote_port"))
+    key = config.get("monitor", "key", fallback=None)
 
     if not m.verify_dependencies():
         sys.exit(1)
@@ -396,11 +397,6 @@ def main():
         main_logger.warning(
             "One-shot mode: expecting monitors without 'fail' in the name to succeed, and with to fail. Will exit zero or non-zero accordingly."
         )
-
-    try:
-        key = config.get("monitor", "key")
-    except Exception:
-        key = None
 
     if enable_remote:
         if not options.quiet:
