@@ -358,11 +358,7 @@ def main():
             main_logger.error("Couldn't write to pidfile!")
             pidfile = None
 
-    if config.has_option("monitor", "monitors"):
-        monitors_file = config.get("monitor", "monitors")
-    else:
-        monitors_file = "monitors.ini"
-
+    monitors_file = config.get("monitor", "monitors", "monitors.ini")
     main_logger.info("Loading monitor config from %s", monitors_file)
 
     try:
