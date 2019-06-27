@@ -142,7 +142,7 @@ This alerter requires the `requests` library to be installed.  You can install i
 
 ## <a name="ses"></a>ses alerters
 
-You will need AWS credentials. Signing up for an configuring an AWS account is beyond the scope of this document. Credentials can come from any of the usual ways the AWS SDKs can find them, or can be specified in the configuration file.
+You will need AWS credentials. Signing up for and configuring an AWS account is beyond the scope of this document. Credentials can come from any of the usual ways the AWS SDKs can find them, or can be specified in the configuration file.
 
 This alerter requires the `boto3` library to be installed.
 
