@@ -62,14 +62,14 @@ class FortySixElksAlerter(Alerter):
         if not monitor.is_urgent():
             return
 
-        type = self.should_alert(monitor)
+        alert_type = self.should_alert(monitor)
         message = ""
         url = ""
 
         (days, hours, minutes, seconds) = monitor.get_downtime()
-        if type == "":
+        if alert_type == "":
             return
-        elif type == "catchup":
+        elif alert_type == "catchup":
             message = "catchup: %s failed on %s at %s (%d+%02d:%02d:%02d)\n%s" % (
                 name,
                 monitor.running_on,
@@ -86,7 +86,7 @@ class FortySixElksAlerter(Alerter):
             url = "https://{}/a1/SMS".format(self.api_host)
             auth = (self.username, self.password)
             params = {"from": self.sender, "to": self.target, "message": message}
-        elif type == "failure":
+        elif alert_type == "failure":
             message = "%s failed on %s at %s (%d+%02d:%02d:%02d)\n%s" % (
                 name,
                 monitor.running_on,
