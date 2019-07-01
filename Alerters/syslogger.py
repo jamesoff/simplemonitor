@@ -12,8 +12,8 @@ class SyslogAlerter(Alerter):
     type = "syslog"
 
     def send_alert(self, name, monitor):
-        type = self.should_alert(monitor)
-        if type == "failure":
+        alert_type = self.should_alert(monitor)
+        if alert_type == "failure":
             syslog.syslog(
                 syslog.LOG_WARNING | syslog.LOG_USER,
                 "Monitor %s failed %d times with message: %s"

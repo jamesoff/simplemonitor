@@ -41,7 +41,7 @@ class EMailAlerter(Alerter):
     def send_alert(self, name, monitor):
         """Send the email."""
 
-        type = self.should_alert(monitor)
+        alert_type = self.should_alert(monitor)
         (days, hours, minutes, seconds) = monitor.get_downtime()
 
         if monitor.is_remote():
@@ -53,9 +53,9 @@ class EMailAlerter(Alerter):
         message["From"] = self.from_addr
         message["To"] = self.to_addr
 
-        if type == "":
+        if alert_type == "":
             return
-        elif type == "failure":
+        elif alert_type == "failure":
             message["Subject"] = "[%s] Monitor %s Failed!" % (self.hostname, name)
             body = """Monitor %s%s has failed.
             Failed at: %s
@@ -80,7 +80,7 @@ class EMailAlerter(Alerter):
             except AttributeError:
                 body += "\nNo recovery info available"
 
-        elif type == "success":
+        elif alert_type == "success":
             message["Subject"] = "[%s] Monitor %s succeeded" % (self.hostname, name)
             body = (
                 "Monitor %s%s is back up.\nOriginally failed at: %s\nDowntime: %d+%02d:%02d:%02d\nDescription: %s"
@@ -96,7 +96,7 @@ class EMailAlerter(Alerter):
                 )
             )
 
-        elif type == "catchup":
+        elif alert_type == "catchup":
             message["Subject"] = "[%s] Monitor %s failed earlier!" % (
                 self.hostname,
                 name,
@@ -114,7 +114,7 @@ class EMailAlerter(Alerter):
             )
 
         else:
-            self.alerter_logger.critical("unknown alert type %s", type)
+            self.alerter_logger.critical("unknown alert type %s", alert_type)
             return
 
         message.attach(MIMEText(body, "plain"))

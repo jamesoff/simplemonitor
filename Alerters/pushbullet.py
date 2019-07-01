@@ -34,7 +34,7 @@ class PushbulletAlerter(Alerter):
     def send_alert(self, name, monitor):
         """Build up the content for the push notification."""
 
-        type = self.should_alert(monitor)
+        alert_type = self.should_alert(monitor)
         (days, hours, minutes, seconds) = monitor.get_downtime()
 
         if monitor.is_remote():
@@ -45,9 +45,9 @@ class PushbulletAlerter(Alerter):
         subject = ""
         body = ""
 
-        if type == "":
+        if alert_type == "":
             return
-        elif type == "failure":
+        elif alert_type == "failure":
             subject = "[%s] Monitor %s Failed!" % (self.hostname, name)
             body = """Monitor %s%s has failed.\n
             Failed at: %s
@@ -72,7 +72,7 @@ class PushbulletAlerter(Alerter):
             except AttributeError:
                 body += "\nNo recovery info available"
 
-        elif type == "success":
+        elif alert_type == "success":
             subject = "[%s] Monitor %s succeeded" % (self.hostname, name)
             body = (
                 "Monitor %s%s is back up.\nOriginally failed at: %s\nDowntime: %d+%02d:%02d:%02d\nDescription: %s"
@@ -88,7 +88,7 @@ class PushbulletAlerter(Alerter):
                 )
             )
 
-        elif type == "catchup":
+        elif alert_type == "catchup":
             subject = "[%s] Monitor %s failed earlier!" % (self.hostname, name)
             body = (
                 "Monitor %s%s failed earlier while this alerter was out of hours.\nFailed at: %s\nVirtual failure count: %d\nAdditional info: %s\nDescription: %s"
@@ -103,7 +103,7 @@ class PushbulletAlerter(Alerter):
             )
 
         else:
-            self.alerter_logger.error("Unknown alert type %s", type)
+            self.alerter_logger.error("Unknown alert type %s", alert_type)
             return
 
         if not self.dry_run:
