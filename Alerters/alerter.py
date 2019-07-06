@@ -28,7 +28,6 @@ class Alerter:
     verbose = False
 
     dry_run = False
-    groups = ["default"]
 
     delay_notification = False
     ooh_failures = []
@@ -54,10 +53,8 @@ class Alerter:
         self.repeat = Alerter.get_config_option(
             config_options, "repeat", required_type="int", default=0, minimum=0
         )
-        self.set_groups(
-            Alerter.get_config_option(
-                config_options, "groups", required_type="[str]", default=["default"]
-            )
+        self._groups = Alerter.get_config_option(
+            config_options, "groups", required_type="[str]", default=["default"]
         )
         self.times_type = Alerter.get_config_option(
             config_options,
@@ -122,10 +119,16 @@ class Alerter:
 
         self.dependencies = dependency_list
 
-    def set_groups(self, group_list):
-        """Record which groups we alert"""
+    @property
+    def groups(self):
+        """The groups for which alert"""
+        return self._groups
 
-        self.groups = group_list
+    @groups.setter
+    def groups(self, group_list):
+        if not isinstance(group_list, list):
+            raise TypeError("group_list must be a list")
+        self._groups = group_list
 
     def check_dependencies(self, failed_list):
         """Check if anything we depend on has failed."""
