@@ -17,23 +17,13 @@ class Alerter:
     dependencies = []
     hostname = gethostname()
     available = False
-    limit = 1
-    repeat = 0
-
-    days = list(range(0, 7))
-    times_type = "always"
-    time_info = [None, None]
 
     debug = False
     verbose = False
 
-    dry_run = False
-
-    delay_notification = False
     ooh_failures = []
     # subclasses should set this to true if they support catchup notifications for delays
     support_catchup = False
-    ooh_recovery = False
 
     type = "unknown"
 
@@ -63,6 +53,7 @@ class Alerter:
             allowed_values=["always", "only", "not"],
             default="always",
         )
+        self.time_info = [None, None]
         if self.times_type in ["only", "not"]:
             time_lower = Alerter.get_config_option(
                 config_options, "time_lower", required_type="str", required=True
