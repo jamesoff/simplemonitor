@@ -32,10 +32,8 @@ class Alerter:
             config_options = {}
         self.alerter_logger = logging.getLogger("simplemonitor.alerter-" + self.type)
         self.available = True
-        self.set_dependencies(
-            Alerter.get_config_option(
-                config_options, "depend", required_type="[str]", default=[]
-            )
+        self.dependencies = Alerter.get_config_option(
+            config_options, "depend", required_type="[str]", default=[]
         )
         self.limit = Alerter.get_config_option(
             config_options, "limit", required_type="int", minimum=1, default=1
@@ -111,6 +109,18 @@ class Alerter:
         self.dependencies = dependency_list
 
     @property
+    def dependencies(self):
+        """The Monitors we depend on.
+        If a monitor we depend on fails, it means we can't reach the database, so we shouldn't bother trying to write to it."""
+        return self._dependencies
+
+    @dependencies.setter
+    def dependencies(self, dependency_list):
+        if not isinstance(dependency_list, list):
+            raise TypeError("dependency_list must be a list")
+        self._dependencies = dependency_list
+
+    @property
     def groups(self):
         """The groups for which alert"""
         return self._groups
@@ -124,7 +134,7 @@ class Alerter:
     def check_dependencies(self, failed_list):
         """Check if anything we depend on has failed."""
         for dependency in failed_list:
-            if dependency in self.dependencies:
+            if dependency in self._dependencies:
                 self.available = False
                 return False
         self.available = True
