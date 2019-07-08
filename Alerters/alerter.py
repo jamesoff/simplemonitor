@@ -17,24 +17,13 @@ class Alerter:
     dependencies = []
     hostname = gethostname()
     available = False
-    limit = 1
-    repeat = 0
-
-    days = list(range(0, 7))
-    times_type = "always"
-    time_info = [None, None]
 
     debug = False
     verbose = False
 
-    dry_run = False
-    groups = ["default"]
-
-    delay_notification = False
     ooh_failures = []
     # subclasses should set this to true if they support catchup notifications for delays
     support_catchup = False
-    ooh_recovery = False
 
     type = "unknown"
 
@@ -43,10 +32,8 @@ class Alerter:
             config_options = {}
         self.alerter_logger = logging.getLogger("simplemonitor.alerter-" + self.type)
         self.available = True
-        self.set_dependencies(
-            Alerter.get_config_option(
-                config_options, "depend", required_type="[str]", default=[]
-            )
+        self.dependencies = Alerter.get_config_option(
+            config_options, "depend", required_type="[str]", default=[]
         )
         self.limit = Alerter.get_config_option(
             config_options, "limit", required_type="int", minimum=1, default=1
@@ -54,10 +41,8 @@ class Alerter:
         self.repeat = Alerter.get_config_option(
             config_options, "repeat", required_type="int", default=0, minimum=0
         )
-        self.set_groups(
-            Alerter.get_config_option(
-                config_options, "groups", required_type="[str]", default=["default"]
-            )
+        self._groups = Alerter.get_config_option(
+            config_options, "groups", required_type="[str]", default=["default"]
         )
         self.times_type = Alerter.get_config_option(
             config_options,
@@ -66,6 +51,7 @@ class Alerter:
             allowed_values=["always", "only", "not"],
             default="always",
         )
+        self.time_info = [None, None]
         if self.times_type in ["only", "not"]:
             time_lower = Alerter.get_config_option(
                 config_options, "time_lower", required_type="str", required=True
@@ -122,15 +108,33 @@ class Alerter:
 
         self.dependencies = dependency_list
 
-    def set_groups(self, group_list):
-        """Record which groups we alert"""
+    @property
+    def dependencies(self):
+        """The Monitors we depend on.
+        If a monitor we depend on fails, it means we can't reach the database, so we shouldn't bother trying to write to it."""
+        return self._dependencies
 
-        self.groups = group_list
+    @dependencies.setter
+    def dependencies(self, dependency_list):
+        if not isinstance(dependency_list, list):
+            raise TypeError("dependency_list must be a list")
+        self._dependencies = dependency_list
+
+    @property
+    def groups(self):
+        """The groups for which alert"""
+        return self._groups
+
+    @groups.setter
+    def groups(self, group_list):
+        if not isinstance(group_list, list):
+            raise TypeError("group_list must be a list")
+        self._groups = group_list
 
     def check_dependencies(self, failed_list):
         """Check if anything we depend on has failed."""
         for dependency in failed_list:
-            if dependency in self.dependencies:
+            if dependency in self._dependencies:
                 self.available = False
                 return False
         self.available = True
