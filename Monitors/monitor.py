@@ -44,7 +44,6 @@ class Monitor:
 
     last_run = 0
 
-    urgent = 1
     notify = True
     group = "default"
 
@@ -74,15 +73,11 @@ class Monitor:
             config_options = {}
         self.name = name
         self.monitor_logger = logging.getLogger("simplemonitor.monitor-" + self.name)
-        self.set_dependencies(
-            Monitor.get_config_option(
-                config_options, "depend", required_type="[str]", default=list()
-            )
+        self._dependencies = Monitor.get_config_option(
+            config_options, "depend", required_type="[str]", default=list()
         )
-        self.set_urgency(
-            Monitor.get_config_option(
-                config_options, "urgent", required_type="bool", default=True
-            )
+        self.urgent = Monitor.get_config_option(
+            config_options, "urgent", required_type="bool", default=True
         )
         self.set_notify(
             Monitor.get_config_option(
@@ -116,6 +111,18 @@ class Monitor:
     def get_config_option(config_options, key, **kwargs):
         kwargs["exception"] = MonitorConfigurationError
         return get_config_option(config_options, key, **kwargs)
+
+    @property
+    def dependencies(self):
+        """The Monitors we depend on.
+        If a monitor we depend on fails, we will skip"""
+        return self._dependencies
+
+    @dependencies.setter
+    def dependencies(self, dependency_list):
+        if not isinstance(dependency_list, list):
+            raise TypeError("dependency_list must be a list")
+        self._dependencies = dependency_list
 
     def set_recover_command(self, command):
         self.recover_command = command
@@ -339,22 +346,25 @@ class Monitor:
         """Get the number of times we've failed (ignoring tolerance)."""
         return self.error_count
 
-    def is_urgent(self):
-        """Check if this monitor needs urgent alerts (e.g. SMS)."""
-        return self.urgent
-
     def is_notify(self):
         """Check if this monitor has notifications enabled"""
         return self.notify
 
-    def set_urgency(self, urgency):
-        """Record if this monitor needs urgent alerts."""
-        if urgency == 1:
-            urgency = True
-        else:
-            urgency = False
+    @property
+    def urgent(self):
+        return self._urgent
 
-        self.urgent = urgency
+    @urgent.setter
+    def urgent(self, value):
+        if isinstance(value, bool):
+            self._urgent = value
+        elif isinstance(value, int):
+            if value:
+                self._urgent = True
+            else:
+                self._urgent = False
+        else:
+            raise TypeError("urgent should be a bool, or an int at a push")
 
     def set_notify(self, notify):
         """Record if this monitor needs notifications."""
