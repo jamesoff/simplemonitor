@@ -44,9 +44,6 @@ class Monitor:
 
     last_run = 0
 
-    notify = True
-    group = "default"
-
     failures = 0
     last_failure = None
 
@@ -76,17 +73,13 @@ class Monitor:
         self._dependencies = Monitor.get_config_option(
             config_options, "depend", required_type="[str]", default=list()
         )
-        self.urgent = Monitor.get_config_option(
+        self._urgent = Monitor.get_config_option(
             config_options, "urgent", required_type="bool", default=True
         )
-        self.set_notify(
-            Monitor.get_config_option(
-                config_options, "notify", required_type="bool", default=True
-            )
+        self._notify = Monitor.get_config_option(
+            config_options, "notify", required_type="bool", default=True
         )
-        self.set_group(
-            Monitor.get_config_option(config_options, "group", default="default")
-        )
+        self.group = Monitor.get_config_option(config_options, "group", default="default")
         self.set_tolerance(
             Monitor.get_config_option(
                 config_options, "tolerance", required_type="int", default=0, minimum=0
@@ -346,9 +339,16 @@ class Monitor:
         """Get the number of times we've failed (ignoring tolerance)."""
         return self.error_count
 
-    def is_notify(self):
-        """Check if this monitor has notifications enabled"""
-        return self.notify
+    @property
+    def notify(self):
+        return self._notify
+
+    @notify.setter
+    def notify(self, value):
+        if isinstance(value, bool):
+            self._notify = value
+        else:
+            raise TypeError("notify must be a bool")
 
     @property
     def urgent(self):
@@ -369,10 +369,6 @@ class Monitor:
     def set_notify(self, notify):
         """Record if this monitor needs notifications."""
         self.notify = notify
-
-    def set_group(self, group):
-        """Record if this monitor has a group."""
-        self.group = group
 
     def should_run(self):
         """Check if we should run our tests.
