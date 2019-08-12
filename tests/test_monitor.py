@@ -22,9 +22,9 @@ class TestMonitor(unittest.TestCase):
         })
         self.assertEqual(m.name, 'unnamed', 'Monitor did not set name')
         self.assertEqual(m.urgent, 0, 'Monitor did not set urgent')
-        self.assertEqual(m.tolerance, 2, 'Monitor did not set tolerance')
+        self.assertEqual(m._tolerance, 2, 'Monitor did not set tolerance')
         self.assertTrue(m.remote_alerting, 'Monitor did not set remote_alerting')
-        self.assertEqual(m.recover_command, 'true', 'Monitor did not set recover_command')
+        self.assertEqual(m._recover_command, 'true', 'Monitor did not set recover_command')
 
     def test_MonitorSuccess(self):
         m = Monitors.monitor.Monitor()

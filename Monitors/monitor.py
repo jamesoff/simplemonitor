@@ -32,17 +32,14 @@ from util import subclass_dict_handler
 class Monitor:
     """Simple monitor. This class is abstract."""
 
-    last_result = ""
     type = "unknown"
+    last_result = ""
     error_count = 0
-    tolerance = 0
     failed_at = None
     success_count = 0
     tests_run = 0
     last_error_count = 0
     last_run_duration = 0
-
-    last_run = 0
 
     failures = 0
     last_failure = None
@@ -50,26 +47,13 @@ class Monitor:
     # this is the time we last received data into this monitor (if we're remote)
     last_update = None
 
-    # we set this to true if we want a remote instance to do our alerts for us
-    remote_alerting = False
-
-    # dependencies holds master list
-    _dependencies = []
-
-    # deps holds temporary list
-    deps = []
-
-    name = "unnamed"
-
-    recover_command = ""
-    recover_info = ""
-
     def __init__(self, name="unnamed", config_options=None):
         """What's that coming over the hill? Is a monitor?"""
         if config_options is None:
             config_options = {}
         self.name = name
-        self._monitor_logger = logging.getLogger("simplemonitor.monitor-" + self.name)
+        self.deps = []
+        self.monitor_logger = logging.getLogger("simplemonitor.monitor-" + self.name)
         self._dependencies = Monitor.get_config_option(
             config_options, "depend", required_type="[str]", default=list()
         )
@@ -82,25 +66,23 @@ class Monitor:
         self.group = Monitor.get_config_option(
             config_options, "group", default="default"
         )
-        self.set_tolerance(
-            Monitor.get_config_option(
-                config_options, "tolerance", required_type="int", default=0, minimum=0
-            )
+        self._tolerance = Monitor.get_config_option(
+            config_options, "tolerance", required_type="int", default=0, minimum=0
         )
-        self.set_remote_alerting(
-            Monitor.get_config_option(
-                config_options, "remote_alert", required_type="bool", default=False
-            )
+        self.remote_alerting = Monitor.get_config_option(
+            config_options, "remote_alert", required_type="bool", default=False
         )
-        self.set_recover_command(
-            Monitor.get_config_option(config_options, "recover_command")
+        self._recover_command = Monitor.get_config_option(
+            config_options, "recover_command"
         )
+        self.recover_info = ""
         self.minimum_gap = Monitor.get_config_option(
             config_options, "gap", required_type="int", minimum=0, default=0
         )
 
         self.running_on = short_hostname()
         self.was_skipped = False
+        self._last_run = 0
 
     @staticmethod
     def get_config_option(config_options, key, **kwargs):
@@ -119,16 +101,6 @@ class Monitor:
             raise TypeError("dependency_list must be a list")
         self._dependencies = dependency_list
 
-    def set_recover_command(self, command):
-        self.recover_command = command
-
-    def set_remote_alerting(self, setting):
-        """Configure ourselves to be remote alerting (or not)."""
-        if setting == 1:
-            self.remote_alerting = True
-        else:
-            self.remote_alerting = False
-
     def is_remote(self):
         """Check if we're running on this machine, or if we're a remote instance."""
         if self.running_on == short_hostname():
@@ -141,21 +113,21 @@ class Monitor:
 
     def virtual_fail_count(self):
         """Return the number of failures we've had past our tolerance."""
-        vfs = self.error_count - self.tolerance
+        vfs = self.error_count - self._tolerance
         if vfs < 0:
             vfs = 0
         return vfs
 
     def test_success(self):
         """Returns false if the test has failed."""
-        if self.error_count > self.tolerance:
+        if self.error_count > self._tolerance:
             return False
         else:
             return True
 
     def first_failure(self):
         """Check if this is our first failure (past tolerance)."""
-        if self.error_count == (self.tolerance + 1):
+        if self.error_count == (self._tolerance + 1):
             return True
         else:
             return False
@@ -195,7 +167,7 @@ class Monitor:
         """Save our latest result to the logger.
 
         To be removed."""
-        if self.error_count > self.tolerance:
+        if self.error_count > self._tolerance:
             result = 0
         else:
             result = 1
@@ -225,10 +197,6 @@ class Monitor:
         """Called with a reference to the list of all monitors.
         Only used by CompoundMonitor for now."""
         pass
-
-    def set_tolerance(self, tolerance):
-        """Set our tolerance."""
-        self.tolerance = tolerance
 
     @property
     def minimum_gap(self):
@@ -325,7 +293,7 @@ class Monitor:
             pass
 
         if (
-            self.last_error_count >= self.tolerance
+            self.last_error_count >= self._tolerance
             and self.success_count == 1
             and not self.was_skipped
         ):
@@ -380,35 +348,35 @@ class Monitor:
         """
         now = int(time.time())
         if self.minimum_gap == 0:
-            self.last_run = now
+            self._last_run = now
             return True
         if self.error_count > 0:
-            self.last_run = now
+            self._last_run = now
             return True
-        if self.last_run == 0:
-            self.last_run = now
+        if self._last_run == 0:
+            self._last_run = now
             return True
-        gap = now - self.last_run
+        gap = now - self._last_run
         if gap >= self.minimum_gap:
-            self.last_run = now
+            self._last_run = now
             return True
         return False
 
     def last_virtual_fail_count(self):
-        if (self.last_error_count - self.tolerance) < 0:
+        if (self.last_error_count - self._tolerance) < 0:
             return 0
         else:
-            return self.last_error_count - self.tolerance
+            return self.last_error_count - self._tolerance
 
     def attempt_recover(self):
-        if self.recover_command is None:
+        if self._recover_command is None:
             self.recover_info = ""
             return
         if not self.first_failure():
             return
 
         try:
-            p = subprocess.Popen(self.recover_command.split(" "))
+            p = subprocess.Popen(self._recover_command.split(" "))
             p.wait()
             self.recover_info = "Command executed and returned %d" % p.returncode
         except Exception as e:
@@ -426,7 +394,7 @@ class Monitor:
         being sent over the network).
         """
         serialize_dict = dict(self.__dict__)
-        del serialize_dict["_monitor_logger"]
+        del serialize_dict["monitor_logger"]
         return serialize_dict
 
     def __setstate__(self, state):
@@ -434,7 +402,7 @@ class Monitor:
         self._set_monitor_logger()
 
     def _set_monitor_logger(self):
-        self._monitor_logger = logging.getLogger("simplemonitor.monitor-" + self.name)
+        self.monitor_logger = logging.getLogger("simplemonitor.monitor-" + self.name)
 
     def to_python_dict(self):
         return self.__getstate__()
@@ -484,7 +452,7 @@ class MonitorFail(Monitor):
 
     def run_test(self):
         """Always fails."""
-        self._monitor_logger.info(
+        self.monitor_logger.info(
             "error_count = %d, interval = %d --> %d",
             self.error_count,
             self.interval,

@@ -54,9 +54,6 @@ class SimpleMonitor:
     def add_monitor(self, name, monitor):
         self.monitors[name] = monitor
 
-    def set_tolerance(self, monitor, tolerance):
-        self.monitors[monitor].set_tolerance(tolerance)
-
     def set_urgency(self, monitor, urgency):
         self.monitors[monitor].set_urgency(urgency)
 
