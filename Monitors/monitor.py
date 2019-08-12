@@ -69,7 +69,7 @@ class Monitor:
         if config_options is None:
             config_options = {}
         self.name = name
-        self.monitor_logger = logging.getLogger("simplemonitor.monitor-" + self.name)
+        self._monitor_logger = logging.getLogger("simplemonitor.monitor-" + self.name)
         self._dependencies = Monitor.get_config_option(
             config_options, "depend", required_type="[str]", default=list()
         )
@@ -79,7 +79,9 @@ class Monitor:
         self._notify = Monitor.get_config_option(
             config_options, "notify", required_type="bool", default=True
         )
-        self.group = Monitor.get_config_option(config_options, "group", default="default")
+        self.group = Monitor.get_config_option(
+            config_options, "group", default="default"
+        )
         self.set_tolerance(
             Monitor.get_config_option(
                 config_options, "tolerance", required_type="int", default=0, minimum=0
@@ -424,7 +426,7 @@ class Monitor:
         being sent over the network).
         """
         serialize_dict = dict(self.__dict__)
-        del serialize_dict["monitor_logger"]
+        del serialize_dict["_monitor_logger"]
         return serialize_dict
 
     def __setstate__(self, state):
@@ -432,7 +434,7 @@ class Monitor:
         self._set_monitor_logger()
 
     def _set_monitor_logger(self):
-        self.monitor_logger = logging.getLogger("simplemonitor.monitor-" + self.name)
+        self._monitor_logger = logging.getLogger("simplemonitor.monitor-" + self.name)
 
     def to_python_dict(self):
         return self.__getstate__()
@@ -482,7 +484,7 @@ class MonitorFail(Monitor):
 
     def run_test(self):
         """Always fails."""
-        self.monitor_logger.info(
+        self._monitor_logger.info(
             "error_count = %d, interval = %d --> %d",
             self.error_count,
             self.interval,
