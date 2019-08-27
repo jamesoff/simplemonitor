@@ -1,0 +1,61 @@
+[magi-fibracat-ping]
+type=host
+host=manresa.pina.cat
+tolerance=5
+
+[jordi-fibracat-ping]
+type=host
+host=213.148.194.117
+tolerance=5
+
+[server-diskspace]
+type=diskspace
+partition=/
+limit=1536M
+
+[raspberry-http]
+type=http
+url=http://manresa.pina.cat:8046
+tolerance=5
+
+[csl.mendeley.com-http]
+type=http
+url=http://csl.mendeley.com
+tolerance=5
+
+[csl.mendeley.com-getstyle-https]
+type=http
+url=https://csl.mendeley.com/styles/16825/apa
+tolerance=5
+
+#[jencarles-virginmedia-ping]
+#type=host
+#host=hertford.pina.cat
+#tolerance=5
+
+[process-mailman]
+type=command
+command=tests/mocks/check-script.sh mailman
+
+[process-spamd]
+type=command
+command=tests/mocks/check-script.sh spamd
+
+[process-apache2]
+type=command
+command=tests/mocks/check-script.sh apache2
+
+[process-mariadb]
+type=command
+command=tests/mocks/check-script.sh mysqld
+
+[wiki.glaceexpedition.ch-https]
+type=http
+url=https://wiki.glaceexpedition.ch
+tolerance=1
+regexp=Login required
+
+[wiki.glaceexpedition.ch-ping]
+type=host
+host=wiki.glaceexpedition.ch
+tolerance=1
