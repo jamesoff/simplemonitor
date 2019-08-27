@@ -113,4 +113,3 @@ SimpleMonitor currently outputs everything to stdout.
 ## Licence
 
 SimpleMonitor is released under the BSD licence.
-
