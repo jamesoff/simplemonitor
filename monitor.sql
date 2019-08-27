@@ -15,4 +15,3 @@ monitor_host varchar(50),
 monitor_name varchar(50),
 monitor_result int,
 monitor_info varchar(255));
-
