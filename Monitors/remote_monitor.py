@@ -11,10 +11,13 @@ class RemoteMonitor(Monitor):
         Monitor.__init__(self, name, config_options)
 
         self._remote_host = Monitor.get_config_option(config_options, "remote_to", required=True)
+        self._port = Monitor.get_config_option(config_options, "port", required=False, required_type="int", default=22)
+
         self._user = Monitor.get_config_option(config_options, "user", required=True)
         # TODO: Add support for ssh key authentication
         self._password = Monitor.get_config_option(config_options, "password", required=True)
-        self._port = Monitor.get_config_option(config_options, "port", required=False, required_type="int", default=22)
+
+        self._connection = None
 
     @property
     def remote_host(self) -> str:
@@ -48,26 +51,23 @@ class RemoteMonitor(Monitor):
     def password(self, password: str):
         self._password = password
 
-    def connect(self) -> fabric.Connection:
-        """
-        Creates a connection to the remote host
-        :return: A conection object to run commands on
-        """
+    @property
+    def connection(self) -> fabric.Connection:
+        return self._connection
 
-        conn = fabric.Connection(host=self.host, user=self.user, port=self.port, connect_kwargs={
+    def prepare_test(self):
+        self._connection = fabric.Connection(host=self.host, user=self.user, port=self.port, connect_kwargs={
             'password': self.password
         })
 
-        return conn
-
-    # TODO: insert before & after each test the connect function & the conn.close() call, & insert the connection
-    #  property to the run_test function
+    def clean_up_test(self):
+        if isinstance(self._connection, fabric.Connection):
+            self._connection.close()
 
     def run_test(self):
         """Override this method to perform the test."""
         raise NotImplementedError
 
     def get_params(self):
-        """Override this method to return a list of parameters (for logging)"""
-        raise NotImplementedError
+        return self.remote_host, self.port, self.user, self.password
 
