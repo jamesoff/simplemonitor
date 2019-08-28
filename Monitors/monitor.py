@@ -107,9 +107,17 @@ class Monitor:
             return False
         return True
 
+    def prepare_test(self):
+        """Override this method to setup the test"""
+        pass
+
     def run_test(self):
         """Override this method to perform the test."""
         raise NotImplementedError
+
+    def clean_up_test(self):
+        """Override this method to setup the test"""
+        pass
 
     def virtual_fail_count(self):
         """Return the number of failures we've had past our tolerance."""
