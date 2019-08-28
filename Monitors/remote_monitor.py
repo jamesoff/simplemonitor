@@ -10,7 +10,7 @@ class RemoteMonitor(Monitor):
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
 
-        self._remote_host = Monitor.get_config_option(config_options, "remote_to", required=True)
+        self._host = Monitor.get_config_option(config_options, "remote_host", required=True)
         self._port = Monitor.get_config_option(config_options, "port", required=False, required_type="int", default=22)
 
         self._user = Monitor.get_config_option(config_options, "user", required=True)
@@ -20,12 +20,12 @@ class RemoteMonitor(Monitor):
         self._connection = None
 
     @property
-    def remote_host(self) -> str:
-        return self._remote_host
+    def host(self) -> str:
+        return self._host
 
-    @remote_host.setter
-    def remote_host(self, remote_host: str):
-        self._remote_host = remote_host
+    @host.setter
+    def host(self, host: str):
+        self._host = host
 
     @property
     def user(self) -> str:
@@ -69,5 +69,5 @@ class RemoteMonitor(Monitor):
         raise NotImplementedError
 
     def get_params(self):
-        return self.remote_host, self.port, self.user, self.password
+        return self.host, self.port, self.user, self.password
 
