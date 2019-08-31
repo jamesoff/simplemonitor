@@ -17,7 +17,9 @@ class RemoteMonitor(Monitor):
         # TODO: Add support for ssh key authentication
         self._password = Monitor.get_config_option(config_options, "password", required=True)
 
-        self._connection = None
+        self._connection = fabric.Connection(host=self.host, user=self.user, port=self.port, connect_kwargs={
+            'password': self.password
+        })
 
     @property
     def host(self) -> str:
@@ -54,11 +56,6 @@ class RemoteMonitor(Monitor):
     @property
     def connection(self) -> fabric.Connection:
         return self._connection
-
-    def prepare_test(self):
-        self._connection = fabric.Connection(host=self.host, user=self.user, port=self.port, connect_kwargs={
-            'password': self.password
-        })
 
     def clean_up_test(self):
         if isinstance(self._connection, fabric.Connection):
