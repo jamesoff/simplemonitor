@@ -5,3 +5,4 @@ colorlog
 pync>=2.0.3
 pydbus
 paho-mqtt
+fabric==2.5.0

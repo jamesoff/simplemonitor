@@ -10,7 +10,7 @@ pyOpenSSL = "*"
 colorlog = "*"
 pync = {version = ">=2.0.3",sys_platform = "== 'darwin'"}
 paho-mqtt = "*"
-fabric = "*"
+fabric = "==2.5.0"
 
 [dev-packages]
 "flake8" = "*"
