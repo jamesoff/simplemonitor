@@ -41,6 +41,7 @@ class RemoteMountMonitor(RemoteMonitor):
 
         self.free_space = RemoteMonitor.get_config_option(config_options, 'freespace', required=False, default='1GB')
 
+        # free space can be given as a percentage or an absolute size (i.e. 10GB)
         if '%' in self.free_space:
             self.free_space_required = int(self.free_space.replace('%', ''))
             self.free_space_unit = 'percent'
@@ -54,14 +55,11 @@ class RemoteMountMonitor(RemoteMonitor):
         failed_mounts = []
 
         assert self.free_space_unit in ['percent', 'byte']
-        # print(self.free_space)
-        # print(f'Checking every mount to see if it has {self.free_space_required} free {self.free_space_unit}')
 
+        # Father all the mounts that do not have enough free space
         if self.free_space_unit == 'percent':
             for mount in mounts:
                 percent_free = 100 - mount.get('Use%')
-                # print(f'percent free: {percent_free}')
-                # print(f'free space required: {self.free_space_required}')
                 if percent_free < self.free_space_required:
                     failed_mounts.append(mount)
         elif self.free_space_unit == 'byte':
@@ -111,20 +109,24 @@ class RemoteMountMonitor(RemoteMonitor):
         mounts = []
         for index, line in enumerate(lines[1:]):
             values = re.split(r'\s+', line)
-            mount = {
-                'Filesystem': values[0],
-                'Type': values[1],
-                'Inodes': int(values[2]),
-                'IUsed': int(values[3]),
-                'IFree': int(values[4]),
-                'IUse%': int(values[5].replace('%', '')),
-                '1K-blocks': int(values[6]),
-                'Used': int(values[7]),
-                'Avail': int(values[8]),
-                'Use%': int(values[9].replace('%', '')),
-                'File': values[10],
-                'Mounted on': values[11]
-            }
-            mounts.append(mount)
+            if len(values) != 12:
+                self.monitor_logger.warning(f'Invalid df --output row, expected it to have 12 values, '
+                                            f'but found {len(values)} (row: {line})')
+            else:
+                mount = {
+                    'Filesystem': values[0],
+                    'Type': values[1],
+                    'Inodes': int(values[2]),
+                    'IUsed': int(values[3]),
+                    'IFree': int(values[4]),
+                    'IUse%': int(values[5].replace('%', '')),
+                    '1K-blocks': int(values[6]),
+                    'Used': int(values[7]),
+                    'Avail': int(values[8]),
+                    'Use%': int(values[9].replace('%', '')),
+                    'File': values[10],
+                    'Mounted on': values[11]
+                }
+                mounts.append(mount)
         return mounts
 
