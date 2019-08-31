@@ -91,8 +91,17 @@ class RemoteMountMonitor(RemoteMonitor):
         return super(RemoteMountMonitor, self).get_params() + (self._free_space,)
 
     def get_mounts(self):
-        # TODO: Stop stdout of command to be printed
         result = self.connection.run('df --output', hide=True)
+        # A sample output of the command:
+        #   Filesystem     Type     Inodes IUsed   IFree IUse% 1K-blocks    Used    Avail Use% File Mounted on
+        #   overlay        overlay 3907584 44516 3863068    2%  61255652 2135556 55978764   4% -    /
+        #   tmpfs          tmpfs    255876    16  255860    1%     65536       0    65536   0% -    /dev
+        #   tmpfs          tmpfs    255876    14  255862    1%   1023504       0  1023504   0% -    /sys/fs/cgroup
+        #   shm            tmpfs    255876     1  255875    1%     65536       0    65536   0% -    /dev/shm
+        #   /dev/sda1      ext4    3907584 44516 3863068    2%  61255652 2135556 55978764   4% -    /etc/hosts
+        #   tmpfs          tmpfs    255876     1  255875    1%   1023504       0  1023504   0% -    /proc/acpi
+        #   tmpfs          tmpfs    255876     1  255875    1%   1023504       0  1023504   0% -    /sys/firmware
+
         if result.stderr or not result.stdout:
             return []
         lines = str(result.stdout).splitlines()
