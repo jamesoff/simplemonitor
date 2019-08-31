@@ -14,11 +14,15 @@ class RemoteMonitor(Monitor):
         self._port = Monitor.get_config_option(config_options, "port", required=False, required_type="int", default=22)
 
         self._user = Monitor.get_config_option(config_options, "user", required=True)
-        # TODO: Add support for ssh key authentication
-        self._password = Monitor.get_config_option(config_options, "password", required=True)
+        self._password = Monitor.get_config_option(config_options, "password", required=False, default=None)
+        if self._password is None:
+            self._key = Monitor.get_config_option(config_options, "key", required=True)
+        else:
+            self._key = Monitor.get_config_option(config_options, "key", required=False, default=None)
 
         self._connection = fabric.Connection(host=self.host, user=self.user, port=self.port, connect_kwargs={
-            'password': self.password
+            'password': self.password,
+            'key_filename': self._key
         })
 
     @property

@@ -39,7 +39,7 @@ class RemoteMountMonitor(RemoteMonitor):
     def __init__(self, name, config_options):
         RemoteMonitor.__init__(self, name, config_options)
 
-        self.free_space = RemoteMonitor.get_config_option(config_options, 'freespace', required=False, default='1GB')
+        self.free_space = RemoteMonitor.get_config_option(config_options, 'free_space', required=False, default='1GB')
 
         # free space can be given as a percentage or an absolute size (i.e. 10GB)
         if '%' in self.free_space:
@@ -90,6 +90,8 @@ class RemoteMountMonitor(RemoteMonitor):
 
     def get_mounts(self):
         result = self.connection.run('df --output', hide=True)
+        self.monitor_logger.debug(f'stdout: {result.stdout}')
+        self.monitor_logger.debug(f'stderr: {result.stderr}')
         # A sample output of the command:
         #   Filesystem     Type     Inodes IUsed   IFree IUse% 1K-blocks    Used    Avail Use% File Mounted on
         #   overlay        overlay 3907584 44516 3863068    2%  61255652 2135556 55978764   4% -    /
