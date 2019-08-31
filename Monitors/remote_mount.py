@@ -1,6 +1,7 @@
 from .remote_monitor import RemoteMonitor
 from .monitor import register
 import re
+from .host import _bytes_to_size_string
 
 
 def _size_string_to_bytes(size: str) -> int:
@@ -38,11 +39,50 @@ class RemoteMountMonitor(RemoteMonitor):
     def __init__(self, name, config_options):
         RemoteMonitor.__init__(self, name, config_options)
 
-        self._free_space = RemoteMonitor.get_config_option(config_options, 'freespace', required=False, default='1GB')
+        self.free_space = RemoteMonitor.get_config_option(config_options, 'freespace', required=False, default='1GB')
+
+        if '%' in self.free_space:
+            self.free_space_required = int(self.free_space.replace('%', ''))
+            self.free_space_unit = 'percent'
+        else:
+            self.free_space_required = _size_string_to_bytes(self.free_space)
+            self.free_space_unit = 'byte'
 
     def run_test(self):
         mounts = self.get_mounts()
-        pass
+
+        failed_mounts = []
+
+        assert self.free_space_unit in ['percent', 'byte']
+        # print(self.free_space)
+        # print(f'Checking every mount to see if it has {self.free_space_required} free {self.free_space_unit}')
+
+        if self.free_space_unit == 'percent':
+            for mount in mounts:
+                percent_free = 100 - mount.get('Use%')
+                # print(f'percent free: {percent_free}')
+                # print(f'free space required: {self.free_space_required}')
+                if percent_free < self.free_space_required:
+                    failed_mounts.append(mount)
+        elif self.free_space_unit == 'byte':
+            for mount in mounts:
+                free_bytes = mount.get('Avail') - mount.get('Used')
+                if free_bytes < self.free_space_required:
+                    failed_mounts.append(mount)
+
+        if not failed_mounts:
+            return self.record_success()
+
+        msg = ''
+        for mount in failed_mounts:
+            if msg != '':
+                msg += '\n'
+            mount_point = mount.get("Mounted on")
+            percent_left = f'{100 - mount.get("Use%")}%'
+            mount_size = _bytes_to_size_string(mount.get("Avail"))
+            amount_left = _bytes_to_size_string(mount.get('Avail') - mount.get('Used'))
+            msg += f'{self.host}:{mount_point} has {percent_left} free space out of {mount_size} ({amount_left} left)'
+        return self.record_fail(msg)
 
     def describe(self):
         pass
@@ -52,7 +92,7 @@ class RemoteMountMonitor(RemoteMonitor):
 
     def get_mounts(self):
         # TODO: Stop stdout of command to be printed
-        result = self.connection.run('df --output')
+        result = self.connection.run('df --output', hide=True)
         if result.stderr or not result.stdout:
             return []
         lines = str(result.stdout).splitlines()
