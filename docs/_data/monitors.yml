@@ -197,3 +197,27 @@
     - name: sub_states
       desc: Comma-separates list of desired sub states for the unit
       required: 'no'
+- name: remotemount
+  oneline: Checks that the remote host has free space in every mount.
+  params:
+      - name: remote_host
+        desc: The address of the remote host to run the test against.
+        required: 'yes'
+      - name: port
+        desc: The ssh port of the remote host
+        required: 'no'
+        default: 22
+      - name: user
+        desc: The ssh user to use.
+        required: 'no'
+        default: root
+      - name: password
+        desc: The ssh password to use. this or key must be given.
+        required: 'no'
+      - name: key
+        desc: Path to an ssh private key to use. this or password must be given.
+        required: 'no'
+      - name: free_space
+        desc: The amount of free space required in every mount of the remote host. can be given as a percentage (i.e. 20%) or as an absolute size (i.e. 10GB)
+        required: 'no'
+        default: '1GB'
