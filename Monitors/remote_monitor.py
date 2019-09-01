@@ -71,4 +71,3 @@ class RemoteMonitor(Monitor):
 
     def get_params(self):
         return self.host, self.port, self.user, self.password
-
