@@ -77,10 +77,11 @@ class RemoteMountMonitor(RemoteMonitor):
             if msg != '':
                 msg += '\n'
             mount_point = mount.get("Mounted on")
-            percent_left = f'{100 - mount.get("Use%")}%'
+            percent_left = '{}%'.format(100 - mount.get("Use%"))
             mount_size = _bytes_to_size_string(mount.get("Avail"))
             amount_left = _bytes_to_size_string(mount.get('Avail') - mount.get('Used'))
-            msg += f'{self.host}:{mount_point} has {percent_left} free space out of {mount_size} ({amount_left} left)'
+            msg += '{}:{} has {} free space out of {} ({} left)'.format(self.host, mount_point, percent_left,
+                                                                        mount_size, amount_left)
         return self.record_fail(msg)
 
     def describe(self):
@@ -91,8 +92,8 @@ class RemoteMountMonitor(RemoteMonitor):
 
     def get_mounts(self):
         result = self.connection.run('df --output', hide=True)
-        self.monitor_logger.debug(f'stdout: {result.stdout}')
-        self.monitor_logger.debug(f'stderr: {result.stderr}')
+        self.monitor_logger.debug('stdout: {}'.format(result.stdout))
+        self.monitor_logger.debug('stderr: {}'.format(result.stderr))
         # A sample output of the command:
         #   Filesystem     Type     Inodes IUsed   IFree IUse% 1K-blocks    Used    Avail Use% File Mounted on
         #   overlay        overlay 3907584 44516 3863068    2%  61255652 2135556 55978764   4% -    /
@@ -113,8 +114,9 @@ class RemoteMountMonitor(RemoteMonitor):
         for line in lines[1:]:
             values = re.split(r'\s+', line)
             if len(values) != 12:
-                self.monitor_logger.warning(f'Invalid df --output row, expected it to have 12 values, '
-                                            f'but found {len(values)} (row: {line})')
+                self.monitor_logger.warning(
+                    'Invalid df --output row, expected it to have 12 values, but found {} (row: {})'.format(len(values),
+                                                                                                            line))
             else:
                 mount = {
                     'Filesystem': values[0],
@@ -132,4 +134,3 @@ class RemoteMountMonitor(RemoteMonitor):
                 }
                 mounts.append(mount)
         return mounts
-
