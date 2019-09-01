@@ -54,7 +54,8 @@ class RemoteMountMonitor(RemoteMonitor):
 
         failed_mounts = []
 
-        assert self.free_space_unit in ['percent', 'byte']
+        if self.free_space_unit not in ['percent', 'byte']:
+            raise AssertionError('the unit of free space must be one of: ["percent", "byte"]')
 
         # Father all the mounts that do not have enough free space
         if self.free_space_unit == 'percent':
@@ -109,7 +110,7 @@ class RemoteMountMonitor(RemoteMonitor):
             return []
 
         mounts = []
-        for index, line in enumerate(lines[1:]):
+        for line in lines[1:]:
             values = re.split(r'\s+', line)
             if len(values) != 12:
                 self.monitor_logger.warning(f'Invalid df --output row, expected it to have 12 values, '
