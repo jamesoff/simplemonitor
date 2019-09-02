@@ -71,11 +71,34 @@ class TestRemoteMountMonitors(unittest.TestCase):
             stdout="""Filesystem     Type     Inodes IUsed   IFree IUse% 1K-blocks    Used    Avail Use% File Mounted on
 overlay        overlay 3907584 44516 3863068    2%  61255652 2135556 55978764   4% -    /
 tmpfs          tmpfs    255876    16  255860    1%     65536       0    65536   0% -    /dev""")
-
         mounts = m.get_mounts()
         self.assertEqual(len(mounts), 2)
         self.assertEqual(mounts[0].get("Use%"), 4)
         self.assertEqual(mounts[1].get("Use%"), 0)
+
+        m._connection = self.mock_connection(
+            stderr="",
+            stdout="Filesystem     Type     Inodes IUsed   IFree IUse% "
+                   "1K-blocks    Used    Avail Use% File Mounted on")
+        mounts = m.get_mounts()
+        self.assertEqual(len(mounts), 0)
+
+        m._connection = self.mock_connection(
+            stderr="",
+            stdout="""Filesystem      Inodes IUsed   IFree IUse% 1K-blocks    Used    Avail Use% File Mounted on
+overlay        3907584 44516 3863068    2%  61255652 2135556 55978764   4% -    /
+tmpfs           255876    16  255860    1%     65536       0    65536   0% -    /dev""")
+        mounts = m.get_mounts()
+        self.assertEqual(len(mounts), 0)
+
+        m._connection = self.mock_connection(
+            stderr="This is an error",
+            stdout="""Filesystem     Type     Inodes IUsed   IFree IUse% 1K-blocks    Used    Avail Use% File Mounted on
+overlay        overlay 3907584 44516 3863068    2%  61255652 2135556 55978764   4% -    /
+mpfs          tmpfs    255876    16  255860    1%     65536       0    65536   0% -    /dev""")
+
+        mounts = m.get_mounts()
+        self.assertEqual(len(mounts), 0)
 
     def test_RemoteMount_percent(self):
         config_options = self.get_config({"free_space": "1%"})
