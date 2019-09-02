@@ -3,7 +3,6 @@
 from .monitor import Monitor, register
 import fabric
 from os.path import isfile
-import os
 
 
 class RemoteMonitor(Monitor):
