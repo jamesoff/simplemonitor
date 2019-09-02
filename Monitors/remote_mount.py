@@ -1,5 +1,5 @@
 from .remote_monitor import RemoteMonitor
-from .monitor import register
+from .monitor import register, MonitorConfigurationError
 import re
 from .host import _bytes_to_size_string
 
@@ -10,7 +10,7 @@ def _size_string_to_bytes(size: str) -> int:
     :param size: The size to convert (in the format [number][size unit])
     :return: The given size in bytes
     """
-    matches = re.findall(r'^(\d+)(.*?)$', size.replace(' ', '').upper())
+    matches = re.findall(r'^(-?\d+)(.*?)$', size.replace(' ', '').upper())
     if matches is None or len(matches) != 1 or len(matches[0]) != 2:
         return None
 
@@ -39,15 +39,19 @@ class RemoteMountMonitor(RemoteMonitor):
     def __init__(self, name, config_options):
         RemoteMonitor.__init__(self, name, config_options)
 
-        self.free_space = RemoteMonitor.get_config_option(config_options, 'free_space', required=False, default='1GB')
+        self._free_space = RemoteMonitor.get_config_option(config_options, 'free_space', required=False, default='1GB')
 
         # free space can be given as a percentage or an absolute size (i.e. 10GB)
-        if '%' in self.free_space:
-            self.free_space_required = int(self.free_space.replace('%', ''))
+        if '%' in self._free_space:
+            self.free_space_required = int(self._free_space.replace('%', ''))
             self.free_space_unit = 'percent'
+            if self.free_space_required > 100 or self.free_space_required < 0:
+                raise MonitorConfigurationError("invalid free space percentage")
         else:
-            self.free_space_required = _size_string_to_bytes(self.free_space)
+            self.free_space_required = _size_string_to_bytes(self._free_space)
             self.free_space_unit = 'byte'
+            if self.free_space_required < 0:
+                raise MonitorConfigurationError("invalid negative free space")
 
     def run_test(self):
         mounts = self.get_mounts()
