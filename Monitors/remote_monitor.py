@@ -1,7 +1,9 @@
 # coding=utf-8
 
-from .monitor import Monitor
+from .monitor import Monitor, register
 import fabric
+from os.path import isfile
+import os
 
 
 class RemoteMonitor(Monitor):
@@ -19,6 +21,9 @@ class RemoteMonitor(Monitor):
             self._key = Monitor.get_config_option(config_options, "key", required=True)
         else:
             self._key = Monitor.get_config_option(config_options, "key", required=False, default=None)
+
+        if self._key is not None and not isfile(self._key):
+            raise OSError('[Errno 2] No such file: {}'.format(self._key))
 
         self._connection = fabric.Connection(host=self.host, user=self.user, port=self.port, connect_kwargs={
             'password': self.password,
@@ -71,3 +76,19 @@ class RemoteMonitor(Monitor):
 
     def get_params(self):
         return self.host, self.port, self.user, self.password
+
+
+@register
+class RemoteMonitorFail(RemoteMonitor):
+    type = "remotemonitorfail"
+
+    def run_test(self):
+        self.record_fail("This monitor always fails.")
+
+
+@register
+class RemoteMonitorNull(RemoteMonitor):
+    type = "remotemonitornull"
+
+    def run_test(self):
+        self.record_success()
