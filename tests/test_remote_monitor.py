@@ -1,6 +1,6 @@
 import unittest
 import Monitors.remote_monitor
-from unittest.mock import MagicMock, Mock
+from unittest.mock import Mock
 
 from Monitors.monitor import MonitorConfigurationError
 
