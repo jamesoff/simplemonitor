@@ -3,7 +3,7 @@ from .monitor import register
 
 
 @register
-class RemoteMountMonitor(RemoteMonitor):
+class RemoteServiceMonitor(RemoteMonitor):
     type = "remoteservice"
 
     def __init__(self, name, config_options):
@@ -29,4 +29,4 @@ class RemoteMountMonitor(RemoteMonitor):
         pass
 
     def get_params(self):
-        return super(RemoteMountMonitor, self).get_params() + (self.service,)
+        return super(RemoteServiceMonitor, self).get_params() + (self.service,)

@@ -1,5 +1,6 @@
 import unittest
 import Monitors.remote_monitor
+from unittest.mock import MagicMock, Mock
 
 from Monitors.monitor import MonitorConfigurationError
 
@@ -62,6 +63,30 @@ class TestRemoteMonitor(unittest.TestCase):
         m = Monitors.remote_monitor.RemoteMonitorFail("test", config_options)
         m.run_test()
         self.assertFalse(m.test_success(), "Monitor did not fail")
+
+    @staticmethod
+    def mock_connection(stdout: str = "", stderr: str = "", return_code: int = 0):
+        connection = Mock()
+        connection.open = lambda *args, **kwargs: None
+        result = Mock()
+        result.stdout = stdout
+        result.stderr = stderr
+        result.return_code = return_code
+        connection.run = lambda *args, **kwargs: result
+
+        return connection
+
+    def test_mockConnection(self):
+        expected_stdout = "command stdout"
+        expected_stderr = "command stderr"
+        expected_return_code = 0
+        connection = self.mock_connection(stdout=expected_stdout,
+                                          stderr=expected_stderr,
+                                          return_code=expected_return_code)
+        result = connection.run('command')
+        self.assertEqual(result.stdout, expected_stdout)
+        self.assertEqual(result.stderr, expected_stderr)
+        self.assertEqual(result.return_code, expected_return_code)
 
 
 if __name__ == "__main__":
