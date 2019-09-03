@@ -23,6 +23,7 @@ import Monitors.file
 import Monitors.compound
 import Monitors.hass
 import Monitors.remote_mount
+import Monitors.remote_service
 
 from simplemonitor import SimpleMonitor
 
