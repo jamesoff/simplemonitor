@@ -221,3 +221,26 @@
         desc: The amount of free space required in every mount of the remote host. can be given as a percentage (i.e. 20%) or as an absolute size (i.e. 10GB)
         required: 'no'
         default: '1GB'
+- name: remoteservice
+  oneline: Checks that the service on the remote linux host is running.
+  params:
+      - name: remote_host
+        desc: The address of the remote host to run the test against.
+        required: 'yes'
+      - name: port
+        desc: The ssh port of the remote host
+        required: 'no'
+        default: 22
+      - name: user
+        desc: The ssh user to use.
+        required: 'no'
+        default: root
+      - name: password
+        desc: The ssh password to use. this or key must be given.
+        required: 'no'
+      - name: key
+        desc: Path to an ssh private key to use. this or password must be given.
+        required: 'no'
+      - name: service
+        desc: The name of the service to check
+        required: 'yes'
