@@ -65,4 +65,4 @@ class RemoteServiceMonitor(RemoteMonitor):
         pass
 
     def get_params(self):
-        return super(RemoteServiceMonitor, self).get_params() + (self.service,)
+        return super(RemoteServiceMonitor, self).get_params() + (self.service, self.svc_cmd)
