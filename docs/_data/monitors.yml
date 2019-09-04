@@ -244,3 +244,7 @@
       - name: service
         desc: The name of the service to check
         required: 'yes'
+      - name: srv_cmd
+        desc: The tool used when checking the status of the service. supported tools are service, chkconfig (more will be added soon)
+        required: 'no'
+        default: 'service'
