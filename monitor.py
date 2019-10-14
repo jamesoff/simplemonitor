@@ -6,6 +6,7 @@ import os
 import sys
 import time
 import logging
+import signal
 
 from envconfig import EnvironmentAwareConfigParser
 
@@ -50,6 +51,26 @@ except ImportError:
 VERSION = "1.8"
 
 main_logger = logging.getLogger("simplemonitor")
+need_hup = False
+
+
+def setup_signals():
+    try:
+        signal.signal(signal.SIGHUP, handle_sighup)
+    except ValueError:  # pragma: no cover
+        main_logger.warning(
+            "Unable to trap SIGHUP... maybe it doesn't exist on this platform.\n"
+        )
+    except AttributeError:  # pragma: no cover
+        main_logger.warning(
+            "Unable to trap SIGHUP... maybe it doesn't exist on this platform.\n"
+        )
+
+
+def handle_sighup(sig_number, stack_frame):
+    global need_hup
+    main_logger.warning("Received SIGHUP")
+    need_hup = True
 
 
 def load_everything(m, config):
@@ -468,6 +489,7 @@ def main():
     heartbeat = 0
 
     loops = int(options.loops)
+    setup_signals()
 
     while loop:
         try:
@@ -478,11 +500,16 @@ def main():
                         "Ran out of loop counter, will stop after this one"
                     )
                     loop = False
-            if m.need_hup:
-                main_logger.warning("Need to HUP")
-                config = load_config(options.config)
-                interval = config.getint("monitor", "interval")
-                m = load_everything(m, config)
+            if need_hup:
+                try:
+                    main_logger.warning("Processing SIGHUP")
+                    config = load_config(options.config)
+                    interval = config.getint("monitor", "interval")
+                    m = load_everything(m, config)
+                    m.hup_loggers()
+                except Exception:
+                    main_logger.exception("Error while reloading configuration")
+                    sys.exit(1)
             m.run_loop()
 
             if (

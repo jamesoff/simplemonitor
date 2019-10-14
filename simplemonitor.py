@@ -1,7 +1,6 @@
 # coding=utf-8
 """Execution logic for SimpleMonitor."""
 
-import signal
 import copy
 import pickle
 import time
@@ -14,11 +13,6 @@ module_logger = logging.getLogger("simplemonitor")
 
 
 class SimpleMonitor:
-
-    # TODO: move this outside into monitor.py?
-    #      could give better control over restarting the listener thread
-    need_hup = False
-
     def __init__(self, allow_pickle=True):
         """Main class turn on."""
         self.allow_pickle = allow_pickle
@@ -31,25 +25,6 @@ class SimpleMonitor:
 
         self.loggers = {}
         self.alerters = {}
-
-        try:
-            signal.signal(signal.SIGHUP, self.hup_loggers)
-        except ValueError:  # pragma: no cover
-            module_logger.warning(
-                "Unable to trap SIGHUP... maybe it doesn't exist on this platform.\n"
-            )
-        except AttributeError:  # pragma: no cover
-            module_logger.warning(
-                "Unable to trap SIGHUP... maybe it doesn't exist on this platform.\n"
-            )
-
-    def hup_loggers(self, sig_number, stack_frame):
-        """Handle a SIGHUP (rotate logfiles).
-
-        We set a variable to say we want to do this later (so it's done at the right time)."""
-
-        self.need_hup = True
-        module_logger.info("We get signal.")
 
     def add_monitor(self, name, monitor):
         self.monitors[name] = monitor
@@ -257,13 +232,11 @@ class SimpleMonitor:
         for key in list(self.monitors.keys()):
             self.monitors[key].attempt_recover()
 
-    def do_logs(self):
-        if self.need_hup:
-            module_logger.info("Processing HUP.")
-            for logger in self.loggers:
-                self.loggers[logger].hup()
-            self.need_hup = False
+    def hup_loggers(self):
+        for logger in self.loggers:
+            self.loggers[logger].hup()
 
+    def do_logs(self):
         for key in list(self.loggers.keys()):
             self.log_result(self.loggers[key])
 
