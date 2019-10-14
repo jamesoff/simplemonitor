@@ -155,6 +155,7 @@ def load_monitors(m, filename):
 
     for i in list(m.monitors.keys()):
         m.monitors[i].post_config_setup()
+    m.prune_monitors(monitors)
     main_logger.info("--- Loaded %d monitors", m.count_monitors())
     return m
 
@@ -200,6 +201,7 @@ def load_loggers(m, config):
         )
         m.add_logger(config_logger, new_logger)
         del new_logger
+    m.prune_loggers(loggers)
     main_logger.info("--- Loaded %d loggers", len(m.loggers))
     return m
 
@@ -240,6 +242,7 @@ def load_alerters(m, config):
         new_alerter.name = alerter
         m.add_alerter(alerter, new_alerter)
         del new_alerter
+    m.prune_alerters(alerters)
     main_logger.info("--- Loaded %d alerters", len(m.alerters))
     return m
 

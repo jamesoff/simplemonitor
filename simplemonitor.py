@@ -5,6 +5,7 @@ import copy
 import pickle
 import time
 import logging
+import sys
 
 import Loggers
 import Monitors
@@ -223,6 +224,47 @@ class SimpleMonitor:
             module_logger.critical(
                 "Failed to add logger because it is not the right type"
             )
+
+    def prune_monitors(self, retain):
+        """Remove monitors which are in our list but not in the list passed to us.
+
+        Used to tidy up after a config reload (which may have removed monitors)"""
+        delete_list = []
+        for monitor in self.monitors.keys():
+            if monitor not in retain:
+                module_logger.info("Removing monitor %s", monitor)
+                delete_list.append(monitor)
+        for monitor in delete_list:
+            del self.monitors[monitor]
+        if not self.verify_dependencies():
+            module_logger.critical(
+                "Broken dependencies after pruning monitors, aborting!"
+            )
+            sys.exit(1)
+
+    def prune_alerters(self, retain):
+        """Remove alerters which are in our list but not in the list passed to us.
+
+        Used to tidy up after a config reload (which may have removed alerters)"""
+        delete_list = []
+        for alerter in self.alerters.keys():
+            if alerter not in retain:
+                module_logger.info("Removing alerter %s", alerter)
+                delete_list.append(alerter)
+        for alerter in delete_list:
+            del self.alerters[alerter]
+
+    def prune_loggers(self, retain):
+        """Remove loggersj which are in our list but not in the list passed to us.
+
+        Used to tidy up after a config reload (which may have removed logger)"""
+        delete_list = []
+        for logger in self.loggers.keys():
+            if logger not in retain:
+                module_logger.info("Removing logger %s", logger)
+                delete_list.append(logger)
+        for logger in delete_list:
+            del self.loggers[logger]
 
     def do_alerts(self):
         for key in list(self.alerters.keys()):
