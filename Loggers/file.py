@@ -8,6 +8,7 @@ import shutil
 import stat
 import sys
 import json
+import subprocess
 
 from io import StringIO
 
@@ -138,6 +139,9 @@ class HTMLLogger(Logger):
         )
         self.folder = Logger.get_config_option(
             config_options, "folder", required=True, allow_empty=False
+        )
+        self.upload_command = Logger.get_config_option(
+            config_options, "upload_command", required=False, allow_empty=False
         )
 
     def save_result2(self, name, monitor):
@@ -315,6 +319,13 @@ class HTMLLogger(Logger):
             self.logger_logger.exception(
                 "problem closing temporary file for HTML output"
             )
+        if self.upload_command:
+            try:
+                subprocess.run(self.upload_command.split(" "))
+            except Exception:
+                self.logger_logger.exception(
+                    "Failed to run upload command for HTML files"
+                )
 
     def parse_file(self, file_handle):
         lines = []
