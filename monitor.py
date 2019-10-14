@@ -52,7 +52,19 @@ VERSION = "1.8"
 main_logger = logging.getLogger("simplemonitor")
 
 
+def load_everything(m, config):
+    """Load monitors, alerters and loggers into a SimpleMonitor object."""
+    monitors_file = config.get("monitor", "monitors", fallback="monitors.ini")
+    m = load_monitors(m, monitors_file)
+    m = load_loggers(m, config)
+    m = load_alerters(m, config)
+    if not m.verify_dependencies():
+        sys.exit(1)
+    return m
+
+
 def load_config(config_file):
+    """Load the main configuration and return a config object."""
     config = EnvironmentAwareConfigParser()
     if not os.path.exists(config_file):
         main_logger.critical('Configuration file "%s" does not exist!', config_file)
@@ -94,8 +106,15 @@ def load_monitors(m, filename):
         config_options = default_config.copy()
         config_options.update(get_config_dict(config, monitor))
         if m.has_monitor(monitor):
-            main_logger.debug("Updating configuration for monitor %s", monitor)
-            m.update_monitor_config(monitor, config_options)
+            if m.monitors[monitor].type == config_options["type"]:
+                main_logger.info("Updating configuration for monitor %s", monitor)
+                m.update_monitor_config(monitor, config_options)
+            else:
+                main_logger.error(
+                    "Cannot update monitor {} from type {} to type {}. Keeping original config for this monitor.".format(
+                        monitor, m.monitors[monitor].type, config_options["type"]
+                    )
+                )
             continue
 
         try:
@@ -132,6 +151,19 @@ def load_loggers(m, config):
         logger_type = config.get(config_logger, "type")
         config_options = get_config_dict(config, config_logger)
         config_options["_name"] = config_logger
+        if m.has_logger(config_logger):
+            if m.loggers[config_logger].type == config_options["type"]:
+                main_logger.info("Updating configuration for logger %s", config_logger)
+                m.update_logger_config(config_logger, config_options)
+            else:
+                main_logger.error(
+                    "Cannot update logger {} from type {} to type {}. Keeping original config for this logger.".format(
+                        config_logger,
+                        m.loggers[config_logger].type,
+                        config_options["type"],
+                    )
+                )
+            continue
         try:
             logger_cls = Loggers.logger.get_class(logger_type)
         except KeyError:
@@ -162,6 +194,17 @@ def load_alerters(m, config):
     for alerter in alerters:
         alerter_type = config.get(alerter, "type")
         config_options = get_config_dict(config, alerter)
+        if m.has_alerter(alerter):
+            if m.alerters[alerter].type == config_options["type"]:
+                main_logger.info("Updating configuration for alerter %s", alerter)
+                m.update_alerter_config(alerter, config_options)
+            else:
+                main_logger.error(
+                    "Cannot update alerter {} from type {} to type {}. Keeping original config for this alerter.".format(
+                        alerter, m.alerters[alerter].type, config_options["type"]
+                    )
+                )
+            continue
         try:
             alerter_cls = Alerters.alerter.get_class(alerter_type)
         except KeyError:
@@ -377,16 +420,12 @@ def main():
         sys.exit(1)
 
     m = SimpleMonitor(allow_pickle=allow_pickle)
-
-    m = load_monitors(m, monitors_file)
+    m = load_everything(m, config)
 
     count = m.count_monitors()
     if count == 0:
         main_logger.critical("No monitors loaded :(")
         sys.exit(2)
-
-    m = load_loggers(m, config)
-    m = load_alerters(m, config)
 
     enable_remote = False
     if config.get("monitor", "remote", fallback="0") == "1":
@@ -394,9 +433,6 @@ def main():
             enable_remote = True
             remote_port = int(config.get("monitor", "remote_port"))
     key = config.get("monitor", "key", fallback=None)
-
-    if not m.verify_dependencies():
-        sys.exit(1)
 
     if options.test:
         main_logger.warning("Config test complete. Exiting.")
@@ -445,12 +481,8 @@ def main():
             if m.need_hup:
                 main_logger.warning("Need to HUP")
                 config = load_config(options.config)
-                # TODO: set interval
-                monitors_file = config.get(
-                    "monitor", "monitors", fallback="monitors.ini"
-                )
-                m = load_monitors(m, monitors_file)
-
+                interval = config.getint("monitor", "interval")
+                m = load_everything(m, config)
             m.run_loop()
 
             if (

@@ -57,12 +57,23 @@ class SimpleMonitor:
     def update_monitor_config(self, name, config_options):
         self.monitors[name].__init__(name, config_options)
 
+    def update_logger_config(self, name, config_options):
+        self.loggers[name].__init__(config_options)
+
+    def update_alerter_config(self, name, config_options):
+        self.alerters[name].__init__(config_options)
+
     def set_urgency(self, monitor, urgency):
         self.monitors[monitor].set_urgency(urgency)
 
     def has_monitor(self, monitor):
-        print(self.monitors.keys())
         return monitor in self.monitors.keys()
+
+    def has_logger(self, logger):
+        return logger in self.loggers.keys()
+
+    def has_alerter(self, alerter):
+        return alerter in self.alerters.keys()
 
     def reset_monitors(self):
         """Clear all the monitors' dependency info back to default."""
