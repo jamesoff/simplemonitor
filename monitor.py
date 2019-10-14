@@ -494,6 +494,7 @@ def main():
     loops = int(options.loops)
     setup_signals()
 
+    global need_hup
     while loop:
         try:
             if loops > 0:
@@ -510,6 +511,7 @@ def main():
                     interval = config.getint("monitor", "interval")
                     m = load_everything(m, config)
                     m.hup_loggers()
+                    need_hup = False
                 except Exception:
                     main_logger.exception("Error while reloading configuration")
                     sys.exit(1)
