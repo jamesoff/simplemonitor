@@ -123,10 +123,18 @@ class HTMLLogger(Logger):
             config_options, "filename", required=True, allow_empty=False
         )
         self.header = Logger.get_config_option(
-            config_options, "header", required=True, allow_empty=False
+            config_options,
+            "header",
+            required=False,
+            allow_empty=False,
+            default="header.html",
         )
         self.footer = Logger.get_config_option(
-            config_options, "footer", required=True, allow_empty=False
+            config_options,
+            "footer",
+            required=False,
+            allow_empty=False,
+            default="footer.html",
         )
         self.folder = Logger.get_config_option(
             config_options, "folder", required=True, allow_empty=False

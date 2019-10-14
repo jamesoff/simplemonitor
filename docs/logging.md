@@ -45,8 +45,8 @@ The section name should be the name of your logger. This is the name you should 
 |---|---|---|---|
 |folder|the folder in which all the needed files live. This is probably going to be html if you don’t move things around from the default distribution.|yes | |
 |filename|the filename to write out. The file will be updated once per interval (as defined in the main configuration). Relative to the *folder*. If you don’t write the output file to the same folder as folder above, you will need to copy/move styles.css to the same place.|yes| |
-|header|the header include file which is sucked in when writing the output file. Relative to folder.|yes| |
-|footer|the footer include file. Relative to folder.|yes| |
+|header|the header include file which is sucked in when writing the output file. Relative to folder.|no|footer.html|
+|footer|the footer include file. Relative to folder.|no|header.html|
 
 The header and footer files do not necessarily need to be in the publicly accessibly folder that the output is written to, but no harm will come if they are.
 
