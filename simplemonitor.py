@@ -54,8 +54,15 @@ class SimpleMonitor:
     def add_monitor(self, name, monitor):
         self.monitors[name] = monitor
 
+    def update_monitor_config(self, name, config_options):
+        self.monitors[name].__init__(name, config_options)
+
     def set_urgency(self, monitor, urgency):
         self.monitors[monitor].set_urgency(urgency)
+
+    def has_monitor(self, monitor):
+        print(self.monitors.keys())
+        return monitor in self.monitors.keys()
 
     def reset_monitors(self):
         """Clear all the monitors' dependency info back to default."""

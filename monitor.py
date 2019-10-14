@@ -52,6 +52,20 @@ VERSION = "1.8"
 main_logger = logging.getLogger("simplemonitor")
 
 
+def load_config(config_file):
+    config = EnvironmentAwareConfigParser()
+    if not os.path.exists(config_file):
+        main_logger.critical('Configuration file "%s" does not exist!', config_file)
+        sys.exit(1)
+    try:
+        config.read(config_file)
+    except Exception as e:
+        main_logger.critical("Unable to read configuration file")
+        main_logger.critical(e)
+        sys.exit(1)
+    return config
+
+
 def load_monitors(m, filename):
     """Load all the monitors from the config file and return a populated SimpleMonitor."""
     config = EnvironmentAwareConfigParser()
@@ -79,6 +93,10 @@ def load_monitors(m, filename):
         new_monitor = None
         config_options = default_config.copy()
         config_options.update(get_config_dict(config, monitor))
+        if m.has_monitor(monitor):
+            main_logger.debug("Updating configuration for monitor %s", monitor)
+            m.update_monitor_config(monitor, config_options)
+            continue
 
         try:
             cls = Monitors.monitor.get_class(monitor_type)
@@ -325,16 +343,7 @@ def main():
         main_logger.info("=== SimpleMonitor v%s", VERSION)
         main_logger.info("Loading main config from %s", options.config)
 
-    config = EnvironmentAwareConfigParser()
-    if not os.path.exists(options.config):
-        main_logger.critical('Configuration file "%s" does not exist!', options.config)
-        sys.exit(1)
-    try:
-        config.read(options.config)
-    except Exception as e:
-        main_logger.critical("Unable to read configuration file")
-        main_logger.critical(e)
-        sys.exit(1)
+    config = load_config(options.config)
 
     try:
         interval = config.getint("monitor", "interval")
@@ -433,6 +442,15 @@ def main():
                         "Ran out of loop counter, will stop after this one"
                     )
                     loop = False
+            if m.need_hup:
+                main_logger.warning("Need to HUP")
+                config = load_config(options.config)
+                # TODO: set interval
+                monitors_file = config.get(
+                    "monitor", "monitors", fallback="monitors.ini"
+                )
+                m = load_monitors(m, monitors_file)
+
             m.run_loop()
 
             if (
