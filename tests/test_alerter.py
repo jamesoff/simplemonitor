@@ -73,7 +73,7 @@ class TestAlerter(unittest.TestCase):
             a.dependencies, ["a", "b", "c"], "Alerter did not store dependencies"
         )
         self.assertEqual(
-            a.check_dependencies(["d", "e"]), None, "Alerter thinks a dependency failed"
+            a.check_dependencies(["d", "e"]), True, "Alerter thinks a dependency failed"
         )
         self.assertEqual(
             a.check_dependencies(["a"]),
