@@ -218,7 +218,8 @@ class Monitor:
         and we don't want to randomly die then."""
         return "(Monitor did not write an auto-biography.)"
 
-    def is_windows(self, allow_cygwin=True):
+    @staticmethod
+    def is_windows(allow_cygwin=True):
         """Checks if our platform is Windowsy.
         If allow_cygwin is False, cygwin will be reported as UNIX."""
 
@@ -228,8 +229,7 @@ class Monitor:
 
         if platform.system() in platforms:
             return True
-        else:
-            return False
+        return False
 
     def record_fail(self, message=""):
         """Update internal state to show that we had a failure."""
@@ -275,8 +275,7 @@ class Monitor:
     def skipped(self):
         if self.was_skipped:
             return True
-        else:
-            return False
+        return False
 
     def get_success_count(self):
         """Get the number of successful tests."""
@@ -365,8 +364,7 @@ class Monitor:
     def last_virtual_fail_count(self):
         if (self.last_error_count - self._tolerance) < 0:
             return 0
-        else:
-            return self.last_error_count - self._tolerance
+        return self.last_error_count - self._tolerance
 
     def attempt_recover(self):
         if self._recover_command is None:
@@ -381,8 +379,6 @@ class Monitor:
             self.recover_info = "Command executed and returned %d" % p.returncode
         except Exception as e:
             self.recover_info = "Unable to run command: %s" % e
-
-        return
 
     def post_config_setup(self):
         """ any post config setup needed """
