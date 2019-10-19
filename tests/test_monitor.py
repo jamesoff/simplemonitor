@@ -29,6 +29,24 @@ class TestMonitor(unittest.TestCase):
         self.assertEqual(
             m._recover_command, "true", "Monitor did not set recover_command"
         )
+        with self.assertRaises(ValueError):
+            m.minimum_gap = -1
+        with self.assertRaises(TypeError):
+            m.minimum_gap = "zero"
+        with self.assertRaises(TypeError):
+            m.notify = "true"
+        m.notify = False
+        self.assertEqual(m.notify, False, "monitor did not unset notify")
+        m.notify = True
+        self.assertEqual(m.notify, True, "monitor did not set notify")
+        with self.assertRaises(TypeError):
+            m.urgent = "true"
+        m.urgent = True
+        self.assertEqual(m.urgent, True, "monitor did not set urgent")
+        m.urgent = 0
+        self.assertEqual(m.urgent, False, "monitor did not unset urgent with an int")
+        m.urgent = 1
+        self.assertEqual(m.urgent, True, "monitor did not set urgent with an int")
 
     def test_MonitorSuccess(self):
         m = Monitors.monitor.Monitor()
