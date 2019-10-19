@@ -40,6 +40,7 @@ class Monitor:
     tests_run = 0
     last_error_count = 0
     last_run_duration = 0
+    skip_dep = None
 
     failures = 0
     last_failure = None
@@ -285,20 +286,13 @@ class Monitor:
 
     def all_better_now(self):
         """Check if we've just recovered."""
-        try:
-            if self.just_recovered:
-                return True
-        except Exception:
-            pass
-
         if (
             self.last_error_count >= self._tolerance
             and self.success_count == 1
             and not self.was_skipped
         ):
             return True
-        else:
-            return False
+        return False
 
     def first_failure_time(self):
         """Get a datetime object showing when we first failed."""

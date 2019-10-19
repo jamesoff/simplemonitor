@@ -14,7 +14,7 @@ class Alerter:
     """Abstract class basis for alerters."""
 
     type = "unknown"
-    dependencies = []
+    _dependencies = None
     hostname = gethostname()
     available = False
 
@@ -102,12 +102,6 @@ class Alerter:
         kwargs["exception"] = AlerterConfigurationError
         return get_config_option(config_options, key, **kwargs)
 
-    def set_dependencies(self, dependency_list):
-        """Record which monitors we depend on.
-        If a monitor we depend on fails, it means we can't reach the database, so we shouldn't bother trying to write to it."""
-
-        self.dependencies = dependency_list
-
     @property
     def dependencies(self):
         """The Monitors we depend on.
@@ -122,7 +116,7 @@ class Alerter:
 
     @property
     def groups(self):
-        """The groups for which alert"""
+        """The groups for which we alert"""
         return self._groups
 
     @groups.setter
@@ -138,6 +132,7 @@ class Alerter:
                 self.available = False
                 return False
         self.available = True
+        return True
 
     def should_alert(self, monitor):
         """Check if we should bother alerting, and what type."""
@@ -178,9 +173,7 @@ class Alerter:
                         return ""
                 return "failure"
             return ""
-        elif (
-            monitor.all_better_now() and monitor.last_virtual_fail_count() >= self.limit
-        ):
+        if monitor.all_better_now() and monitor.last_virtual_fail_count() >= self.limit:
             try:
                 self.ooh_failures.remove(monitor.name)
             except ValueError:
@@ -188,11 +181,9 @@ class Alerter:
             if out_of_hours:
                 if self.ooh_recovery:
                     return "success"
-                else:
-                    return ""
+                return ""
             return "success"
-        else:
-            return ""
+        return ""
 
     def send_alert(self, name, monitor):
         """Abstract function to do the alerting."""
@@ -212,18 +203,15 @@ class Alerter:
         if self.times_type == "only":
             if (now > self.time_info[0]) and (now < self.time_info[1]):
                 return True
-            else:
-                return False
-        elif self.times_type == "not":
+            return False
+        if self.times_type == "not":
             if (now > self.time_info[0]) and (now < self.time_info[1]):
                 return False
-            else:
-                return True
-        else:
-            self.alerter_logger.error(
-                "this should never happen! Unknown times_type in alerter"
-            )
             return True
+        self.alerter_logger.error(
+            "this should never happen! Unknown times_type in alerter"
+        )
+        return True
 
 
 (register, get_class, all_types) = subclass_dict_handler(
