@@ -368,7 +368,7 @@ class Monitor:
             return
 
         try:
-            p = subprocess.Popen(self._recover_command.split(" "))
+            p = subprocess.Popen(self._recover_command.split(" "))  # nosec
             p.wait()
             self.recover_info = "Command executed and returned %d" % p.returncode
         except Exception as e:
