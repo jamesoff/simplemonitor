@@ -47,6 +47,14 @@ class TestMonitor(unittest.TestCase):
         self.assertEqual(m.urgent, False, "monitor did not unset urgent with an int")
         m.urgent = 1
         self.assertEqual(m.urgent, True, "monitor did not set urgent with an int")
+        with self.assertRaises(TypeError):
+            m.dependencies = "no at a list"
+        m.dependencies = ["a", "b"]
+        self.assertEqual(
+            m.dependencies,
+            ["a", "b"],
+            "monitor did not set or return dependencies correctly",
+        )
 
     def test_MonitorSuccess(self):
         m = Monitors.monitor.Monitor()
@@ -56,6 +64,8 @@ class TestMonitor(unittest.TestCase):
         self.assertEqual(m.tests_run, 1, "Tests run is not 1")
         self.assertFalse(m.was_skipped, "was_skipped is not false")
         self.assertEqual(m.last_result, "yay", "Last result is not correct")
+        self.assertEqual(m.state(), True, "monitor did not report state correctly")
+        self.assertEqual(m.virtual_fail_count(), 0, "monitor did not report VFC of 0")
 
     def test_MonitorFail(self):
         m = Monitors.monitor.Monitor()
@@ -65,6 +75,10 @@ class TestMonitor(unittest.TestCase):
         self.assertEqual(m.tests_run, 1, "Tests run is not 1")
         self.assertFalse(m.was_skipped, "was_skipped is not false")
         self.assertEqual(m.last_result, "boo", "Last result is not correct")
+        self.assertEqual(m.state(), False, "monitor did not report state correctly")
+        self.assertEqual(
+            m.virtual_fail_count(), 1, "monitor did not calculate VFC correctly"
+        )
 
     def test_MonitorWindows(self):
         m = Monitors.monitor.Monitor()
