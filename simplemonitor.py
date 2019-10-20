@@ -57,10 +57,6 @@ class SimpleMonitor:
     def set_urgency(self, monitor, urgency):
         self.monitors[monitor].set_urgency(urgency)
 
-    def set_dependencies(self, name, dependencies):
-        """Update a monitor's dependencies."""
-        self.monitors[name].set_dependencies(dependencies)
-
     def reset_monitors(self):
         """Clear all the monitors' dependency info back to default."""
         for key in list(self.monitors.keys()):
@@ -93,13 +89,13 @@ class SimpleMonitor:
             module_logger.debug("Starting loop with joblist %s", joblist)
             for monitor in joblist:
                 module_logger.debug("Trying monitor: %s", monitor)
-                if len(self.monitors[monitor].get_dependencies()) > 0:
+                if self.monitors[monitor].remaining_dependencies:
                     # this monitor has outstanding deps, put it on the new joblist for next loop
                     new_joblist.append(monitor)
                     module_logger.debug(
                         "Added %s to new joblist, is now %s", monitor, new_joblist
                     )
-                    for dep in self.monitors[monitor].get_dependencies():
+                    for dep in self.monitors[monitor].remaining_dependencies:
                         module_logger.debug(
                             "considering %s's dependency %s (failed monitors: %s)",
                             monitor,

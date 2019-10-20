@@ -53,7 +53,7 @@ class Monitor:
         if config_options is None:
             config_options = {}
         self.name = name
-        self.deps = []
+        self._deps = []
         self.monitor_logger = logging.getLogger("simplemonitor.monitor-" + self.name)
         self._dependencies = Monitor.get_config_option(
             config_options, "depend", required_type="[str]", default=list()
@@ -101,6 +101,12 @@ class Monitor:
         if not isinstance(dependency_list, list):
             raise TypeError("dependency_list must be a list")
         self._dependencies = dependency_list
+        self.reset_dependencies()
+
+    @property
+    def remaining_dependencies(self):
+        """The dependencies we're still waiting on"""
+        return self._deps
 
     def is_remote(self):
         """Check if we're running on this machine, or if we're a remote instance."""
@@ -146,23 +152,14 @@ class Monitor:
 
     def reset_dependencies(self):
         """Reset the monitor's dependency list back to default."""
-        self.deps = copy.copy(self._dependencies)
+        self._deps = copy.copy(self._dependencies)
 
     def dependency_succeeded(self, dependency):
         """Remove a dependency from the current version of the list."""
         try:
-            self.deps.remove(dependency)
-        except Exception:
+            self._deps.remove(dependency)
+        except ValueError:
             pass
-
-    def get_dependencies(self):
-        """Return our outstanding dependencies."""
-        return self.deps
-
-    def set_dependencies(self, dependencies):
-        """Set our master list of dependencies."""
-        self._dependencies = dependencies
-        self.reset_dependencies()
 
     def log_result(self, name, logger):
         """Save our latest result to the logger.
@@ -328,10 +325,6 @@ class Monitor:
                 self._urgent = False
         else:
             raise TypeError("urgent should be a bool, or an int at a push")
-
-    def set_notify(self, notify):
-        """Record if this monitor needs notifications."""
-        self.notify = notify
 
     def should_run(self):
         """Check if we should run our tests.

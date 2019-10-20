@@ -55,6 +55,18 @@ class TestMonitor(unittest.TestCase):
             ["a", "b"],
             "monitor did not set or return dependencies correctly",
         )
+        self.assertEqual(
+            m.remaining_dependencies,
+            ["a", "b"],
+            "monitor did not set remaining dependencies",
+        )
+        m.dependency_succeeded("a")
+        self.assertEqual(
+            m.remaining_dependencies,
+            ["b"],
+            "monitor did not remove dependencies from list",
+        )
+        m.dependency_succeeded("a")  # should be safe to remove again
 
     def test_MonitorSuccess(self):
         m = Monitors.monitor.Monitor()
