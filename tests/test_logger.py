@@ -20,3 +20,18 @@ class TestLogger(unittest.TestCase):
         )
         with self.assertRaises(TypeError):
             logger.dependencies = "moo"
+        logger.dependencies = ["b", "c"]
+        self.assertEqual(
+            logger.check_dependencies(["a"]),
+            True,
+            "logger thought a dependency had failed",
+        )
+        self.assertEqual(
+            logger.connected, True, "logger did not think it was connected"
+        )
+        self.assertEqual(
+            logger.check_dependencies(["a", "b"]),
+            False,
+            "logger did not think a dependency failed",
+        )
+        self.assertEqual(logger.connected, False, "logger thought it was connected")

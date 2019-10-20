@@ -33,7 +33,7 @@ class Logger:
         """Close and reopen our log file, if supported.
 
         This should be overridden where needed."""
-        return
+        return  # pragma: no cover
 
     def save_result(self):
         raise NotImplementedError
@@ -50,12 +50,11 @@ class Logger:
 
     def check_dependencies(self, failed_list):
         """Compare a list of failed monitors to our dependencies, and mark the Logger as offline if one failed"""
+        self.connected = True
         for dependency in failed_list:
             if dependency in self._dependencies:
                 self.connected = False
-                return False
-        self.connected = True
-        return True
+        return self.connected
 
     def start_batch(self):
         """Prepare to process a batch of results"""
@@ -80,13 +79,13 @@ class Logger:
     def process_batch(self):
         """Process the batched data.
         This is blank for the base class."""
-        return
+        return  # pragma: no cover
 
     def describe(self):
         """Explain what this logger does.
         We don't throw NotImplementedError here as it won't show up until something breaks,
         and we don't want to randomly die then."""
-        return "(Logger did not write an auto-biography.)"
+        return "(Logger did not write an auto-biography.)"  # pragma: no cover
 
     def __str__(self):
         return self.describe()
