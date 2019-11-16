@@ -111,9 +111,6 @@ class MonitorFileStat(Monitor):
     """Make sure a file exists, isn't too old and/or isn't too small."""
 
     type = "filestat"
-    maxage = -1
-    minsize = -1
-    filename = ""
 
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
@@ -174,9 +171,6 @@ class MonitorApcupsd(Monitor):
     """
 
     type = "apcupsd"
-
-    path = ""
-    regexp = re.compile("STATUS +: (.+)")
 
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
@@ -240,7 +234,6 @@ class MonitorPortAudit(Monitor):
 
     type = "portaudit"
     regexp = re.compile(r"(\d+) problem\(s\) in your installed packages found")
-    path = ""
 
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
@@ -289,7 +282,6 @@ class MonitorPkgAudit(Monitor):
 
     type = "pkgaudit"
     regexp = re.compile(r"(\d+) problem\(s\) in the installed packages found")
-    path = ""
 
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
@@ -336,14 +328,12 @@ class MonitorLoadAvg(Monitor):
     """Check a host's load average isn't too high."""
 
     type = "loadavg"
-    # which time field we're looking at: 0 = 1min, 1 = 5min, 2=15min
-    which = 1
-    max = 1.00
 
     def __init__(self, name, config_options):
         Monitor.__init__(self, name, config_options)
         if self.is_windows(allow_cygwin=False):
             raise RuntimeError("loadavg monitor does not support Windows")
+        # which time field we're looking at: 0 = 1min, 1 = 5min, 2=15min
         self.which = Monitor.get_config_option(
             config_options,
             "which",
@@ -383,7 +373,6 @@ class MonitorZap(Monitor):
     """Checks a Zap channel to make sure it is ok"""
 
     type = "zap"
-    span = 1
     r = re.compile("^alarms=(?P<status>).+")
 
     def __init__(self, name, config_options):
@@ -420,13 +409,8 @@ class MonitorCommand(Monitor):
     We can check for a regexp match in the output or give a max value and check the output is lower that this value.
     """
 
-    command = ""
     result_regexp = None
-    result_regexp_text = ""
-    result_max = None
-
     type = "command"
-
     available = True
 
     def __init__(self, name, config_options):

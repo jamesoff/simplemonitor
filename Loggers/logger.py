@@ -5,27 +5,24 @@ from util import get_config_option, LoggerConfigurationError
 from util import subclass_dict_handler
 
 
-class Logger(object):
+class Logger:
     """Abstract class basis for loggers."""
 
     type = "unknown"
 
-    dependencies = []
-
     supports_batch = False
-
     doing_batch = True
-
-    batch_data = {}
+    batch_data = None
+    connected = True
 
     def __init__(self, config_options):
         self.name = Logger.get_config_option(config_options, "_name", default="unnamed")
         self.logger_logger = logging.getLogger("simplemonitor.logger-" + self.name)
-        self.set_dependencies(
-            Logger.get_config_option(
-                config_options, "depend", required_type="[str]", default=[]
-            )
+        self._dependencies = Logger.get_config_option(
+            config_options, "depend", required_type="[str]", default=[]
         )
+        if self.batch_data is None:
+            self.batch_data = {}
 
     @staticmethod
     def get_config_option(config_options, key, **kwargs):
@@ -36,48 +33,59 @@ class Logger(object):
         """Close and reopen our log file, if supported.
 
         This should be overridden where needed."""
-        return
+        return  # pragma: no cover
 
     def save_result(self):
         raise NotImplementedError
 
-    def set_dependencies(self, dependency_list):
-        """Record which monitors we depend on.
-        If a monitor we depend on fails, it means we can't reach the database, so we shouldn't bother trying to write to it."""
-        # TODO: Maybe cache the commands until connection returns
+    @property
+    def dependencies(self):
+        return self._dependencies
 
-        self.dependencies = dependency_list
+    @dependencies.setter
+    def dependencies(self, dependency_list):
+        if not isinstance(dependency_list, list):
+            raise TypeError("dependency_list must be a list")
+        self._dependencies = dependency_list
 
     def check_dependencies(self, failed_list):
-        for dependency in failed_list:
-            if dependency in self.dependencies:
-                self.connected = False
-                return False
+        """Compare a list of failed monitors to our dependencies, and mark the Logger as offline if one failed"""
         self.connected = True
+        for dependency in failed_list:
+            if dependency in self._dependencies:
+                self.connected = False
+        return self.connected
 
     def start_batch(self):
-        """We're about to start a batch."""
+        """Prepare to process a batch of results"""
         if not self.supports_batch:
             return
+        if self.doing_batch:
+            self.logger_logger.error(
+                "starting a batch while one was already in progress"
+            )
         self.batch_data = {}
         self.doing_batch = True
 
     def end_batch(self):
-        """We've ended a batch."""
+        """End receiving a batch of results and process them"""
         if not self.supports_batch:
             return
+        if not self.doing_batch:
+            self.logger_logger.error("ending a batch when one wasn't in progress")
         self.process_batch()
         self.doing_batch = False
 
     def process_batch(self):
-        """This is blank for the base class."""
-        return
+        """Process the batched data.
+        This is blank for the base class."""
+        return  # pragma: no cover
 
     def describe(self):
         """Explain what this logger does.
         We don't throw NotImplementedError here as it won't show up until something breaks,
         and we don't want to randomly die then."""
-        return "(Logger did not write an auto-biography.)"
+        return "(Logger did not write an auto-biography.)"  # pragma: no cover
 
     def __str__(self):
         return self.describe()

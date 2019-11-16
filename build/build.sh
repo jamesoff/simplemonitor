@@ -34,4 +34,3 @@ echo
 echo "--> Creating archives"
 tar cjf "${BUILDDIR}.tar.gz" "$BUILDDIR"
 zip -r "${BUILDDIR}.zip" "$BUILDDIR"
-

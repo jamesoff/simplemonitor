@@ -287,7 +287,9 @@ class MonitorDNS(Monitor):
             result = subprocess.check_output(self.params).decode("utf-8")
             result = result.strip()
             if result is None or result == "":
-                return self.record_fail("failed to resolve %s" % self.path)
+                if self.desired_val != "nxdomain":
+                    return self.record_fail("failed to resolve %s" % self.path)
+                return self.record_success("successfully did not resolve")
             if self.desired_val and set(result.split("\n")) != set(
                 self.desired_val.split("\n")
             ):

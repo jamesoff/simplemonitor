@@ -1,6 +1,4 @@
 # coding=utf-8
-from __future__ import with_statement
-
 import os
 import datetime
 import time
@@ -11,10 +9,7 @@ import stat
 import sys
 import json
 
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
+from io import StringIO
 
 from util import format_datetime, short_hostname
 from .logger import Logger, register
