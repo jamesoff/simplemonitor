@@ -79,6 +79,8 @@ def check_hup_file(path):
     the same as receiving SIGHUP so that a reload is triggered. This allows
     config reloading on platforms which don't support the signal (i.e.
     Windows)"""
+    if path is None:
+        return False
     try:
         statinfo = os.stat(path)
     except IOError:
