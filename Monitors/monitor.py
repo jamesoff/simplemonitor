@@ -96,17 +96,17 @@ class Monitor:
         If a monitor we depend on fails, we will skip"""
         return self._dependencies
 
+    @property
+    def remaining_dependencies(self):
+        """The Monitors we still depend on for this loop"""
+        return self._deps
+
     @dependencies.setter
     def dependencies(self, dependency_list):
         if not isinstance(dependency_list, list):
             raise TypeError("dependency_list must be a list")
         self._dependencies = dependency_list
         self.reset_dependencies()
-
-    @property
-    def remaining_dependencies(self):
-        """The dependencies we're still waiting on"""
-        return self._deps
 
     def is_remote(self):
         """Check if we're running on this machine, or if we're a remote instance."""

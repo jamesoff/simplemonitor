@@ -71,6 +71,22 @@ class TestMonitor(unittest.TestCase):
         )
         m.dependency_succeeded("a")  # should be safe to remove again
 
+    def test_MonitorDependencies(self):
+        m = Monitors.monitor.Monitor()
+        m.dependencies = ["a", "b", "c"]
+        m.dependency_succeeded("b")
+        self.assertEqual(
+            m.remaining_dependencies,
+            ["a", "c"],
+            "monitor did not remove succeded dependency",
+        )
+        m.reset_dependencies()
+        self.assertEqual(
+            m.remaining_dependencies,
+            ["a", "b", "c"],
+            "monitor did not reset dependencies",
+        )
+
     def test_MonitorSuccess(self):
         m = Monitors.monitor.Monitor()
         m.record_success("yay")
