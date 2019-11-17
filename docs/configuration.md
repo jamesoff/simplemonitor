@@ -20,6 +20,11 @@ Section names and option values (but not option names) support environment varia
 | remote | enables the listener for receiving data from remote instances. Set to 1 to enable. | no | 0 |
 | remote_port | gives the TCP port to listen on for data. | if `remote` is enabled | |
 | key | shared secret for validating data from remote instances. | if `remote` is enabled | |
+| hup_file | a file to watch the modification time on, and if it increases, reload the config | no | |
+
+The `hup_file` setting really exists for platforms which don't have SIGHUP (e.g. Windows). On platforms which do, you should send the SimpleMonitor process SIGHUP to trigger a config reload.
+
+Note: The config reload will pick up new, modified and removed monitors, loggers, and alerters. Other than the `interval` setting, no other configuration options are reloaded. Note also that monitors, loggers and alerters cannot change type during a reload.
 
 ## Reporting section
 *loggers* lists (comma-separated, no spaces) the names of the loggers you have defined. (You can define loggers and not add them to this setting.) Not required; no default.

@@ -52,6 +52,7 @@ VERSION = "1.8"
 
 main_logger = logging.getLogger("simplemonitor")
 need_hup = False
+hup_timestamp = None
 
 
 def setup_signals():
@@ -71,6 +72,27 @@ def handle_sighup(sig_number, stack_frame):
     global need_hup
     main_logger.warning("Received SIGHUP")
     need_hup = True
+
+
+def check_hup_file(path):
+    """Check a file's timestamp, and if it's newer than last time, treat it
+    the same as receiving SIGHUP so that a reload is triggered. This allows
+    config reloading on platforms which don't support the signal (i.e.
+    Windows)"""
+    try:
+        statinfo = os.stat(path)
+    except IOError:
+        main_logger.debug("Could not call stat() on path %s for file-based HUP", path)
+        return False
+    global hup_timestamp
+    modification_time = statinfo.st_mtime
+    if hup_timestamp is None:
+        hup_timestamp = modification_time
+        return True
+    if modification_time > hup_timestamp:
+        hup_timestamp = modification_time
+        return True
+    return False
 
 
 def load_everything(m, config):
@@ -493,6 +515,13 @@ def main():
 
     loops = int(options.loops)
     setup_signals()
+    hup_file = config.get("monitor", "hup_file", None)
+    if hup_file:
+        main_logger.info(
+            "Watching modification time of %s; increase it to trigger a config reload",
+            hup_file,
+        )
+        check_hup_file(hup_file)
 
     global need_hup
     while loop:
@@ -504,9 +533,9 @@ def main():
                         "Ran out of loop counter, will stop after this one"
                     )
                     loop = False
-            if need_hup:
+            if need_hup or check_hup_file(hup_file):
                 try:
-                    main_logger.warning("Processing SIGHUP")
+                    main_logger.warning("Reloading configuration")
                     config = load_config(options.config)
                     interval = config.getint("monitor", "interval")
                     m = load_everything(m, config)
