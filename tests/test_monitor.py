@@ -80,6 +80,7 @@ class TestMonitor(unittest.TestCase):
         self.assertEqual(m.last_result, "yay", "Last result is not correct")
         self.assertEqual(m.state(), True, "monitor did not report state correctly")
         self.assertEqual(m.virtual_fail_count(), 0, "monitor did not report VFC of 0")
+        self.assertEqual(m.test_success(), True, "test_success is not True")
 
     def test_MonitorFail(self):
         m = Monitors.monitor.Monitor()
@@ -93,6 +94,13 @@ class TestMonitor(unittest.TestCase):
         self.assertEqual(
             m.virtual_fail_count(), 1, "monitor did not calculate VFC correctly"
         )
+        self.assertEqual(m.test_success(), False, "test_success is not False")
+        self.assertEqual(m.first_failure(), True, "First failure is not False")
+
+        m.record_fail("cows")
+        self.assertEqual(m.get_error_count(), 2, "Error count is not 2")
+        self.assertEqual(m.first_failure(), False, "first_failure is not False")
+        self.assertEqual(m.state(), False, "state is not False")
 
     def test_MonitorWindows(self):
         m = Monitors.monitor.Monitor()
