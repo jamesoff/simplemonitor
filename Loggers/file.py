@@ -8,7 +8,7 @@ import shutil
 import stat
 import sys
 import json
-import subprocess
+import subprocess  # nosec
 
 from io import StringIO
 
@@ -321,7 +321,7 @@ class HTMLLogger(Logger):
             )
         if self.upload_command:
             try:
-                subprocess.run(self.upload_command.split(" "))
+                subprocess.run(self.upload_command.split(" "))  # nosec
             except Exception:
                 self.logger_logger.exception(
                     "Failed to run upload command for HTML files"
