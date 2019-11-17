@@ -515,7 +515,7 @@ def main():
 
     loops = int(options.loops)
     setup_signals()
-    hup_file = config.get("monitor", "hup_file", None)
+    hup_file = config.get("monitor", "hup_file", fallback=None)
     if hup_file:
         main_logger.info(
             "Watching modification time of %s; increase it to trigger a config reload",
