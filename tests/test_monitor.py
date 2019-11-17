@@ -1,5 +1,6 @@
 import unittest
 import datetime
+import time
 import monitor
 import Monitors.monitor
 from simplemonitor import SimpleMonitor
@@ -205,4 +206,33 @@ class TestMonitor(unittest.TestCase):
         self.assertEqual(m.monitors["monitor2"].type, "host", "monitor2 changed type")
         self.assertEqual(
             m.monitors["monitor2"].host, "127.0.0.2", "monitor2 did not update config"
+        )
+
+    def test_should_run(self):
+        m = Monitors.monitor.Monitor()
+        m.minimum_gap = 0
+        self.assertEqual(m.should_run(), True, "monitor did not should_run with 0 gap")
+        m.minimum_gap = 300
+
+        m.record_fail("test")
+        self.assertEqual(
+            m.should_run(), True, "monitor did not should_run when it's failing"
+        )
+
+        m.record_success("test")
+        m._last_run = 0
+        self.assertEqual(
+            m.should_run(), True, "monitor did not should_run when it had never run"
+        )
+
+        m._last_run = time.time() - 350
+        self.assertEqual(
+            m.should_run(),
+            True,
+            "monitor did not should_run when the gap was large enough",
+        )
+
+        m._last_run = time.time()
+        self.assertEqual(
+            m.should_run(), False, "monitor did should_run when it shouldn't have"
         )
