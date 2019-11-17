@@ -4,6 +4,7 @@ import tempfile
 import pathlib
 import os
 import os.path
+import time
 
 from unittest.mock import patch
 
@@ -26,6 +27,7 @@ class TestMonitor(unittest.TestCase):
         os.close(temp_file_info[0])
         temp_file_name = temp_file_info[1]
         monitor.check_hup_file(temp_file_name)
+        time.sleep(2)
         pathlib.Path(temp_file_name).touch()
         self.assertEqual(
             monitor.check_hup_file(temp_file_name),
