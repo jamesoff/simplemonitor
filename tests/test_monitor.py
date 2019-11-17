@@ -1,6 +1,8 @@
 import unittest
 import datetime
+import monitor
 import Monitors.monitor
+from simplemonitor import SimpleMonitor
 
 
 class TestMonitor(unittest.TestCase):
@@ -170,3 +172,29 @@ class TestMonitor(unittest.TestCase):
 
         m.failed_at = yesterday
         self.assertEqual(m.get_downtime(), (1, 0, 0, 0))
+
+    def test_sighup(self):
+        monitor.setup_signals()
+
+        self.assertEqual(monitor.need_hup, False, "need_hup did not start False")
+        monitor.handle_sighup(None, None)
+        self.assertEqual(monitor.need_hup, True, "need_hup did not get set to True")
+
+        m = SimpleMonitor()
+        m = monitor.load_monitors(m, "tests/monitors-prehup.ini")
+        self.assertEqual(
+            m.monitors["monitor1"].type, "null", "monitor1 did not load correctly"
+        )
+        self.assertEqual(
+            m.monitors["monitor2"].type, "host", "monitor2 did not load correctly"
+        )
+        self.assertEqual(
+            m.monitors["monitor2"].host, "127.0.0.1", "monitor2 did not load correctly"
+        )
+
+        m = monitor.load_monitors(m, "tests/monitors-posthup.ini")
+        self.assertEqual(m.monitors["monitor1"].type, "null", "monitor1 changed type")
+        self.assertEqual(m.monitors["monitor2"].type, "host", "monitor2 changed type")
+        self.assertEqual(
+            m.monitors["monitor2"].host, "127.0.0.2", "monitor2 did not update config"
+        )
