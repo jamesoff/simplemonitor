@@ -301,7 +301,7 @@ class MonitorPkgAudit(Monitor):
             try:
                 output = subprocess.check_output([self.path, "audit"]).decode("utf-8")
             except subprocess.CalledProcessError as e:
-                output = e.output
+                output = e.output.decode("utf-8")
             except OSError as e:
                 return self.record_fail(
                     "Failed to run %s audit: {0} {1}".format(self.path, e)
