@@ -281,7 +281,7 @@ class MonitorPkgAudit(Monitor):
     """Check a host doesn't have outstanding security issues."""
 
     type = "pkgaudit"
-    regexp = re.compile(r"(\d+) problem\(s\) in \w+ installed packages found")
+    regexp = re.compile(r"(\d+) problem\(s\) in \w+ installed package(s|\(s\)) found")
     path = ""
 
     def __init__(self, name, config_options):
