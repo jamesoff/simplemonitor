@@ -598,10 +598,13 @@ def main():
     if options.one_shot:  # pragma: no cover
         ok = True
         print("\n--> One-shot results:")
+        tail_info = []
         for monitor in sorted(m.monitors.keys()):
             if "fail" in monitor:
                 if m.monitors[monitor].error_count == 0:
-                    print("    Monitor {0} should have failed".format(monitor))
+                    tail_info.append(
+                        "    Monitor {0} should have failed".format(monitor)
+                    )
                     ok = False
                 else:
                     print("    Monitor {0} was ok (failed)".format(monitor))
@@ -609,14 +612,22 @@ def main():
                 if m.monitors[monitor].skipped():
                     print("    Monitor {0} was ok (skipped)".format(monitor))
                 else:
-                    print("    Monitor {0} should have been skipped".format(monitor))
+                    tail_info.append(
+                        "    Monitor {0} should have been skipped".format(monitor)
+                    )
                     ok = False
             else:
                 if m.monitors[monitor].error_count > 0:
-                    print("    Monitor {0} failed and shouldn't have".format(monitor))
+                    tail_info.append(
+                        "    Monitor {0} failed and shouldn't have".format(monitor)
+                    )
                     ok = False
                 else:
                     print("    Monitor {0} was ok".format(monitor))
+        if len(tail_info):
+            print()
+            for line in tail_info:
+                print(line)
         if not ok:
             print("Not all non-'fail' succeeded, or not all 'fail' monitors failed.")
             sys.exit(1)
