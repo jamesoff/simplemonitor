@@ -61,10 +61,9 @@ class MonitorHTTP(Monitor):
         if not self.certfile and self.keyfile:
             raise ValueError('config option keyfile is set but certfile is not')
 
-        try:
-            self.headers = json.loads(config_options.get('headers'))
-        except ValueError:
-            self.headers = None
+        self.headers = config_options.get('headers')
+        if self.headers:
+            self.headers = json.loads(self.headers)
 
         self.verify_hostname = Monitor.get_config_option(
             config_options,
