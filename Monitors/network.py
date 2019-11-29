@@ -65,7 +65,7 @@ class MonitorHTTP(Monitor):
             self.headers = json.loads(config_options.get('headers'))
         except ValueError:
             self.headers = None
-            
+
         self.verify_hostname = Monitor.get_config_option(
             config_options,
             'verify_hostname',
