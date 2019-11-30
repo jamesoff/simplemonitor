@@ -31,7 +31,7 @@ class MonitorHTTP(Monitor):
     certfile = None
     keyfile = None
 
-    #optional - headers
+    # optional - headers
     headers = None
 
     def __init__(self, name, config_options):
