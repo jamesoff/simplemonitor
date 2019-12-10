@@ -1,8 +1,6 @@
 import os
 import re
-
-from configparser import ConfigParser
-from configparser import BasicInterpolation
+from configparser import BasicInterpolation, ConfigParser
 
 
 class EnvironmentAwareConfigParser(ConfigParser):

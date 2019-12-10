@@ -6,6 +6,7 @@ except ImportError:
     requests_available = False
 
 from util import AlerterConfigurationError, format_datetime
+
 from .alerter import Alerter, register
 
 

@@ -2,10 +2,10 @@
 """Execution logic for SimpleMonitor."""
 
 import copy
-import pickle
-import time
 import logging
+import pickle
 import sys
+import time
 
 import Loggers
 import Monitors

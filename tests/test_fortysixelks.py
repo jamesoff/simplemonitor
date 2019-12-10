@@ -1,7 +1,6 @@
 import unittest
 
 import Alerters.fortysixelks
-
 import util
 
 

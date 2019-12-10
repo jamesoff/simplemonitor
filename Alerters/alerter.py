@@ -3,11 +3,9 @@
 
 import datetime
 import logging
-
 from socket import gethostname
 
-from util import get_config_option, AlerterConfigurationError
-from util import subclass_dict_handler
+from util import AlerterConfigurationError, get_config_option, subclass_dict_handler
 
 
 class Alerter:

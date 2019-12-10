@@ -10,13 +10,20 @@ functions.
 
 """
 
-import platform
-import sys
-import datetime
-import time
 import copy
-import subprocess
+import datetime
 import logging
+import platform
+import subprocess
+import sys
+import time
+
+from util import (
+    MonitorConfigurationError,
+    get_config_option,
+    short_hostname,
+    subclass_dict_handler,
+)
 
 try:
     import win32api  # noqa: F401
@@ -24,9 +31,6 @@ try:
     win32_available = True
 except ImportError:
     win32_available = False
-
-from util import get_config_option, MonitorConfigurationError, short_hostname
-from util import subclass_dict_handler
 
 
 class Monitor:

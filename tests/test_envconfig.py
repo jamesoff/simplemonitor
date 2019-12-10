@@ -1,6 +1,7 @@
-import unittest
-import envconfig
 import os
+import unittest
+
+import envconfig
 
 os.environ["TEST_VALUE"] = "test1"
 

@@ -1,6 +1,7 @@
-import unittest
 import datetime
 import time
+import unittest
+
 import monitor
 import Monitors.monitor
 from simplemonitor import SimpleMonitor

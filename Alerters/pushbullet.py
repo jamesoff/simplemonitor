@@ -1,6 +1,7 @@
 import requests
 
 from util import format_datetime
+
 from .alerter import Alerter, register
 
 

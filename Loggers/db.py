@@ -7,8 +7,9 @@ except ImportError:
     sqlite_available = False
 
 import time
-from .logger import Logger, register
 from socket import gethostname
+
+from .logger import Logger, register
 
 CREATE_SQL = [
     """

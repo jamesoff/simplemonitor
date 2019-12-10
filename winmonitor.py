@@ -1,11 +1,12 @@
-import win32serviceutil
-import win32service
-import win32event
-import socket
-import os
 import logging
-import sys
 import multiprocessing as mp
+import os
+import socket
+import sys
+
+import win32event
+import win32service
+import win32serviceutil
 
 r"""
 Notes:

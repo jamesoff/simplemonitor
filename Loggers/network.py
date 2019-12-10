@@ -1,18 +1,16 @@
 # coding=utf-8
+import hmac
+import logging
 import pickle
 import socket
-import sys
-import hmac
 import struct
-import logging
+import sys
+from json import JSONDecodeError
+from threading import Thread
 
 import util
 
-from threading import Thread
-
 from .logger import Logger, register
-
-from json import JSONDecodeError
 
 # From the docs:
 #  Threads interact strangely with interrupts: the KeyboardInterrupt exception

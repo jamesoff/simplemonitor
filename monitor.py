@@ -2,46 +2,39 @@
 """A (fairly) simple host/service monitor."""
 
 
+import logging
 import os
+import signal
 import sys
 import time
-import logging
-import signal
-
-from envconfig import EnvironmentAwareConfigParser
-
-from optparse import OptionParser, SUPPRESS_HELP
-
+from optparse import SUPPRESS_HELP, OptionParser
 from socket import gethostname
 
-from util import get_config_dict
-
+import Alerters.bulksms
+import Alerters.execute
+import Alerters.fortysixelks
+import Alerters.mail
+import Alerters.nc
+import Alerters.pushbullet
+import Alerters.pushover
+import Alerters.ses
+import Alerters.slack
+import Alerters.syslogger
+import Alerters.telegram
+import Loggers.db
+import Loggers.file
+import Loggers.mqtt
+import Loggers.network
+import Monitors.compound
+import Monitors.file
+import Monitors.hass
+import Monitors.host
 import Monitors.monitor
 import Monitors.network
 import Monitors.service
-import Monitors.host
-import Monitors.file
-import Monitors.compound
-import Monitors.hass
-
+from envconfig import EnvironmentAwareConfigParser
 from simplemonitor import SimpleMonitor
-
-import Loggers.file
-import Loggers.db
-import Loggers.network
-import Loggers.mqtt
-
-import Alerters.mail
-import Alerters.ses
-import Alerters.bulksms
-import Alerters.fortysixelks
-import Alerters.syslogger
-import Alerters.execute
-import Alerters.slack
-import Alerters.pushover
-import Alerters.pushbullet
-import Alerters.telegram
-import Alerters.nc
+from util import get_config_dict
 
 try:
     import colorlog

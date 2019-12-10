@@ -1,8 +1,10 @@
-import re
 import os
+import re
+import shlex
 import subprocess
 import time
-import shlex
+
+from .monitor import Monitor, register
 
 try:
     import win32api
@@ -10,8 +12,6 @@ try:
     win32_available = True
 except ImportError:
     win32_available = False
-
-from .monitor import Monitor, register
 
 
 def _size_string_to_bytes(s):

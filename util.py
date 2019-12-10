@@ -1,8 +1,8 @@
 """Utilities for SimpleMonitor."""
 
-import re
-import json
 import datetime
+import json
+import re
 import socket
 
 

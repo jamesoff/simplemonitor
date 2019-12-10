@@ -1,18 +1,18 @@
 # coding=utf-8
-import os
 import datetime
-import time
-import socket
-import tempfile
-import shutil
-import stat
-import sys
 import json
+import os
+import shutil
+import socket
+import stat
 import subprocess  # nosec
-
+import sys
+import tempfile
+import time
 from io import StringIO
 
 from util import format_datetime, short_hostname
+
 from .logger import Logger, register
 
 

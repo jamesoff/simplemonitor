@@ -1,20 +1,20 @@
 # coding=utf-8
 import fnmatch
+import os
 import platform
 import re
-import os
 import subprocess
 import sys
 import time
+
+from util import MonitorConfigurationError
+
+from .monitor import Monitor, register
 
 try:
     import pydbus
 except ImportError:
     pydbus = None
-
-from util import MonitorConfigurationError
-
-from .monitor import Monitor, register
 
 
 @register

@@ -1,6 +1,6 @@
 import unittest
-import Monitors.host
 
+import Monitors.host
 from Monitors.monitor import MonitorConfigurationError
 
 

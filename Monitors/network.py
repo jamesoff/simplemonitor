@@ -1,13 +1,14 @@
 # coding=utf-8
 """Network-related monitors for SimpleMonitor."""
 
-import re
-import sys
-import socket
 import datetime
-import subprocess
-import requests
 import json
+import re
+import socket
+import subprocess
+import sys
+
+import requests
 from requests.auth import HTTPBasicAuth
 
 from .monitor import Monitor, register

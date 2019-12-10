@@ -1,11 +1,10 @@
-import sys
-import unittest
-import tempfile
-import pathlib
 import os
 import os.path
+import pathlib
+import sys
+import tempfile
 import time
-
+import unittest
 from unittest.mock import patch
 
 import monitor

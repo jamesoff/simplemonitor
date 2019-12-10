@@ -1,8 +1,9 @@
 # coding=utf-8
-import subprocess
 import shlex
+import subprocess
 
 from util import AlerterConfigurationError, format_datetime
+
 from .alerter import Alerter, register
 
 
