@@ -58,7 +58,7 @@ class MonitorHTTP(Monitor):
         if not self.certfile and self.keyfile:
             raise ValueError("config option keyfile is set but certfile is not")
 
-        self.headers = config_options.get('headers')
+        self.headers = config_options.get("headers")
         if self.headers:
             self.headers = json.loads(self.headers)
 
@@ -78,28 +78,28 @@ class MonitorHTTP(Monitor):
         end_time = None
         try:
             if self.certfile is None and self.username is None:
-                r = requests.get(self.url,
-                                 timeout=self.request_timeout,
-                                 verify=self.verify_hostname,
-                                 headers=self.headers
-                                 )
+                r = requests.get(
+                    self.url,
+                    timeout=self.request_timeout,
+                    verify=self.verify_hostname,
+                    headers=self.headers,
+                )
             elif self.certfile is None and self.username is not None:
-                r = requests.get(self.url,
-                                 timeout=self.request_timeout,
-                                 auth=HTTPBasicAuth(
-                                     self.username,
-                                     self.password
-                                 ),
-                                 verify=self.verify_hostname,
-                                 headers=self.headers
-                                 )
+                r = requests.get(
+                    self.url,
+                    timeout=self.request_timeout,
+                    auth=HTTPBasicAuth(self.username, self.password),
+                    verify=self.verify_hostname,
+                    headers=self.headers,
+                )
             else:
-                r = requests.get(self.url,
-                                 timeout=self.request_timeout,
-                                 cert=(self.certfile, self.keyfile),
-                                 verify=self.verify_hostname,
-                                 headers=self.headers
-                                 )
+                r = requests.get(
+                    self.url,
+                    timeout=self.request_timeout,
+                    cert=(self.certfile, self.keyfile),
+                    verify=self.verify_hostname,
+                    headers=self.headers,
+                )
 
             end_time = datetime.datetime.now()
             load_time = end_time - start_time
