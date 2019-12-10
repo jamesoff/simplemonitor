@@ -1,11 +1,11 @@
 # coding=utf-8
 """Execution logic for SimpleMonitor."""
 
-import signal
 import copy
 import pickle
 import time
 import logging
+import sys
 
 import Loggers
 import Monitors
@@ -14,11 +14,6 @@ module_logger = logging.getLogger("simplemonitor")
 
 
 class SimpleMonitor:
-
-    # TODO: move this outside into monitor.py?
-    #      could give better control over restarting the listener thread
-    need_hup = False
-
     def __init__(self, allow_pickle=True):
         """Main class turn on."""
         self.allow_pickle = allow_pickle
@@ -32,30 +27,29 @@ class SimpleMonitor:
         self.loggers = {}
         self.alerters = {}
 
-        try:
-            signal.signal(signal.SIGHUP, self.hup_loggers)
-        except ValueError:  # pragma: no cover
-            module_logger.warning(
-                "Unable to trap SIGHUP... maybe it doesn't exist on this platform.\n"
-            )
-        except AttributeError:  # pragma: no cover
-            module_logger.warning(
-                "Unable to trap SIGHUP... maybe it doesn't exist on this platform.\n"
-            )
-
-    def hup_loggers(self, sig_number, stack_frame):
-        """Handle a SIGHUP (rotate logfiles).
-
-        We set a variable to say we want to do this later (so it's done at the right time)."""
-
-        self.need_hup = True
-        module_logger.info("We get signal.")
-
     def add_monitor(self, name, monitor):
         self.monitors[name] = monitor
 
+    def update_monitor_config(self, name, config_options):
+        self.monitors[name].__init__(name, config_options)
+
+    def update_logger_config(self, name, config_options):
+        self.loggers[name].__init__(config_options)
+
+    def update_alerter_config(self, name, config_options):
+        self.alerters[name].__init__(config_options)
+
     def set_urgency(self, monitor, urgency):
         self.monitors[monitor].set_urgency(urgency)
+
+    def has_monitor(self, monitor):
+        return monitor in self.monitors.keys()
+
+    def has_logger(self, logger):
+        return logger in self.loggers.keys()
+
+    def has_alerter(self, alerter):
+        return alerter in self.alerters.keys()
 
     def reset_monitors(self):
         """Clear all the monitors' dependency info back to default."""
@@ -231,6 +225,47 @@ class SimpleMonitor:
                 "Failed to add logger because it is not the right type"
             )
 
+    def prune_monitors(self, retain):
+        """Remove monitors which are in our list but not in the list passed to us.
+
+        Used to tidy up after a config reload (which may have removed monitors)"""
+        delete_list = []
+        for monitor in self.monitors.keys():
+            if monitor not in retain:
+                module_logger.info("Removing monitor %s", monitor)
+                delete_list.append(monitor)
+        for monitor in delete_list:
+            del self.monitors[monitor]
+        if not self.verify_dependencies():
+            module_logger.critical(
+                "Broken dependencies after pruning monitors, aborting!"
+            )
+            sys.exit(1)
+
+    def prune_alerters(self, retain):
+        """Remove alerters which are in our list but not in the list passed to us.
+
+        Used to tidy up after a config reload (which may have removed alerters)"""
+        delete_list = []
+        for alerter in self.alerters.keys():
+            if alerter not in retain:
+                module_logger.info("Removing alerter %s", alerter)
+                delete_list.append(alerter)
+        for alerter in delete_list:
+            del self.alerters[alerter]
+
+    def prune_loggers(self, retain):
+        """Remove loggers which are in our list but not in the list passed to us.
+
+        Used to tidy up after a config reload (which may have removed logger)"""
+        delete_list = []
+        for logger in self.loggers.keys():
+            if logger not in retain:
+                module_logger.info("Removing logger %s", logger)
+                delete_list.append(logger)
+        for logger in delete_list:
+            del self.loggers[logger]
+
     def do_alerts(self):
         for key in list(self.alerters.keys()):
             self.do_alert(self.alerters[key])
@@ -239,13 +274,11 @@ class SimpleMonitor:
         for key in list(self.monitors.keys()):
             self.monitors[key].attempt_recover()
 
-    def do_logs(self):
-        if self.need_hup:
-            module_logger.info("Processing HUP.")
-            for logger in self.loggers:
-                self.loggers[logger].hup()
-            self.need_hup = False
+    def hup_loggers(self):
+        for logger in self.loggers:
+            self.loggers[logger].hup()
 
+    def do_logs(self):
         for key in list(self.loggers.keys()):
             self.log_result(self.loggers[key])
 

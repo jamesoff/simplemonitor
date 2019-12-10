@@ -1,6 +1,9 @@
 import unittest
 import datetime
+import time
+import monitor
 import Monitors.monitor
+from simplemonitor import SimpleMonitor
 
 
 class TestMonitor(unittest.TestCase):
@@ -68,6 +71,22 @@ class TestMonitor(unittest.TestCase):
         )
         m.dependency_succeeded("a")  # should be safe to remove again
 
+    def test_MonitorDependencies(self):
+        m = Monitors.monitor.Monitor()
+        m.dependencies = ["a", "b", "c"]
+        m.dependency_succeeded("b")
+        self.assertEqual(
+            m.remaining_dependencies,
+            ["a", "c"],
+            "monitor did not remove succeded dependency",
+        )
+        m.reset_dependencies()
+        self.assertEqual(
+            m.remaining_dependencies,
+            ["a", "b", "c"],
+            "monitor did not reset dependencies",
+        )
+
     def test_MonitorSuccess(self):
         m = Monitors.monitor.Monitor()
         m.record_success("yay")
@@ -78,6 +97,7 @@ class TestMonitor(unittest.TestCase):
         self.assertEqual(m.last_result, "yay", "Last result is not correct")
         self.assertEqual(m.state(), True, "monitor did not report state correctly")
         self.assertEqual(m.virtual_fail_count(), 0, "monitor did not report VFC of 0")
+        self.assertEqual(m.test_success(), True, "test_success is not True")
 
     def test_MonitorFail(self):
         m = Monitors.monitor.Monitor()
@@ -91,6 +111,13 @@ class TestMonitor(unittest.TestCase):
         self.assertEqual(
             m.virtual_fail_count(), 1, "monitor did not calculate VFC correctly"
         )
+        self.assertEqual(m.test_success(), False, "test_success is not False")
+        self.assertEqual(m.first_failure(), True, "First failure is not False")
+
+        m.record_fail("cows")
+        self.assertEqual(m.get_error_count(), 2, "Error count is not 2")
+        self.assertEqual(m.first_failure(), False, "first_failure is not False")
+        self.assertEqual(m.state(), False, "state is not False")
 
     def test_MonitorWindows(self):
         m = Monitors.monitor.Monitor()
@@ -170,3 +197,58 @@ class TestMonitor(unittest.TestCase):
 
         m.failed_at = yesterday
         self.assertEqual(m.get_downtime(), (1, 0, 0, 0))
+
+    def test_sighup(self):
+        monitor.setup_signals()
+
+        self.assertEqual(monitor.need_hup, False, "need_hup did not start False")
+        monitor.handle_sighup(None, None)
+        self.assertEqual(monitor.need_hup, True, "need_hup did not get set to True")
+
+        m = SimpleMonitor()
+        m = monitor.load_monitors(m, "tests/monitors-prehup.ini")
+        self.assertEqual(
+            m.monitors["monitor1"].type, "null", "monitor1 did not load correctly"
+        )
+        self.assertEqual(
+            m.monitors["monitor2"].type, "host", "monitor2 did not load correctly"
+        )
+        self.assertEqual(
+            m.monitors["monitor2"].host, "127.0.0.1", "monitor2 did not load correctly"
+        )
+
+        m = monitor.load_monitors(m, "tests/monitors-posthup.ini")
+        self.assertEqual(m.monitors["monitor1"].type, "null", "monitor1 changed type")
+        self.assertEqual(m.monitors["monitor2"].type, "host", "monitor2 changed type")
+        self.assertEqual(
+            m.monitors["monitor2"].host, "127.0.0.2", "monitor2 did not update config"
+        )
+
+    def test_should_run(self):
+        m = Monitors.monitor.Monitor()
+        m.minimum_gap = 0
+        self.assertEqual(m.should_run(), True, "monitor did not should_run with 0 gap")
+        m.minimum_gap = 300
+
+        m.record_fail("test")
+        self.assertEqual(
+            m.should_run(), True, "monitor did not should_run when it's failing"
+        )
+
+        m.record_success("test")
+        m._last_run = 0
+        self.assertEqual(
+            m.should_run(), True, "monitor did not should_run when it had never run"
+        )
+
+        m._last_run = time.time() - 350
+        self.assertEqual(
+            m.should_run(),
+            True,
+            "monitor did not should_run when the gap was large enough",
+        )
+
+        m._last_run = time.time()
+        self.assertEqual(
+            m.should_run(), False, "monitor did should_run when it shouldn't have"
+        )

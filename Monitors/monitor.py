@@ -96,17 +96,17 @@ class Monitor:
         If a monitor we depend on fails, we will skip"""
         return self._dependencies
 
+    @property
+    def remaining_dependencies(self):
+        """The Monitors we still depend on for this loop"""
+        return self._deps
+
     @dependencies.setter
     def dependencies(self, dependency_list):
         if not isinstance(dependency_list, list):
             raise TypeError("dependency_list must be a list")
         self._dependencies = dependency_list
         self.reset_dependencies()
-
-    @property
-    def remaining_dependencies(self):
-        """The dependencies we're still waiting on"""
-        return self._deps
 
     def is_remote(self):
         """Check if we're running on this machine, or if we're a remote instance."""
@@ -121,30 +121,25 @@ class Monitor:
     def virtual_fail_count(self):
         """Return the number of failures we've had past our tolerance."""
         vfs = self.error_count - self._tolerance
-        if vfs < 0:
-            vfs = 0
-        return vfs
+        return max(vfs, 0)
 
     def test_success(self):
         """Returns false if the test has failed."""
         if self.error_count > self._tolerance:
             return False
-        else:
-            return True
+        return True
 
     def first_failure(self):
         """Check if this is our first failure (past tolerance)."""
         if self.error_count == (self._tolerance + 1):
             return True
-        else:
-            return False
+        return False
 
     def state(self):
         """Returns false if the last test failed."""
         if self.error_count > 0:
             return False
-        else:
-            return True
+        return True
 
     def get_result(self):
         """Return the result info from the last test."""

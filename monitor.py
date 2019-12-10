@@ -6,6 +6,7 @@ import os
 import sys
 import time
 import logging
+import signal
 
 from envconfig import EnvironmentAwareConfigParser
 
@@ -50,6 +51,76 @@ except ImportError:
 VERSION = "1.8"
 
 main_logger = logging.getLogger("simplemonitor")
+need_hup = False
+hup_timestamp = None
+
+
+def setup_signals():
+    try:
+        signal.signal(signal.SIGHUP, handle_sighup)
+    except ValueError:  # pragma: no cover
+        main_logger.warning(
+            "Unable to trap SIGHUP... maybe it doesn't exist on this platform.\n"
+        )
+    except AttributeError:  # pragma: no cover
+        main_logger.warning(
+            "Unable to trap SIGHUP... maybe it doesn't exist on this platform.\n"
+        )
+
+
+def handle_sighup(sig_number, stack_frame):
+    global need_hup
+    main_logger.warning("Received SIGHUP")
+    need_hup = True
+
+
+def check_hup_file(path):
+    """Check a file's timestamp, and if it's newer than last time, treat it
+    the same as receiving SIGHUP so that a reload is triggered. This allows
+    config reloading on platforms which don't support the signal (i.e.
+    Windows)"""
+    if path is None:
+        return False
+    try:
+        statinfo = os.stat(path)
+    except IOError:
+        main_logger.debug("Could not call stat() on path %s for file-based HUP", path)
+        return False
+    global hup_timestamp
+    modification_time = statinfo.st_mtime
+    if hup_timestamp is None:
+        hup_timestamp = modification_time
+        return True
+    if modification_time > hup_timestamp:
+        hup_timestamp = modification_time
+        return True
+    return False
+
+
+def load_everything(m, config):
+    """Load monitors, alerters and loggers into a SimpleMonitor object."""
+    monitors_file = config.get("monitor", "monitors", fallback="monitors.ini")
+    m = load_monitors(m, monitors_file)
+    m = load_loggers(m, config)
+    m = load_alerters(m, config)
+    if not m.verify_dependencies():
+        sys.exit(1)
+    return m
+
+
+def load_config(config_file):
+    """Load the main configuration and return a config object."""
+    config = EnvironmentAwareConfigParser()
+    if not os.path.exists(config_file):
+        main_logger.critical('Configuration file "%s" does not exist!', config_file)
+        sys.exit(1)
+    try:
+        config.read(config_file)
+    except Exception as e:
+        main_logger.critical("Unable to read configuration file")
+        main_logger.critical(e)
+        sys.exit(1)
+    return config
 
 
 def load_monitors(m, filename):
@@ -79,6 +150,17 @@ def load_monitors(m, filename):
         new_monitor = None
         config_options = default_config.copy()
         config_options.update(get_config_dict(config, monitor))
+        if m.has_monitor(monitor):
+            if m.monitors[monitor].type == config_options["type"]:
+                main_logger.info("Updating configuration for monitor %s", monitor)
+                m.update_monitor_config(monitor, config_options)
+            else:
+                main_logger.error(
+                    "Cannot update monitor {} from type {} to type {}. Keeping original config for this monitor.".format(
+                        monitor, m.monitors[monitor].type, config_options["type"]
+                    )
+                )
+            continue
 
         try:
             cls = Monitors.monitor.get_class(monitor_type)
@@ -97,6 +179,7 @@ def load_monitors(m, filename):
 
     for i in list(m.monitors.keys()):
         m.monitors[i].post_config_setup()
+    m.prune_monitors(monitors)
     main_logger.info("--- Loaded %d monitors", m.count_monitors())
     return m
 
@@ -114,6 +197,19 @@ def load_loggers(m, config):
         logger_type = config.get(config_logger, "type")
         config_options = get_config_dict(config, config_logger)
         config_options["_name"] = config_logger
+        if m.has_logger(config_logger):
+            if m.loggers[config_logger].type == config_options["type"]:
+                main_logger.info("Updating configuration for logger %s", config_logger)
+                m.update_logger_config(config_logger, config_options)
+            else:
+                main_logger.error(
+                    "Cannot update logger {} from type {} to type {}. Keeping original config for this logger.".format(
+                        config_logger,
+                        m.loggers[config_logger].type,
+                        config_options["type"],
+                    )
+                )
+            continue
         try:
             logger_cls = Loggers.logger.get_class(logger_type)
         except KeyError:
@@ -129,6 +225,7 @@ def load_loggers(m, config):
         )
         m.add_logger(config_logger, new_logger)
         del new_logger
+    m.prune_loggers(loggers)
     main_logger.info("--- Loaded %d loggers", len(m.loggers))
     return m
 
@@ -144,6 +241,17 @@ def load_alerters(m, config):
     for alerter in alerters:
         alerter_type = config.get(alerter, "type")
         config_options = get_config_dict(config, alerter)
+        if m.has_alerter(alerter):
+            if m.alerters[alerter].type == config_options["type"]:
+                main_logger.info("Updating configuration for alerter %s", alerter)
+                m.update_alerter_config(alerter, config_options)
+            else:
+                main_logger.error(
+                    "Cannot update alerter {} from type {} to type {}. Keeping original config for this alerter.".format(
+                        alerter, m.alerters[alerter].type, config_options["type"]
+                    )
+                )
+            continue
         try:
             alerter_cls = Alerters.alerter.get_class(alerter_type)
         except KeyError:
@@ -158,6 +266,7 @@ def load_alerters(m, config):
         new_alerter.name = alerter
         m.add_alerter(alerter, new_alerter)
         del new_alerter
+    m.prune_alerters(alerters)
     main_logger.info("--- Loaded %d alerters", len(m.alerters))
     return m
 
@@ -325,16 +434,7 @@ def main():
         main_logger.info("=== SimpleMonitor v%s", VERSION)
         main_logger.info("Loading main config from %s", options.config)
 
-    config = EnvironmentAwareConfigParser()
-    if not os.path.exists(options.config):
-        main_logger.critical('Configuration file "%s" does not exist!', options.config)
-        sys.exit(1)
-    try:
-        config.read(options.config)
-    except Exception as e:
-        main_logger.critical("Unable to read configuration file")
-        main_logger.critical(e)
-        sys.exit(1)
+    config = load_config(options.config)
 
     try:
         interval = config.getint("monitor", "interval")
@@ -368,16 +468,12 @@ def main():
         sys.exit(1)
 
     m = SimpleMonitor(allow_pickle=allow_pickle)
-
-    m = load_monitors(m, monitors_file)
+    m = load_everything(m, config)
 
     count = m.count_monitors()
     if count == 0:
         main_logger.critical("No monitors loaded :(")
         sys.exit(2)
-
-    m = load_loggers(m, config)
-    m = load_alerters(m, config)
 
     enable_remote = False
     if config.get("monitor", "remote", fallback="0") == "1":
@@ -385,9 +481,6 @@ def main():
             enable_remote = True
             remote_port = int(config.get("monitor", "remote_port"))
     key = config.get("monitor", "key", fallback=None)
-
-    if not m.verify_dependencies():
-        sys.exit(1)
 
     if options.test:
         main_logger.warning("Config test complete. Exiting.")
@@ -423,7 +516,16 @@ def main():
     heartbeat = 0
 
     loops = int(options.loops)
+    setup_signals()
+    hup_file = config.get("monitor", "hup_file", fallback=None)
+    if hup_file:
+        main_logger.info(
+            "Watching modification time of %s; increase it to trigger a config reload",
+            hup_file,
+        )
+        check_hup_file(hup_file)
 
+    global need_hup
     while loop:
         try:
             if loops > 0:
@@ -433,6 +535,17 @@ def main():
                         "Ran out of loop counter, will stop after this one"
                     )
                     loop = False
+            if need_hup or check_hup_file(hup_file):
+                try:
+                    main_logger.warning("Reloading configuration")
+                    config = load_config(options.config)
+                    interval = config.getint("monitor", "interval")
+                    m = load_everything(m, config)
+                    m.hup_loggers()
+                    need_hup = False
+                except Exception:
+                    main_logger.exception("Error while reloading configuration")
+                    sys.exit(1)
             m.run_loop()
 
             if (
@@ -485,10 +598,13 @@ def main():
     if options.one_shot:  # pragma: no cover
         ok = True
         print("\n--> One-shot results:")
+        tail_info = []
         for monitor in sorted(m.monitors.keys()):
             if "fail" in monitor:
                 if m.monitors[monitor].error_count == 0:
-                    print("    Monitor {0} should have failed".format(monitor))
+                    tail_info.append(
+                        "    Monitor {0} should have failed".format(monitor)
+                    )
                     ok = False
                 else:
                     print("    Monitor {0} was ok (failed)".format(monitor))
@@ -496,14 +612,22 @@ def main():
                 if m.monitors[monitor].skipped():
                     print("    Monitor {0} was ok (skipped)".format(monitor))
                 else:
-                    print("    Monitor {0} should have been skipped".format(monitor))
+                    tail_info.append(
+                        "    Monitor {0} should have been skipped".format(monitor)
+                    )
                     ok = False
             else:
                 if m.monitors[monitor].error_count > 0:
-                    print("    Monitor {0} failed and shouldn't have".format(monitor))
+                    tail_info.append(
+                        "    Monitor {0} failed and shouldn't have".format(monitor)
+                    )
                     ok = False
                 else:
                     print("    Monitor {0} was ok".format(monitor))
+        if len(tail_info):
+            print()
+            for line in tail_info:
+                print(line)
         if not ok:
             print("Not all non-'fail' succeeded, or not all 'fail' monitors failed.")
             sys.exit(1)

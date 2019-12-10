@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+# mock pkg (audit) for simplemonitor
+
+cat <<EOF
+libidn2-2.2.0 is vulnerable:
+libidn2 -- roundtrip check vulnerability
+CVE: CVE-2019-12290
+WWW: https://vuxml.FreeBSD.org/freebsd/f04f840d-0840-11ea-8d66-75d3253ef913.html
+
+1 problem(s) in 1 installed package(s) found.
+EOF
