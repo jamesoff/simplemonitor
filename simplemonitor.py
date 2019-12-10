@@ -255,7 +255,7 @@ class SimpleMonitor:
             del self.alerters[alerter]
 
     def prune_loggers(self, retain):
-        """Remove loggersj which are in our list but not in the list passed to us.
+        """Remove loggers which are in our list but not in the list passed to us.
 
         Used to tidy up after a config reload (which may have removed logger)"""
         delete_list = []
