@@ -7,6 +7,7 @@ import re
 import socket
 import subprocess
 import sys
+from typing import List
 
 import requests
 from requests.auth import HTTPBasicAuth
@@ -24,7 +25,7 @@ class MonitorHTTP(Monitor):
     url = ""
     regexp = None
     regexp_text = ""
-    allowed_codes = []
+    allowed_codes: List[int] = []
 
     type = "http"
 

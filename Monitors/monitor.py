@@ -15,9 +15,11 @@ import datetime
 import logging
 import platform
 import subprocess
-import sys
 import time
+from typing import Any, List, Optional, Tuple
 
+from Alerters.alerter import Alerter
+from Loggers.logger import Logger
 from util import (
     MonitorConfigurationError,
     get_config_option,
@@ -26,6 +28,7 @@ from util import (
 )
 
 try:
+    # type: ignore
     import win32api  # noqa: F401
 
     win32_available = True
@@ -44,20 +47,20 @@ class Monitor:
     tests_run = 0
     last_error_count = 0
     last_run_duration = 0
-    skip_dep = None
+    skip_dep = None  # type: Optional[str]
 
     failures = 0
-    last_failure = None
+    last_failure = None  # type: Optional[datetime.datetime]
 
     # this is the time we last received data into this monitor (if we're remote)
-    last_update = None
+    last_update: Optional[datetime.datetime] = None
 
-    def __init__(self, name="unnamed", config_options=None):
+    def __init__(self, name="unnamed", config_options=None) -> None:
         """What's that coming over the hill? Is a monitor?"""
         if config_options is None:
             config_options = {}
         self.name = name
-        self._deps = []
+        self._deps = []  # type: List[str]
         self.monitor_logger = logging.getLogger("simplemonitor.monitor-" + self.name)
         self._dependencies = Monitor.get_config_option(
             config_options, "depend", required_type="[str]", default=list()
@@ -90,29 +93,29 @@ class Monitor:
         self._last_run = 0
 
     @staticmethod
-    def get_config_option(config_options, key, **kwargs):
+    def get_config_option(config_options: dict, key: str, **kwargs) -> Any:
         kwargs["exception"] = MonitorConfigurationError
         return get_config_option(config_options, key, **kwargs)
 
     @property
-    def dependencies(self):
+    def dependencies(self) -> List[str]:
         """The Monitors we depend on.
         If a monitor we depend on fails, we will skip"""
         return self._dependencies
 
-    @property
-    def remaining_dependencies(self):
-        """The Monitors we still depend on for this loop"""
-        return self._deps
-
     @dependencies.setter
-    def dependencies(self, dependency_list):
+    def dependencies(self, dependency_list: List[str]) -> None:
         if not isinstance(dependency_list, list):
             raise TypeError("dependency_list must be a list")
         self._dependencies = dependency_list
         self.reset_dependencies()
 
-    def is_remote(self):
+    @property
+    def remaining_dependencies(self) -> List[str]:
+        """The Monitors we still depend on for this loop"""
+        return self._deps
+
+    def is_remote(self) -> bool:
         """Check if we're running on this machine, or if we're a remote instance."""
         if self.running_on == short_hostname():
             return False
@@ -122,61 +125,49 @@ class Monitor:
         """Override this method to perform the test."""
         raise NotImplementedError
 
-    def virtual_fail_count(self):
+    def virtual_fail_count(self) -> int:
         """Return the number of failures we've had past our tolerance."""
         vfs = self.error_count - self._tolerance
         return max(vfs, 0)
 
-    def test_success(self):
+    def test_success(self) -> bool:
         """Returns false if the test has failed."""
         if self.error_count > self._tolerance:
             return False
         return True
 
-    def first_failure(self):
+    def first_failure(self) -> bool:
         """Check if this is our first failure (past tolerance)."""
         if self.error_count == (self._tolerance + 1):
             return True
         return False
 
-    def state(self):
+    def state(self) -> bool:
         """Returns false if the last test failed."""
         if self.error_count > 0:
             return False
         return True
 
-    def get_result(self):
+    def get_result(self) -> str:
         """Return the result info from the last test."""
         return self.last_result
 
-    def reset_dependencies(self):
+    def reset_dependencies(self) -> None:
         """Reset the monitor's dependency list back to default."""
         self._deps = copy.copy(self._dependencies)
 
-    def dependency_succeeded(self, dependency):
+    def dependency_succeeded(self, dependency) -> None:
         """Remove a dependency from the current version of the list."""
         try:
             self._deps.remove(dependency)
         except ValueError:
             pass
 
-    def log_result(self, name, logger):
-        """Save our latest result to the logger.
+    def log_result(self, name: str, logger: Logger) -> None:
+        """Save our latest result to the logger."""
+        logger.save_result2(name, self)
 
-        To be removed."""
-        if self.error_count > self._tolerance:
-            result = 0
-        else:
-            result = 1
-        try:
-            logger.save_result2(name, self)
-        except Exception as e:
-            sys.stderr.write("%s\n" % e)
-            logger.save_result(
-                name, self.type, self.get_params(), result, self.last_result
-            )
-
-    def send_alert(self, name, alerter):
+    def send_alert(self, name: str, alerter: Alerter) -> None:
         """Send an alert when we first fail.
 
         Set first_only to False to generate mail every time.
@@ -186,22 +177,22 @@ class Monitor:
         if self.virtual_fail_count() == 1:
             alerter.send_alert(name, self)
 
-    def get_params(self):
+    def get_params(self) -> Tuple:
         """Override this method to return a list of parameters (for logging)"""
         raise NotImplementedError
 
-    def set_mon_refs(self, mmm):
+    def set_mon_refs(self, mmm) -> None:
         """Called with a reference to the list of all monitors.
         Only used by CompoundMonitor for now."""
         pass
 
     @property
-    def minimum_gap(self):
+    def minimum_gap(self) -> int:
         """Minimum gap between runs of the monitor."""
         return self._minimum_gap
 
     @minimum_gap.setter
-    def minimum_gap(self, gap):
+    def minimum_gap(self, gap: int) -> None:
         if isinstance(gap, int):
             if gap < 0:
                 raise ValueError("gap must be at least 0")
@@ -209,14 +200,14 @@ class Monitor:
         else:
             raise TypeError("gap must be an integer")
 
-    def describe(self):
+    def describe(self) -> str:
         """Explain what this monitor does.
         We don't throw NotImplementedError here as it won't show up until something breaks,
         and we don't want to randomly die then."""
         return "(Monitor did not write an auto-biography.)"
 
     @staticmethod
-    def is_windows(allow_cygwin=True):
+    def is_windows(allow_cygwin=True) -> bool:
         """Checks if our platform is Windowsy.
         If allow_cygwin is False, cygwin will be reported as UNIX."""
 
@@ -228,7 +219,7 @@ class Monitor:
             return True
         return False
 
-    def record_fail(self, message=""):
+    def record_fail(self, message="") -> bool:
         """Update internal state to show that we had a failure."""
         self.error_count += 1
         self.last_update = datetime.datetime.utcnow()
@@ -242,7 +233,7 @@ class Monitor:
         self.was_skipped = False
         return False
 
-    def record_success(self, message=""):
+    def record_success(self, message="") -> bool:
         """Update internal state to show we had a success."""
         if self.error_count > 0:
             self.last_error_count = self.error_count
@@ -255,7 +246,7 @@ class Monitor:
         self.last_result = message
         return True
 
-    def record_skip(self, which_dep):
+    def record_skip(self, which_dep: Optional[str]) -> bool:
         """Record that we were skipped.
 
         We pretend to have succeeded as we don't want notifications sent."""
@@ -269,18 +260,18 @@ class Monitor:
             self.was_skipped = True
         return True
 
-    def skipped(self):
+    def skipped(self) -> bool:
         if self.was_skipped:
             return True
         return False
 
-    def get_success_count(self):
+    def get_success_count(self) -> int:
         """Get the number of successful tests."""
         if self.tests_run == 0:
             return 0
         return self.success_count
 
-    def all_better_now(self):
+    def all_better_now(self) -> bool:
         """Check if we've just recovered."""
         if (
             self.last_error_count >= self._tolerance
@@ -290,31 +281,31 @@ class Monitor:
             return True
         return False
 
-    def first_failure_time(self):
+    def first_failure_time(self) -> Optional[datetime.datetime]:
         """Get a datetime object showing when we first failed."""
         return self.failed_at
 
-    def get_error_count(self):
+    def get_error_count(self) -> int:
         """Get the number of times we've failed (ignoring tolerance)."""
         return self.error_count
 
     @property
-    def notify(self):
+    def notify(self) -> bool:
         return self._notify
 
     @notify.setter
-    def notify(self, value):
+    def notify(self, value) -> None:
         if isinstance(value, bool):
             self._notify = value
         else:
             raise TypeError("notify must be a bool")
 
     @property
-    def urgent(self):
+    def urgent(self) -> bool:
         return self._urgent
 
     @urgent.setter
-    def urgent(self, value):
+    def urgent(self, value) -> None:
         if isinstance(value, bool):
             self._urgent = value
         elif isinstance(value, int):
@@ -325,7 +316,7 @@ class Monitor:
         else:
             raise TypeError("urgent should be a bool, or an int at a push")
 
-    def should_run(self):
+    def should_run(self) -> bool:
         """Check if we should run our tests.
 
         We always run if the minimum gap is 0, or if we're currently failing.
@@ -347,12 +338,12 @@ class Monitor:
             return True
         return False
 
-    def last_virtual_fail_count(self):
+    def last_virtual_fail_count(self) -> int:
         if (self.last_error_count - self._tolerance) < 0:
             return 0
         return self.last_error_count - self._tolerance
 
-    def attempt_recover(self):
+    def attempt_recover(self) -> None:
         if self._recover_command is None:
             self.recover_info = ""
             return
@@ -366,11 +357,11 @@ class Monitor:
         except Exception as e:
             self.recover_info = "Unable to run command: %s" % e
 
-    def post_config_setup(self):
+    def post_config_setup(self) -> None:
         """ any post config setup needed """
         pass
 
-    def __getstate__(self):
+    def __getstate__(self) -> dict:
         """Loggers (the Python kind, not the SimpleMonitor kind) can't be serialized.
         In order to work around that, we omit them when getting serialized (for
         being sent over the network).
@@ -379,26 +370,46 @@ class Monitor:
         del serialize_dict["monitor_logger"]
         return serialize_dict
 
-    def __setstate__(self, state):
+    def __setstate__(self, state) -> None:
         self.__dict__.update(state)
         self._set_monitor_logger()
 
-    def _set_monitor_logger(self):
+    def _set_monitor_logger(self) -> None:
         self.monitor_logger = logging.getLogger("simplemonitor.monitor-" + self.name)
 
-    def to_python_dict(self):
+    def to_python_dict(self) -> dict:
         return self.__getstate__()
 
+    """
+    TODO
+    from typing import Type, TypeVar
+
+    T = TypeVar('T', bound='TrivialClass')
+
+    class TrivialClass:
+        # ...
+
     @classmethod
-    def from_python_dict(cls, d):
+    def from_int(cls: Type[T], int_arg: int) -> T:
+        # ...
+        return cls(...)
+    """
+
+    @classmethod
+    def from_python_dict(
+        cls: Any, d: dict
+    ) -> "Monitor":  # can't return Monitor type as flake8 gets cross
         monitor = Monitor()
         monitor.__class__ = cls
         monitor.__setstate__(d)
         return monitor
 
-    def get_downtime(self):
-        try:
-            downtime = datetime.datetime.utcnow() - self.first_failure_time()
+    def get_downtime(self) -> Tuple[int, int, int, int]:  # TODO: specify list better?
+        first_failure_time = self.first_failure_time()
+        if first_failure_time is None:
+            return (0, 0, 0, 0)
+        else:
+            downtime = datetime.datetime.utcnow() - first_failure_time
             downtime_seconds = downtime.seconds
             (hours, minutes) = (0, 0)
             if downtime_seconds > 3600:
@@ -406,10 +417,8 @@ class Monitor:
             if downtime_seconds > 60:
                 (minutes, downtime_seconds) = divmod(downtime_seconds, 60)
             return (downtime.days, hours, minutes, downtime_seconds)
-        except TypeError:
-            return (0, 0, 0, 0)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.describe()
 
 
@@ -426,13 +435,13 @@ class MonitorFail(Monitor):
 
     type = "fail"
 
-    def __init__(self, name, config_options):
+    def __init__(self, name: str, config_options: dict):
         Monitor.__init__(self, name, config_options)
         self.interval = Monitor.get_config_option(
             config_options, "interval", required_type="int", minimum=1, default=5
         )
 
-    def run_test(self):
+    def run_test(self) -> bool:
         """Always fails."""
         self.monitor_logger.info(
             "error_count = %d, interval = %d --> %d",
@@ -451,10 +460,10 @@ class MonitorFail(Monitor):
             self.record_success()
             return True
 
-    def describe(self):
+    def describe(self) -> str:
         return "A monitor which always fails."
 
-    def get_params(self):
+    def get_params(self) -> Tuple:
         return (self.interval,)
 
 
@@ -464,8 +473,8 @@ class MonitorNull(Monitor):
 
     type = "null"
 
-    def run_test(self):
-        self.record_success()
+    def run_test(self) -> bool:
+        return self.record_success()
 
-    def get_params(self):
+    def get_params(self) -> Tuple:
         return ()

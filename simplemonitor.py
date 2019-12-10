@@ -6,9 +6,13 @@ import logging
 import pickle
 import sys
 import time
+from typing import Any, List
 
 import Loggers
-import Monitors
+import Monitors.monitor
+from Alerters.alerter import Alerter
+from Loggers.logger import Logger
+from Monitors.monitor import Monitor
 
 module_logger = logging.getLogger("simplemonitor")
 
@@ -27,36 +31,36 @@ class SimpleMonitor:
         self.loggers = {}
         self.alerters = {}
 
-    def add_monitor(self, name, monitor):
+    def add_monitor(self, name: str, monitor: Monitor) -> None:
         self.monitors[name] = monitor
 
-    def update_monitor_config(self, name, config_options):
+    def update_monitor_config(self, name: str, config_options: dict) -> None:
         self.monitors[name].__init__(name, config_options)
 
-    def update_logger_config(self, name, config_options):
+    def update_logger_config(self, name: str, config_options: dict) -> None:
         self.loggers[name].__init__(config_options)
 
-    def update_alerter_config(self, name, config_options):
+    def update_alerter_config(self, name: str, config_options: dict) -> None:
         self.alerters[name].__init__(config_options)
 
-    def set_urgency(self, monitor, urgency):
+    def set_urgency(self, monitor: str, urgency: bool) -> None:
         self.monitors[monitor].set_urgency(urgency)
 
-    def has_monitor(self, monitor):
+    def has_monitor(self, monitor: str) -> bool:
         return monitor in self.monitors.keys()
 
-    def has_logger(self, logger):
+    def has_logger(self, logger: str) -> bool:
         return logger in self.loggers.keys()
 
-    def has_alerter(self, alerter):
+    def has_alerter(self, alerter: str) -> bool:
         return alerter in self.alerters.keys()
 
-    def reset_monitors(self):
+    def reset_monitors(self) -> None:
         """Clear all the monitors' dependency info back to default."""
         for key in list(self.monitors.keys()):
             self.monitors[key].reset_dependencies()
 
-    def verify_dependencies(self):
+    def verify_dependencies(self) -> bool:
         ok = True
         for k in list(self.monitors.keys()):
             for dependency in self.monitors[k]._dependencies:
@@ -69,12 +73,12 @@ class SimpleMonitor:
                     ok = False
         return ok
 
-    def run_tests(self):
+    def run_tests(self) -> None:
         self.reset_monitors()
 
         joblist = list(self.monitors.keys())
-        new_joblist = []
-        failed = []
+        new_joblist: List[str] = []
+        failed: List[str] = []
 
         not_run = False
 
@@ -149,7 +153,7 @@ class SimpleMonitor:
                         self.monitors[monitor2].dependency_succeeded(monitor)
             joblist = copy.copy(new_joblist)
 
-    def log_result(self, logger):
+    def log_result(self, logger: Logger) -> None:
         """Use the given logger object to log our state."""
         logger.check_dependencies(self.failed + self.still_failing + self.skipped)
         logger.start_batch()
@@ -163,7 +167,7 @@ class SimpleMonitor:
             module_logger.exception("exception while logging remote monitors")
         logger.end_batch()
 
-    def do_alert(self, alerter):
+    def do_alert(self, alerter: Alerter) -> None:
         """Use the given alerter object to send an alert, if needed."""
         alerter.check_dependencies(self.failed + self.still_failing + self.skipped)
         for key in list(self.monitors.keys()):
@@ -210,14 +214,14 @@ class SimpleMonitor:
             except Exception:  # pragma: no cover
                 module_logger.exception("exception caught while alerting for %s", key)
 
-    def count_monitors(self):
+    def count_monitors(self) -> int:
         """Gets the number of monitors we have defined."""
         return len(self.monitors)
 
-    def add_alerter(self, name, alerter):
+    def add_alerter(self, name: str, alerter: Alerter) -> None:
         self.alerters[name] = alerter
 
-    def add_logger(self, name, logger):
+    def add_logger(self, name: str, logger: Logger) -> None:
         if isinstance(logger, Loggers.logger.Logger):
             self.loggers[name] = logger
         else:
@@ -225,7 +229,7 @@ class SimpleMonitor:
                 "Failed to add logger because it is not the right type"
             )
 
-    def prune_monitors(self, retain):
+    def prune_monitors(self, retain: List[str]) -> None:
         """Remove monitors which are in our list but not in the list passed to us.
 
         Used to tidy up after a config reload (which may have removed monitors)"""
@@ -242,7 +246,7 @@ class SimpleMonitor:
             )
             sys.exit(1)
 
-    def prune_alerters(self, retain):
+    def prune_alerters(self, retain: List[str]) -> None:
         """Remove alerters which are in our list but not in the list passed to us.
 
         Used to tidy up after a config reload (which may have removed alerters)"""
@@ -254,7 +258,7 @@ class SimpleMonitor:
         for alerter in delete_list:
             del self.alerters[alerter]
 
-    def prune_loggers(self, retain):
+    def prune_loggers(self, retain: List[str]) -> None:
         """Remove loggers which are in our list but not in the list passed to us.
 
         Used to tidy up after a config reload (which may have removed logger)"""
@@ -266,23 +270,23 @@ class SimpleMonitor:
         for logger in delete_list:
             del self.loggers[logger]
 
-    def do_alerts(self):
+    def do_alerts(self) -> None:
         for key in list(self.alerters.keys()):
             self.do_alert(self.alerters[key])
 
-    def do_recovery(self):
+    def do_recovery(self) -> None:
         for key in list(self.monitors.keys()):
             self.monitors[key].attempt_recover()
 
-    def hup_loggers(self):
+    def hup_loggers(self) -> None:
         for logger in self.loggers:
             self.loggers[logger].hup()
 
-    def do_logs(self):
+    def do_logs(self) -> None:
         for key in list(self.loggers.keys()):
             self.log_result(self.loggers[key])
 
-    def update_remote_monitor(self, data, hostname):
+    def update_remote_monitor(self, data: Any, hostname: str) -> None:
         for (name, state) in data.items():
             module_logger.info("updating remote monitor %s", name)
             if isinstance(state, dict):
@@ -307,7 +311,7 @@ class SimpleMonitor:
                     name,
                 )
 
-    def run_loop(self):
+    def run_loop(self) -> None:
         """Run the complete monitor loop once."""
         module_logger.debug("Running tests")
         self.run_tests()

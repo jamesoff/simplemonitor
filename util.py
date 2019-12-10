@@ -4,6 +4,9 @@ import datetime
 import json
 import re
 import socket
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+
+from envconfig import EnvironmentAwareConfigParser
 
 
 class MonitorConfigurationError(ValueError):
@@ -30,7 +33,9 @@ class SimpleMonitorConfigurationError(ValueError):
     pass
 
 
-def get_config_option(config_options, key, **kwargs):
+def get_config_option(
+    config_options: dict, key: str, **kwargs: Any
+) -> Union[None, str, int, float, bool, List[str], List[int]]:
     """Get a value out of a dict, with possible default, required type and requiredness."""
     exception = kwargs.get("exception", ValueError)
 
@@ -92,7 +97,7 @@ def get_config_option(config_options, key, **kwargs):
     return value
 
 
-def format_datetime(the_datetime):
+def format_datetime(the_datetime: Optional[datetime.datetime]) -> str:
     """Return an isoformat()-like datetime without the microseconds."""
     if the_datetime is None:
         return ""
@@ -103,7 +108,7 @@ def format_datetime(the_datetime):
     return the_datetime
 
 
-def short_hostname():
+def short_hostname() -> str:
     """Get just our machine name.
 
     TODO: This might actually be redundant. Python probably provides it's own version of this."""
@@ -111,7 +116,9 @@ def short_hostname():
     return (socket.gethostname() + ".").split(".")[0]
 
 
-def get_config_dict(config, monitor):
+def get_config_dict(
+    config: EnvironmentAwareConfigParser, monitor: str
+) -> Dict[str, str]:
     options = config.items(monitor)
     ret = {}
     for (key, value) in options:
@@ -119,14 +126,14 @@ def get_config_dict(config, monitor):
     return ret
 
 
-DATETIME_MAGIC_TOKEN = "__simplemonitor_datetime"
+DATETIME_MAGIC_TOKEN = "__simplemonitor_datetime"  # nosec
 FORMAT = "%Y-%m-%d %H:%M:%S.%f"
 
 
 class JSONEncoder(json.JSONEncoder):
     _regexp_type = type(re.compile(""))
 
-    def default(self, obj):
+    def default(self, obj) -> Any:
         if isinstance(obj, datetime.datetime):
             return {DATETIME_MAGIC_TOKEN: obj.strftime(FORMAT)}
         if isinstance(obj, self._regexp_type):
@@ -142,7 +149,7 @@ class JSONDecoder(json.JSONDecoder):
 
     _datetime_re = re.compile(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{6}")
 
-    def object_pairs_hook(self, obj):
+    def object_pairs_hook(self, obj) -> Any:
         if (
             len(obj) == 1
             and obj[0][0] == DATETIME_MAGIC_TOKEN
@@ -156,16 +163,18 @@ class JSONDecoder(json.JSONDecoder):
             return dict(obj)
 
 
-def json_dumps(data):
+def json_dumps(data) -> bytes:
     return JSONEncoder().encode(data).encode("ascii")
 
 
-def json_loads(string):
+def json_loads(string) -> str:
     return JSONDecoder().decode(string.decode("ascii"))
 
 
-def subclass_dict_handler(mod, base_cls):
-    def _check_is_subclass(cls):
+def subclass_dict_handler(
+    mod: str, base_cls: type
+) -> Tuple[Callable, Callable, Callable]:
+    def _check_is_subclass(cls: Any) -> None:
         if not issubclass(cls, base_cls):
             raise TypeError(
                 ("%s.register may only be used on subclasses " "of %s.%s")
@@ -174,7 +183,7 @@ def subclass_dict_handler(mod, base_cls):
 
     _subclasses = {}
 
-    def register(cls):
+    def register(cls: Any) -> Any:
         """Decorator for monitor classes."""
         _check_is_subclass(cls)
         assert cls.type != "unknown", cls
@@ -184,7 +193,7 @@ def subclass_dict_handler(mod, base_cls):
     def get_class(type_):
         return _subclasses[type_]
 
-    def all_types():
+    def all_types() -> list:
         return list(_subclasses)
 
     return (register, get_class, all_types)

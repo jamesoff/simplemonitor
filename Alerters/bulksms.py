@@ -1,5 +1,7 @@
 # coding=utf-8
 
+from typing import Any
+
 import requests
 
 from util import format_datetime
@@ -15,7 +17,7 @@ class BulkSMSAlerter(Alerter):
 
     type = "bulksms"
 
-    def __init__(self, config_options):
+    def __init__(self, config_options: dict) -> None:
         Alerter.__init__(self, config_options)
         self.username = Alerter.get_config_option(
             config_options, "username", required=True, allow_empty=False
@@ -30,6 +32,7 @@ class BulkSMSAlerter(Alerter):
         self.sender = Alerter.get_config_option(
             config_options, "sender", default="SmplMntr"
         )
+        assert isinstance(self.sender, str)
         if len(self.sender) > 11:
             self.alerter_logger.warning("truncating SMS sender name to 11 chars")
             self.sender = self.sender[:11]
@@ -40,7 +43,7 @@ class BulkSMSAlerter(Alerter):
 
         self.support_catchup = True
 
-    def send_alert(self, name, monitor):
+    def send_alert(self, name: str, monitor: Any) -> None:
         """Send an SMS alert."""
 
         if not monitor.is_urgent():
@@ -49,6 +52,12 @@ class BulkSMSAlerter(Alerter):
         type_ = self.should_alert(monitor)
         message = ""
         url = ""
+
+        # to reassure mypy, else params has a bad type later
+        assert isinstance(self.username, str)
+        assert isinstance(self.password, str)
+        assert isinstance(self.target, str)
+        assert isinstance(self.sender, str)
 
         (days, hours, minutes, seconds) = monitor.get_downtime()
         if type_ == "":

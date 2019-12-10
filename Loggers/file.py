@@ -10,7 +10,9 @@ import sys
 import tempfile
 import time
 from io import StringIO
+from typing import List, TextIO
 
+from Monitors.monitor import Monitor
 from util import format_datetime, short_hostname
 
 from .logger import Logger, register
@@ -61,12 +63,12 @@ class FileLogger(Logger):
 
         self.file_handle.write("%s: simplemonitor starting" % self._get_datestring())
 
-    def _get_datestring(self):
+    def _get_datestring(self) -> str:
         if self.dateformat == "iso8601":
             return format_datetime(datetime.datetime.now())
         return str(int(time.time()))
 
-    def save_result2(self, name, monitor):
+    def save_result2(self, name: str, monitor: Monitor):
         if self.only_failures and monitor.virtual_fail_count() == 0:
             return
 
@@ -95,7 +97,7 @@ class FileLogger(Logger):
         except Exception:
             self.logger_logger.exception("Error writing to logfile %s", self.filename)
 
-    def hup(self):
+    def hup(self) -> None:
         """Close and reopen log file."""
         self.file_handle.close()
         try:
@@ -105,7 +107,7 @@ class FileLogger(Logger):
                 "Couldn't reopen log file %s after HUP: %s" % (self.filename, e)
             )
 
-    def describe(self):
+    def describe(self) -> str:
         return "Writing log file to {0}".format(self.filename)
 
 
@@ -144,12 +146,14 @@ class HTMLLogger(Logger):
             config_options, "upload_command", required=False, allow_empty=False
         )
 
-    def save_result2(self, name, monitor):
+    def save_result2(self, name: str, monitor: Monitor) -> None:
         if not self.doing_batch:
             self.logger_logger.error(
                 "HTMLLogger.save_result2() called while not doing batch."
             )
             return
+        if self.batch_data is None:
+            self.batch_data = {}
         if monitor.virtual_fail_count() == 0:
             status = True
         else:
@@ -163,16 +167,19 @@ class HTMLLogger(Logger):
             fail_time = ""
             fail_count = 0
             fail_data = monitor.get_result()
-            downtime = ""
+            downtime = (0, 0, 0, 0)
         failures = monitor.failures
         last_failure = monitor.last_failure
 
         try:
-            age = datetime.datetime.utcnow() - monitor.last_update
-            age = age.days * 3600 + age.seconds
-            update = monitor.last_update
-        except Exception:
-            age = 0
+            if monitor.last_update is not None:
+                age = datetime.datetime.utcnow() - monitor.last_update
+                age_seconds = age.days * 3600 + age.seconds
+                update = str(monitor.last_update)
+            else:
+                raise ValueError
+        except ValueError:
+            age_seconds = 0
             update = ""
 
         data_line = {
@@ -181,7 +188,7 @@ class HTMLLogger(Logger):
             "fail_count": fail_count,
             "fail_data": fail_data,
             "downtime": downtime,
-            "age": age,
+            "age": age_seconds,
             "update": update,
             "host": monitor.running_on,
             "failures": failures,
@@ -189,7 +196,7 @@ class HTMLLogger(Logger):
         }
         self.batch_data[monitor.name] = data_line
 
-    def process_batch(self):
+    def process_batch(self) -> None:
         """Save the HTML file."""
         ok_count = 0
         fail_count = 0
@@ -209,6 +216,8 @@ class HTMLLogger(Logger):
         output_ok = StringIO()
         output_fail = StringIO()
 
+        if self.batch_data is None:
+            return
         keys = list(self.batch_data.keys())
         keys.sort()
         for entry in keys:
@@ -327,8 +336,8 @@ class HTMLLogger(Logger):
                     "Failed to run upload command for HTML files"
                 )
 
-    def parse_file(self, file_handle):
-        lines = []
+    def parse_file(self, file_handle: TextIO) -> List[str]:
+        lines: List[str] = []
         for line in file_handle:
             line = line.replace("_NOW_", format_datetime(datetime.datetime.now()))
             line = line.replace("_HOST_", socket.gethostname())
@@ -338,7 +347,7 @@ class HTMLLogger(Logger):
             lines.append(line)
         return lines
 
-    def describe(self):
+    def describe(self) -> str:
         return "Writing HTML page to {0}".format(self.filename)
 
 
@@ -351,7 +360,7 @@ class MonitorResult(object):
         self.status = "Fail"
         self.dependencies = []
 
-    def json_representation(self):
+    def json_representation(self) -> dict:
         return self.__dict__
 
 
@@ -360,7 +369,7 @@ class MonitorJsonPayload(object):
         self.generated = None
         self.monitors = {}
 
-    def json_representation(self):
+    def json_representation(self) -> dict:
         return self.__dict__
 
 
@@ -375,16 +384,20 @@ class PayloadEncoder(json.JSONEncoder):
 @register
 class JsonLogger(Logger):
     type = "json"
-    filename = ""
+    filename: str = ""
     supports_batch = True
 
-    def __init__(self, config_options={}):
-        Logger.__init__(self, config_options)
+    def __init__(self, config_options=None) -> None:
+        if config_options is None:
+            config_options = {}
+        super().__init__(config_options)
         self.filename = Logger.get_config_option(
             config_options, "filename", required=True, allow_empty=False
         )
 
-    def save_result2(self, name, monitor):
+    def save_result2(self, name: str, monitor: Monitor) -> None:
+        if self.batch_data is None:
+            self.batch_data = {}
         result = MonitorResult()
         result.first_failure_time = format_datetime(monitor.first_failure_time())
         result.virtual_fail_count = monitor.virtual_fail_count()
@@ -398,7 +411,7 @@ class JsonLogger(Logger):
 
         self.batch_data[name] = result
 
-    def process_batch(self):
+    def process_batch(self) -> None:
         payload = MonitorJsonPayload()
         payload.generated = format_datetime(datetime.datetime.now())
         payload.monitors = self.batch_data
@@ -414,5 +427,5 @@ class JsonLogger(Logger):
             )
         self.batch_data = {}
 
-    def describe(self):
+    def describe(self) -> str:
         return "Writing JSON file to {0}".format(self.filename)

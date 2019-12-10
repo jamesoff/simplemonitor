@@ -3,6 +3,7 @@ import re
 import shlex
 import subprocess
 import time
+from typing import Optional, Tuple
 
 from .monitor import Monitor, register
 
@@ -14,7 +15,7 @@ except ImportError:
     win32_available = False
 
 
-def _size_string_to_bytes(s):
+def _size_string_to_bytes(s: str) -> Optional[int]:
     if s is None:
         return None
     if s.endswith("G"):
@@ -31,7 +32,7 @@ def _size_string_to_bytes(s):
     return bytes
 
 
-def _bytes_to_size_string(b):
+def _bytes_to_size_string(b: int) -> str:
     """Convert a number in bytes to a sensible unit."""
 
     kb = 1024
@@ -57,7 +58,7 @@ class MonitorDiskSpace(Monitor):
 
     type = "diskspace"
 
-    def __init__(self, name, config_options):
+    def __init__(self, name: str, config_options: dict) -> None:
         Monitor.__init__(self, name, config_options)
         if self.is_windows(allow_cygwin=False):
             self.use_statvfs = False
@@ -74,20 +75,20 @@ class MonitorDiskSpace(Monitor):
             Monitor.get_config_option(config_options, "limit", required=True)
         )
 
-    def run_test(self):
+    def run_test(self) -> bool:
         try:
             if self.use_statvfs:
                 result = os.statvfs(self.partition)
                 space = result.f_bavail * result.f_frsize
                 percent = float(result.f_bavail) / float(result.f_blocks) * 100
             else:
-                result = win32api.GetDiskFreeSpaceEx(self.partition)
-                space = result[2]
-                percent = float(result[2]) / float(result[1]) * 100
+                win_result = win32api.GetDiskFreeSpaceEx(self.partition)
+                space = win_result[2]
+                percent = float(win_result[2]) / float(win_result[1]) * 100
         except Exception as e:
             return self.record_fail("Couldn't get free disk space: %s" % e)
 
-        if space <= self.limit:
+        if self.limit and space <= self.limit:
             return self.record_fail(
                 "%s free (%d%%)" % (_bytes_to_size_string(space), percent)
             )
@@ -95,14 +96,16 @@ class MonitorDiskSpace(Monitor):
             "%s free (%d%%)" % (_bytes_to_size_string(space), percent)
         )
 
-    def describe(self):
+    def describe(self) -> str:
         """Explains what we do."""
-        return "Checking for at least %s free space on %s" % (
-            _bytes_to_size_string(self.limit),
-            self.partition,
-        )
+        if self.limit is None:
+            limit = "none"
+        else:
+            limit = _bytes_to_size_string(self.limit)
 
-    def get_params(self):
+        return "Checking for at least %s free space on %s" % (limit, self.partition)
+
+    def get_params(self) -> Tuple:
         return (self.limit, self.partition)
 
 
@@ -112,7 +115,7 @@ class MonitorFileStat(Monitor):
 
     type = "filestat"
 
-    def __init__(self, name, config_options):
+    def __init__(self, name: str, config_options: dict) -> None:
         Monitor.__init__(self, name, config_options)
         self.maxage = Monitor.get_config_option(
             config_options, "maxage", required_type="int", minimum=0
@@ -126,7 +129,7 @@ class MonitorFileStat(Monitor):
             config_options, "filename", required=True
         )
 
-    def run_test(self):
+    def run_test(self) -> bool:
         try:
             statinfo = os.stat(self.filename)
         except Exception as e:
@@ -149,7 +152,7 @@ class MonitorFileStat(Monitor):
 
         return self.record_success()
 
-    def describe(self):
+    def describe(self) -> str:
         """Explains what we do"""
         desc = "Checking %s exists" % self.filename
         if self.maxage:
@@ -158,7 +161,7 @@ class MonitorFileStat(Monitor):
             desc = desc + " and is not smaller than %d bytes" % self.minsize
         return desc
 
-    def get_params(self):
+    def get_params(self) -> Tuple:
         return (self.filename, self.minsize, self.maxage)
 
 
@@ -221,10 +224,10 @@ class MonitorApcupsd(Monitor):
 
         return True
 
-    def describe(self):
+    def describe(self) -> str:
         return "Monitoring UPS to make sure it's ONLINE."
 
-    def get_params(self):
+    def get_params(self) -> Tuple:
         return (self.path,)
 
 
@@ -235,17 +238,17 @@ class MonitorPortAudit(Monitor):
     type = "portaudit"
     regexp = re.compile(r"(\d+) problem\(s\) in your installed packages found")
 
-    def __init__(self, name, config_options):
+    def __init__(self, name: str, config_options: dict) -> None:
         Monitor.__init__(self, name, config_options)
         self.path = Monitor.get_config_option(config_options, "path", default="")
 
-    def describe(self):
+    def describe(self) -> str:
         return "Checking for insecure ports."
 
-    def get_params(self):
+    def get_params(self) -> Tuple:
         return (self.path,)
 
-    def run_test(self):
+    def run_test(self) -> bool:
         try:
             # -X 1 tells portaudit to re-download db if one day out of date
             if self.path == "":
@@ -284,17 +287,17 @@ class MonitorPkgAudit(Monitor):
     regexp = re.compile(r"(\d+) problem\(s\) in \w+ installed package(s|\(s\)) found")
     path = ""
 
-    def __init__(self, name, config_options):
+    def __init__(self, name: str, config_options: dict) -> None:
         Monitor.__init__(self, name, config_options)
         self.path = Monitor.get_config_option(config_options, "path", default="")
 
-    def describe(self):
+    def describe(self) -> str:
         return "Checking for insecure packages."
 
-    def get_params(self):
+    def get_params(self) -> Tuple:
         return (self.path,)
 
-    def run_test(self):
+    def run_test(self) -> bool:
         try:
             if self.path == "":
                 self.path = "/usr/local/sbin/pkg"
@@ -330,7 +333,7 @@ class MonitorLoadAvg(Monitor):
 
     type = "loadavg"
 
-    def __init__(self, name, config_options):
+    def __init__(self, name: str, config_options: dict) -> None:
         Monitor.__init__(self, name, config_options)
         if self.is_windows(allow_cygwin=False):
             raise RuntimeError("loadavg monitor does not support Windows")
@@ -347,7 +350,7 @@ class MonitorLoadAvg(Monitor):
             config_options, "max", required_type="float", default=1.00, minimum=0
         )
 
-    def describe(self):
+    def describe(self) -> str:
         if self.which == 0:
             return "Checking 1min loadavg is <= %0.2f" % self.max
         elif self.which == 1:
@@ -355,7 +358,7 @@ class MonitorLoadAvg(Monitor):
         else:
             return "Checking 15min loadavg is <= %0.2f" % self.max
 
-    def run_test(self):
+    def run_test(self) -> bool:
         try:
             loadavg = os.getloadavg()
         except Exception as e:
@@ -365,7 +368,7 @@ class MonitorLoadAvg(Monitor):
             return self.record_fail("%0.2f" % loadavg[self.which])
         return self.record_success("%0.2f" % loadavg[self.which])
 
-    def get_params(self):
+    def get_params(self) -> Tuple:
         return (self.which, self.max)
 
 
@@ -376,15 +379,16 @@ class MonitorZap(Monitor):
     type = "zap"
     r = re.compile("^alarms=(?P<status>).+")
 
-    def __init__(self, name, config_options):
+    def __init__(self, name: str, config_options: dict) -> None:
         Monitor.__init__(self, name, config_options)
         self.span = Monitor.get_config_option(
             config_options, "span", required_type="int", default=1, minimum=1
         )
 
-    def run_test(self):
+    def run_test(self) -> bool:
         try:
-            output = subprocess.check_output(["ztscan", str(self.span)])
+            _output = subprocess.check_output(["ztscan", str(self.span)])
+            output = _output.decode("utf-8")
             for line in output:
                 matches = self.r.match(line)
                 if matches:
@@ -396,10 +400,10 @@ class MonitorZap(Monitor):
         except Exception as e:
             return self.record_fail("Error running ztscan: %s" % e)
 
-    def describe(self):
+    def describe(self) -> str:
         return "Checking status of zap span %d is OK" % self.span
 
-    def get_params(self):
+    def get_params(self) -> Tuple:
         return (self.span,)
 
 
@@ -414,7 +418,7 @@ class MonitorCommand(Monitor):
     type = "command"
     available = True
 
-    def __init__(self, name, config_options):
+    def __init__(self, name: str, config_options: dict) -> None:
         Monitor.__init__(self, name, config_options)
 
         self.result_regexp_text = Monitor.get_config_option(
@@ -436,19 +440,19 @@ class MonitorCommand(Monitor):
         )
         self.command = shlex.split(command)
 
-    def run_test(self):
+    def run_test(self) -> bool:
         if not self.available:
             return self.record_skip(None)
         try:
-            out = subprocess.check_output(self.command)
+            _out = subprocess.check_output(self.command)
             if self.result_regexp is not None:
-                out = out.decode("utf-8")
+                out = _out.decode("utf-8")
                 matches = self.result_regexp.search(out)
                 if matches:
                     return self.record_success()
                 return self.record_fail("could not match regexp in out")
             elif self.result_max is not None:
-                outasinteger = int(out)
+                outasinteger = int(_out)
                 if outasinteger < self.result_max:
                     return self.record_success(
                         "%s < %s" % (outasinteger, self.result_max)
@@ -460,7 +464,7 @@ class MonitorCommand(Monitor):
 
         return self.record_fail()
 
-    def describe(self):
+    def describe(self) -> str:
         """Explains what this instance is checking"""
         if self.result_regexp is not None:
             return 'checking command "%s" match a regexp %s' % (
@@ -475,5 +479,5 @@ class MonitorCommand(Monitor):
         else:
             return 'checking command "%s" has return status 0' % " ".join(self.command)
 
-    def get_params(self):
+    def get_params(self) -> Tuple:
         return (self.command, self.result_regexp_text, self.result_max)

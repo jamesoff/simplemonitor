@@ -1,6 +1,7 @@
 import os
 import re
 from configparser import BasicInterpolation, ConfigParser
+from typing import List, Optional
 
 
 class EnvironmentAwareConfigParser(ConfigParser):
@@ -9,13 +10,13 @@ class EnvironmentAwareConfigParser(ConfigParser):
 
     r = re.compile("%env:([a-zA-Z0-9_]+)%")
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         """Init with our specific interpolation class (for Python 3)"""
         interpolation = EnvironmentAwareInterpolation()
         kwargs["interpolation"] = interpolation
         ConfigParser.__init__(self, *args, **kwargs)
 
-    def read(self, filenames):
+    def read(self, filenames, encoding: Optional[str] = None) -> List[str]:
         """Load a config file and do environment variable interpolation on the section names."""
         result = ConfigParser.read(self, filenames)
         for section in self.sections():

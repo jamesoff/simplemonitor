@@ -6,6 +6,7 @@ import re
 import subprocess
 import sys
 import time
+from typing import Any, List
 
 from util import MonitorConfigurationError
 
@@ -184,7 +185,7 @@ class MonitorSystemdUnit(Monitor):
 
     # A cached shared by all instances of MonitorSystemdUnit, so a single
     # call is done for all monitors at once.
-    _listunit_cache = []
+    _listunit_cache: List[Any] = []
     _listunit_cache_expiry = 0
     CACHE_LIFETIME = 1  # in seconds
 
@@ -258,7 +259,7 @@ class MonitorSystemdUnit(Monitor):
             )
         if self.want_sub_states and sub_state not in self.want_sub_states:
             return self.record_fail(
-                "Unit {0} has sub state: {0} (wanted {2})".format(
+                "Unit {0} has sub state: {1} (wanted {2})".format(
                     name, sub_state, self.want_sub_states
                 )
             )
