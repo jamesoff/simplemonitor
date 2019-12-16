@@ -18,25 +18,25 @@
     "default": {
         "boto3": {
             "hashes": [
-                "sha256:5cce08df442a965b74c3db1c8147b437893da52ccfa8fd1d25caf1a83bca8aa1",
-                "sha256:adbeb9966c787c4acf4686afaa4e6951c89519a62f0a94caacf2e0c910b8b799"
+                "sha256:67211b7454183a4b61a269003f8b3add76bbaf282236221632eafa0e2ec62e09",
+                "sha256:c53f274991616dc6d84d1b3b4e57a86f146df2132e3bd1b02ce10209bf7a2c49"
             ],
             "index": "pypi",
-            "version": "==1.10.18"
+            "version": "==1.10.39"
         },
         "botocore": {
             "hashes": [
-                "sha256:946fd5e85378c3c597d6b9f495706576a0fc0000b216e30346ed7ee796ff50c8",
-                "sha256:f82e44af499a8f806c363ab4e26df82195b5b190c4169ccfbfbc98e55aa22bf7"
+                "sha256:2d2b0bf77c417e5fa42b64acfc5501f11537c3a3bc05a93ea3893d1d18c7a1c2",
+                "sha256:9a993f7650e9a6eabb12cb3cc14b339a0d1ca14a80a9f539a6d5a63f2392a781"
             ],
-            "version": "==1.12.150"
+            "version": "==1.13.39"
         },
         "certifi": {
             "hashes": [
-                "sha256:e4f3620cfea4f83eedc95b24abd9cd56f3c4b146dd0177e83a21b4eb49e21e50",
-                "sha256:fd7c7c74727ddcf00e9acd26bba8da604ffec95bf1c2144e67aff7a8b50e6cef"
+                "sha256:017c25db2a153ce562900032d5bc68e9f191e44e9a0f762f373977de9df1fbb3",
+                "sha256:25b64c7da4cd7479594d035c08c2d809eb4aab3a26e5a990ea98cc450c320f1f"
             ],
-            "version": "==2019.9.11"
+            "version": "==2019.11.28"
         },
         "cffi": {
             "hashes": [
@@ -210,10 +210,10 @@
     "develop": {
         "certifi": {
             "hashes": [
-                "sha256:e4f3620cfea4f83eedc95b24abd9cd56f3c4b146dd0177e83a21b4eb49e21e50",
-                "sha256:fd7c7c74727ddcf00e9acd26bba8da604ffec95bf1c2144e67aff7a8b50e6cef"
+                "sha256:017c25db2a153ce562900032d5bc68e9f191e44e9a0f762f373977de9df1fbb3",
+                "sha256:25b64c7da4cd7479594d035c08c2d809eb4aab3a26e5a990ea98cc450c320f1f"
             ],
-            "version": "==2019.9.11"
+            "version": "==2019.11.28"
         },
         "chardet": {
             "hashes": [
