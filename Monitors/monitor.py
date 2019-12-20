@@ -19,7 +19,6 @@ import time
 from typing import Any, List, Optional, Tuple
 
 from Alerters.alerter import Alerter
-from Loggers.logger import Logger
 from util import (
     MonitorConfigurationError,
     get_config_option,
@@ -163,9 +162,11 @@ class Monitor:
         except ValueError:
             pass
 
-    def log_result(self, name: str, logger: Logger) -> None:
-        """Save our latest result to the logger."""
-        logger.save_result2(name, self)
+    def log_result(self, name: str, logger: Any) -> None:
+        """Save our latest result to the logger.
+
+        TODO: remove when known safe"""
+        self.monitor_logger.critical("Unexpected call to log_result()")
 
     def send_alert(self, name: str, alerter: Alerter) -> None:
         """Send an alert when we first fail.

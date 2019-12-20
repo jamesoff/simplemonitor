@@ -157,11 +157,11 @@ class SimpleMonitor:
         logger.check_dependencies(self.failed + self.still_failing + self.skipped)
         logger.start_batch()
         for key in list(self.monitors.keys()):
-            self.monitors[key].log_result(key, logger)
+            logger.save_result2(key, self.monitors[key])
         try:
             for key in list(self.remote_monitors.keys()):
                 module_logger.info("remote logging for %s", key)
-                self.remote_monitors[key].log_result(key, logger)
+                logger.save_result2(key, self.remote_monitors[key])
         except Exception:  # pragma: no cover
             module_logger.exception("exception while logging remote monitors")
         logger.end_batch()
