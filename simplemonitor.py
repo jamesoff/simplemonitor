@@ -77,13 +77,12 @@ class SimpleMonitor:
         self.reset_monitors()
 
         joblist = list(self.monitors.keys())
-        new_joblist: List[str] = []
-        failed: List[str] = []
+        failed = []  # type: List[str]
 
         not_run = False
 
         while joblist:
-            new_joblist = []
+            new_joblist = []  # type: List[str]
             module_logger.debug("Starting loop with joblist %s", joblist)
             for monitor in joblist:
                 module_logger.debug("Trying monitor: %s", monitor)

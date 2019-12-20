@@ -19,9 +19,9 @@ class Alerter:
 
     debug = False
     verbose = False
-    name: Optional[str] = None
+    name = None  # type: Optional[str]
 
-    ooh_failures: List[str] = []
+    ooh_failures = []  # type: List[str]
     # subclasses should set this to true if they support catchup notifications for delays
     support_catchup = False
 

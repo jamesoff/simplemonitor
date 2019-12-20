@@ -25,7 +25,7 @@ class MonitorHTTP(Monitor):
     url = ""
     regexp = None
     regexp_text = ""
-    allowed_codes: List[int] = []
+    allowed_codes = []  # type: List[int]
 
     type = "http"
 

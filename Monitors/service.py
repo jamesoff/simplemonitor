@@ -185,7 +185,7 @@ class MonitorSystemdUnit(Monitor):
 
     # A cached shared by all instances of MonitorSystemdUnit, so a single
     # call is done for all monitors at once.
-    _listunit_cache: List[Any] = []
+    _listunit_cache = []  # type: List[Any]
     _listunit_cache_expiry = 0
     CACHE_LIFETIME = 1  # in seconds
 

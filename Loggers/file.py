@@ -337,7 +337,7 @@ class HTMLLogger(Logger):
                 )
 
     def parse_file(self, file_handle: TextIO) -> List[str]:
-        lines: List[str] = []
+        lines = []  # type: List[str]
         for line in file_handle:
             line = line.replace("_NOW_", format_datetime(datetime.datetime.now()))
             line = line.replace("_HOST_", socket.gethostname())
@@ -384,7 +384,7 @@ class PayloadEncoder(json.JSONEncoder):
 @register
 class JsonLogger(Logger):
     type = "json"
-    filename: str = ""
+    filename = ""  # type: str
     supports_batch = True
 
     def __init__(self, config_options=None) -> None:

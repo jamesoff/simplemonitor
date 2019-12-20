@@ -13,7 +13,7 @@ class Logger:
 
     supports_batch = False
     doing_batch = True
-    batch_data: Optional[Dict[str, Any]] = None
+    batch_data = None  # type: Optional[Dict[str, Any]]
     connected = True
 
     def __init__(self, config_options: dict):
@@ -23,7 +23,7 @@ class Logger:
             config_options, "depend", required_type="[str]", default=[]
         )
         if self.batch_data is None:
-            self.batch_data: Optional[Dict[str, Any]] = {}
+            self.batch_data = {}  # type: Optional[Dict[str, Any]]
 
     @staticmethod
     def get_config_option(config_options: dict, key: str, **kwargs) -> Any:

@@ -53,7 +53,7 @@ class Monitor:
     last_failure = None  # type: Optional[datetime.datetime]
 
     # this is the time we last received data into this monitor (if we're remote)
-    last_update: Optional[datetime.datetime] = None
+    last_update = None  # type: Optional[datetime.datetime]
 
     def __init__(self, name="unnamed", config_options=None) -> None:
         """What's that coming over the hill? Is a monitor?"""
