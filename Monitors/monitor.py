@@ -25,14 +25,6 @@ from util import (
     subclass_dict_handler,
 )
 
-try:
-    # type: ignore
-    import win32api  # noqa: F401
-
-    win32_available = True
-except ImportError:
-    win32_available = False
-
 
 class Monitor:
     """Simple monitor. This class is abstract."""
