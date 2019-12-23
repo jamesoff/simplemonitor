@@ -60,7 +60,7 @@ class FortySixElksAlerter(Alerter):
     def send_alert(self, name, monitor):
         """Send an SMS alert."""
 
-        if not monitor.is_urgent():
+        if not monitor.urgent:
             return
 
         alert_type = self.should_alert(monitor)

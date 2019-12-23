@@ -46,7 +46,7 @@ class BulkSMSAlerter(Alerter):
     def send_alert(self, name: str, monitor: Any) -> None:
         """Send an SMS alert."""
 
-        if not monitor.is_urgent():
+        if not monitor.urgent:
             return
 
         type_ = self.should_alert(monitor)
