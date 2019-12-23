@@ -18,7 +18,6 @@ import subprocess
 import time
 from typing import Any, List, Optional, Tuple
 
-from Alerters.alerter import Alerter
 from util import (
     MonitorConfigurationError,
     get_config_option,
@@ -167,16 +166,6 @@ class Monitor:
 
         TODO: remove when known safe"""
         self.monitor_logger.critical("Unexpected call to log_result()")
-
-    def send_alert(self, name: str, alerter: Alerter) -> None:
-        """Send an alert when we first fail.
-
-        Set first_only to False to generate mail every time.
-
-        To be removed."""
-
-        if self.virtual_fail_count() == 1:
-            alerter.send_alert(name, self)
 
     def get_params(self) -> Tuple:
         """Override this method to return a list of parameters (for logging)"""
