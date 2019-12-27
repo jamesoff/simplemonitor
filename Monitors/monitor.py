@@ -386,7 +386,7 @@ class Monitor:
         monitor.__setstate__(d)
         return monitor
 
-    def get_downtime(self) -> Tuple[int, int, int, int]:  # TODO: specify list better?
+    def get_downtime(self) -> Tuple[int, int, int, int]:
         first_failure_time = self.first_failure_time()
         if first_failure_time is None:
             return (0, 0, 0, 0)

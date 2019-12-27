@@ -175,11 +175,11 @@ class MonitorApcupsd(Monitor):
 
     type = "apcupsd"
 
-    def __init__(self, name, config_options):
+    def __init__(self, name: str, config_options: dict) -> None:
         Monitor.__init__(self, name, config_options)
         self.path = Monitor.get_config_option(config_options, "path", default="")
 
-    def run_test(self):
+    def run_test(self) -> bool:
         info = {}
         if self.path != "":
             executable = os.path.join(self.path, "apcaccess")
@@ -189,8 +189,8 @@ class MonitorApcupsd(Monitor):
             else:
                 executable = "apcaccess"
         try:
-            output = subprocess.check_output(executable)
-            output = output.decode("utf-8")
+            _output = subprocess.check_output(executable)
+            output = _output.decode("utf-8")  # type: str
         except subprocess.CalledProcessError as e:
             output = e.output
         except OSError as e:
@@ -222,7 +222,7 @@ class MonitorApcupsd(Monitor):
                 data += "; "
             data += "%s%% load" % info["LOADPCT"][0:4]
 
-        return True
+        return self.record_success(data)
 
     def describe(self) -> str:
         return "Monitoring UPS to make sure it's ONLINE."
