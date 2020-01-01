@@ -32,6 +32,7 @@ import Monitors.hass
 import Monitors.host
 import Monitors.monitor
 import Monitors.network
+import Monitors.ring
 import Monitors.service
 from envconfig import EnvironmentAwareConfigParser
 from simplemonitor import SimpleMonitor
