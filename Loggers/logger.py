@@ -12,7 +12,7 @@ class Logger:
     type = "unknown"
 
     supports_batch = False
-    doing_batch = True
+    doing_batch = False
     batch_data = None  # type: Optional[Dict[str, Any]]
     connected = True
 
