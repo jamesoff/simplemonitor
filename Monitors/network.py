@@ -38,15 +38,12 @@ class MonitorHTTP(Monitor):
         if regexp is not None:
             self.regexp = re.compile(regexp)
             self.regexp_text = regexp
-        if not regexp:
-            self.allowed_codes = Monitor.get_config_option(
-                config_options,
-                'allowed_codes',
-                default=[200],
-                required_type='[int]'
+        self.allowed_codes = Monitor.get_config_option(
+            config_options,
+            'allowed_codes',
+            default=[200],
+            required_type='[int]'
             )
-        else:
-            self.allowed_codes = [200]
 
         # optionnal - for HTTPS client authentication only
         # in this case, certfile is required
