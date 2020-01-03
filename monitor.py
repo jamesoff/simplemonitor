@@ -169,12 +169,13 @@ def load_monitors(m: SimpleMonitor, filename: str) -> SimpleMonitor:
             )
             continue
         new_monitor = cls(monitor, config_options)
-        new_monitor.set_mon_refs(m)
+        # new_monitor.set_mon_refs(m)
 
         main_logger.info("Adding %s monitor %s: %s", monitor_type, monitor, new_monitor)
         m.add_monitor(monitor, new_monitor)
 
     for i in list(m.monitors.keys()):
+        m.monitors[i].set_mon_refs(m.monitors)
         m.monitors[i].post_config_setup()
     m.prune_monitors(monitors)
     main_logger.info("--- Loaded %d monitors", m.count_monitors())

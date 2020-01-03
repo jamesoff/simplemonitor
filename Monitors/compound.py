@@ -2,6 +2,7 @@
 """compound checks (logical and of failure of multiple probes) for SimpleMonitor."""
 
 from typing import Dict, List, Optional, Tuple, cast
+from weakref import WeakValueDictionary
 
 from .monitor import Monitor, register
 
@@ -14,8 +15,8 @@ class CompoundMonitor(Monitor):
     """
 
     type = "compound"
-    m = None  # type: Optional[Dict[str, Monitor]]
-    mt = None  # type: Optional[Dict[str, Monitor]]
+    m = None  # type: Optional[WeakValueDictionary[str, Monitor]]
+    mt = None  # type: Optional[WeakValueDictionary[str, Monitor]]
 
     def __init__(self, name: str, config_options: dict) -> None:
         Monitor.__init__(self, name, config_options)
@@ -39,8 +40,6 @@ class CompoundMonitor(Monitor):
                 minimum=1,
             ),
         )
-        self.m = None
-        self.mt = None
 
     def run_test(self) -> bool:
         # we depend on the other tests to run, just check them
@@ -50,7 +49,13 @@ class CompoundMonitor(Monitor):
             for i in self.monitors:
                 if self.m[i].get_success_count() > 0 and self.m[i].tests_run > 0:
                     failcount -= 1
-        return failcount > 0
+        if failcount < self.min_fail:
+            return self.record_success(
+                "{} monitors failed (min: {})".format(failcount, self.min_fail)
+            )
+        return self.record_fail(
+            "{} monitors failed (min: {})".format(failcount, self.min_fail)
+        )
 
     def describe(self) -> str:
         """Explains what we do."""
@@ -63,13 +68,13 @@ class CompoundMonitor(Monitor):
 
     def set_mon_refs(self, mmm: Dict[str, Monitor]) -> None:
         """ stash a ref to the global monitor list so we can examine later """
-        self.all_monitors = mmm
+        self.all_monitors = WeakValueDictionary(mmm)
 
     def post_config_setup(self) -> None:
         """ make a nice little dict of just the monitors we need """
         if self.m is not None:
             return
-        self.m = {}
+        self.m = WeakValueDictionary()
         for i in list(self.all_monitors.keys()):
             if i in self.monitors:
                 self.m[i] = self.all_monitors[i]
