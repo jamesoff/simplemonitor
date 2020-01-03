@@ -14,9 +14,9 @@ import copy
 import datetime
 import logging
 import platform
-import subprocess
+import subprocess  # nosec
 import time
-from typing import Any, List, Optional, Tuple
+from typing import Any, List, NoReturn, Optional, Tuple, Union
 
 from util import (
     MonitorConfigurationError,
@@ -45,7 +45,9 @@ class Monitor:
     # this is the time we last received data into this monitor (if we're remote)
     last_update = None  # type: Optional[datetime.datetime]
 
-    def __init__(self, name="unnamed", config_options=None) -> None:
+    def __init__(
+        self, name: str = "unnamed", config_options: Optional[dict] = None
+    ) -> None:
         """What's that coming over the hill? Is a monitor?"""
         if config_options is None:
             config_options = {}
@@ -83,7 +85,7 @@ class Monitor:
         self._last_run = 0
 
     @staticmethod
-    def get_config_option(config_options: dict, key: str, **kwargs) -> Any:
+    def get_config_option(config_options: dict, key: str, **kwargs: Any) -> Any:
         kwargs["exception"] = MonitorConfigurationError
         return get_config_option(config_options, key, **kwargs)
 
@@ -111,7 +113,7 @@ class Monitor:
             return False
         return True
 
-    def run_test(self):
+    def run_test(self) -> Union[NoReturn, bool]:
         """Override this method to perform the test."""
         raise NotImplementedError
 
@@ -146,7 +148,7 @@ class Monitor:
         """Reset the monitor's dependency list back to default."""
         self._deps = copy.copy(self._dependencies)
 
-    def dependency_succeeded(self, dependency) -> None:
+    def dependency_succeeded(self, dependency: str) -> None:
         """Remove a dependency from the current version of the list."""
         try:
             self._deps.remove(dependency)
@@ -163,7 +165,7 @@ class Monitor:
         """Override this method to return a list of parameters (for logging)"""
         raise NotImplementedError
 
-    def set_mon_refs(self, mmm) -> None:
+    def set_mon_refs(self, mmm: Any) -> None:
         """Called with a reference to the list of all monitors.
         Only used by CompoundMonitor for now."""
         pass
@@ -189,7 +191,7 @@ class Monitor:
         return "(Monitor did not write an auto-biography.)"
 
     @staticmethod
-    def is_windows(allow_cygwin=True) -> bool:
+    def is_windows(allow_cygwin: bool = True) -> bool:
         """Checks if our platform is Windowsy.
         If allow_cygwin is False, cygwin will be reported as UNIX."""
 
@@ -201,7 +203,7 @@ class Monitor:
             return True
         return False
 
-    def record_fail(self, message="") -> bool:
+    def record_fail(self, message: str = "") -> bool:
         """Update internal state to show that we had a failure."""
         self.error_count += 1
         self.last_update = datetime.datetime.utcnow()
@@ -215,7 +217,7 @@ class Monitor:
         self.was_skipped = False
         return False
 
-    def record_success(self, message="") -> bool:
+    def record_success(self, message: str = "") -> bool:
         """Update internal state to show we had a success."""
         if self.error_count > 0:
             self.last_error_count = self.error_count
@@ -276,7 +278,7 @@ class Monitor:
         return self._notify
 
     @notify.setter
-    def notify(self, value) -> None:
+    def notify(self, value: bool) -> None:
         if isinstance(value, bool):
             self._notify = value
         else:
@@ -287,7 +289,7 @@ class Monitor:
         return self._urgent
 
     @urgent.setter
-    def urgent(self, value) -> None:
+    def urgent(self, value: Union[bool, int]) -> None:
         if isinstance(value, bool):
             self._urgent = value
         elif isinstance(value, int):
@@ -352,7 +354,7 @@ class Monitor:
         del serialize_dict["monitor_logger"]
         return serialize_dict
 
-    def __setstate__(self, state) -> None:
+    def __setstate__(self, state: dict) -> None:
         self.__dict__.update(state)
         self._set_monitor_logger()
 

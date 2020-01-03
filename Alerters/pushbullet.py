@@ -1,5 +1,8 @@
+from typing import cast
+
 import requests
 
+from Monitors.monitor import Monitor
 from util import format_datetime
 
 from .alerter import Alerter, register
@@ -11,16 +14,19 @@ class PushbulletAlerter(Alerter):
 
     type = "pushbullet"
 
-    def __init__(self, config_options):
+    def __init__(self, config_options: dict) -> None:
         Alerter.__init__(self, config_options)
 
-        self.pushbullet_token = Alerter.get_config_option(
-            config_options, "token", required=True, allow_empty=False
+        self.pushbullet_token = cast(
+            str,
+            Alerter.get_config_option(
+                config_options, "token", required=True, allow_empty=False
+            ),
         )
 
         self.support_catchup = True
 
-    def send_pushbullet_notification(self, subject, body):
+    def send_pushbullet_notification(self, subject: str, body: str) -> None:
         """Send a push notification."""
 
         _payload = {"type": "note", "title": subject, "body": body}
@@ -32,7 +38,7 @@ class PushbulletAlerter(Alerter):
         if not r.status_code == requests.codes.ok:
             raise RuntimeError("Unable to send Pushbullet notification")
 
-    def send_alert(self, name, monitor):
+    def send_alert(self, name: str, monitor: Monitor) -> None:
         """Build up the content for the push notification."""
 
         alert_type = self.should_alert(monitor)

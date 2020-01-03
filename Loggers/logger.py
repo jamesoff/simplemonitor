@@ -1,6 +1,6 @@
 # coding=utf-8
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 from Monitors.monitor import Monitor
 from util import LoggerConfigurationError, get_config_option, subclass_dict_handler
@@ -16,17 +16,20 @@ class Logger:
     batch_data = None  # type: Optional[Dict[str, Any]]
     connected = True
 
-    def __init__(self, config_options: dict):
+    def __init__(self, config_options: dict) -> None:
         self.name = Logger.get_config_option(config_options, "_name", default="unnamed")
         self.logger_logger = logging.getLogger("simplemonitor.logger-" + self.name)
-        self._dependencies = Logger.get_config_option(
-            config_options, "depend", required_type="[str]", default=[]
+        self._dependencies = cast(
+            List[str],
+            Logger.get_config_option(
+                config_options, "depend", required_type="[str]", default=[]
+            ),
         )
         if self.batch_data is None:
-            self.batch_data = {}  # type: Optional[Dict[str, Any]]
+            self.batch_data = {}
 
     @staticmethod
-    def get_config_option(config_options: dict, key: str, **kwargs) -> Any:
+    def get_config_option(config_options: dict, key: str, **kwargs: Any) -> Any:
         kwargs["exception"] = LoggerConfigurationError
         return get_config_option(config_options, key, **kwargs)
 
@@ -44,12 +47,12 @@ class Logger:
         return self._dependencies
 
     @dependencies.setter
-    def dependencies(self, dependency_list) -> None:
+    def dependencies(self, dependency_list: List[str]) -> None:
         if not isinstance(dependency_list, list):
             raise TypeError("dependency_list must be a list")
         self._dependencies = dependency_list
 
-    def check_dependencies(self, failed_list: List[Monitor]) -> bool:
+    def check_dependencies(self, failed_list: List[str]) -> bool:
         """Compare a list of failed monitors to our dependencies, and mark the Logger as offline if one failed"""
         self.connected = True
         for dependency in failed_list:

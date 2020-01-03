@@ -27,7 +27,7 @@ class Alerter:
 
     type = "unknown"
 
-    def __init__(self, config_options=None) -> None:
+    def __init__(self, config_options: dict = None) -> None:
         if config_options is None:
             config_options = {}
         self.alerter_logger = logging.getLogger("simplemonitor.alerter-" + self.type)

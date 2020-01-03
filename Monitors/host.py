@@ -460,7 +460,7 @@ class MonitorCommand(Monitor):
                 return self.record_fail("%s >= %s" % (outasinteger, self.result_max))
             return self.record_success()
         except Exception as e:
-            return self.record_fail(e)
+            return self.record_fail(str(e))
 
         return self.record_fail()
 

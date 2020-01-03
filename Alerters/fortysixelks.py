@@ -5,6 +5,9 @@ try:
 except ImportError:
     requests_available = False
 
+from typing import cast
+
+from Monitors.monitor import Monitor
 from util import AlerterConfigurationError, format_datetime
 
 from .alerter import Alerter, register
@@ -18,7 +21,7 @@ class FortySixElksAlerter(Alerter):
 
     type = "46elks"
 
-    def __init__(self, config_options):
+    def __init__(self, config_options: dict) -> None:
         Alerter.__init__(self, config_options)
         if not requests_available:
             self.alerter_logger.critical(
@@ -27,18 +30,27 @@ class FortySixElksAlerter(Alerter):
             self.alerter_logger.critical("Try: pip install -r requirements.txt")
             return
 
-        self.username = Alerter.get_config_option(
-            config_options, "username", required=True, allow_empty=False
+        self.username = cast(
+            str,
+            Alerter.get_config_option(
+                config_options, "username", required=True, allow_empty=False
+            ),
         )
-        self.password = Alerter.get_config_option(
-            config_options, "password", required=True, allow_empty=False
+        self.password = cast(
+            str,
+            Alerter.get_config_option(
+                config_options, "password", required=True, allow_empty=False
+            ),
         )
-        self.target = Alerter.get_config_option(
-            config_options, "target", required=True, allow_empty=False
+        self.target = cast(
+            str,
+            Alerter.get_config_option(
+                config_options, "target", required=True, allow_empty=False
+            ),
         )
 
-        self.sender = Alerter.get_config_option(
-            config_options, "sender", default="SmplMntr"
+        self.sender = cast(
+            str, Alerter.get_config_option(config_options, "sender", default="SmplMntr")
         )
         if self.sender[0] == "+" and self.sender[1:].isdigit():
             # sender is phone number
@@ -57,7 +69,7 @@ class FortySixElksAlerter(Alerter):
 
         self.support_catchup = True
 
-    def send_alert(self, name, monitor):
+    def send_alert(self, name: str, monitor: Monitor) -> None:
         """Send an SMS alert."""
 
         if not monitor.urgent:

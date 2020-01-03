@@ -1,7 +1,9 @@
 # coding=utf-8
 import shlex
 import subprocess
+from typing import cast
 
+from Monitors.monitor import Monitor
 from util import AlerterConfigurationError, format_datetime
 
 from .alerter import Alerter, register
@@ -13,17 +15,26 @@ class ExecuteAlerter(Alerter):
 
     type = "execute"
 
-    def __init__(self, config_options):
+    def __init__(self, config_options: dict) -> None:
         Alerter.__init__(self, config_options)
 
-        self.fail_command = Alerter.get_config_option(
-            config_options, "fail_command", allow_empty=False
+        self.fail_command = cast(
+            str,
+            Alerter.get_config_option(
+                config_options, "fail_command", allow_empty=False
+            ),
         )
-        self.success_command = Alerter.get_config_option(
-            config_options, "success_command", allow_empty=False
+        self.success_command = cast(
+            str,
+            Alerter.get_config_option(
+                config_options, "success_command", allow_empty=False
+            ),
         )
-        self.catchup_command = Alerter.get_config_option(
-            config_options, "catchup_command", allow_empty=False
+        self.catchup_command = cast(
+            str,
+            Alerter.get_config_option(
+                config_options, "catchup_command", allow_empty=False
+            ),
         )
         if (
             self.fail_command is None
@@ -32,7 +43,7 @@ class ExecuteAlerter(Alerter):
         ):
             raise AlerterConfigurationError("execute alerter has no commands defined")
 
-    def send_alert(self, name, monitor):
+    def send_alert(self, name: str, monitor: Monitor) -> None:
         type_ = self.should_alert(monitor)
         command = None
         (days, hours, minutes, seconds) = monitor.get_downtime()

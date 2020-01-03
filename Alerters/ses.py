@@ -7,7 +7,9 @@ except ImportError:
     boto3_available = False
 
 import os
+from typing import Any, Dict, cast
 
+from Monitors.monitor import Monitor
 from util import format_datetime
 
 from .alerter import Alerter, register
@@ -19,7 +21,7 @@ class SESAlerter(Alerter):
 
     type = "ses"
 
-    def __init__(self, config_options):
+    def __init__(self, config_options: dict) -> None:
         Alerter.__init__(self, config_options)
         if not boto3_available:
             self.alerter_logger.critical(
@@ -28,31 +30,33 @@ class SESAlerter(Alerter):
             self.available = False
             return
 
-        self.from_addr = Alerter.get_config_option(
-            config_options, "from", allow_empty=False
+        self.from_addr = cast(
+            str, Alerter.get_config_option(config_options, "from", allow_empty=False)
         )
-        self.to_addr = Alerter.get_config_option(
-            config_options, "to", allow_empty=False
+        self.to_addr = cast(
+            str, Alerter.get_config_option(config_options, "to", allow_empty=False)
         )
 
         self.support_catchup = True
 
-        self.ses_client_params = {}
+        self.ses_client_params = {}  # type: Dict[str, str]
 
-        aws_region = Alerter.get_config_option(config_options, "aws_region")
+        aws_region = cast(str, Alerter.get_config_option(config_options, "aws_region"))
         if aws_region:
             os.environ["AWS_DEFAULT_REGION"] = aws_region
 
-        aws_access_key = Alerter.get_config_option(config_options, "aws_access_key")
-        aws_secret_key = Alerter.get_config_option(
-            config_options, "aws_secret_access_key"
+        aws_access_key = cast(
+            str, Alerter.get_config_option(config_options, "aws_access_key")
+        )
+        aws_secret_key = cast(
+            str, Alerter.get_config_option(config_options, "aws_secret_access_key")
         )
 
         if aws_access_key and aws_secret_key:
             self.ses_client_params["aws_access_key_id"] = aws_access_key
             self.ses_client_params["aws_secret_access_key"] = aws_secret_key
 
-    def send_alert(self, name, monitor):
+    def send_alert(self, name: str, monitor: Monitor) -> None:
         """Send the email."""
 
         type = self.should_alert(monitor)
@@ -63,14 +67,16 @@ class SESAlerter(Alerter):
         else:
             host = " on host %s" % self.hostname
 
-        mail = {"Source": self.from_addr}
+        mail = {}  # type: Dict[str, Any]
+        mail["Source"] = self.from_addr
         mail["Destination"] = {"ToAddresses": [self.to_addr]}
 
         if type == "":
             return
         elif type == "failure":
-            message = {
-                "Subject": {"Data": "[%s] Monitor %s Failed!" % (self.hostname, name)}
+            message = {}  # type: Dict[str, Any]
+            message["Subject"] = {
+                "Data": "[%s] Monitor %s Failed!" % (self.hostname, name)
             }
             message["Body"] = {
                 "Text": {

@@ -4,6 +4,8 @@ try:
 except ImportError:
     pass
 
+from Monitors.monitor import Monitor
+
 from .alerter import Alerter, register
 
 
@@ -11,7 +13,7 @@ from .alerter import Alerter, register
 class SyslogAlerter(Alerter):
     type = "syslog"
 
-    def send_alert(self, name, monitor):
+    def send_alert(self, name: str, monitor: Monitor) -> None:
         alert_type = self.should_alert(monitor)
         if alert_type == "failure":
             syslog.syslog(

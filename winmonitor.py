@@ -3,6 +3,7 @@ import multiprocessing as mp
 import os
 import socket
 import sys
+from typing import Any
 
 import win32event
 import win32service
@@ -28,7 +29,9 @@ LOGFILE = os.path.join(APP_PATH, "simplemonitor.log")
 
 
 # Setup Logging
-def configure_logger(logger, level=logging.DEBUG):
+def configure_logger(
+    logger: logging.Logger, level: int = logging.DEBUG
+) -> logging.Logger:
     logger.setLevel(level)
     fh = logging.FileHandler(LOGFILE)
     fh.setLevel(level)
@@ -40,7 +43,7 @@ def configure_logger(logger, level=logging.DEBUG):
     return logger
 
 
-def setup_logger(level=logging.DEBUG):
+def setup_logger(level: int = logging.DEBUG) -> logging.Logger:
     return configure_logger(mp.get_logger(), level)
 
 
@@ -52,7 +55,7 @@ class AppServerSvc(win32serviceutil.ServiceFramework):
     _svc_display_name_ = "SimpleMonitor"
     _svc_description_ = "A service wrapper for the python SimpleMonitor program"
 
-    def __init__(self, args):
+    def __init__(self, args: Any) -> None:
         # Initialise service
         win32serviceutil.ServiceFramework.__init__(self, args)
         self.hWaitStop = win32event.CreateEvent(None, 0, 0, None)
@@ -62,12 +65,12 @@ class AppServerSvc(win32serviceutil.ServiceFramework):
         self.logger = LOGGER
         self.logger.info("Initialised {} service".format(self._svc_display_name_))
 
-    def SvcStop(self):
+    def SvcStop(self) -> None:
         self.logger.info("Stopping {} service".format(self._svc_display_name_))
         self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
         win32event.SetEvent(self.hWaitStop)
 
-    def SvcDoRun(self):
+    def SvcDoRun(self) -> None:
         self.logger.info("Starting {} service".format(self._svc_display_name_))
         import servicemanager
 
@@ -107,7 +110,7 @@ class AppServerSvc(win32serviceutil.ServiceFramework):
         self.logger.info("Stopped {} service".format(self._svc_display_name_))
 
 
-def run_monitor():
+def run_monitor() -> None:
     import monitor
 
     sys.argv = ["monitor.py", "-vH", "--config={}".format(CONFIG)]

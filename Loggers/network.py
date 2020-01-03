@@ -4,11 +4,12 @@ import logging
 import pickle
 import socket
 import struct
-import sys
 from json import JSONDecodeError
 from threading import Thread
+from typing import Any, cast
 
 import util
+from Monitors.monitor import Monitor
 
 from .logger import Logger, register
 
@@ -27,14 +28,20 @@ class NetworkLogger(Logger):
     type = "network"
     supports_batch = True
 
-    def __init__(self, config_options):
+    def __init__(self, config_options: dict) -> None:
         Logger.__init__(self, config_options)
 
-        self.host = Logger.get_config_option(
-            config_options, "host", required=True, allow_empty=False
+        self.host = cast(
+            str,
+            Logger.get_config_option(
+                config_options, "host", required=True, allow_empty=False
+            ),
         )
-        self.port = Logger.get_config_option(
-            config_options, "port", required_type="int", required=True
+        self.port = cast(
+            int,
+            Logger.get_config_option(
+                config_options, "port", required_type="int", required=True
+            ),
         )
         self.hostname = socket.gethostname()
         self.key = bytearray(
@@ -44,10 +51,10 @@ class NetworkLogger(Logger):
             "utf-8",
         )
 
-    def describe(self):
+    def describe(self) -> str:
         return "Sending monitor results to {0}:{1}".format(self.host, self.port)
 
-    def save_result2(self, name, monitor):
+    def save_result2(self, name: str, monitor: Monitor) -> None:
         if not self.doing_batch:  # pragma: no cover
             self.logger_logger.error(
                 "NetworkLogger.save_result2() called while not doing batch."
@@ -65,14 +72,13 @@ class NetworkLogger(Logger):
                     "not pickling compound monitor - currently incompatible with network loggers"
                 )
             else:
-                self.batch_data[monitor.name] = {
-                    "cls_type": monitor.type,
-                    "data": monitor.to_python_dict(),
-                }
+                data = {"cls_type": monitor.type, "data": monitor.to_python_dict()}
+                # TODO: why does the line below make mypy cross?
+                self.batch_data[monitor.name] = data  # type: ignore
         except Exception:
             self.logger_logger.exception("Failed to serialize monitor %s", name)
 
-    def process_batch(self):
+    def process_batch(self) -> None:
         try:
             p = util.json_dumps(self.batch_data)
             mac = hmac.new(self.key, p, _DIGEST_NAME)
@@ -97,7 +103,9 @@ class Listener(Thread):
 
     Here seemed a reasonable place to put it."""
 
-    def __init__(self, simplemonitor, port, key=None, allow_pickle=True):
+    def __init__(
+        self, simplemonitor: Any, port: int, key: str = None, allow_pickle: bool = True
+    ) -> None:
         """Set up the thread.
 
         simplemonitor is a SimpleMonitor object which we will put our results into.
@@ -118,7 +126,7 @@ class Listener(Thread):
         self.logger = logging.getLogger("simplemonitor.logger.networklistener")
         self.running = False
 
-    def run(self):
+    def run(self) -> None:
         """The main body of our thread.
 
         The loop here keeps going until we're killed by the main app.
@@ -176,18 +184,14 @@ class Listener(Thread):
                     self.simplemonitor.update_remote_monitor(result, addr[0])
                 except Exception:
                     self.logger.exception("Error adding remote monitor")
-            except socket.error:
-                fail_info = sys.exc_info()
-                try:
-                    if fail_info[1][0] == 4:
-                        # Interrupted system call
-                        self.logger.warning(
-                            "Interrupted system call in thread, I think that's a ^C"
-                        )
-                        self.running = False
-                        self.sock.close()
-                except IndexError:
-                    pass
+            except socket.error as e:
+                if e.errno == 4:
+                    # Interrupted system call
+                    self.logger.warning(
+                        "Interrupted system call in thread, I think that's a ^C"
+                    )
+                    self.running = False
+                    self.sock.close()
                 if self.running:
                     self.logger.exception("Socket error caught in thread: %s")
             except Exception:

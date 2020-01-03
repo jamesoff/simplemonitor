@@ -15,7 +15,7 @@ class MonitorBackup(Monitor):
         "C:\\", "Program Files", "VERITAS", "Backup Exec", "status.txt"
     )
 
-    def run_test(self):
+    def run_test(self) -> bool:
         if not os.path.exists(self.filename):
             return self.record_fail("Status file missing")
 
@@ -26,14 +26,14 @@ class MonitorBackup(Monitor):
 
         try:
             status = fh.readline()
-            timestamp = fh.readline()
+            _timestamp = fh.readline()
         except Exception:
             return self.record_fail("Unable to read data from status file")
 
         fh.close()
 
         status = status.strip()
-        timestamp = int(timestamp.strip())
+        timestamp = int(_timestamp.strip())
 
         if status not in ("ok", "running"):
             return self.record_fail("Unknown status %s" % status)
@@ -52,5 +52,5 @@ class MonitorBackup(Monitor):
 
         return self.record_success()
 
-    def describe(self):
+    def describe(self) -> str:
         "Checking Backup Exec runs daily, and doesn't run for too long."

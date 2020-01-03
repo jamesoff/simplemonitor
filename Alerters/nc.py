@@ -7,6 +7,8 @@ except Exception:
 
 import platform
 
+from Monitors.monitor import Monitor
+
 from .alerter import Alerter, register
 
 
@@ -16,7 +18,7 @@ class NotificationCenterAlerter(Alerter):
 
     type = "nc"
 
-    def __init__(self, config_options):
+    def __init__(self, config_options: dict) -> None:
         Alerter.__init__(self, config_options)
         if not pync_available:
             self.alerter_logger.critical(
@@ -31,7 +33,7 @@ class NotificationCenterAlerter(Alerter):
             )
             return
 
-    def send_alert(self, name, monitor):
+    def send_alert(self, name: str, monitor: Monitor) -> None:
         """Send the message."""
 
         alert_type = self.should_alert(monitor)

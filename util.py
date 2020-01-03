@@ -133,7 +133,7 @@ FORMAT = "%Y-%m-%d %H:%M:%S.%f"
 class JSONEncoder(json.JSONEncoder):
     _regexp_type = type(re.compile(""))
 
-    def default(self, obj) -> Any:
+    def default(self, obj: Any) -> Any:
         if isinstance(obj, datetime.datetime):
             return {DATETIME_MAGIC_TOKEN: obj.strftime(FORMAT)}
         if isinstance(obj, self._regexp_type):
@@ -142,14 +142,14 @@ class JSONEncoder(json.JSONEncoder):
 
 
 class JSONDecoder(json.JSONDecoder):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         self._original_object_pairs_hook = kwargs.pop("object_pairs_hook", None)
         kwargs["object_pairs_hook"] = self.object_pairs_hook
         super(JSONDecoder, self).__init__(*args, **kwargs)
 
     _datetime_re = re.compile(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{6}")
 
-    def object_pairs_hook(self, obj) -> Any:
+    def object_pairs_hook(self, obj: Any) -> Any:
         if (
             len(obj) == 1
             and obj[0][0] == DATETIME_MAGIC_TOKEN
@@ -163,11 +163,11 @@ class JSONDecoder(json.JSONDecoder):
             return dict(obj)
 
 
-def json_dumps(data) -> bytes:
+def json_dumps(data: Any) -> bytes:
     return JSONEncoder().encode(data).encode("ascii")
 
 
-def json_loads(string) -> str:
+def json_loads(string: bytes) -> str:
     return JSONDecoder().decode(string.decode("ascii"))
 
 
@@ -190,7 +190,7 @@ def subclass_dict_handler(
         _subclasses[cls.type] = cls
         return cls
 
-    def get_class(type_):
+    def get_class(type_: Any) -> Any:
         return _subclasses[type_]
 
     def all_types() -> list:

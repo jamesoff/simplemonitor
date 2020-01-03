@@ -6,7 +6,7 @@ import logging
 import pickle
 import sys
 import time
-from typing import Any, List
+from typing import Any, Dict, List
 
 import Loggers
 import Monitors.monitor
@@ -18,33 +18,33 @@ module_logger = logging.getLogger("simplemonitor")
 
 
 class SimpleMonitor:
-    def __init__(self, allow_pickle=True):
+    def __init__(self, allow_pickle: bool = True) -> None:
         """Main class turn on."""
         self.allow_pickle = allow_pickle
-        self.monitors = {}
-        self.failed = []
-        self.still_failing = []
-        self.skipped = []
-        self.warning = []
-        self.remote_monitors = {}
+        self.monitors = {}  # type: Dict[str, Monitor]
+        self.failed = []  # type: List[str]
+        self.still_failing = []  # type: List[str]
+        self.skipped = []  # type: List[str]
+        self.warning = []  # type: List[str]
+        self.remote_monitors = {}  # type: Dict[str, Monitor]
 
-        self.loggers = {}
-        self.alerters = {}
+        self.loggers = {}  # type: Dict[str, Logger]
+        self.alerters = {}  # type: Dict[str, Alerter]
 
     def add_monitor(self, name: str, monitor: Monitor) -> None:
         self.monitors[name] = monitor
 
     def update_monitor_config(self, name: str, config_options: dict) -> None:
-        self.monitors[name].__init__(name, config_options)
+        self.monitors[name].__init__(name, config_options)  # type: ignore
 
     def update_logger_config(self, name: str, config_options: dict) -> None:
-        self.loggers[name].__init__(config_options)
+        self.loggers[name].__init__(config_options)  # type: ignore
 
     def update_alerter_config(self, name: str, config_options: dict) -> None:
-        self.alerters[name].__init__(config_options)
+        self.alerters[name].__init__(config_options)  # type: ignore
 
     def set_urgency(self, monitor: str, urgency: bool) -> None:
-        self.monitors[monitor].set_urgency(urgency)
+        self.monitors[monitor].urgent = urgency
 
     def has_monitor(self, monitor: str) -> bool:
         return monitor in self.monitors.keys()
@@ -124,7 +124,9 @@ class SimpleMonitor:
                         start_time = time.time()
                         self.monitors[monitor].run_test()
                         end_time = time.time()
-                        self.monitors[monitor].last_run_duration = end_time - start_time
+                        self.monitors[monitor].last_run_duration = int(
+                            end_time - start_time
+                        )
                     else:
                         not_run = True
                         self.monitors[monitor].record_skip(None)
@@ -296,7 +298,7 @@ class SimpleMonitor:
             elif self.allow_pickle:
                 # Fallback for old remote monitors
                 try:
-                    remote_monitor = pickle.loads(state)
+                    remote_monitor = pickle.loads(state)  # nosec
                 except pickle.UnpicklingError:
                     module_logger.critical("Could not unpickle monitor %s", name)
                 else:
