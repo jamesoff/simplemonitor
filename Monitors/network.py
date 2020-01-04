@@ -43,7 +43,7 @@ class MonitorHTTP(Monitor):
             'allowed_codes',
             default=[200],
             required_type='[int]'
-            )
+        )
 
         # optionnal - for HTTPS client authentication only
         # in this case, certfile is required
