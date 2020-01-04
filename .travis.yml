@@ -10,6 +10,7 @@ python:
     - nightly
 install:
     - pip install pipenv
+    - pip install mypy
     - pipenv install --dev
 before_script:
     - export -f travis_nanoseconds
@@ -23,6 +24,9 @@ script:
     - travis_fold start flake8
     - pipenv run flake8 --ignore=E501,W503,E203 *.py Alerters/ Monitors/ Loggers/
     - travis_fold end flake8
+    - travis_fold start mypy
+    - mypy --ignore-missing-imports *.py {Monitors,Alerters,Loggers}/*.py
+    - travis_fold end mypy
     - travis_fold start integration
     - pipenv run env PATH=$PWD/tests/mocks:$PATH coverage run monitor.py -1 -v -d -f tests/monitor.ini
     - travis_fold end integration
@@ -38,5 +42,5 @@ script:
 after_success:
     - pipenv run codecov
 matrix:
-  allow_failures:
-    - python: nightly
+    allow_failures:
+        - python: nightly
