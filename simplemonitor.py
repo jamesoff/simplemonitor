@@ -73,10 +73,23 @@ class SimpleMonitor:
                     ok = False
         return ok
 
+    def sort_joblist(self, joblist: List[str]) -> List[str]:
+        """Order a list of monitors so that compound monitors are at the end"""
+        new_list = []  # type: List[str]
+        late_list = []  # type: List[str]
+        for monitor in joblist:
+            if self.monitors[monitor].type in ["compound"]:
+                late_list.append(monitor)
+            else:
+                new_list.append(monitor)
+        new_list.extend(late_list)
+        return new_list
+
     def run_tests(self) -> None:
         self.reset_monitors()
 
         joblist = list(self.monitors.keys())
+        joblist = self.sort_joblist(joblist)
         failed = []  # type: List[str]
 
         not_run = False
