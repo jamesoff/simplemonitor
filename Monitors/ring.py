@@ -1,5 +1,6 @@
 try:
     import ring_doorbell
+    from oauthlib.oauth2.rfc6749.errors import MissingTokenError
 except ImportError:
     ring_doorbell = None
 
@@ -38,18 +39,27 @@ class MonitorRingDoorbell(Monitor):
         )
         self.ring = None
 
+    def login(self) -> bool:
+        self.monitor_logger.info("Logging in to ring")
+        try:
+            self.ring = ring_doorbell.Ring(self.ring_username, self.ring_password)
+            return True
+        except Exception:
+            self.monitor_logger.exception("Failed to log in to Ring")
+            return False
+
     def run_test(self) -> bool:
         if ring_doorbell is None:
             return self.record_fail("ring_doorbell library is not installed")
         if self.ring is None:
-            self.monitor_logger.info("Logging in to ring")
-            try:
-                self.ring = ring_doorbell.Ring(self.ring_username, self.ring_password)
-            except Exception as e:
-                self.monitor_logger.exception("Failed to log in to Ring")
-                return self.record_fail("Failed to log in to Ring: {}".format(e))
+            if not self.login():
+                return self.record_fail("Failed to log in to Ring")
         else:
-            self.ring.update()
+            try:
+                self.ring.update()
+            except MissingTokenError:
+                if not self.login():
+                    return self.record_fail("Failed to re-login to Ring")
         assert self.ring is not None
         for doorbell in self.ring.doorbells:
             doorbell.update()
