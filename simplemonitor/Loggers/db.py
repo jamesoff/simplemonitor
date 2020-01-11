@@ -9,8 +9,7 @@ except ImportError:
 import time
 from socket import gethostname
 
-from Monitors.monitor import Monitor
-
+from ..Monitors.monitor import Monitor
 from .logger import Logger, register
 
 CREATE_SQL = [

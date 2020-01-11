@@ -6,7 +6,7 @@ import re
 import socket
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
-from envconfig import EnvironmentAwareConfigParser
+from .envconfig import EnvironmentAwareConfigParser
 
 
 class MonitorConfigurationError(ValueError):

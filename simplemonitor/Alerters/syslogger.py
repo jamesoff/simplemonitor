@@ -4,8 +4,7 @@ try:
 except ImportError:
     pass
 
-from Monitors.monitor import Monitor
-
+from ..Monitors.monitor import Monitor
 from .alerter import Alerter, register
 
 

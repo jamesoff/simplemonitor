@@ -1,5 +1,8 @@
 # coding=utf-8
-"""A (fairly) simple host/service monitor."""
+"""A (fairly) simple host/service monitor.
+
+isort:skip_file
+"""
 
 
 import logging
@@ -11,32 +14,34 @@ from optparse import SUPPRESS_HELP, OptionParser
 from socket import gethostname
 from typing import Any, Optional
 
-import Alerters.bulksms
-import Alerters.execute
-import Alerters.fortysixelks
-import Alerters.mail
-import Alerters.nc
-import Alerters.pushbullet
-import Alerters.pushover
-import Alerters.ses
-import Alerters.slack
-import Alerters.syslogger
-import Alerters.telegram
-import Loggers.db
-import Loggers.file
-import Loggers.mqtt
-import Loggers.network
-import Monitors.compound
-import Monitors.file
-import Monitors.hass
-import Monitors.host
-import Monitors.monitor
-import Monitors.network
-import Monitors.ring
-import Monitors.service
-from envconfig import EnvironmentAwareConfigParser
-from simplemonitor import SimpleMonitor
-from util import get_config_dict
+# fmt: off
+from .Alerters import (  # noqa: F401
+    alerter,
+    bulksms,
+    execute,
+    fortysixelks,
+    mail,
+    nc,
+    pushbullet,
+    pushover,
+    ses,
+    slack,
+    syslogger,
+    telegram,
+)
+from .Loggers import db  # noqa: F401
+from .Loggers import file as file_logger  # noqa: F401
+from .Loggers import logger, mqtt  # noqa: F401
+from .Loggers import network as network_logger  # noqa: F401
+from .Monitors import compound  # noqa: F401
+from .Monitors import file as file_monitor  # noqa: F401
+from .Monitors import hass, host, monitor  # noqa: F401
+from .Monitors import network as network_monitor  # noqa: F401
+from .Monitors import ring, service  # noqa: F401
+# fmt: on
+from .simplemonitor import SimpleMonitor
+from .util import get_config_dict
+from .util.envconfig import EnvironmentAwareConfigParser
 
 try:
     import colorlog
@@ -134,45 +139,49 @@ def load_monitors(m: SimpleMonitor, filename: str) -> SimpleMonitor:
     myhostname = gethostname().lower()
 
     main_logger.info("=== Loading monitors")
-    for monitor in monitors:
-        if config.has_option(monitor, "runon"):
-            if myhostname != config.get(monitor, "runon").lower():
+    for this_monitor in monitors:
+        if config.has_option(this_monitor, "runon"):
+            if myhostname != config.get(this_monitor, "runon").lower():
                 main_logger.warning(
                     "Ignoring monitor %s because it's only for host %s",
-                    monitor,
-                    config.get(monitor, "runon"),
+                    this_monitor,
+                    config.get(this_monitor, "runon"),
                 )
                 continue
-        monitor_type = config.get(monitor, "type")
+        monitor_type = config.get(this_monitor, "type")
         new_monitor = None
         config_options = default_config.copy()
-        config_options.update(get_config_dict(config, monitor))
-        if m.has_monitor(monitor):
-            if m.monitors[monitor].type == config_options["type"]:
-                main_logger.info("Updating configuration for monitor %s", monitor)
-                m.update_monitor_config(monitor, config_options)
+        config_options.update(get_config_dict(config, this_monitor))
+        if m.has_monitor(this_monitor):
+            if m.monitors[this_monitor].type == config_options["type"]:
+                main_logger.info("Updating configuration for monitor %s", this_monitor)
+                m.update_monitor_config(this_monitor, config_options)
             else:
                 main_logger.error(
                     "Cannot update monitor {} from type {} to type {}. Keeping original config for this monitor.".format(
-                        monitor, m.monitors[monitor].type, config_options["type"]
+                        this_monitor,
+                        m.monitors[this_monitor].type,
+                        config_options["type"],
                     )
                 )
             continue
 
         try:
-            cls = Monitors.monitor.get_class(monitor_type)
+            cls = monitor.get_class(monitor_type)
         except KeyError:
             main_logger.error(
                 "Unknown monitor type %s; valid types are: %s",
                 monitor_type,
-                ", ".join(Monitors.monitor.all_types()),
+                ", ".join(monitor.all_types()),
             )
             continue
-        new_monitor = cls(monitor, config_options)
+        new_monitor = cls(this_monitor, config_options)
         # new_monitor.set_mon_refs(m)
 
-        main_logger.info("Adding %s monitor %s: %s", monitor_type, monitor, new_monitor)
-        m.add_monitor(monitor, new_monitor)
+        main_logger.info(
+            "Adding %s monitor %s: %s", monitor_type, this_monitor, new_monitor
+        )
+        m.add_monitor(this_monitor, new_monitor)
 
     for i in list(m.monitors.keys()):
         m.monitors[i].set_mon_refs(m.monitors)
@@ -211,12 +220,12 @@ def load_loggers(
                 )
             continue
         try:
-            logger_cls = Loggers.logger.get_class(logger_type)
+            logger_cls = logger.get_class(logger_type)
         except KeyError:
             main_logger.error(
                 "Unknown logger type %s; valid types are: %s",
                 logger_type,
-                ", ".join(Loggers.logger.all_types()),
+                ", ".join(logger.all_types()),
             )
             continue
         new_logger = logger_cls(config_options)
@@ -240,33 +249,35 @@ def load_alerters(
         alerters = []
 
     main_logger.info("=== Loading alerters")
-    for alerter in alerters:
-        alerter_type = config.get(alerter, "type")
-        config_options = get_config_dict(config, alerter)
-        if m.has_alerter(alerter):
-            if m.alerters[alerter].type == config_options["type"]:
-                main_logger.info("Updating configuration for alerter %s", alerter)
-                m.update_alerter_config(alerter, config_options)
+    for this_alerter in alerters:
+        alerter_type = config.get(this_alerter, "type")
+        config_options = get_config_dict(config, this_alerter)
+        if m.has_alerter(this_alerter):
+            if m.alerters[this_alerter].type == config_options["type"]:
+                main_logger.info("Updating configuration for alerter %s", this_alerter)
+                m.update_alerter_config(this_alerter, config_options)
             else:
                 main_logger.error(
                     "Cannot update alerter {} from type {} to type {}. Keeping original config for this alerter.".format(
-                        alerter, m.alerters[alerter].type, config_options["type"]
+                        this_alerter,
+                        m.alerters[this_alerter].type,
+                        config_options["type"],
                     )
                 )
             continue
         try:
-            alerter_cls = Alerters.alerter.get_class(alerter_type)
+            alerter_cls = alerter.get_class(alerter_type)
         except KeyError:
             main_logger.error(
                 "Unknown alerter type %s; valid types are: %s",
                 alerter_type,
-                ", ".join(Alerters.alerter.all_types()),
+                ", ".join(alerter.all_types()),
             )
             continue
         new_alerter = alerter_cls(config_options)
-        main_logger.info("Adding %s alerter %s", alerter_type, alerter)
-        new_alerter.name = alerter
-        m.add_alerter(alerter, new_alerter)
+        main_logger.info("Adding %s alerter %s", alerter_type, this_alerter)
+        new_alerter.name = this_alerter
+        m.add_alerter(this_alerter, new_alerter)
         del new_alerter
     m.prune_alerters(alerters)
     main_logger.info("--- Loaded %d alerters", len(m.alerters))
@@ -381,11 +392,11 @@ def main() -> None:
         import pprint
 
         print("Monitors:")
-        pprint.pprint(sorted(Monitors.monitor.all_types()), compact=True)
+        pprint.pprint(sorted(monitor.all_types()), compact=True)
         print("Loggers:")
-        pprint.pprint(sorted(Loggers.logger.all_types()), compact=True)
+        pprint.pprint(sorted(logger.all_types()), compact=True)
         print("Alerters:")
-        pprint.pprint(sorted(Alerters.alerter.all_types()), compact=True)
+        pprint.pprint(sorted(alerter.all_types()), compact=True)
         sys.exit(0)
 
     if options.quiet:
@@ -504,7 +515,7 @@ def main() -> None:
                     allowing_pickle
                 )
             )
-        remote_listening_thread = Loggers.network.Listener(
+        remote_listening_thread = network_logger.Listener(
             m, remote_port, key, allow_pickle=allow_pickle
         )
         remote_listening_thread.daemon = True
@@ -568,7 +579,7 @@ def main() -> None:
         if loop and enable_remote:
             if not remote_listening_thread.isAlive():
                 main_logger.error("Listener thread died :(")
-                remote_listening_thread = Loggers.network.Listener(
+                remote_listening_thread = network_logger.Listener(
                     m, remote_port, key, allow_pickle=allow_pickle
                 )
                 remote_listening_thread.start()
@@ -601,31 +612,31 @@ def main() -> None:
         ok = True
         print("\n--> One-shot results:")
         tail_info = []
-        for monitor in sorted(m.monitors.keys()):
-            if "fail" in monitor:
-                if m.monitors[monitor].error_count == 0:
+        for this_monitor in sorted(m.monitors.keys()):
+            if "fail" in this_monitor:
+                if m.monitors[this_monitor].error_count == 0:
                     tail_info.append(
-                        "    Monitor {0} should have failed".format(monitor)
+                        "    Monitor {0} should have failed".format(this_monitor)
                     )
                     ok = False
                 else:
-                    print("    Monitor {0} was ok (failed)".format(monitor))
-            elif "skip" in monitor:
-                if m.monitors[monitor].skipped():
-                    print("    Monitor {0} was ok (skipped)".format(monitor))
+                    print("    Monitor {0} was ok (failed)".format(this_monitor))
+            elif "skip" in this_monitor:
+                if m.monitors[this_monitor].skipped():
+                    print("    Monitor {0} was ok (skipped)".format(this_monitor))
                 else:
                     tail_info.append(
-                        "    Monitor {0} should have been skipped".format(monitor)
+                        "    Monitor {0} should have been skipped".format(this_monitor)
                     )
                     ok = False
             else:
-                if m.monitors[monitor].error_count > 0:
+                if m.monitors[this_monitor].error_count > 0:
                     tail_info.append(
-                        "    Monitor {0} failed and shouldn't have".format(monitor)
+                        "    Monitor {0} failed and shouldn't have".format(this_monitor)
                     )
                     ok = False
                 else:
-                    print("    Monitor {0} was ok".format(monitor))
+                    print("    Monitor {0} was ok".format(this_monitor))
         if len(tail_info):
             print()
             for line in tail_info:

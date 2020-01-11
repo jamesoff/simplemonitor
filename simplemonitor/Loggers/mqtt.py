@@ -15,8 +15,7 @@ except ImportError:
 import json
 from typing import List, cast
 
-from Monitors.monitor import Monitor
-
+from ..Monitors.monitor import Monitor
 from .logger import Logger, register
 
 

@@ -8,9 +8,8 @@ from json import JSONDecodeError
 from threading import Thread
 from typing import Any, cast
 
-import util
-from Monitors.monitor import Monitor
-
+from ..Monitors.monitor import Monitor
+from ..util import LoggerConfigurationError, json_dumps, json_loads
 from .logger import Logger, register
 
 # From the docs:
@@ -80,7 +79,7 @@ class NetworkLogger(Logger):
 
     def process_batch(self) -> None:
         try:
-            p = util.json_dumps(self.batch_data)
+            p = json_dumps(self.batch_data)
             mac = hmac.new(self.key, p, _DIGEST_NAME)
             send_bytes = struct.pack("B", mac.digest_size) + mac.digest() + p
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -111,7 +110,7 @@ class Listener(Thread):
         simplemonitor is a SimpleMonitor object which we will put our results into.
         """
         if key is None or key == "":
-            raise util.LoggerConfigurationError("Network logger key is missing")
+            raise LoggerConfigurationError("Network logger key is missing")
         Thread.__init__(self)
         self.allow_pickle = allow_pickle
         # try IPv6 and fallback to IPv4
@@ -177,7 +176,7 @@ class Listener(Thread):
                         % addr[0]
                     )
                 try:
-                    result = util.json_loads(serialized)
+                    result = json_loads(serialized)
                 except JSONDecodeError:
                     result = pickle.loads(serialized)
                 try:

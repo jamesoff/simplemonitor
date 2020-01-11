@@ -2,8 +2,8 @@
 import logging
 from typing import Any, Dict, List, Optional, cast
 
-from Monitors.monitor import Monitor
-from util import LoggerConfigurationError, get_config_option, subclass_dict_handler
+from ..Monitors.monitor import Monitor
+from ..util import LoggerConfigurationError, get_config_option, subclass_dict_handler
 
 
 class Logger:

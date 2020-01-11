@@ -1,47 +1,54 @@
+# coding=utf-8
 from typing import cast
 
 import requests
 
-from Monitors.monitor import Monitor
-from util import format_datetime
-
+from ..Monitors.monitor import Monitor
+from ..util import format_datetime
 from .alerter import Alerter, register
 
 
 @register
-class PushbulletAlerter(Alerter):
-    """Send push notification via Pushbullet."""
+class PushoverAlerter(Alerter):
+    """Send push notification via Pushover."""
 
-    type = "pushbullet"
+    type = "pushover"
 
     def __init__(self, config_options: dict) -> None:
         Alerter.__init__(self, config_options)
 
-        self.pushbullet_token = cast(
+        self.pushover_token = cast(
             str,
             Alerter.get_config_option(
                 config_options, "token", required=True, allow_empty=False
             ),
         )
+        self.pushover_user = cast(
+            str,
+            Alerter.get_config_option(
+                config_options, "user", required=True, allow_empty=False
+            ),
+        )
 
         self.support_catchup = True
 
-    def send_pushbullet_notification(self, subject: str, body: str) -> None:
+    def send_pushover_notification(self, subject: str, body: str) -> None:
         """Send a push notification."""
 
-        _payload = {"type": "note", "title": subject, "body": body}
-        _auth = requests.auth.HTTPBasicAuth(self.pushbullet_token, "")
-
-        r = requests.post(
-            "https://api.pushbullet.com/v2/pushes", data=_payload, auth=_auth
+        requests.post(
+            "https://api.pushover.net/1/messages.json",
+            data={
+                "token": self.pushover_token,
+                "user": self.pushover_user,
+                "title": subject,
+                "message": body,
+            },
         )
-        if not r.status_code == requests.codes.ok:
-            raise RuntimeError("Unable to send Pushbullet notification")
 
     def send_alert(self, name: str, monitor: Monitor) -> None:
         """Build up the content for the push notification."""
 
-        alert_type = self.should_alert(monitor)
+        type = self.should_alert(monitor)
         (days, hours, minutes, seconds) = monitor.get_downtime()
 
         if monitor.is_remote():
@@ -52,9 +59,9 @@ class PushbulletAlerter(Alerter):
         subject = ""
         body = ""
 
-        if alert_type == "":
+        if type == "":
             return
-        elif alert_type == "failure":
+        elif type == "failure":
             subject = "[%s] Monitor %s Failed!" % (self.hostname, name)
             body = """Monitor %s%s has failed.\n
             Failed at: %s
@@ -79,7 +86,7 @@ class PushbulletAlerter(Alerter):
             except AttributeError:
                 body += "\nNo recovery info available"
 
-        elif alert_type == "success":
+        elif type == "success":
             subject = "[%s] Monitor %s succeeded" % (self.hostname, name)
             body = (
                 "Monitor %s%s is back up.\nOriginally failed at: %s\nDowntime: %d+%02d:%02d:%02d\nDescription: %s"
@@ -95,7 +102,7 @@ class PushbulletAlerter(Alerter):
                 )
             )
 
-        elif alert_type == "catchup":
+        elif type == "catchup":
             subject = "[%s] Monitor %s failed earlier!" % (self.hostname, name)
             body = (
                 "Monitor %s%s failed earlier while this alerter was out of hours.\nFailed at: %s\nVirtual failure count: %d\nAdditional info: %s\nDescription: %s"
@@ -110,14 +117,14 @@ class PushbulletAlerter(Alerter):
             )
 
         else:
-            self.alerter_logger.error("Unknown alert type %s", alert_type)
+            self.alerter_logger.error("Unknown alert type %s", type)
             return
 
         if not self.dry_run:
             try:
-                self.send_pushbullet_notification(subject, body)
+                self.send_pushover_notification(subject, body)
             except Exception:
                 self.alerter_logger.exception("Couldn't send push notification")
                 self.available = False
         else:
-            self.alerter_logger.info("dry_run: would send push notification: %s" % body)
+            self.alerter_logger.info("dry_run: would send push notification: %s", body)

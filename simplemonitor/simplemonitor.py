@@ -8,11 +8,9 @@ import sys
 import time
 from typing import Any, Dict, List
 
-import Loggers
-import Monitors.monitor
-from Alerters.alerter import Alerter
-from Loggers.logger import Logger
-from Monitors.monitor import Monitor
+from .Alerters.alerter import Alerter
+from .Loggers.logger import Logger
+from .Monitors.monitor import Monitor, get_class
 
 module_logger = logging.getLogger("simplemonitor")
 
@@ -236,7 +234,7 @@ class SimpleMonitor:
         self.alerters[name] = alerter
 
     def add_logger(self, name: str, logger: Logger) -> None:
-        if isinstance(logger, Loggers.logger.Logger):
+        if isinstance(logger, Logger):
             self.loggers[name] = logger
         else:
             module_logger.critical(
@@ -304,9 +302,9 @@ class SimpleMonitor:
         for (name, state) in data.items():
             module_logger.info("updating remote monitor %s", name)
             if isinstance(state, dict):
-                remote_monitor = Monitors.monitor.get_class(
-                    state["cls_type"]
-                ).from_python_dict(state["data"])
+                remote_monitor = get_class(state["cls_type"]).from_python_dict(
+                    state["data"]
+                )
                 self.remote_monitors[name] = remote_monitor
             elif self.allow_pickle:
                 # Fallback for old remote monitors
