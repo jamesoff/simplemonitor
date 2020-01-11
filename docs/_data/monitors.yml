@@ -197,3 +197,19 @@
     - name: sub_states
       desc: Comma-separates list of desired sub states for the unit
       required: 'no'
+- name: ring
+  oneline: Check battery level of Ring Doorbell
+  params:
+    - name: device_name
+      desc: The name of the Ring Doorbell to monitor
+      required: 'yes'
+    - name: minimum_battery
+      desc: The minimum battery percent allowed
+      required: 'no'
+      default: 25
+    - name: username
+      desc: Your Ring username (e.g. email address). Accounts using MFA are not supported. You can create a separate account for API access.
+      required: 'yes'
+    - name: password
+      desc: Your Ring password
+      required: 'yes'
