@@ -13,6 +13,9 @@ try:
 except ImportError:
     mqtt_available = False
 import json
+from typing import List, cast
+
+from Monitors.monitor import Monitor
 
 from .logger import Logger, register
 
@@ -24,7 +27,7 @@ class MQTTLogger(Logger):
     buffered = False
     dateformat = None
 
-    def __init__(self, config_options=None):
+    def __init__(self, config_options: dict = None) -> None:
         if config_options is None:
             config_options = {}
         Logger.__init__(self, config_options)
@@ -34,42 +37,56 @@ class MQTTLogger(Logger):
             return
 
         # TODO: add configuration for authenticated calls, port, will, etc.
-        self.host = Logger.get_config_option(
-            config_options, "host", required=True, allow_empty=False
+        self.host = cast(
+            str,
+            Logger.get_config_option(
+                config_options, "host", required=True, allow_empty=False
+            ),
         )
-        self.port = Logger.get_config_option(
-            config_options,
-            "port",
-            required=False,
-            allow_empty=False,
-            required_type="int",
-            default=1883,
+        self.port = cast(
+            int,
+            Logger.get_config_option(
+                config_options,
+                "port",
+                required=False,
+                allow_empty=False,
+                required_type="int",
+                default=1883,
+            ),
         )
         # specif configuration for Home Assistant MQTT discovery
         # https://www.home-assistant.io/docs/mqtt/discovery/
-        self.hass = Logger.get_config_option(
-            config_options,
-            "hass",
-            required=False,
-            allow_empty=False,
-            required_type="bool",
-            default=False,
+        self.hass = cast(
+            bool,
+            Logger.get_config_option(
+                config_options,
+                "hass",
+                required=False,
+                allow_empty=False,
+                required_type="bool",
+                default=False,
+            ),
         )
         # topic to send information to
-        self.topic = Logger.get_config_option(
-            config_options,
-            "topic",
-            required=False,
-            allow_empty=False,
-            default="simplemonitor" if not self.hass else "homeassistant/binary_sensor",
+        self.topic = cast(
+            str,
+            Logger.get_config_option(
+                config_options,
+                "topic",
+                required=False,
+                allow_empty=False,
+                default="simplemonitor"
+                if not self.hass
+                else "homeassistant/binary_sensor",
+            ),
         )
 
         # registry of monitors which registered with HA
         # not used if not Home Assistant context
         # also see https://github.com/jamesoff/simplemonitor/issues/236#issuecomment-462481900 for rationale
-        self.registered = []
+        self.registered = []  # type: List[str]
 
-    def save_result2(self, name, monitor):
+    def save_result2(self, name: str, monitor: Monitor) -> None:
         # check if monitor registred with HA
         if self.hass:
             if monitor.name not in self.registered:
@@ -126,12 +143,14 @@ class MQTTLogger(Logger):
             )
         except Exception as e:
             self.logger_logger.error(
-                "cannot send state {payload} to {topic}: {e}"
-            ).format(payload=payload, topic=topic, e=e)
+                "cannot send state {payload} to {topic}: {e}".format(
+                    payload=payload, topic=topic, e=e
+                )
+            )
         else:
             self.logger_logger.debug(
                 "state {state} sent to {topic}".format(state=payload, topic=topic)
             )
 
-    def describe(self):
+    def describe(self) -> str:
         return "Sends monitoring status to a MQTT broker"

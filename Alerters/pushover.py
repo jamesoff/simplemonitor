@@ -1,6 +1,9 @@
 # coding=utf-8
+from typing import cast
+
 import requests
 
+from Monitors.monitor import Monitor
 from util import format_datetime
 
 from .alerter import Alerter, register
@@ -12,19 +15,25 @@ class PushoverAlerter(Alerter):
 
     type = "pushover"
 
-    def __init__(self, config_options):
+    def __init__(self, config_options: dict) -> None:
         Alerter.__init__(self, config_options)
 
-        self.pushover_token = Alerter.get_config_option(
-            config_options, "token", required=True, allow_empty=False
+        self.pushover_token = cast(
+            str,
+            Alerter.get_config_option(
+                config_options, "token", required=True, allow_empty=False
+            ),
         )
-        self.pushover_user = Alerter.get_config_option(
-            config_options, "user", required=True, allow_empty=False
+        self.pushover_user = cast(
+            str,
+            Alerter.get_config_option(
+                config_options, "user", required=True, allow_empty=False
+            ),
         )
 
         self.support_catchup = True
 
-    def send_pushover_notification(self, subject, body):
+    def send_pushover_notification(self, subject: str, body: str) -> None:
         """Send a push notification."""
 
         requests.post(
@@ -37,7 +46,7 @@ class PushoverAlerter(Alerter):
             },
         )
 
-    def send_alert(self, name, monitor):
+    def send_alert(self, name: str, monitor: Monitor) -> None:
         """Build up the content for the push notification."""
 
         type = self.should_alert(monitor)
@@ -95,12 +104,7 @@ class PushoverAlerter(Alerter):
             )
 
         elif type == "catchup":
-            subject = "[%s] Monitor %s failed earlier!" % (
-                self.from_addr,
-                self.to_addr,
-                self.hostname,
-                name,
-            )
+            subject = "[%s] Monitor %s failed earlier!" % (self.hostname, name)
             body = (
                 "Monitor %s%s failed earlier while this alerter was out of hours.\nFailed at: %s\nVirtual failure count: %d\nAdditional info: %s\nDescription: %s"
                 % (

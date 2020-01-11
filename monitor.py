@@ -9,6 +9,7 @@ import sys
 import time
 from optparse import SUPPRESS_HELP, OptionParser
 from socket import gethostname
+from typing import Any, Optional
 
 import Alerters.bulksms
 import Alerters.execute
@@ -31,6 +32,7 @@ import Monitors.hass
 import Monitors.host
 import Monitors.monitor
 import Monitors.network
+import Monitors.ring
 import Monitors.service
 from envconfig import EnvironmentAwareConfigParser
 from simplemonitor import SimpleMonitor
@@ -48,7 +50,7 @@ need_hup = False
 hup_timestamp = None
 
 
-def setup_signals():
+def setup_signals() -> None:
     try:
         signal.signal(signal.SIGHUP, handle_sighup)
     except ValueError:  # pragma: no cover
@@ -61,13 +63,13 @@ def setup_signals():
         )
 
 
-def handle_sighup(sig_number, stack_frame):
+def handle_sighup(sig_number: Any, stack_frame: Any) -> None:
     global need_hup
     main_logger.warning("Received SIGHUP")
     need_hup = True
 
 
-def check_hup_file(path):
+def check_hup_file(path: Optional[str]) -> bool:
     """Check a file's timestamp, and if it's newer than last time, treat it
     the same as receiving SIGHUP so that a reload is triggered. This allows
     config reloading on platforms which don't support the signal (i.e.
@@ -90,7 +92,9 @@ def check_hup_file(path):
     return False
 
 
-def load_everything(m, config):
+def load_everything(
+    m: SimpleMonitor, config: EnvironmentAwareConfigParser
+) -> SimpleMonitor:
     """Load monitors, alerters and loggers into a SimpleMonitor object."""
     monitors_file = config.get("monitor", "monitors", fallback="monitors.ini")
     m = load_monitors(m, monitors_file)
@@ -101,7 +105,7 @@ def load_everything(m, config):
     return m
 
 
-def load_config(config_file):
+def load_config(config_file: str) -> EnvironmentAwareConfigParser:
     """Load the main configuration and return a config object."""
     config = EnvironmentAwareConfigParser()
     if not os.path.exists(config_file):
@@ -116,7 +120,7 @@ def load_config(config_file):
     return config
 
 
-def load_monitors(m, filename):
+def load_monitors(m: SimpleMonitor, filename: str) -> SimpleMonitor:
     """Load all the monitors from the config file and return a populated SimpleMonitor."""
     config = EnvironmentAwareConfigParser()
     config.read(filename)
@@ -165,19 +169,22 @@ def load_monitors(m, filename):
             )
             continue
         new_monitor = cls(monitor, config_options)
-        new_monitor.set_mon_refs(m)
+        # new_monitor.set_mon_refs(m)
 
         main_logger.info("Adding %s monitor %s: %s", monitor_type, monitor, new_monitor)
         m.add_monitor(monitor, new_monitor)
 
     for i in list(m.monitors.keys()):
+        m.monitors[i].set_mon_refs(m.monitors)
         m.monitors[i].post_config_setup()
     m.prune_monitors(monitors)
     main_logger.info("--- Loaded %d monitors", m.count_monitors())
     return m
 
 
-def load_loggers(m, config):
+def load_loggers(
+    m: SimpleMonitor, config: EnvironmentAwareConfigParser
+) -> SimpleMonitor:
     """Load the loggers listed in the config object."""
 
     if config.has_option("reporting", "loggers"):
@@ -223,7 +230,9 @@ def load_loggers(m, config):
     return m
 
 
-def load_alerters(m, config):
+def load_alerters(
+    m: SimpleMonitor, config: EnvironmentAwareConfigParser
+) -> SimpleMonitor:
     """Load the alerters listed in the config object."""
     if config.has_option("reporting", "alerters"):
         alerters = config.get("reporting", "alerters").split(",")
@@ -264,7 +273,7 @@ def load_alerters(m, config):
     return m
 
 
-def main():
+def main() -> None:
     r"""This is where it happens \o/"""
 
     parser = OptionParser()
@@ -455,7 +464,7 @@ def main():
     main_logger.info("Loading monitor config from %s", monitors_file)
 
     try:
-        allow_pickle = config.getboolean("monitor", "allow_pickle", fallback="true")
+        allow_pickle = config.getboolean("monitor", "allow_pickle", fallback=True)
     except ValueError:
         main_logger.critical('allow_pickle should be "true" or "false".')
         sys.exit(1)

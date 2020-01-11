@@ -1,6 +1,8 @@
 # coding=utf-8
 """ Home Automation monitors for SimpleMonitor. """
 
+from typing import Tuple, cast
+
 import requests
 
 from .monitor import Monitor, register
@@ -10,16 +12,22 @@ from .monitor import Monitor, register
 class MonitorSensor(Monitor):
     type = "hass_sensor"
 
-    def __init__(self, name, config_options):
+    def __init__(self, name: str, config_options: dict) -> None:
         Monitor.__init__(self, name, config_options)
-        self.url = Monitor.get_config_option(config_options, "url", required=True)
-        self.sensor = Monitor.get_config_option(config_options, "sensor", required=True)
-        self.token = Monitor.get_config_option(config_options, "token", default=None)
+        self.url = cast(
+            str, Monitor.get_config_option(config_options, "url", required=True)
+        )
+        self.sensor = cast(
+            str, Monitor.get_config_option(config_options, "sensor", required=True)
+        )
+        self.token = cast(
+            str, Monitor.get_config_option(config_options, "token", default=None)
+        )
 
-    def describe(self):
+    def describe(self) -> str:
         return "monitor the existence of a sensor"
 
-    def run_test(self):
+    def run_test(self) -> bool:
         try:
             # retrieve the status from hass API
             self.monitor_logger.debug(
@@ -52,5 +60,5 @@ class MonitorSensor(Monitor):
             else:
                 return self.record_fail("sensor not found in hass")
 
-    def get_params(self):
+    def get_params(self) -> Tuple:
         return (self.url, self.sensor)

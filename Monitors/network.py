@@ -7,6 +7,7 @@ import re
 import socket
 import subprocess
 import sys
+from typing import List, Pattern, Tuple, Union, cast
 
 import requests
 from requests.auth import HTTPBasicAuth
@@ -24,7 +25,7 @@ class MonitorHTTP(Monitor):
     url = ""
     regexp = None
     regexp_text = ""
-    allowed_codes = []
+    allowed_codes = []  # type: List[int]
 
     type = "http"
 
@@ -35,7 +36,7 @@ class MonitorHTTP(Monitor):
     # optional - headers
     headers = None
 
-    def __init__(self, name, config_options):
+    def __init__(self, name: str, config_options: dict) -> None:
         Monitor.__init__(self, name, config_options)
         self.url = Monitor.get_config_option(config_options, "url", required=True)
 
@@ -74,7 +75,7 @@ class MonitorHTTP(Monitor):
         self.username = config_options.get("username")
         self.password = config_options.get("password")
 
-    def run_test(self):
+    def run_test(self) -> bool:
         start_time = datetime.datetime.now()
         end_time = None
         try:
@@ -139,7 +140,7 @@ class MonitorHTTP(Monitor):
         except Exception as e:
             return self.record_fail("Exception while trying to open url: {0}".format(e))
 
-    def describe(self):
+    def describe(self) -> str:
         """Explains what we do."""
         if self.regexp is None:
             message = "Checking that accessing %s returns HTTP/200 OK" % self.url
@@ -150,7 +151,7 @@ class MonitorHTTP(Monitor):
             )
         return message
 
-    def get_params(self):
+    def get_params(self) -> Tuple:
         return (self.url, self.regexp_text, self.allowed_codes)
 
 
@@ -159,18 +160,21 @@ class MonitorTCP(Monitor):
     """TCP port monitor"""
 
     host = ""
-    port = ""
+    port = 0
     type = "tcp"
 
-    def __init__(self, name, config_options):
+    def __init__(self, name: str, config_options: dict) -> None:
         """Constructor"""
         Monitor.__init__(self, name, config_options)
         self.host = Monitor.get_config_option(config_options, "host", required=True)
-        self.port = Monitor.get_config_option(
-            config_options, "port", required=True, required_type="int", minimum=0
+        self.port = cast(
+            int,
+            Monitor.get_config_option(
+                config_options, "port", required=True, required_type="int", minimum=0
+            ),
         )
 
-    def run_test(self):
+    def run_test(self) -> bool:
         """Check the port is open on the remote host"""
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
@@ -181,11 +185,11 @@ class MonitorTCP(Monitor):
         s.close()
         return self.record_success()
 
-    def describe(self):
+    def describe(self) -> str:
         """Explains what this instance is checking"""
         return "checking for open tcp socket on %s:%d" % (self.host, self.port)
 
-    def get_params(self):
+    def get_params(self) -> Tuple:
         return (self.host, self.port)
 
 
@@ -198,10 +202,10 @@ class MonitorHost(Monitor):
     ping_regexp = ""
     type = "host"
     time_regexp = ""
-    r = ""
-    r2 = ""
+    r = ""  # type: Union[str, Pattern[str]]
+    r2 = ""  # type: Union[str, Pattern[str]]
 
-    def __init__(self, name, config_options):
+    def __init__(self, name: str, config_options: dict) -> None:
         """
         Note: We use -w/-t on Windows/POSIX to limit the amount of time we wait to 5 seconds.
         This is to stop ping holding things up too much. A machine that can't ping back in <5s is
@@ -231,7 +235,7 @@ class MonitorHost(Monitor):
 
         self.host = Monitor.get_config_option(config_options, "host", required=True)
 
-    def run_test(self):
+    def run_test(self) -> bool:
         success = False
         pingtime = 0.0
 
@@ -248,22 +252,23 @@ class MonitorHost(Monitor):
                 if matches:
                     success = True
                 else:
+                    assert isinstance(self.r2, Pattern)
                     matches = self.r2.search(line)
                     if matches:
-                        pingtime = matches.group("ms")
+                        pingtime = float(matches.group("ms"))
         except Exception as e:
-            return self.record_fail(e)
+            return self.record_fail(str(e))
         if success:
             if pingtime > 0:
                 return self.record_success("%sms" % pingtime)
             return self.record_success()
         return self.record_fail()
 
-    def describe(self):
+    def describe(self) -> str:
         """Explains what this instance is checking"""
         return "checking host %s is pingable" % self.host
 
-    def get_params(self):
+    def get_params(self) -> Tuple:
         return (self.host,)
 
 
@@ -275,7 +280,7 @@ class MonitorDNS(Monitor):
     path = ""
     command = "dig"
 
-    def __init__(self, name, config_options):
+    def __init__(self, name: str, config_options: dict) -> None:
         Monitor.__init__(self, name, config_options)
         self.path = Monitor.get_config_option(config_options, "record", required=True)
 
@@ -296,7 +301,7 @@ class MonitorDNS(Monitor):
         self.params.append(self.path)
         self.params.append("+short")
 
-    def run_test(self):
+    def run_test(self) -> bool:
         try:
             result = subprocess.check_output(self.params).decode("utf-8")
             result = result.strip()
@@ -322,7 +327,7 @@ class MonitorDNS(Monitor):
                 "Exception while executing '%s': %s" % (" ".join(self.params), e)
             )
 
-    def describe(self):
+    def describe(self) -> str:
         if self.desired_val:
             end_part = "resolves to %s" % self.desired_val
         else:
@@ -339,5 +344,5 @@ class MonitorDNS(Monitor):
             very_end_part = ""
         return "Checking that DNS %s %s%s" % (mid_part, end_part, very_end_part)
 
-    def get_params(self):
+    def get_params(self) -> Tuple:
         return (self.path,)

@@ -2,7 +2,9 @@
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from typing import Optional, cast
 
+from Monitors.monitor import Monitor
 from util import format_datetime
 
 from .alerter import Alerter, register
@@ -14,31 +16,46 @@ class EMailAlerter(Alerter):
 
     type = "email"
 
-    def __init__(self, config_options):
+    def __init__(self, config_options: dict) -> None:
         Alerter.__init__(self, config_options)
-        self.mail_host = Alerter.get_config_option(
-            config_options, "host", required=True, allow_empty=False
+        self.mail_host = cast(
+            str,
+            Alerter.get_config_option(
+                config_options, "host", required=True, allow_empty=False
+            ),
         )
-        self.from_addr = Alerter.get_config_option(
-            config_options, "from", required=True, allow_empty=False
+        self.from_addr = cast(
+            str,
+            Alerter.get_config_option(
+                config_options, "from", required=True, allow_empty=False
+            ),
         )
-        self.to_addr = Alerter.get_config_option(
-            config_options, "to", required=True, allow_empty=False
+        self.to_addr = cast(
+            str,
+            Alerter.get_config_option(
+                config_options, "to", required=True, allow_empty=False
+            ),
         )
-        self.mail_port = Alerter.get_config_option(
-            config_options, "port", required_type="int", default=25
+        self.mail_port = cast(
+            int,
+            Alerter.get_config_option(
+                config_options, "port", required_type="int", default=25
+            ),
         )
-        self.username = Alerter.get_config_option(config_options, "username")
-        self.password = Alerter.get_config_option(config_options, "password")
-        self.ssl = Alerter.get_config_option(
-            config_options, "ssl", allowed_values=["starttls", "yes", None]
+        self.username = cast(str, Alerter.get_config_option(config_options, "username"))
+        self.password = cast(str, Alerter.get_config_option(config_options, "password"))
+        self.ssl = cast(
+            Optional[str],
+            Alerter.get_config_option(
+                config_options, "ssl", allowed_values=["starttls", "yes", None]
+            ),
         )
         if self.ssl == "yes":
             self.alerter_logger.warning("ssl=yes for email alerter is untested")
 
         self.support_catchup = True
 
-    def send_alert(self, name, monitor):
+    def send_alert(self, name: str, monitor: Monitor) -> None:
         """Send the email."""
 
         alert_type = self.should_alert(monitor)

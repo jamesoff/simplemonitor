@@ -3,6 +3,7 @@ import time
 import unittest
 
 import monitor
+import Monitors.compound
 import Monitors.monitor
 from simplemonitor import SimpleMonitor
 
@@ -252,4 +253,109 @@ class TestMonitor(unittest.TestCase):
         m._last_run = time.time()
         self.assertEqual(
             m.should_run(), False, "monitor did should_run when it shouldn't have"
+        )
+
+    def test_compound_partial_fail(self):
+        m = Monitors.monitor.MonitorNull()
+        m2 = Monitors.monitor.MonitorFail("fail1", {})
+        m3 = Monitors.monitor.MonitorFail("fail2", {})
+
+        compound_monitor = Monitors.compound.CompoundMonitor(
+            "compound", {"monitors": ["m", "m2", "m3"]}
+        )
+        monitors = {"m": m, "m2": m2, "m3": m3}
+        compound_monitor.set_mon_refs(monitors)
+        compound_monitor.post_config_setup()
+
+        self.assertIn(
+            "m", compound_monitor.all_monitors, "compound all_monitors not set"
+        )
+        self.assertIn("m", compound_monitor.m, "compund m not set")
+
+        m.run_test()
+        m2.run_test()
+        m3.run_test()
+
+        result = compound_monitor.run_test()
+        # should be ok because not all have failed
+        self.assertEqual(result, True, "compound monitor should not have failed")
+        self.assertEqual(
+            compound_monitor.virtual_fail_count(),
+            0,
+            "compound monitor should not report fail count",
+        )
+        self.assertEqual(
+            compound_monitor.get_result(),
+            "2 of 3 services failed. Fail after: 3",
+            "compound monitor did not report failures properly",
+        )
+
+    def test_compound_no_fail(self):
+        m = Monitors.monitor.MonitorNull()
+        m2 = Monitors.monitor.MonitorNull()
+
+        compound_monitor = Monitors.compound.CompoundMonitor(
+            "compound", {"monitors": ["m", "m2"]}
+        )
+        monitors = {"m": m, "m2": m2}
+        compound_monitor.set_mon_refs(monitors)
+        compound_monitor.post_config_setup()
+
+        self.assertIn(
+            "m", compound_monitor.all_monitors, "compound all_monitors not set"
+        )
+        self.assertIn("m", compound_monitor.m, "compund m not set")
+
+        m.run_test()
+        m2.run_test()
+
+        result = compound_monitor.run_test()
+        # should be ok because not all have failed
+        self.assertEqual(result, True, "compound monitor should not have failed")
+        self.assertEqual(
+            compound_monitor.virtual_fail_count(),
+            0,
+            "compound monitor should not report fail count",
+        )
+        self.assertEqual(
+            compound_monitor.get_result(),
+            "All 2 services OK",
+            "compound monitor did not report status properly",
+        )
+
+    def test_compound_fail(self):
+        m = Monitors.monitor.MonitorNull()
+        m2 = Monitors.monitor.MonitorFail("fail1", {})
+        m3 = Monitors.monitor.MonitorFail("fail2", {})
+
+        compound_monitor = Monitors.compound.CompoundMonitor(
+            "compound", {"monitors": ["m2", "m3"]}
+        )
+        monitors = {"m": m, "m2": m2, "m3": m3}
+        compound_monitor.set_mon_refs(monitors)
+        compound_monitor.post_config_setup()
+
+        self.assertIn(
+            "m", compound_monitor.all_monitors, "compound all_monitors not set"
+        )
+        self.assertIn("m2", compound_monitor.m, "compund m not set")
+        self.assertNotIn(
+            "m", compound_monitor.m, "compound m should not include monitor m"
+        )
+
+        m2.run_test()
+        m3.run_test()
+
+        result = compound_monitor.run_test()
+        # should be ok because not all have failed
+        self.assertEqual(result, False, "compound monitor should have failed")
+        self.assertEqual(
+            compound_monitor.virtual_fail_count(),
+            2,
+            "compound monitor should report fail count",
+        )
+        self.assertEqual(
+            compound_monitor.get_result(),
+            "2 of 2 services failed. Fail after: 2",
+            "compound monitor did not report failures properly",
         )

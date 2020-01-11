@@ -1,6 +1,9 @@
 # coding=utf-8
+from typing import cast
+
 import requests
 
+from Monitors.monitor import Monitor
 from util import format_datetime
 
 from .alerter import Alerter, register
@@ -12,20 +15,26 @@ class TelegramAlerter(Alerter):
 
     type = "telegram"
 
-    def __init__(self, config_options):
+    def __init__(self, config_options: dict) -> None:
         Alerter.__init__(self, config_options)
 
-        self.telegram_token = Alerter.get_config_option(
-            config_options, "token", required=True, allow_empty=False
+        self.telegram_token = cast(
+            str,
+            Alerter.get_config_option(
+                config_options, "token", required=True, allow_empty=False
+            ),
         )
 
-        self.telegram_chatid = Alerter.get_config_option(
-            config_options, "chat_id", required=True, allow_empty=False
+        self.telegram_chatid = cast(
+            str,
+            Alerter.get_config_option(
+                config_options, "chat_id", required=True, allow_empty=False
+            ),
         )
 
         self.support_catchup = True
 
-    def send_telegram_notification(self, body):
+    def send_telegram_notification(self, body: str) -> None:
         """Send a push notification."""
 
         r = requests.post(
@@ -35,7 +44,7 @@ class TelegramAlerter(Alerter):
         if not r.status_code == requests.codes.ok:
             raise RuntimeError("Unable to send telegram notification")
 
-    def send_alert(self, name, monitor):
+    def send_alert(self, name: str, monitor: Monitor) -> None:
         """Build up the content for the push notification."""
 
         type = self.should_alert(monitor)

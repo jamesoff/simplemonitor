@@ -5,23 +5,42 @@ language: python
 python:
     - "3.5"
     - "3.6"
-    - "3.7"
-    - "3.8-dev"
+    - "3.7.6"
+    - "3.8"
+    - nightly
 install:
     - pip install pipenv
+    - pip install mypy
     - pipenv install --dev
 before_script:
+    - export -f travis_nanoseconds
+    - export -f travis_fold
+    - export -f travis_time_start
+    - export -f travis_time_finish
     - rm -f monitor.db monitor2.db
     - sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0
     - sudo sysctl -w net.ipv6.conf.lo.disable_ipv6=0
 script:
+    - travis_fold start flake8
     - pipenv run flake8 --ignore=E501,W503,E203 *.py Alerters/ Monitors/ Loggers/
+    - travis_fold end flake8
+    - travis_fold start mypy
+    - mypy --ignore-missing-imports *.py {Monitors,Alerters,Loggers}/*.py
+    - travis_fold end mypy
+    - travis_fold start integration
     - pipenv run env PATH=$PWD/tests/mocks:$PATH coverage run monitor.py -1 -v -d -f tests/monitor.ini
+    - travis_fold end integration
+    - travis_fold start envtest
     - pipenv run env TEST_VALUE=myenv coverage run --append monitor.py -t -f tests/monitor-env.ini
+    - travis_fold end envtest
+    - travis_fold start unittest
     - pipenv run coverage run --append -m unittest discover -s tests
+    - travis_fold end unittest
+    - travis_fold start network
     - pipenv run tests/test-network.sh
+    - travis_fold end network
 after_success:
     - pipenv run codecov
 matrix:
-  allow_failures:
-    - python: "3.8-dev"
+    allow_failures:
+        - python: nightly

@@ -5,6 +5,9 @@ try:
 except ImportError:
     requests_available = False
 
+from typing import Any, Dict, cast
+
+from Monitors.monitor import Monitor
 from util import format_datetime
 
 from .alerter import Alerter, register
@@ -19,7 +22,7 @@ class SlackAlerter(Alerter):
     channel = None
     username = None
 
-    def __init__(self, config_options):
+    def __init__(self, config_options: dict) -> None:
         Alerter.__init__(self, config_options)
         if not requests_available:
             self.alerter_logger.critical(
@@ -28,19 +31,23 @@ class SlackAlerter(Alerter):
             self.alerter_logger.critical("Try: pip install -r requirements.txt")
             return
 
-        self.url = Alerter.get_config_option(
-            config_options, "url", required=True, allow_empty=False
+        self.url = cast(
+            str,
+            Alerter.get_config_option(
+                config_options, "url", required=True, allow_empty=False
+            ),
         )
 
-        self.channel = Alerter.get_config_option(config_options, "channel")
-        self.username = Alerter.get_config_option(config_options, "username")
+        self.channel = cast(str, Alerter.get_config_option(config_options, "channel"))
+        self.username = cast(str, Alerter.get_config_option(config_options, "username"))
 
-    def send_alert(self, name, monitor):
+    def send_alert(self, name: str, monitor: Monitor) -> None:
         """Send the message."""
 
         type = self.should_alert(monitor)
         (days, hours, minutes, seconds) = monitor.get_downtime()
 
+        message_json = {}  # type: Dict[str, Any]
         if self.channel is not None:
             message_json = {"channel": self.channel}
         elif self.username is not None:

@@ -16,7 +16,7 @@ class TestAlerter(unittest.TestCase):
         config_options = {"times_type": "always"}
         a = Alerters.alerter.Alerter(config_options)
         self.assertEqual(a.times_type, "always")
-        self.assertEqual(a.time_info, [None, None])
+        self.assertEqual(a.time_info, (None, None))
 
     def test_times_only(self):
         config_options = {
@@ -26,7 +26,7 @@ class TestAlerter(unittest.TestCase):
         }
         a = Alerters.alerter.Alerter(config_options)
         self.assertEqual(a.times_type, "only")
-        self.assertEqual(a.time_info, [datetime.time(10, 00), datetime.time(11, 00)])
+        self.assertEqual(a.time_info, (datetime.time(10, 00), datetime.time(11, 00)))
 
     def test_times_not(self):
         config_options = {
@@ -36,7 +36,7 @@ class TestAlerter(unittest.TestCase):
         }
         a = Alerters.alerter.Alerter(config_options)
         self.assertEqual(a.times_type, "not")
-        self.assertEqual(a.time_info, [datetime.time(10, 00), datetime.time(11, 00)])
+        self.assertEqual(a.time_info, (datetime.time(10, 00), datetime.time(11, 00)))
 
     def test_times_broken(self):
         config_options = {
