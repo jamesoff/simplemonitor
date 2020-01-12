@@ -9,6 +9,8 @@ import win32event
 import win32service
 import win32serviceutil
 
+from simplemonitor import monitor
+
 r"""
 Notes:
 
@@ -111,7 +113,6 @@ class AppServerSvc(win32serviceutil.ServiceFramework):
 
 
 def run_monitor() -> None:
-    import monitor
 
     sys.argv = ["monitor.py", "-vH", "--config={}".format(CONFIG)]
     monitor.main()
