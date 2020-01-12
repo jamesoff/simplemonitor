@@ -1,3 +1,4 @@
+# type: ignore
 import os
 import os.path
 import pathlib
@@ -7,7 +8,7 @@ import time
 import unittest
 from unittest.mock import patch
 
-import monitor
+from simplemonitor import monitor
 
 
 class TestMonitor(unittest.TestCase):

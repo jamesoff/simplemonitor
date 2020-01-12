@@ -1,11 +1,12 @@
+# type: ignore
 import datetime
 import time
 import unittest
 
-import monitor
-import Monitors.compound
-import Monitors.monitor
-from simplemonitor import SimpleMonitor
+from simplemonitor import monitor
+from simplemonitor.Monitors.compound import CompoundMonitor
+from simplemonitor.Monitors.monitor import Monitor, MonitorFail, MonitorNull
+from simplemonitor.simplemonitor import SimpleMonitor
 
 
 class TestMonitor(unittest.TestCase):
@@ -18,7 +19,7 @@ class TestMonitor(unittest.TestCase):
     one_TB = one_GB * 1024
 
     def test_MonitorInit(self):
-        m = Monitors.monitor.Monitor(
+        m = Monitor(
             config_options={
                 "depend": "a, b",
                 "urgent": 0,
@@ -74,7 +75,7 @@ class TestMonitor(unittest.TestCase):
         m.dependency_succeeded("a")  # should be safe to remove again
 
     def test_MonitorDependencies(self):
-        m = Monitors.monitor.Monitor()
+        m = Monitor()
         m.dependencies = ["a", "b", "c"]
         m.dependency_succeeded("b")
         self.assertEqual(
@@ -90,7 +91,7 @@ class TestMonitor(unittest.TestCase):
         )
 
     def test_MonitorSuccess(self):
-        m = Monitors.monitor.Monitor()
+        m = Monitor()
         m.record_success("yay")
         self.assertEqual(m.get_error_count(), 0, "Error count is not 0")
         self.assertEqual(m.get_success_count(), 1, "Success count is not 1")
@@ -102,7 +103,7 @@ class TestMonitor(unittest.TestCase):
         self.assertEqual(m.test_success(), True, "test_success is not True")
 
     def test_MonitorFail(self):
-        m = Monitors.monitor.Monitor()
+        m = Monitor()
         m.record_fail("boo")
         self.assertEqual(m.get_error_count(), 1, "Error count is not 1")
         self.assertEqual(m.get_success_count(), 0, "Success count is not 0")
@@ -122,11 +123,11 @@ class TestMonitor(unittest.TestCase):
         self.assertEqual(m.state(), False, "state is not False")
 
     def test_MonitorWindows(self):
-        m = Monitors.monitor.Monitor()
+        m = Monitor()
         self.assertFalse(m.is_windows())
 
     def test_MonitorSkip(self):
-        m = Monitors.monitor.Monitor()
+        m = Monitor()
         m.record_skip("a")
         self.assertEqual(m.get_success_count(), 1, "Success count is not 1")
         self.assertTrue(m.was_skipped, "was_skipped is not true")
@@ -145,30 +146,27 @@ class TestMonitor(unittest.TestCase):
             "test_bool4": "0",
         }
         self.assertEqual(
-            Monitors.monitor.Monitor.get_config_option(config_options, "test_string"),
-            "a string",
+            Monitor.get_config_option(config_options, "test_string"), "a string"
         )
         self.assertEqual(
-            Monitors.monitor.Monitor.get_config_option(
-                config_options, "test_int", required_type="int"
-            ),
+            Monitor.get_config_option(config_options, "test_int", required_type="int"),
             3,
         )
         self.assertEqual(
-            Monitors.monitor.Monitor.get_config_option(
+            Monitor.get_config_option(
                 config_options, "test_[int]", required_type="[int]"
             ),
             [1, 2, 3],
         )
         self.assertEqual(
-            Monitors.monitor.Monitor.get_config_option(
+            Monitor.get_config_option(
                 config_options, "test_[str]", required_type="[str]"
             ),
             ["a", "b", "c"],
         )
         for bool_test in list(range(1, 4)):
             self.assertEqual(
-                Monitors.monitor.Monitor.get_config_option(
+                Monitor.get_config_option(
                     config_options,
                     "test_bool{0}".format(bool_test),
                     required_type="bool",
@@ -176,14 +174,14 @@ class TestMonitor(unittest.TestCase):
                 True,
             )
         self.assertEqual(
-            Monitors.monitor.Monitor.get_config_option(
+            Monitor.get_config_option(
                 config_options, "test_bool4", required_type="bool"
             ),
             False,
         )
 
     def test_downtime(self):
-        m = Monitors.monitor.Monitor()
+        m = Monitor()
         m.failed_at = datetime.datetime.utcnow()
         self.assertEqual(m.get_downtime(), (0, 0, 0, 0))
 
@@ -227,7 +225,7 @@ class TestMonitor(unittest.TestCase):
         )
 
     def test_should_run(self):
-        m = Monitors.monitor.Monitor()
+        m = Monitor()
         m.minimum_gap = 0
         self.assertEqual(m.should_run(), True, "monitor did not should_run with 0 gap")
         m.minimum_gap = 300
@@ -256,13 +254,11 @@ class TestMonitor(unittest.TestCase):
         )
 
     def test_compound_partial_fail(self):
-        m = Monitors.monitor.MonitorNull()
-        m2 = Monitors.monitor.MonitorFail("fail1", {})
-        m3 = Monitors.monitor.MonitorFail("fail2", {})
+        m = MonitorNull()
+        m2 = MonitorFail("fail1", {})
+        m3 = MonitorFail("fail2", {})
 
-        compound_monitor = Monitors.compound.CompoundMonitor(
-            "compound", {"monitors": ["m", "m2", "m3"]}
-        )
+        compound_monitor = CompoundMonitor("compound", {"monitors": ["m", "m2", "m3"]})
         monitors = {"m": m, "m2": m2, "m3": m3}
         compound_monitor.set_mon_refs(monitors)
         compound_monitor.post_config_setup()
@@ -291,12 +287,10 @@ class TestMonitor(unittest.TestCase):
         )
 
     def test_compound_no_fail(self):
-        m = Monitors.monitor.MonitorNull()
-        m2 = Monitors.monitor.MonitorNull()
+        m = MonitorNull()
+        m2 = MonitorNull()
 
-        compound_monitor = Monitors.compound.CompoundMonitor(
-            "compound", {"monitors": ["m", "m2"]}
-        )
+        compound_monitor = CompoundMonitor("compound", {"monitors": ["m", "m2"]})
         monitors = {"m": m, "m2": m2}
         compound_monitor.set_mon_refs(monitors)
         compound_monitor.post_config_setup()
@@ -324,13 +318,11 @@ class TestMonitor(unittest.TestCase):
         )
 
     def test_compound_fail(self):
-        m = Monitors.monitor.MonitorNull()
-        m2 = Monitors.monitor.MonitorFail("fail1", {})
-        m3 = Monitors.monitor.MonitorFail("fail2", {})
+        m = MonitorNull()
+        m2 = MonitorFail("fail1", {})
+        m3 = MonitorFail("fail2", {})
 
-        compound_monitor = Monitors.compound.CompoundMonitor(
-            "compound", {"monitors": ["m2", "m3"]}
-        )
+        compound_monitor = CompoundMonitor("compound", {"monitors": ["m2", "m3"]})
         monitors = {"m": m, "m2": m2, "m3": m3}
         compound_monitor.set_mon_refs(monitors)
         compound_monitor.post_config_setup()

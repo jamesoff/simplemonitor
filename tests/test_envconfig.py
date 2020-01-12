@@ -1,7 +1,8 @@
+# type: ignore
 import os
 import unittest
 
-import envconfig
+from simplemonitor.util import envconfig
 
 os.environ["TEST_VALUE"] = "test1"
 
