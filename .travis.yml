@@ -22,10 +22,10 @@ before_script:
     - sudo sysctl -w net.ipv6.conf.lo.disable_ipv6=0
 script:
     - travis_fold start flake8
-    - pipenv run flake8 --ignore=E501,W503,E203 *.py Alerters/ Monitors/ Loggers/
+    - pipenv run flake8 --ignore=E501,W503,E203 *.py simplemonitor/Alerters/ simplemonitor/Monitors/ simplemonitor/Loggers/
     - travis_fold end flake8
     - travis_fold start mypy
-    - mypy --ignore-missing-imports *.py {Monitors,Alerters,Loggers}/*.py
+    - mypy --ignore-missing-imports simplemonitor/*.py simplemonitor/{Monitors,Alerters,Loggers}/*.py
     - travis_fold end mypy
     - travis_fold start integration
     - pipenv run env PATH=$PWD/tests/mocks:$PATH coverage run monitor.py -1 -v -d -f tests/monitor.ini
