@@ -18,7 +18,7 @@ import subprocess  # nosec
 import time
 from typing import Any, List, NoReturn, Optional, Tuple, Union
 
-from util import (
+from ..util import (
     MonitorConfigurationError,
     get_config_option,
     short_hostname,

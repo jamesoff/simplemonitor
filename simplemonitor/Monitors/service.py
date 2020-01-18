@@ -8,8 +8,7 @@ import sys
 import time
 from typing import Any, List, Tuple, cast
 
-from util import MonitorConfigurationError
-
+from ..util import MonitorConfigurationError
 from .monitor import Monitor, register
 
 try:

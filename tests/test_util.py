@@ -1,7 +1,8 @@
+# type: ignore
 import datetime
 import unittest
 
-import util
+from simplemonitor import util
 
 
 class TestUtil(unittest.TestCase):

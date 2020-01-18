@@ -6,7 +6,7 @@ import logging
 from socket import gethostname
 from typing import Any, List, NoReturn, Optional, Tuple, Union, cast
 
-from util import AlerterConfigurationError, get_config_option, subclass_dict_handler
+from ..util import AlerterConfigurationError, get_config_option, subclass_dict_handler
 
 
 class Alerter:

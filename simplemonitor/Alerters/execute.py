@@ -3,9 +3,8 @@ import shlex
 import subprocess
 from typing import cast
 
-from Monitors.monitor import Monitor
-from util import AlerterConfigurationError, format_datetime
-
+from ..Monitors.monitor import Monitor
+from ..util import AlerterConfigurationError, format_datetime
 from .alerter import Alerter, register
 
 

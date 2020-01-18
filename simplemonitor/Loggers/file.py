@@ -12,9 +12,8 @@ import time
 from io import StringIO
 from typing import Any, List, Optional, TextIO, cast
 
-from Monitors.monitor import Monitor
-from util import format_datetime, short_hostname
-
+from ..Monitors.monitor import Monitor
+from ..util import format_datetime, short_hostname
 from .logger import Logger, register
 
 

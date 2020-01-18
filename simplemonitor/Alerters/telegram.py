@@ -3,9 +3,8 @@ from typing import cast
 
 import requests
 
-from Monitors.monitor import Monitor
-from util import format_datetime
-
+from ..Monitors.monitor import Monitor
+from ..util import format_datetime
 from .alerter import Alerter, register
 
 

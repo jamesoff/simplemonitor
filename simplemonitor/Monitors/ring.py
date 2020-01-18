@@ -7,7 +7,7 @@ except ImportError:
 
 from typing import cast
 
-from Monitors.monitor import Monitor, register
+from ..Monitors.monitor import Monitor, register
 
 
 @register

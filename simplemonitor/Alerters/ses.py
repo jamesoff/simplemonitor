@@ -9,9 +9,8 @@ except ImportError:
 import os
 from typing import Any, Dict, cast
 
-from Monitors.monitor import Monitor
-from util import format_datetime
-
+from ..Monitors.monitor import Monitor
+from ..util import format_datetime
 from .alerter import Alerter, register
 
 
