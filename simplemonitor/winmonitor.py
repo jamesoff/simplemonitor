@@ -118,5 +118,9 @@ def run_monitor() -> None:
     monitor.main()
 
 
-if __name__ == "__main__":
+def main() -> None:
     win32serviceutil.HandleCommandLine(AppServerSvc)
+
+
+if __name__ == "__main__":
+    main()
