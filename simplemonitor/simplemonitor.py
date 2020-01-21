@@ -290,6 +290,10 @@ class SimpleMonitor:
         for key in list(self.monitors.keys()):
             self.monitors[key].attempt_recover()
 
+    def do_recovered(self) -> None:
+        for key in list(self.monitors.keys()):
+            self.monitors[key].run_recovered()
+
     def hup_loggers(self) -> None:
         for logger in self.loggers:
             self.loggers[logger].hup()

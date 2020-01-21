@@ -1,5 +1,6 @@
 # type: ignore
 import datetime
+import os
 import time
 import unittest
 
@@ -26,6 +27,7 @@ class TestMonitor(unittest.TestCase):
                 "tolerance": 2,
                 "remote_alert": 1,
                 "recover_command": "true",
+                "recovered_command": "true",
             }
         )
         self.assertEqual(m.name, "unnamed", "Monitor did not set name")
@@ -34,6 +36,9 @@ class TestMonitor(unittest.TestCase):
         self.assertTrue(m.remote_alerting, "Monitor did not set remote_alerting")
         self.assertEqual(
             m._recover_command, "true", "Monitor did not set recover_command"
+        )
+        self.assertEqual(
+            m._recovered_command, "true", "Monitor did not set recovered_command"
         )
         with self.assertRaises(ValueError):
             m.minimum_gap = -1
@@ -351,3 +356,25 @@ class TestMonitor(unittest.TestCase):
             "2 of 2 services failed. Fail after: 2",
             "compound monitor did not report failures properly",
         )
+
+    def test_recovery(self):
+        m = MonitorFail("fail1", {"recover_command": "touch did_recovery"})
+        try:
+            os.unlink("did_recovery")
+        except FileNotFoundError:
+            pass
+        m.run_test()
+        m.attempt_recover()
+        #  throws an exception if the file isn't there
+        os.stat("did_recovery")
+
+    def test_recovered(self):
+        m = MonitorFail("fail9", {"recovered_command": "touch did_recovered"})
+        try:
+            os.unlink("did_recovered")
+        except FileNotFoundError:
+            pass
+        for i in range(0, 6):
+            m.run_test()
+        m.run_recovered()
+        os.stat("did_recovered")
