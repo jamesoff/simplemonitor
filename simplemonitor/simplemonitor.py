@@ -333,6 +333,7 @@ class SimpleMonitor:
         self.run_tests()
         module_logger.debug("Running recovery")
         self.do_recovery()
+        self.do_recovered()
         module_logger.debug("Running alerts")
         self.do_alerts()
         module_logger.debug("Running logs")
