@@ -75,7 +75,11 @@ class Monitor:
         self._recover_command = Monitor.get_config_option(
             config_options, "recover_command"
         )
+        self._recovered_command = Monitor.get_config_option(
+            config_options, "recovered_command"
+        )
         self.recover_info = ""
+        self.recovered_info = ""
         self.minimum_gap = Monitor.get_config_option(
             config_options, "gap", required_type="int", minimum=0, default=0
         )
@@ -123,10 +127,10 @@ class Monitor:
         return max(vfs, 0)
 
     def test_success(self) -> bool:
-        """Returns false if the test has failed."""
-        if self.error_count > self._tolerance:
-            return False
-        return True
+        """Returns false if the monitor has failed.
+
+        This means that enough tests have failed in a row to exceed the tolerance."""
+        return not bool(self.virtual_fail_count())
 
     def first_failure(self) -> bool:
         """Check if this is our first failure (past tolerance)."""
@@ -135,7 +139,10 @@ class Monitor:
         return False
 
     def state(self) -> bool:
-        """Returns false if the last test failed."""
+        """Returns false if the last test failed.
+
+        The monitor may not be in a failed state if the number of failed
+        tests are less than the tolerance."""
         if self.error_count > 0:
             return False
         return True
@@ -258,7 +265,7 @@ class Monitor:
     def all_better_now(self) -> bool:
         """Check if we've just recovered."""
         if (
-            self.last_error_count >= self._tolerance
+            self.last_virtual_fail_count()
             and self.success_count == 1
             and not self.was_skipped
         ):
@@ -323,9 +330,8 @@ class Monitor:
         return False
 
     def last_virtual_fail_count(self) -> int:
-        if (self.last_error_count - self._tolerance) < 0:
-            return 0
-        return self.last_error_count - self._tolerance
+        value = self.last_error_count - self._tolerance
+        return max(0, value)
 
     def attempt_recover(self) -> None:
         if self._recover_command is None:
@@ -335,11 +341,25 @@ class Monitor:
             return
 
         try:
+            self.monitor_logger.info("Attempting recovery command")
             p = subprocess.Popen(self._recover_command.split(" "))  # nosec
             p.wait()
             self.recover_info = "Command executed and returned %d" % p.returncode
         except Exception as e:
             self.recover_info = "Unable to run command: %s" % e
+
+    def run_recovered(self) -> None:
+        if self._recovered_command is None:
+            self.recovered_info = ""
+            return
+        if self.all_better_now():
+            self.monitor_logger.info("Attempting recovered command")
+            try:
+                p = subprocess.Popen(self._recovered_command.split(" "))  # nosec
+                p.wait()
+                self.recovered_info = "Command executed and returned %d" % p.returncode
+            except Exception as e:
+                self.recovered_info = "Unable to run command: %s" % e
 
     def post_config_setup(self) -> None:
         """ any post config setup needed """
@@ -413,9 +433,9 @@ class Monitor:
 
 @register
 class MonitorFail(Monitor):
-    """A monitor which always fails.
+    """A monitor which fails a fixed number of times then succeeds once, and repeats.
 
-    Use for testing alerters etc."""
+    Use for testing alerters etc. The default interval for successes is 5."""
 
     type = "fail"
 
@@ -438,11 +458,9 @@ class MonitorFail(Monitor):
             or (self.error_count == 0)
             or (self.error_count % self.interval != 0)
         ):
-            self.record_fail("This monitor always fails.")
-            return False
+            return self.record_fail("This monitor always fails.")
         else:
-            self.record_success()
-            return True
+            return self.record_success()
 
     def describe(self) -> str:
         return "A monitor which always fails."

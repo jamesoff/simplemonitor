@@ -27,3 +27,4 @@ docs/vendor
 monitor.log
 monitor.pid
 output.json
+did_recover*
