@@ -189,6 +189,11 @@ class HTMLLogger(Logger):
             downtime = (0, 0, 0, 0)
         failures = monitor.failures
         last_failure = monitor.last_failure
+        gap = monitor.minimum_gap
+        if gap == 0:
+            gap = (
+                60
+            )  # TODO: figure out a good way to know the interval value for both local and remote monitors
 
         try:
             if monitor.last_update is not None:
@@ -212,6 +217,7 @@ class HTMLLogger(Logger):
             "host": monitor.running_on,
             "failures": failures,
             "last_failure": last_failure,
+            "gap": gap,
         }
         self.batch_data[monitor.name] = data_line
 
@@ -240,7 +246,7 @@ class HTMLLogger(Logger):
         keys = list(self.batch_data.keys())
         keys.sort()
         for entry in keys:
-            if self.batch_data[entry]["age"] > 120:
+            if self.batch_data[entry]["age"] > self.batch_data[entry]["gap"] + 60:
                 status = "OLD"
                 old_count += 1
             elif self.batch_data[entry]["status"]:
