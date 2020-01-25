@@ -4,10 +4,13 @@ try:
 except ImportError:
     ring_doorbell = None
 
-
-from typing import cast
+import json
+from pathlib import Path
+from typing import Optional, cast
 
 from ..Monitors.monitor import Monitor, register
+
+RING_USER_AGENT = "SimpleMonitor/1.8.0"
 
 
 @register
@@ -37,34 +40,50 @@ class MonitorRingDoorbell(Monitor):
         self.ring_password = cast(
             str, self.get_config_option(config_options, "password")
         )
-        self.ring = None
+        self.cache_file = Path(
+            self.get_config_option(
+                config_options, "cache_file", default=".ring_token.cache"
+            )
+        )
+        if self.cache_file.is_file():
+            self.monitor_logger.info("Using token cache file for Ring")
+            self._ring_auth = ring_doorbell.Auth(
+                RING_USER_AGENT,
+                json.loads(self.cache_file.read_text()),
+                self._token_updated,
+            )
+        else:
+            self._ring_auth = ring_doorbell.Auth(
+                RING_USER_AGENT, token_updater=self._token_updated
+            )
+            try:
+                self.monitor_logger.info("Logging in to Ring")
+                self._ring_auth.fetch_token(self.ring_username, self.ring_password)
+            except MissingTokenError:
+                self.monitor_logger.critical("MFA logins are not supported")
+                self._ring_auth = None
+        self.ring = None  # type: Optional[ring_doorbell.Ring]
 
-    def login(self) -> bool:
-        self.monitor_logger.info("Logging in to ring")
-        try:
-            self.ring = ring_doorbell.Ring(self.ring_username, self.ring_password)
-            return True
-        except Exception:
-            self.monitor_logger.exception("Failed to log in to Ring")
-            return False
+    def _token_updated(self, token: str):
+        self.cache_file.write_text(json.dumps(token))
 
     def run_test(self) -> bool:
         if ring_doorbell is None:
             return self.record_fail("ring_doorbell library is not installed")
         if self.ring is None:
-            if not self.login():
-                return self.record_fail("Failed to log in to Ring")
-        else:
-            try:
-                self.ring.update()
-            except MissingTokenError:
-                if not self.login():
-                    return self.record_fail("Failed to re-login to Ring")
+            self.ring = ring_doorbell.Ring(self._ring_auth)
         assert self.ring is not None
-        for doorbell in self.ring.doorbells:
-            doorbell.update()
+        self.ring.update_data()
+        devices = self.ring.devices()
+        # doorbots are doorbells owned by this account
+        # authorized_doorbots are ones shared with this account
+        # the device of interest could be in either depending on how the API
+        # user we're configured with relates to it
+        doorbells = devices["authorized_doorbots"]
+        doorbells.extend(devices["doorbots"])
+        for doorbell in doorbells:
             if doorbell.name == self.device_name:
-                battery = doorbell.battery_life
+                battery = int(doorbell.battery_life)
                 if battery < self.minimum_battery:
                     return self.record_fail(
                         "Battery is at {}% (limit: {}%)".format(
