@@ -9,8 +9,9 @@ from pathlib import Path
 from typing import Optional, cast
 
 from ..Monitors.monitor import Monitor, register
+from ..version import VERSION
 
-RING_USER_AGENT = "SimpleMonitor/1.8.0"
+RING_USER_AGENT = f"SimpleMonitor/{VERSION}"
 
 
 @register

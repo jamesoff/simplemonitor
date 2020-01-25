@@ -48,7 +48,7 @@ try:
 except ImportError:
     pass
 
-VERSION = "1.8"
+from .version import VERSION
 
 main_logger = logging.getLogger("simplemonitor")
 need_hup = False
@@ -287,7 +287,7 @@ def load_alerters(
 def main() -> None:
     r"""This is where it happens \o/"""
 
-    parser = OptionParser()
+    parser = OptionParser(version=f"%prog {VERSION}")
     parser.add_option(
         "-v",
         "--verbose",
