@@ -16,7 +16,6 @@ ring-doorbell = ">=0.6.0"
 "flake8" = "*"
 codecov = "*"
 coverage = "*"
-twine = { version = "*", python_version = ">=3.6" }
 
 [requires]
 python_version = "3.7"
