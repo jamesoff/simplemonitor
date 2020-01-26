@@ -287,7 +287,7 @@ def load_alerters(
 def main() -> None:
     r"""This is where it happens \o/"""
 
-    parser = OptionParser(version=f"%prog {VERSION}")
+    parser = OptionParser(version="%prog {}".format(VERSION))
     parser.add_option(
         "-v",
         "--verbose",

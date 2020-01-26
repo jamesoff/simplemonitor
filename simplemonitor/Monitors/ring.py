@@ -11,7 +11,7 @@ from typing import Optional, cast
 from ..Monitors.monitor import Monitor, register
 from ..version import VERSION
 
-RING_USER_AGENT = f"SimpleMonitor/{VERSION}"
+RING_USER_AGENT = "SimpleMonitor/{}".format(VERSION)
 
 
 @register
