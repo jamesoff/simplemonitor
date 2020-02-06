@@ -1,6 +1,6 @@
--i https://pypi.python.org/simple
-boto3==1.11.9
-botocore==1.14.9
+-i https://pypi.python.org/simple/
+boto3==1.11.11
+botocore==1.14.11
 certifi==2019.11.28
 cffi==1.13.2
 chardet==3.0.4
