@@ -413,7 +413,7 @@ class MonitorMemory(Monitor):
 
     def run_test(self) -> bool:
         stats = psutil.virtual_memory()
-        percent = int(stats.available / stats.total)
+        percent = int(stats.available / stats.total * 100)
         message = "{}% free".format(percent)
         if percent < self.percent_free:
             return self.record_fail(message)
