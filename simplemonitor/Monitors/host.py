@@ -120,11 +120,20 @@ class MonitorFileStat(Monitor):
         self.maxage = Monitor.get_config_option(
             config_options, "maxage", required_type="int", minimum=0
         )
-        self.minsize = Monitor.get_config_option(
-            config_options, "minsize", required_type="str", allow_empty=False
+        _minsize = Monitor.get_config_option(
+            config_options, "minsize", required_type="str", allow_empty=True
         )
-        if self.minsize:
-            self.minsize = _size_string_to_bytes(self.minsize)
+        if _minsize:
+            self.minsize = _size_string_to_bytes(_minsize)
+        else:
+            self.minsize = None
+        _maxsize = Monitor.get_config_option(
+            config_options, "maxsize", required_type="str", allow_empty=True, default=""
+        )
+        if _maxsize:
+            self.maxsize = _size_string_to_bytes(_maxsize)
+        else:
+            self.maxsize = None
         self.filename = Monitor.get_config_option(
             config_options, "filename", required=True
         )
@@ -132,6 +141,8 @@ class MonitorFileStat(Monitor):
     def run_test(self) -> bool:
         try:
             statinfo = os.stat(self.filename)
+        except FileNotFoundError:
+            return self.record_fail("File %s does not exist" % self.filename)
         except Exception as e:
             return self.record_fail("Unable to check file: %s" % e)
 
@@ -142,15 +153,26 @@ class MonitorFileStat(Monitor):
                     % (statinfo.st_size, self.minsize)
                 )
 
+        if self.maxsize:
+            if statinfo.st_size > self.maxsize:
+                return self.record_fail(
+                    "Size is %d, should be <= %d bytes"
+                    % (statinfo.st_size, self.maxsize)
+                )
+
+        now = time.time()
+        diff = now - statinfo.st_mtime
         if self.maxage:
-            now = time.time()
-            diff = now - statinfo.st_mtime
             if diff > self.maxage:
                 return self.record_fail(
                     "Age is %d, should be < %d seconds" % (diff, self.maxage)
                 )
 
-        return self.record_success()
+        return self.record_success(
+            "File {} exists (age: {}, size: {})".format(
+                self.filename, int(diff), statinfo.st_size
+            )
+        )
 
     def describe(self) -> str:
         """Explains what we do"""
@@ -206,7 +228,7 @@ class MonitorApcupsd(Monitor):
         if "STATUS" not in info:
             return self.record_fail("Could not get UPS status")
 
-        if not info["STATUS"] == "ONLINE":
+        if info["STATUS"] != "ONLINE":
             if "TIMELEFT" in info:
                 return self.record_fail(
                     "%s: %s left" % (info["STATUS"], info["TIMELEFT"])
