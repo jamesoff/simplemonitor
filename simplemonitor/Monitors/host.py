@@ -3,7 +3,9 @@ import re
 import shlex
 import subprocess
 import time
-from typing import Optional, Tuple
+from typing import Optional, Tuple, cast
+
+import psutil
 
 from .monitor import Monitor, register
 
@@ -392,6 +394,37 @@ class MonitorLoadAvg(Monitor):
 
     def get_params(self) -> Tuple:
         return (self.which, self.max)
+
+
+@register
+class MonitorMemory(Monitor):
+    """Check for available memory."""
+
+    type = "memory"
+
+    def __init__(self, name: str, config_options: dict) -> None:
+        super().__init__(name, config_options)
+        self.percent_free = cast(
+            int,
+            self.get_config_option(
+                config_options, "percent_free", required_type="int", required=True
+            ),
+        )
+
+    def run_test(self) -> bool:
+        stats = psutil.virtual_memory()
+        percent = int(stats.available / stats.total)
+        message = "{}% free".format(percent)
+        if percent < self.percent_free:
+            return self.record_fail(message)
+        else:
+            return self.record_success(message)
+
+    def get_params(self) -> Tuple:
+        return (self.percent_free,)
+
+    def describe(self):
+        return "Checking for at least {}% free memory".format(self.percent_free)
 
 
 @register

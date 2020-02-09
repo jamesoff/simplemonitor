@@ -213,3 +213,9 @@
     - name: password
       desc: Your Ring password
       required: 'yes'
+- name: memory
+  oneline: Check free memory percentage
+  params:
+    - name: percent_free
+      desc: The minimum percent of available (as per psutils' definition) memory
+      required: 'yes'
