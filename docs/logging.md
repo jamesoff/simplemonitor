@@ -43,13 +43,13 @@ The section name should be the name of your logger. This is the name you should 
 
 | setting | description | required | default |
 |---|---|---|---|
-|folder|the folder in which all the needed files live. This is probably going to be html if you don’t move things around from the default distribution.|yes | |
-|filename|the filename to write out. The file will be updated once per interval (as defined in the main configuration). Relative to the *folder*. If you don’t write the output file to the same folder as folder above, you will need to copy/move styles.css to the same place.|yes| |
+|source_folder|the folder in which all the needed files live. You only need this if you're customising the files|no|"html" in the distribution|
+|folder|the folder in which to write the file(s). Must already exist.|yes| |
+|filename|the filename to write out. The file will be updated once per interval (as defined in the main configuration). Relative to the *folder*.|yes| |
 |header|the header include file which is sucked in when writing the output file. Relative to folder.|no|footer.html|
 |footer|the footer include file. Relative to folder.|no|header.html|
 |upload_command|a command to run to e.g. upload the generated files to another location|no| |
-
-The header and footer files do not necessarily need to be in the publicly accessibly folder that the output is written to, but no harm will come if they are.
+|copy_resources|set to 0 if simplemonitor should not copy needed supporting files (e.g. CSS) to the output folder|no|1|
 
 The supplied header file includes JavaScript to notify you if the page either doesn’t auto-refresh, or if SimpleMonitor has stopped updating it. This requires your machine running SimpleMonitor and the machine you are browsing from to agree on what the time is (timezone doesn’t matter)!
 

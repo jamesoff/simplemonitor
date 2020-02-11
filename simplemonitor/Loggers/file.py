@@ -125,7 +125,10 @@ class HTMLLogger(Logger):
     def __init__(self, config_options: dict = None) -> None:
         if config_options is None:
             config_options = {}
-        Logger.__init__(self, config_options)
+        super().__init__(config_options)
+        package_data_dir = os.path.join(
+            os.path.dirname(sys.modules["simplemonitor"].__file__), "html"
+        )
         self.filename = cast(
             str,
             Logger.get_config_option(
@@ -152,10 +155,29 @@ class HTMLLogger(Logger):
                 default="footer.html",
             ),
         )
+        self.source_folder = cast(
+            str,
+            super().get_config_option(
+                config_options,
+                "source_folder",
+                required=False,
+                default=package_data_dir,
+            ),
+        )
         self.folder = cast(
             str,
             Logger.get_config_option(
-                config_options, "folder", required=True, allow_empty=False
+                config_options, "folder", required=False, default="html"
+            ),
+        )
+        if not os.path.isdir(self.folder):
+            self.logger_logger.critical(
+                "output folder {} does not exist".format(self.folder)
+            )
+        self.copy_resources = cast(
+            bool,
+            super().get_config_option(
+                config_options, "copy_resources", required_type="bool", default=True
             ),
         )
         self.upload_command = cast(
@@ -164,6 +186,7 @@ class HTMLLogger(Logger):
                 config_options, "upload_command", required=False, allow_empty=False
             ),
         )
+        self._resource_files = ["style.css"]  # type: List[str]
 
     def save_result2(self, name: str, monitor: Monitor) -> None:
         if not self.doing_batch:
@@ -235,7 +258,9 @@ class HTMLLogger(Logger):
             file_handle = os.fdopen(temp_file[0], "w")
             file_name = temp_file[1]
         except Exception:
-            sys.stderr.write("Couldn't create temporary file for HTML output\n")
+            self.logger_logger.exception(
+                "Couldn't create temporary file for HTML output"
+            )
             return
 
         output_ok = StringIO()
@@ -333,13 +358,13 @@ class HTMLLogger(Logger):
 
         self.status = cls.upper()
 
-        with open(os.path.join(self.folder, self.header), "r") as file_input:
+        with open(os.path.join(self.source_folder, self.header), "r") as file_input:
             file_handle.writelines(self.parse_file(file_input))
 
         file_handle.write(output_fail.getvalue())
         file_handle.write(output_ok.getvalue())
 
-        with open(os.path.join(self.folder, self.footer), "r") as file_input:
+        with open(os.path.join(self.source_folder, self.footer), "r") as file_input:
             file_handle.writelines(self.parse_file(file_input))
 
         try:
@@ -348,10 +373,18 @@ class HTMLLogger(Logger):
             os.chmod(
                 file_name, stat.S_IREAD | stat.S_IWRITE | stat.S_IRGRP | stat.S_IROTH
             )
+            if not os.path.isdir(self.folder):
+                self.logger_logger.critical(
+                    "Target folder {} does not exist".format(self.folder)
+                )
+                return
             shutil.move(file_name, os.path.join(self.folder, self.filename))
+            if self.copy_resources:
+                for filename in self._resource_files:
+                    shutil.copy(os.path.join(self.source_folder, filename), self.folder)
         except Exception:
             self.logger_logger.exception(
-                "problem closing temporary file for HTML output"
+                "problem closing/moving temporary file for HTML output"
             )
         if self.upload_command:
             try:
