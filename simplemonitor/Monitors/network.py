@@ -17,10 +17,7 @@ from .monitor import Monitor, register
 
 @register
 class MonitorHTTP(Monitor):
-    """Check an HTTP server is working right.
-
-    We can either check that we get a 200 OK back, or we can check for a regexp match in the page.
-    """
+    """Check an HTTP server is working right. """
 
     url = ""
     regexp = None
@@ -142,12 +139,13 @@ class MonitorHTTP(Monitor):
 
     def describe(self) -> str:
         """Explains what we do."""
-        if self.regexp is None:
-            message = "Checking that accessing %s returns HTTP/200 OK" % self.url
-        else:
-            message = (
-                "Checking that accessing %s returns HTTP/200 OK and that /%s/ matches the page"
-                % (self.url, self.regexp_text)
+        codes = [str(x) for x in self.allowed_codes]
+        message = "Checking {} returns HTTP/{} within {}s".format(
+            self.url, "or".join(codes), self.request_timeout
+        )
+        if self.regexp is not None:
+            message = message + " and that /{}/ matches the page".format(
+                self.regexp_text
             )
         return message
 
