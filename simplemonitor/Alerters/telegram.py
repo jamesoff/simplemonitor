@@ -15,20 +15,14 @@ class TelegramAlerter(Alerter):
     type = "telegram"
 
     def __init__(self, config_options: dict) -> None:
-        Alerter.__init__(self, config_options)
+        super().__init__(config_options)
 
         self.telegram_token = cast(
-            str,
-            Alerter.get_config_option(
-                config_options, "token", required=True, allow_empty=False
-            ),
+            str, self.get_config_option("token", required=True, allow_empty=False)
         )
 
         self.telegram_chatid = cast(
-            str,
-            Alerter.get_config_option(
-                config_options, "chat_id", required=True, allow_empty=False
-            ),
+            str, self.get_config_option("chat_id", required=True, allow_empty=False)
         )
 
         self.support_catchup = True

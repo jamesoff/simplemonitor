@@ -30,25 +30,23 @@ class Alerter:
     def __init__(self, config_options: dict = None) -> None:
         if config_options is None:
             config_options = {}
+        self._config_options = config_options
         self.alerter_logger = logging.getLogger("simplemonitor.alerter-" + self.type)
         self.available = True
         self.dependencies = cast(
             List[str],
-            Alerter.get_config_option(
-                config_options, "depend", required_type="[str]", default=[]
-            ),
+            self.get_config_option("depend", required_type="[str]", default=[]),
         )
-        self.limit = Alerter.get_config_option(
-            config_options, "limit", required_type="int", minimum=1, default=1
+        self.limit = self.get_config_option(
+            "limit", required_type="int", minimum=1, default=1
         )
-        self.repeat = Alerter.get_config_option(
-            config_options, "repeat", required_type="int", default=0, minimum=0
+        self.repeat = self.get_config_option(
+            "repeat", required_type="int", default=0, minimum=0
         )
-        self._groups = Alerter.get_config_option(
-            config_options, "groups", required_type="[str]", default=["default"]
+        self._groups = self.get_config_option(
+            "groups", required_type="[str]", default=["default"]
         )
-        self.times_type = Alerter.get_config_option(
-            config_options,
+        self.times_type = self.get_config_option(
             "times_type",
             required_type="str",
             allowed_values=["always", "only", "not"],
@@ -60,14 +58,10 @@ class Alerter:
         )  # type: Tuple[Optional[datetime.time], Optional[datetime.time]]
         if self.times_type in ["only", "not"]:
             time_lower = str(
-                Alerter.get_config_option(
-                    config_options, "time_lower", required_type="str", required=True
-                )
+                self.get_config_option("time_lower", required_type="str", required=True)
             )
             time_upper = str(
-                Alerter.get_config_option(
-                    config_options, "time_upper", required_type="str", required=True
-                )
+                self.get_config_option("time_upper", required_type="str", required=True)
             )
             try:
                 time_info = [
@@ -81,38 +75,34 @@ class Alerter:
                 self.time_info = (time_info[0], time_info[1])
             except Exception:
                 raise RuntimeError("error processing time limit definition")
-        self.days = Alerter.get_config_option(
-            config_options,
+        self.days = self.get_config_option(
             "days",
             required_type="[int]",
             allowed_values=list(range(0, 7)),
             default=list(range(0, 7)),
         )
-        self.delay_notification = Alerter.get_config_option(
-            config_options, "delay", required_type="bool", default=False
+        self.delay_notification = self.get_config_option(
+            "delay", required_type="bool", default=False
         )
-        self.dry_run = Alerter.get_config_option(
-            config_options, "dry_run", required_type="bool", default=False
+        self.dry_run = self.get_config_option(
+            "dry_run", required_type="bool", default=False
         )
-        self.ooh_recovery = Alerter.get_config_option(
-            config_options, "ooh_recovery", required_type="bool", default=False
+        self.ooh_recovery = self.get_config_option(
+            "ooh_recovery", required_type="bool", default=False
         )
 
-        if Alerter.get_config_option(
-            config_options, "debug_times", required_type=bool, default=False
-        ):
+        if self.get_config_option("debug_times", required_type=bool, default=False):
             self.time_info = (
                 (datetime.datetime.utcnow() - datetime.timedelta(minutes=1)).time(),
                 (datetime.datetime.utcnow() + datetime.timedelta(minutes=1)).time(),
             )
             self.alerter_logger.debug("set times for alerter to %s", self.time_info)
 
-    @staticmethod
     def get_config_option(
-        config_options: dict, key: str, **kwargs: Any
+        self, key: str, **kwargs: Any
     ) -> Union[None, str, int, float, bool, List[str], List[int]]:
         kwargs["exception"] = AlerterConfigurationError
-        return get_config_option(config_options, key, **kwargs)
+        return get_config_option(self._config_options, key, **kwargs)
 
     @property
     def dependencies(self) -> List[str]:

@@ -15,25 +15,16 @@ class ExecuteAlerter(Alerter):
     type = "execute"
 
     def __init__(self, config_options: dict) -> None:
-        Alerter.__init__(self, config_options)
+        super().__init__(config_options)
 
         self.fail_command = cast(
-            str,
-            Alerter.get_config_option(
-                config_options, "fail_command", allow_empty=False
-            ),
+            str, self.get_config_option("fail_command", allow_empty=False)
         )
         self.success_command = cast(
-            str,
-            Alerter.get_config_option(
-                config_options, "success_command", allow_empty=False
-            ),
+            str, self.get_config_option("success_command", allow_empty=False)
         )
         self.catchup_command = cast(
-            str,
-            Alerter.get_config_option(
-                config_options, "catchup_command", allow_empty=False
-            ),
+            str, self.get_config_option("catchup_command", allow_empty=False)
         )
         if (
             self.fail_command is None

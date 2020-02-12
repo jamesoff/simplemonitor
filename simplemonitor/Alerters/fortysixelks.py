@@ -21,7 +21,7 @@ class FortySixElksAlerter(Alerter):
     type = "46elks"
 
     def __init__(self, config_options: dict) -> None:
-        Alerter.__init__(self, config_options)
+        super().__init__(config_options)
         if not requests_available:
             self.alerter_logger.critical(
                 "Requests package is not available, cannot use FortySixElksAlerter."
@@ -30,27 +30,16 @@ class FortySixElksAlerter(Alerter):
             return
 
         self.username = cast(
-            str,
-            Alerter.get_config_option(
-                config_options, "username", required=True, allow_empty=False
-            ),
+            str, self.get_config_option("username", required=True, allow_empty=False)
         )
         self.password = cast(
-            str,
-            Alerter.get_config_option(
-                config_options, "password", required=True, allow_empty=False
-            ),
+            str, self.get_config_option("password", required=True, allow_empty=False)
         )
         self.target = cast(
-            str,
-            Alerter.get_config_option(
-                config_options, "target", required=True, allow_empty=False
-            ),
+            str, self.get_config_option("target", required=True, allow_empty=False)
         )
 
-        self.sender = cast(
-            str, Alerter.get_config_option(config_options, "sender", default="SmplMntr")
-        )
+        self.sender = cast(str, self.get_config_option("sender", default="SmplMntr"))
         if self.sender[0] == "+" and self.sender[1:].isdigit():
             # sender is phone number
             pass
@@ -62,9 +51,7 @@ class FortySixElksAlerter(Alerter):
             self.alerter_logger.warning("truncating SMS sender name to 11 chars")
             self.sender = self.sender[:11]
 
-        self.api_host = Alerter.get_config_option(
-            config_options, "api_host", default="api.46elks.com"
-        )
+        self.api_host = self.get_config_option("api_host", default="api.46elks.com")
 
         self.support_catchup = True
 

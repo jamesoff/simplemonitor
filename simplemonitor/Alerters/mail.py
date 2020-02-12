@@ -16,38 +16,24 @@ class EMailAlerter(Alerter):
     type = "email"
 
     def __init__(self, config_options: dict) -> None:
-        Alerter.__init__(self, config_options)
+        super().__init__(config_options)
         self.mail_host = cast(
-            str,
-            Alerter.get_config_option(
-                config_options, "host", required=True, allow_empty=False
-            ),
+            str, self.get_config_option("host", required=True, allow_empty=False)
         )
         self.from_addr = cast(
-            str,
-            Alerter.get_config_option(
-                config_options, "from", required=True, allow_empty=False
-            ),
+            str, self.get_config_option("from", required=True, allow_empty=False)
         )
         self.to_addr = cast(
-            str,
-            Alerter.get_config_option(
-                config_options, "to", required=True, allow_empty=False
-            ),
+            str, self.get_config_option("to", required=True, allow_empty=False)
         )
         self.mail_port = cast(
-            int,
-            Alerter.get_config_option(
-                config_options, "port", required_type="int", default=25
-            ),
+            int, self.get_config_option("port", required_type="int", default=25)
         )
-        self.username = cast(str, Alerter.get_config_option(config_options, "username"))
-        self.password = cast(str, Alerter.get_config_option(config_options, "password"))
+        self.username = cast(str, self.get_config_option("username"))
+        self.password = cast(str, self.get_config_option("password"))
         self.ssl = cast(
             Optional[str],
-            Alerter.get_config_option(
-                config_options, "ssl", allowed_values=["starttls", "yes", None]
-            ),
+            self.get_config_option("ssl", allowed_values=["starttls", "yes", None]),
         )
         if self.ssl == "yes":
             self.alerter_logger.warning("ssl=yes for email alerter is untested")

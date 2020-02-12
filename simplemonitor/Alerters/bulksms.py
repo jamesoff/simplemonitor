@@ -17,28 +17,22 @@ class BulkSMSAlerter(Alerter):
     type = "bulksms"
 
     def __init__(self, config_options: dict) -> None:
-        Alerter.__init__(self, config_options)
-        self.username = Alerter.get_config_option(
-            config_options, "username", required=True, allow_empty=False
+        super().__init__(config_options)
+        self.username = self.get_config_option(
+            "username", required=True, allow_empty=False
         )
-        self.password = Alerter.get_config_option(
-            config_options, "password", required=True, allow_empty=False
+        self.password = self.get_config_option(
+            "password", required=True, allow_empty=False
         )
-        self.target = Alerter.get_config_option(
-            config_options, "target", required=True, allow_empty=False
-        )
+        self.target = self.get_config_option("target", required=True, allow_empty=False)
 
-        self.sender = Alerter.get_config_option(
-            config_options, "sender", default="SmplMntr"
-        )
+        self.sender = self.get_config_option("sender", default="SmplMntr")
         assert isinstance(self.sender, str)
         if len(self.sender) > 11:
             self.alerter_logger.warning("truncating SMS sender name to 11 chars")
             self.sender = self.sender[:11]
 
-        self.api_host = Alerter.get_config_option(
-            config_options, "api_host", default="www.bulksms.co.uk"
-        )
+        self.api_host = self.get_config_option("api_host", default="www.bulksms.co.uk")
 
         self.support_catchup = True
 
