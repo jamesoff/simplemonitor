@@ -29,7 +29,7 @@ class MQTTLogger(Logger):
     def __init__(self, config_options: dict = None) -> None:
         if config_options is None:
             config_options = {}
-        Logger.__init__(self, config_options)
+        super().__init__(config_options)
 
         if not mqtt_available:
             self.logger_logger.error("Missing paho.mqtt module!")
@@ -37,15 +37,11 @@ class MQTTLogger(Logger):
 
         # TODO: add configuration for authenticated calls, port, will, etc.
         self.host = cast(
-            str,
-            Logger.get_config_option(
-                config_options, "host", required=True, allow_empty=False
-            ),
+            str, self.get_config_option("host", required=True, allow_empty=False)
         )
         self.port = cast(
             int,
-            Logger.get_config_option(
-                config_options,
+            self.get_config_option(
                 "port",
                 required=False,
                 allow_empty=False,
@@ -57,8 +53,7 @@ class MQTTLogger(Logger):
         # https://www.home-assistant.io/docs/mqtt/discovery/
         self.hass = cast(
             bool,
-            Logger.get_config_option(
-                config_options,
+            self.get_config_option(
                 "hass",
                 required=False,
                 allow_empty=False,
@@ -69,8 +64,7 @@ class MQTTLogger(Logger):
         # topic to send information to
         self.topic = cast(
             str,
-            Logger.get_config_option(
-                config_options,
+            self.get_config_option(
                 "topic",
                 required=False,
                 allow_empty=False,

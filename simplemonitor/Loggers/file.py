@@ -28,34 +28,29 @@ class FileLogger(Logger):
     def __init__(self, config_options: dict = None) -> None:
         if config_options is None:
             config_options = {}
-        Logger.__init__(self, config_options)
-        if "filename" in config_options:
-            try:
-                self.filename = config_options["filename"]
-                self.file_handle = open(self.filename, "a+")
-            except Exception as e:
-                raise RuntimeError(
-                    "Couldn't open log file %s for appending: %s" % (self.filename, e)
-                )
-        else:
-            raise RuntimeError("Missing filename for logfile")
-        self.filename = Logger.get_config_option(
-            config_options, "filename", required=True, allow_empty=False
+        super().__init__(config_options)
+        self.filename = self.get_config_option(
+            "filename", required=True, allow_empty=False
         )
+        try:
+            self.file_handle = open(self.filename, "a+")
+        except Exception as e:
+            raise RuntimeError(
+                "Couldn't open log file %s for appending: %s" % (self.filename, e)
+            )
         self.file_handle = open(self.filename, "a+")
 
-        self.only_failures = Logger.get_config_option(
-            config_options, "only_failures", required_type="bool", default=False
+        self.only_failures = self.get_config_option(
+            "only_failures", required_type="bool", default=False
         )
 
-        self.buffered = Logger.get_config_option(
-            config_options, "buffered", required_type="bool", default=True
+        self.buffered = self.get_config_option(
+            "buffered", required_type="bool", default=True
         )
 
         self.dateformat = cast(
             str,
-            Logger.get_config_option(
-                config_options,
+            self.get_config_option(
                 "dateformat",
                 required_type="str",
                 allowed_values=["timestamp", "iso8601"],
@@ -130,45 +125,28 @@ class HTMLLogger(Logger):
             os.path.dirname(sys.modules["simplemonitor"].__file__), "html"
         )
         self.filename = cast(
-            str,
-            Logger.get_config_option(
-                config_options, "filename", required=True, allow_empty=False
-            ),
+            str, self.get_config_option("filename", required=True, allow_empty=False)
         )
         self.header = cast(
             str,
-            Logger.get_config_option(
-                config_options,
-                "header",
-                required=False,
-                allow_empty=False,
-                default="header.html",
+            self.get_config_option(
+                "header", required=False, allow_empty=False, default="header.html"
             ),
         )
         self.footer = cast(
             str,
-            Logger.get_config_option(
-                config_options,
-                "footer",
-                required=False,
-                allow_empty=False,
-                default="footer.html",
+            self.get_config_option(
+                "footer", required=False, allow_empty=False, default="footer.html"
             ),
         )
         self.source_folder = cast(
             str,
-            super().get_config_option(
-                config_options,
-                "source_folder",
-                required=False,
-                default=package_data_dir,
+            self.get_config_option(
+                "source_folder", required=False, default=package_data_dir
             ),
         )
         self.folder = cast(
-            str,
-            Logger.get_config_option(
-                config_options, "folder", required=False, default="html"
-            ),
+            str, self.get_config_option("folder", required=False, default="html")
         )
         if not os.path.isdir(self.folder):
             self.logger_logger.critical(
@@ -176,15 +154,13 @@ class HTMLLogger(Logger):
             )
         self.copy_resources = cast(
             bool,
-            super().get_config_option(
-                config_options, "copy_resources", required_type="bool", default=True
+            self.get_config_option(
+                "copy_resources", required_type="bool", default=True
             ),
         )
         self.upload_command = cast(
             str,
-            Logger.get_config_option(
-                config_options, "upload_command", required=False, allow_empty=False
-            ),
+            self.get_config_option("upload_command", required=False, allow_empty=False),
         )
         self._resource_files = ["style.css"]  # type: List[str]
 
@@ -449,8 +425,8 @@ class JsonLogger(Logger):
         if config_options is None:
             config_options = {}
         super().__init__(config_options)
-        self.filename = Logger.get_config_option(
-            config_options, "filename", required=True, allow_empty=False
+        self.filename = self.get_config_option(
+            "filename", required=True, allow_empty=False
         )
 
     def save_result2(self, name: str, monitor: Monitor) -> None:
