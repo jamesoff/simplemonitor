@@ -26,25 +26,15 @@ class MonitorRingDoorbell(Monitor):
         super().__init__(name, config_options)
         if ring_doorbell is None:
             self.monitor_logger.critical("ring_doorbell library is not installed")
-        self.device_name = cast(
-            str, self.get_config_option(config_options, "device_name")
-        )
+        self.device_name = cast(str, self.get_config_option("device_name"))
         self.minimum_battery = cast(
             int,
-            self.get_config_option(
-                config_options, "minimum_battery", required_type="int", default=25
-            ),
+            self.get_config_option("minimum_battery", required_type="int", default=25),
         )
-        self.ring_username = cast(
-            str, self.get_config_option(config_options, "username")
-        )
-        self.ring_password = cast(
-            str, self.get_config_option(config_options, "password")
-        )
+        self.ring_username = cast(str, self.get_config_option("username"))
+        self.ring_password = cast(str, self.get_config_option("password"))
         self.cache_file = Path(
-            self.get_config_option(
-                config_options, "cache_file", default=".ring_token.cache"
-            )
+            self.get_config_option("cache_file", default=".ring_token.cache")
         )
         if self.cache_file.is_file():
             self.monitor_logger.info("Using token cache file for Ring")

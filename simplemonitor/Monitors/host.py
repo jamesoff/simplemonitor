@@ -61,7 +61,7 @@ class MonitorDiskSpace(Monitor):
     type = "diskspace"
 
     def __init__(self, name: str, config_options: dict) -> None:
-        Monitor.__init__(self, name, config_options)
+        super().__init__(name, config_options)
         if self.is_windows(allow_cygwin=False):
             self.use_statvfs = False
             if not win32_available:
@@ -70,11 +70,9 @@ class MonitorDiskSpace(Monitor):
                 )
         else:
             self.use_statvfs = True
-        self.partition = Monitor.get_config_option(
-            config_options, "partition", required=True
-        )
+        self.partition = self.get_config_option("partition", required=True)
         self.limit = _size_string_to_bytes(
-            Monitor.get_config_option(config_options, "limit", required=True)
+            self.get_config_option("limit", required=True)
         )
 
     def run_test(self) -> bool:
@@ -118,26 +116,26 @@ class MonitorFileStat(Monitor):
     type = "filestat"
 
     def __init__(self, name: str, config_options: dict) -> None:
-        Monitor.__init__(self, name, config_options)
-        self.maxage = Monitor.get_config_option(
-            config_options, "maxage", required_type="int", minimum=0
+        super().__init__(name, config_options)
+        self.maxage = self.get_config_option(
+            "maxage", required_type="int", minimum=0
         )
-        _minsize = Monitor.get_config_option(
-            config_options, "minsize", required_type="str", allow_empty=True
+        _minsize = self.get_config_option(
+            "minsize", required_type="str", allow_empty=True
         )
         if _minsize:
             self.minsize = _size_string_to_bytes(_minsize)
         else:
             self.minsize = None
-        _maxsize = Monitor.get_config_option(
-            config_options, "maxsize", required_type="str", allow_empty=True, default=""
+        _maxsize = self.get_config_option(
+            "maxsize", required_type="str", allow_empty=True, default=""
         )
         if _maxsize:
             self.maxsize = _size_string_to_bytes(_maxsize)
         else:
             self.maxsize = None
-        self.filename = Monitor.get_config_option(
-            config_options, "filename", required=True
+        self.filename = self.get_config_option(
+            "filename", required=True
         )
 
     def run_test(self) -> bool:
@@ -200,8 +198,8 @@ class MonitorApcupsd(Monitor):
     type = "apcupsd"
 
     def __init__(self, name: str, config_options: dict) -> None:
-        Monitor.__init__(self, name, config_options)
-        self.path = Monitor.get_config_option(config_options, "path", default="")
+        super().__init__(name, config_options)
+        self.path = self.get_config_option("path", default="")
 
     def run_test(self) -> bool:
         info = {}
@@ -263,8 +261,8 @@ class MonitorPortAudit(Monitor):
     regexp = re.compile(r"(\d+) problem\(s\) in your installed packages found")
 
     def __init__(self, name: str, config_options: dict) -> None:
-        Monitor.__init__(self, name, config_options)
-        self.path = Monitor.get_config_option(config_options, "path", default="")
+        super().__init__(name, config_options)
+        self.path = self.get_config_option("path", default="")
 
     def describe(self) -> str:
         return "Checking for insecure ports."
@@ -312,8 +310,8 @@ class MonitorPkgAudit(Monitor):
     path = ""
 
     def __init__(self, name: str, config_options: dict) -> None:
-        Monitor.__init__(self, name, config_options)
-        self.path = Monitor.get_config_option(config_options, "path", default="")
+        super().__init__(name, config_options)
+        self.path = self.get_config_option("path", default="")
 
     def describe(self) -> str:
         return "Checking for insecure packages."
@@ -358,20 +356,15 @@ class MonitorLoadAvg(Monitor):
     type = "loadavg"
 
     def __init__(self, name: str, config_options: dict) -> None:
-        Monitor.__init__(self, name, config_options)
+        super().__init__(name, config_options)
         if self.is_windows(allow_cygwin=False):
             raise RuntimeError("loadavg monitor does not support Windows")
         # which time field we're looking at: 0 = 1min, 1 = 5min, 2=15min
-        self.which = Monitor.get_config_option(
-            config_options,
-            "which",
-            required_type="int",
-            default=1,
-            minimum=0,
-            maximum=2,
+        self.which = self.get_config_option(
+            "which", required_type="int", default=1, minimum=0, maximum=2
         )
-        self.max = Monitor.get_config_option(
-            config_options, "max", required_type="float", default=1.00, minimum=0
+        self.max = self.get_config_option(
+            "max", required_type="float", default=1.00, minimum=0
         )
 
     def describe(self) -> str:
@@ -435,9 +428,9 @@ class MonitorZap(Monitor):
     r = re.compile("^alarms=(?P<status>).+")
 
     def __init__(self, name: str, config_options: dict) -> None:
-        Monitor.__init__(self, name, config_options)
-        self.span = Monitor.get_config_option(
-            config_options, "span", required_type="int", default=1, minimum=1
+        super().__init__(name, config_options)
+        self.span = self.get_config_option(
+            "span", required_type="int", default=1, minimum=1
         )
 
     def run_test(self) -> bool:
@@ -474,14 +467,10 @@ class MonitorCommand(Monitor):
     available = True
 
     def __init__(self, name: str, config_options: dict) -> None:
-        Monitor.__init__(self, name, config_options)
+        super().__init__(name, config_options)
 
-        self.result_regexp_text = Monitor.get_config_option(
-            config_options, "result_regexp", default=""
-        )
-        self.result_max = Monitor.get_config_option(
-            config_options, "result_max", required_type="int"
-        )
+        self.result_regexp_text = self.get_config_option("result_regexp", default="")
+        self.result_max = self.get_config_option("result_max", required_type="int")
         if self.result_regexp_text != "":
             self.result_regexp = re.compile(self.result_regexp_text)
             if self.result_max is not None:
@@ -490,9 +479,7 @@ class MonitorCommand(Monitor):
                 )
                 self.result_max = None
 
-        command = Monitor.get_config_option(
-            config_options, "command", required=True, allow_empty=False
-        )
+        command = self.get_config_option("command", required=True, allow_empty=False)
         self.command = shlex.split(command)
 
     def run_test(self) -> bool:
