@@ -117,9 +117,7 @@ class MonitorFileStat(Monitor):
 
     def __init__(self, name: str, config_options: dict) -> None:
         super().__init__(name, config_options)
-        self.maxage = self.get_config_option(
-            "maxage", required_type="int", minimum=0
-        )
+        self.maxage = self.get_config_option("maxage", required_type="int", minimum=0)
         _minsize = self.get_config_option(
             "minsize", required_type="str", allow_empty=True
         )
@@ -134,9 +132,7 @@ class MonitorFileStat(Monitor):
             self.maxsize = _size_string_to_bytes(_maxsize)
         else:
             self.maxsize = None
-        self.filename = self.get_config_option(
-            "filename", required=True
-        )
+        self.filename = self.get_config_option("filename", required=True)
 
     def run_test(self) -> bool:
         try:
@@ -399,9 +395,7 @@ class MonitorMemory(Monitor):
         super().__init__(name, config_options)
         self.percent_free = cast(
             int,
-            self.get_config_option(
-                config_options, "percent_free", required_type="int", required=True
-            ),
+            self.get_config_option("percent_free", required_type="int", required=True),
         )
 
     def run_test(self) -> bool:
