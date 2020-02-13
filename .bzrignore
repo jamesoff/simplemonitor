@@ -1,8 +1,0 @@
-./*.ini
-*.py[oc]
-.*.swp
-.svn
-dist/*
-html/status.html
-monitor.log
-html/status.html
