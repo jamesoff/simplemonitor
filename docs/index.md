@@ -21,7 +21,7 @@ SimpleMonitor is a Python script which monitors hosts and network connectivity. 
 * Exim queue size monitoring
 * Windows DHCP scope (available IPs)
 * APC UPS monitoring (requires apcupsd to be installed and configured)
-* Running an arbitary command and checking the output
+* Running an arbitrary command and checking the output
 * A monitor which is a compound of a number of the above
 
 Adding more monitor types is quite simple if you are able to code in Python.
@@ -55,33 +55,19 @@ Again, adding more logging/alerting methods is simply a case of writing some Pyt
 
 ## Getting started
 
-* Download the code
-* Install dependencies: `pip install -r requirements.txt`
-* Write your configuration files
-* Run the code
+* `pip install simplemonitor` or `pip install --user simplemonitor`
+
+If you are on a Mac and want the Notification Center alerter to work, use `simplemonitor[nc]` for the package name. If you want to be able to query the Ring API for your doorbell battery level, use `simplemonitor[ring]`
+
+* Create `monitor.ini` and `monitors.ini`. See [Configuration](configuration.html).
 
 ## Running SimpleMonitor
 
-* `python monitor.py`
-
-That was easy.
-
-For help on command line options, run `python monitor.py -h`, or see below.
+Assuming your $PATH covers where `pip` installs things, you can just run `simplemonitor`.
 
 SimpleMonitor does not fork.
 
-On non-Windows, SimpleMonitor runs very nicely under daemontools. You just need a run file a bit like this:
-
-{% highlight bash %}
-#!/bin/sh
-
-cd /usr/local/monitor && exec /usr/local/bin/python monitor.py -q
-{% endhighlight %}
-
-On Windows hosts, you’ll have to leave it running in a Command Prompt for now; I haven’t gotten round to making it run as a service.
-
-In the `scripts` folder you can find startup scripts for various systems. You will need to adjust paths, usernames and options before using them!
-
+In the [`scripts`](https://github.com/jamesoff/simplemonitor/tree/develop/scripts) folder you can find startup scripts for various systems. You will need to adjust paths, usernames and options before using them! If you want to run it as a Windows Service, you want `winmonitor.exe`.
 
 ## Command line options
 
