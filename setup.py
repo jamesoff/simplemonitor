@@ -29,13 +29,12 @@ setuptools.setup(
         "Typing :: Typed",
     ],
     python_requires=">=3.5",
-    entry_points={"console_scripts": ["simplemonitor=simplemonitor.monitor:main"]},
-    install_requires=[
-        "requests",
-        "boto3",
-        "pyOpenSSL",
-        "colorlog",
-        "ring-doorbell>=0.6.0",
-        "paho-mqtt",
-    ],
+    entry_points={
+        "console_scripts": [
+            "simplemonitor=simplemonitor.monitor:main",
+            "winmonitor=simplemonitor.winmonitor.main",
+        ]
+    },
+    extras_require={"nc": ["pync"], "ring": ["ring-doorbell>=0.6.0"]},
+    install_requires=["requests", "boto3", "pyOpenSSL", "colorlog", "paho-mqtt"],
 )
