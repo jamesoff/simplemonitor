@@ -17,21 +17,19 @@ class Logger:
     connected = True
 
     def __init__(self, config_options: dict) -> None:
-        self.name = Logger.get_config_option(config_options, "_name", default="unnamed")
+        self._config_options = config_options
+        self.name = self.get_config_option("_name", default="unnamed")
         self.logger_logger = logging.getLogger("simplemonitor.logger-" + self.name)
         self._dependencies = cast(
             List[str],
-            Logger.get_config_option(
-                config_options, "depend", required_type="[str]", default=[]
-            ),
+            self.get_config_option("depend", required_type="[str]", default=[]),
         )
         if self.batch_data is None:
             self.batch_data = {}
 
-    @staticmethod
-    def get_config_option(config_options: dict, key: str, **kwargs: Any) -> Any:
+    def get_config_option(self, key: str, **kwargs: Any) -> Any:
         kwargs["exception"] = LoggerConfigurationError
-        return get_config_option(config_options, key, **kwargs)
+        return get_config_option(self._config_options, key, **kwargs)
 
     def hup(self) -> None:
         """Close and reopen our log file, if supported.

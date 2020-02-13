@@ -21,7 +21,7 @@ class SESAlerter(Alerter):
     type = "ses"
 
     def __init__(self, config_options: dict) -> None:
-        Alerter.__init__(self, config_options)
+        super().__init__(config_options)
         if not boto3_available:
             self.alerter_logger.critical(
                 "boto3 package is not available, cannot use SESAlerter."
@@ -29,27 +29,19 @@ class SESAlerter(Alerter):
             self.available = False
             return
 
-        self.from_addr = cast(
-            str, Alerter.get_config_option(config_options, "from", allow_empty=False)
-        )
-        self.to_addr = cast(
-            str, Alerter.get_config_option(config_options, "to", allow_empty=False)
-        )
+        self.from_addr = cast(str, self.get_config_option("from", allow_empty=False))
+        self.to_addr = cast(str, self.get_config_option("to", allow_empty=False))
 
         self.support_catchup = True
 
         self.ses_client_params = {}  # type: Dict[str, str]
 
-        aws_region = cast(str, Alerter.get_config_option(config_options, "aws_region"))
+        aws_region = cast(str, self.get_config_option("aws_region"))
         if aws_region:
             os.environ["AWS_DEFAULT_REGION"] = aws_region
 
-        aws_access_key = cast(
-            str, Alerter.get_config_option(config_options, "aws_access_key")
-        )
-        aws_secret_key = cast(
-            str, Alerter.get_config_option(config_options, "aws_secret_access_key")
-        )
+        aws_access_key = cast(str, self.get_config_option("aws_access_key"))
+        aws_secret_key = cast(str, self.get_config_option("aws_secret_access_key"))
 
         if aws_access_key and aws_secret_key:
             self.ses_client_params["aws_access_key_id"] = aws_access_key

@@ -150,40 +150,23 @@ class TestMonitor(unittest.TestCase):
             "test_bool3": "true",
             "test_bool4": "0",
         }
+        m = Monitor("test", config_options)
+        self.assertEqual(m.get_config_option("test_string"), "a string")
+        self.assertEqual(m.get_config_option("test_int", required_type="int"), 3)
         self.assertEqual(
-            Monitor.get_config_option(config_options, "test_string"), "a string"
+            m.get_config_option("test_[int]", required_type="[int]"), [1, 2, 3]
         )
         self.assertEqual(
-            Monitor.get_config_option(config_options, "test_int", required_type="int"),
-            3,
-        )
-        self.assertEqual(
-            Monitor.get_config_option(
-                config_options, "test_[int]", required_type="[int]"
-            ),
-            [1, 2, 3],
-        )
-        self.assertEqual(
-            Monitor.get_config_option(
-                config_options, "test_[str]", required_type="[str]"
-            ),
-            ["a", "b", "c"],
+            m.get_config_option("test_[str]", required_type="[str]"), ["a", "b", "c"]
         )
         for bool_test in list(range(1, 4)):
             self.assertEqual(
-                Monitor.get_config_option(
-                    config_options,
-                    "test_bool{0}".format(bool_test),
-                    required_type="bool",
+                m.get_config_option(
+                    "test_bool{0}".format(bool_test), required_type="bool"
                 ),
                 True,
             )
-        self.assertEqual(
-            Monitor.get_config_option(
-                config_options, "test_bool4", required_type="bool"
-            ),
-            False,
-        )
+        self.assertEqual(m.get_config_option("test_bool4", required_type="bool"), False)
 
     def test_downtime(self):
         m = Monitor()

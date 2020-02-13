@@ -28,26 +28,17 @@ class NetworkLogger(Logger):
     supports_batch = True
 
     def __init__(self, config_options: dict) -> None:
-        Logger.__init__(self, config_options)
+        super().__init__(config_options)
 
         self.host = cast(
-            str,
-            Logger.get_config_option(
-                config_options, "host", required=True, allow_empty=False
-            ),
+            str, self.get_config_option("host", required=True, allow_empty=False)
         )
         self.port = cast(
-            int,
-            Logger.get_config_option(
-                config_options, "port", required_type="int", required=True
-            ),
+            int, self.get_config_option("port", required_type="int", required=True)
         )
         self.hostname = socket.gethostname()
         self.key = bytearray(
-            Logger.get_config_option(
-                config_options, "key", required=True, allow_empty=False
-            ),
-            "utf-8",
+            self.get_config_option("key", required=True, allow_empty=False), "utf-8"
         )
 
     def describe(self) -> str:

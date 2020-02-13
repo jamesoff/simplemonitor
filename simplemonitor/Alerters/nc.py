@@ -18,7 +18,7 @@ class NotificationCenterAlerter(Alerter):
     type = "nc"
 
     def __init__(self, config_options: dict) -> None:
-        Alerter.__init__(self, config_options)
+        super().__init__(config_options)
         if not pync_available:
             self.alerter_logger.critical(
                 "Pync package is not available, which is necessary to use NotificationCenterAlerter."

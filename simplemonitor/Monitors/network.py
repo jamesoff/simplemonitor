@@ -34,16 +34,16 @@ class MonitorHTTP(Monitor):
     headers = None
 
     def __init__(self, name: str, config_options: dict) -> None:
-        Monitor.__init__(self, name, config_options)
-        self.url = Monitor.get_config_option(config_options, "url", required=True)
+        super().__init__(name, config_options)
+        self.url = self.get_config_option("url", required=True)
 
-        regexp = Monitor.get_config_option(config_options, "regexp")
+        regexp = self.get_config_option("regexp")
         if regexp is not None:
             self.regexp = re.compile(regexp)
             self.regexp_text = regexp
         if not regexp:
-            self.allowed_codes = Monitor.get_config_option(
-                config_options, "allowed_codes", default=[200], required_type="[int]"
+            self.allowed_codes = self.get_config_option(
+                "allowed_codes", default=[200], required_type="[int]"
             )
         else:
             self.allowed_codes = [200]
@@ -61,12 +61,12 @@ class MonitorHTTP(Monitor):
         if self.headers:
             self.headers = json.loads(self.headers)
 
-        self.verify_hostname = Monitor.get_config_option(
-            config_options, "verify_hostname", default=True, required_type="bool"
+        self.verify_hostname = self.get_config_option(
+            "verify_hostname", default=True, required_type="bool"
         )
 
-        self.request_timeout = Monitor.get_config_option(
-            config_options, "timeout", default=5, required_type="int"
+        self.request_timeout = self.get_config_option(
+            "timeout", default=5, required_type="int"
         )
 
         self.username = config_options.get("username")
@@ -163,12 +163,12 @@ class MonitorTCP(Monitor):
 
     def __init__(self, name: str, config_options: dict) -> None:
         """Constructor"""
-        Monitor.__init__(self, name, config_options)
-        self.host = Monitor.get_config_option(config_options, "host", required=True)
+        super().__init__(name, config_options)
+        self.host = self.get_config_option("host", required=True)
         self.port = cast(
             int,
-            Monitor.get_config_option(
-                config_options, "port", required=True, required_type="int", minimum=0
+            self.get_config_option(
+                "port", required=True, required_type="int", minimum=0
             ),
         )
 
@@ -209,9 +209,9 @@ class MonitorHost(Monitor):
         This is to stop ping holding things up too much. A machine that can't ping back in <5s is
         a machine in trouble anyway, so should probably count as a failure.
         """
-        Monitor.__init__(self, name, config_options)
-        ping_ttl = Monitor.get_config_option(
-            config_options, "ping_ttl", required_type="int", minimum=0, default=5
+        super().__init__(name, config_options)
+        ping_ttl = self.get_config_option(
+            "ping_ttl", required_type="int", minimum=0, default=5
         )
         ping_ms = str(ping_ttl * 1000)
         ping_ttl = str(ping_ttl)
@@ -231,7 +231,7 @@ class MonitorHost(Monitor):
         else:
             RuntimeError("Don't know how to run ping on this platform, help!")
 
-        self.host = Monitor.get_config_option(config_options, "host", required=True)
+        self.host = self.get_config_option("host", required=True)
 
     def run_test(self) -> bool:
         success = False
@@ -279,19 +279,19 @@ class MonitorDNS(Monitor):
     command = "dig"
 
     def __init__(self, name: str, config_options: dict) -> None:
-        Monitor.__init__(self, name, config_options)
-        self.path = Monitor.get_config_option(config_options, "record", required=True)
+        super().__init__(name, config_options)
+        self.path = self.get_config_option("record", required=True)
 
-        self.desired_val = Monitor.get_config_option(config_options, "desired_val")
+        self.desired_val = self.get_config_option("desired_val")
 
-        self.server = Monitor.get_config_option(config_options, "server")
+        self.server = self.get_config_option("server")
 
         self.params = [self.command]
 
         if self.server:
             self.params.append("@%s" % self.server)
 
-        self.rectype = Monitor.get_config_option(config_options, "record_type")
+        self.rectype = self.get_config_option("record_type")
         if self.rectype:
             self.params.append("-t")
             self.params.append(config_options["record_type"])

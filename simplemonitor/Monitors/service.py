@@ -25,10 +25,8 @@ class MonitorSvc(Monitor):
     path = ""
 
     def __init__(self, name: str, config_options: dict) -> None:
-        Monitor.__init__(self, name, config_options)
-        self.path = cast(
-            str, Monitor.get_config_option(config_options, "path", required=True)
-        )
+        super().__init__(name, config_options)
+        self.path = cast(str, self.get_config_option("path", required=True))
         self.params = ("svok %s" % self.path).split(" ")
 
     def run_test(self) -> bool:
@@ -63,14 +61,10 @@ class MonitorService(Monitor):
     type = "service"
 
     def __init__(self, name: str, config_options: dict) -> None:
-        Monitor.__init__(self, name, config_options)
-        self.service_name = Monitor.get_config_option(
-            config_options, "service", required=True
-        )
-        self.want_state = Monitor.get_config_option(
-            config_options, "state", default="RUNNING"
-        )
-        self.host = Monitor.get_config_option(config_options, "host", default=".")
+        super().__init__(name, config_options)
+        self.service_name = self.get_config_option("service", required=True)
+        self.want_state = self.get_config_option("state", default="RUNNING")
+        self.host = self.get_config_option("host", default=".")
 
         if self.want_state not in ["RUNNING", "STOPPED"]:
             raise MonitorConfigurationError(
@@ -127,21 +121,13 @@ class MonitorRC(Monitor):
         """Initialise the class.
         Change script path to /etc/rc.d/ to monitor base system services. If the
         script path ends with /, the service name is appended."""
-        Monitor.__init__(self, name, config_options)
-        self.service_name = cast(
-            str, Monitor.get_config_option(config_options, "service", required=True)
-        )
+        super().__init__(name, config_options)
+        self.service_name = cast(str, self.get_config_option("service", required=True))
         self.script_path = cast(
-            str,
-            Monitor.get_config_option(
-                config_options, "path", default="/usr/local/etc/rc.d"
-            ),
+            str, self.get_config_option("path", default="/usr/local/etc/rc.d")
         )
         self.want_return_code = cast(
-            str,
-            Monitor.get_config_option(
-                config_options, "return_code", required_type="int", default=0
-            ),
+            str, self.get_config_option("return_code", required_type="int", default=0)
         )
         if self.script_path.endswith("/"):
             self.script_path = self.script_path + self.service_name
@@ -195,35 +181,28 @@ class MonitorSystemdUnit(Monitor):
     CACHE_LIFETIME = 1  # in seconds
 
     def __init__(self, name: str, config_options: dict) -> None:
-        Monitor.__init__(self, name, config_options)
+        super().__init__(name, config_options)
         if not pydbus:
             self.monitor_logger.critical(
                 "pydbus package is not available, cannot use MonitorSystemdUnit."
             )
             return
-        self.unit_name = cast(
-            str, Monitor.get_config_option(config_options, "name", required=True)
-        )
+        self.unit_name = cast(str, self.get_config_option("name", required=True))
         self.want_load_states = cast(
             List[str],
-            Monitor.get_config_option(
-                config_options, "load_states", required_type="[str]", default=["loaded"]
+            self.get_config_option(
+                "load_states", required_type="[str]", default=["loaded"]
             ),
         )
         self.want_active_states = cast(
             List[str],
-            Monitor.get_config_option(
-                config_options,
-                "active_states",
-                required_type="[str]",
-                default=["active", "reloading"],
+            self.get_config_option(
+                "active_states", required_type="[str]", default=["active", "reloading"]
             ),
         )
         self.want_sub_states = cast(
             List[str],
-            Monitor.get_config_option(
-                config_options, "sub_states", required_type="[str]", default=[]
-            ),
+            self.get_config_option("sub_states", required_type="[str]", default=[]),
         )
 
     @classmethod
@@ -304,13 +283,11 @@ class MonitorEximQueue(Monitor):
     path = "/usr/local/sbin"
 
     def __init__(self, name: str, config_options: dict) -> None:
-        Monitor.__init__(self, name, config_options)
-        self.max_length = Monitor.get_config_option(
-            config_options, "max_length", required_type="int", minimum=1
+        super().__init__(name, config_options)
+        self.max_length = self.get_config_option(
+            "max_length", required_type="int", minimum=1
         )
-        path = Monitor.get_config_option(
-            config_options, "path", default="/usr/local/sbin"
-        )
+        path = self.get_config_option("path", default="/usr/local/sbin")
         self.path = os.path.join(path, "exiqgrep")
 
     def run_test(self) -> bool:
@@ -357,11 +334,11 @@ class MonitorWindowsDHCPScope(Monitor):
     def __init__(self, name: str, config_options: dict) -> None:
         if not self.is_windows(True):
             raise RuntimeError("DHCPScope monitor requires a Windows platform.")
-        Monitor.__init__(self, name, config_options)
-        self.max_used = Monitor.get_config_option(
-            config_options, "max_used", required_type="int", minimum=1
+        super().__init__(name, config_options)
+        self.max_used = self.get_config_option(
+            "max_used", required_type="int", minimum=1
         )
-        self.scope = Monitor.get_config_option(config_options, "scope", required=True)
+        self.scope = self.get_config_option("scope", required=True)
 
     def run_test(self) -> bool:
         try:

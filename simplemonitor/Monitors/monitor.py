@@ -51,47 +51,41 @@ class Monitor:
         """What's that coming over the hill? Is a monitor?"""
         if config_options is None:
             config_options = {}
+        self._config_options = config_options
         self.name = name
         self._deps = []  # type: List[str]
         self.monitor_logger = logging.getLogger("simplemonitor.monitor-" + self.name)
-        self._dependencies = Monitor.get_config_option(
-            config_options, "depend", required_type="[str]", default=list()
+        self._dependencies = self.get_config_option(
+            "depend", required_type="[str]", default=list()
         )
-        self._urgent = Monitor.get_config_option(
-            config_options, "urgent", required_type="bool", default=True
+        self._urgent = self.get_config_option(
+            "urgent", required_type="bool", default=True
         )
-        self._notify = Monitor.get_config_option(
-            config_options, "notify", required_type="bool", default=True
+        self._notify = self.get_config_option(
+            "notify", required_type="bool", default=True
         )
-        self.group = Monitor.get_config_option(
-            config_options, "group", default="default"
+        self.group = self.get_config_option("group", default="default")
+        self._tolerance = self.get_config_option(
+            "tolerance", required_type="int", default=0, minimum=0
         )
-        self._tolerance = Monitor.get_config_option(
-            config_options, "tolerance", required_type="int", default=0, minimum=0
+        self.remote_alerting = self.get_config_option(
+            "remote_alert", required_type="bool", default=False
         )
-        self.remote_alerting = Monitor.get_config_option(
-            config_options, "remote_alert", required_type="bool", default=False
-        )
-        self._recover_command = Monitor.get_config_option(
-            config_options, "recover_command"
-        )
-        self._recovered_command = Monitor.get_config_option(
-            config_options, "recovered_command"
-        )
+        self._recover_command = self.get_config_option("recover_command")
+        self._recovered_command = self.get_config_option("recovered_command")
         self.recover_info = ""
         self.recovered_info = ""
-        self.minimum_gap = Monitor.get_config_option(
-            config_options, "gap", required_type="int", minimum=0, default=0
+        self.minimum_gap = self.get_config_option(
+            "gap", required_type="int", minimum=0, default=0
         )
 
         self.running_on = short_hostname()
         self.was_skipped = False
         self._last_run = 0
 
-    @staticmethod
-    def get_config_option(config_options: dict, key: str, **kwargs: Any) -> Any:
+    def get_config_option(self, key: str, **kwargs: Any) -> Any:
         kwargs["exception"] = MonitorConfigurationError
-        return get_config_option(config_options, key, **kwargs)
+        return get_config_option(self._config_options, key, **kwargs)
 
     @property
     def dependencies(self) -> List[str]:
@@ -441,8 +435,8 @@ class MonitorFail(Monitor):
 
     def __init__(self, name: str, config_options: dict):
         Monitor.__init__(self, name, config_options)
-        self.interval = Monitor.get_config_option(
-            config_options, "interval", required_type="int", minimum=1, default=5
+        self.interval = self.get_config_option(
+            "interval", required_type="int", minimum=1, default=5
         )
 
     def run_test(self) -> bool:

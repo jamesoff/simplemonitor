@@ -22,7 +22,7 @@ class SlackAlerter(Alerter):
     username = None
 
     def __init__(self, config_options: dict) -> None:
-        Alerter.__init__(self, config_options)
+        super().__init__(config_options)
         if not requests_available:
             self.alerter_logger.critical(
                 "Requests package is not available, cannot use SlackAlerter."
@@ -31,14 +31,11 @@ class SlackAlerter(Alerter):
             return
 
         self.url = cast(
-            str,
-            Alerter.get_config_option(
-                config_options, "url", required=True, allow_empty=False
-            ),
+            str, self.get_config_option("url", required=True, allow_empty=False)
         )
 
-        self.channel = cast(str, Alerter.get_config_option(config_options, "channel"))
-        self.username = cast(str, Alerter.get_config_option(config_options, "username"))
+        self.channel = cast(str, self.get_config_option("channel"))
+        self.username = cast(str, self.get_config_option("username"))
 
     def send_alert(self, name: str, monitor: Monitor) -> None:
         """Send the message."""

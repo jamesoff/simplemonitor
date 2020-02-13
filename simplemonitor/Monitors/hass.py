@@ -13,16 +13,10 @@ class MonitorSensor(Monitor):
     type = "hass_sensor"
 
     def __init__(self, name: str, config_options: dict) -> None:
-        Monitor.__init__(self, name, config_options)
-        self.url = cast(
-            str, Monitor.get_config_option(config_options, "url", required=True)
-        )
-        self.sensor = cast(
-            str, Monitor.get_config_option(config_options, "sensor", required=True)
-        )
-        self.token = cast(
-            str, Monitor.get_config_option(config_options, "token", default=None)
-        )
+        super().__init__(name, config_options)
+        self.url = cast(str, self.get_config_option("url", required=True))
+        self.sensor = cast(str, self.get_config_option("sensor", required=True))
+        self.token = cast(str, self.get_config_option("token", default=None))
 
     def describe(self) -> str:
         return "monitor the existence of a sensor"

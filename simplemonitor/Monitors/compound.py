@@ -19,25 +19,17 @@ class CompoundMonitor(Monitor):
     mt = None  # type: Optional[WeakValueDictionary[str, Monitor]]
 
     def __init__(self, name: str, config_options: dict) -> None:
-        Monitor.__init__(self, name, config_options)
+        super().__init__(name, config_options)
         self.monitors = cast(
             List[str],
-            Monitor.get_config_option(
-                config_options,
-                "monitors",
-                required_type="[str]",
-                required=True,
-                default=[],
+            self.get_config_option(
+                "monitors", required_type="[str]", required=True, default=[]
             ),
         )
         self.min_fail = cast(
             int,
-            Monitor.get_config_option(
-                config_options,
-                "min_fail",
-                required_type="int",
-                default=len(self.monitors),
-                minimum=1,
+            self.get_config_option(
+                "min_fail", required_type="int", default=len(self.monitors), minimum=1
             ),
         )
 

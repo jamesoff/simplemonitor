@@ -14,13 +14,10 @@ class PushbulletAlerter(Alerter):
     type = "pushbullet"
 
     def __init__(self, config_options: dict) -> None:
-        Alerter.__init__(self, config_options)
+        super().__init__(config_options)
 
         self.pushbullet_token = cast(
-            str,
-            Alerter.get_config_option(
-                config_options, "token", required=True, allow_empty=False
-            ),
+            str, self.get_config_option("token", required=True, allow_empty=False)
         )
 
         self.support_catchup = True

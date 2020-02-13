@@ -50,11 +50,11 @@ class DBLogger(Logger):
 
     def __init__(self, config_options: dict) -> None:
         """Open the database connection."""
-        Logger.__init__(self, config_options)
+        super().__init__(config_options)
         if not sqlite_available:
             raise RuntimeError("SQLite module not loaded.")
-        self.db_path = Logger.get_config_option(
-            config_options, "db_path", required=True, allow_empty=False
+        self.db_path = self.get_config_option(
+            "db_path", required=True, allow_empty=False
         )
 
         self.db_handle = sqlite3.connect(self.db_path, isolation_level=None)
