@@ -26,6 +26,8 @@ class MonitorRingDoorbell(Monitor):
         super().__init__(name, config_options)
         if ring_doorbell is None:
             self.monitor_logger.critical("ring_doorbell library is not installed")
+            self.monitor_logger.critical("Try: pip install ring-doorbell")
+            self.monitor_logger.critical("     or pip install simplemonitor[ring]")
         self.device_name = cast(str, self.get_config_option("device_name"))
         self.minimum_battery = cast(
             int,

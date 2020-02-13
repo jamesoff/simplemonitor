@@ -5,9 +5,13 @@ import subprocess
 import time
 from typing import Optional, Tuple, cast
 
-import psutil
-
 from .monitor import Monitor, register
+
+try:
+    import psutil
+except ImportError:
+    psutil = None
+
 
 try:
     import win32api
@@ -393,12 +397,17 @@ class MonitorMemory(Monitor):
 
     def __init__(self, name: str, config_options: dict) -> None:
         super().__init__(name, config_options)
+        if psutil is None:
+            self.monitor_logger.critical("psutil is not installed.")
+            self.monitor_logger.critical("Try: pip install -r requirements.txt")
         self.percent_free = cast(
             int,
             self.get_config_option("percent_free", required_type="int", required=True),
         )
 
     def run_test(self) -> bool:
+        if psutil is None:
+            return self.record_fail("psutil is not installed")
         stats = psutil.virtual_memory()
         percent = int(stats.available / stats.total * 100)
         message = "{}% free".format(percent)

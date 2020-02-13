@@ -10,7 +10,7 @@ import os
 import signal
 import sys
 import time
-from optparse import SUPPRESS_HELP, OptionParser
+import argparse
 from socket import gethostname
 from typing import Any, Optional
 
@@ -287,24 +287,29 @@ def load_alerters(
 def main() -> None:
     r"""This is where it happens \o/"""
 
-    parser = OptionParser(version="%prog {}".format(VERSION))
-    parser.add_option(
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--version", action="version", version="%(prog)s {}".format(VERSION)
+    )
+    output_group = parser.add_argument_group(title="Output controls")
+    testing_group = parser.add_argument_group(title="Test and debug tools")
+    output_group.add_argument(
         "-v",
         "--verbose",
         action="store_true",
         dest="verbose",
         default=False,
-        help=SUPPRESS_HELP,
+        help="Alias for --log-level=info",
     )
-    parser.add_option(
+    output_group.add_argument(
         "-q",
         "--quiet",
         action="store_true",
         dest="quiet",
         default=False,
-        help=SUPPRESS_HELP,
+        help="Alias for --log-level=critical",
     )
-    parser.add_option(
+    testing_group.add_argument(
         "-t",
         "--test",
         action="store_true",
@@ -312,33 +317,33 @@ def main() -> None:
         default=False,
         help="Test config and exit",
     )
-    parser.add_option(
+    parser.add_argument(
         "-p", "--pidfile", dest="pidfile", default=None, help="Write PID into this file"
     )
-    parser.add_option(
+    parser.add_argument(
         "-N",
         "--no-network",
         dest="no_network",
         default=False,
         action="store_true",
-        help="Disable network listening socket",
+        help="Disable network listening socket (if enabled in config)",
     )
-    parser.add_option(
+    output_group.add_argument(
         "-d",
         "--debug",
         dest="debug",
         default=False,
         action="store_true",
-        help=SUPPRESS_HELP,
+        help="Alias for --log-level=debug",
     )
-    parser.add_option(
+    parser.add_argument(
         "-f",
         "--config",
         dest="config",
         default="monitor.ini",
         help="configuration file",
     )
-    parser.add_option(
+    output_group.add_argument(
         "-H",
         "--no-heartbeat",
         action="store_true",
@@ -346,7 +351,7 @@ def main() -> None:
         default=False,
         help="Omit printing the '.' character when running checks",
     )
-    parser.add_option(
+    testing_group.add_argument(
         "-1",
         "--one-shot",
         action="store_true",
@@ -354,15 +359,21 @@ def main() -> None:
         default=False,
         help='Run the monitors once only, without alerting. Require monitors without "fail" in the name to succeed. Exit zero or non-zero accordingly.',
     )
-    parser.add_option("--loops", dest="loops", default=-1, help=SUPPRESS_HELP, type=int)
-    parser.add_option(
+    testing_group.add_argument(
+        "--loops",
+        dest="loops",
+        default=-1,
+        type=int,
+        help="Number of iterations to run before exiting",
+    )
+    output_group.add_argument(
         "-l",
         "--log-level",
         dest="loglevel",
         default="warn",
         help="Log level: critical, error, warn, info, debug",
     )
-    parser.add_option(
+    output_group.add_argument(
         "-C",
         "--no-colour",
         "--no-color",
@@ -371,22 +382,22 @@ def main() -> None:
         default=False,
         help="Do not colourise log output",
     )
-    parser.add_option(
+    output_group.add_argument(
         "--no-timestamps",
         action="store_true",
         dest="no_timestamps",
         default=False,
         help="Do not prefix log output with timestamps",
     )
-    parser.add_option(
+    testing_group.add_argument(
         "--dump-known-resources",
         action="store_true",
         dest="dump_resources",
         default=False,
-        help=SUPPRESS_HELP,
+        help="Print out loaded Monitor, Alerter and Logger types",
     )
 
-    (options, _) = parser.parse_args()
+    options = parser.parse_args()
 
     if options.dump_resources:
         import pprint
@@ -400,15 +411,12 @@ def main() -> None:
         sys.exit(0)
 
     if options.quiet:
-        print("Warning: --quiet is deprecated; use --log-level=critical")
         options.loglevel = "critical"
 
     if options.verbose:
-        print("Warning: --verbose is deprecated; use --log-level=info")
         options.loglevel = "info"
 
     if options.debug:
-        print("Warning: --debug is deprecated; use --log-level=debug")
         options.loglevel = "debug"
 
     if options.no_timestamps:
