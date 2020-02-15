@@ -56,16 +56,13 @@ hup_timestamp = None
 
 
 def setup_signals() -> None:
+    _message = "Unable to trap SIGHUP... maybe it doesn't exist on this platform. Set 'hup_file' in config and touch that file to trigger a config reload."
     try:
         signal.signal(signal.SIGHUP, handle_sighup)
     except ValueError:  # pragma: no cover
-        main_logger.warning(
-            "Unable to trap SIGHUP... maybe it doesn't exist on this platform.\n"
-        )
+        main_logger.warning(_message)
     except AttributeError:  # pragma: no cover
-        main_logger.warning(
-            "Unable to trap SIGHUP... maybe it doesn't exist on this platform.\n"
-        )
+        main_logger.warning(_message)
 
 
 def handle_sighup(sig_number: Any, stack_frame: Any) -> None:
