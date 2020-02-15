@@ -1,3 +1,17 @@
+1.9:
+	* REQUIRE PYTHON >= 3.5
+	* Switch to distribution as a pip package! You can now "pip install simplemonitor"
+	* Add memory monitor
+	* Add Ring doorbell monitor (checks battery level)
+	* Add support for checking file is not too large
+	* Add support for running a command when a monitor recovers
+	* Add support for reloading config on the fly
+	* Fixes to compound monitor logic
+	* HTTP monitor can check both return code and regexp now
+	* Update pkgaudit monitor to chase new output format
+	* DNS monitor can check response is NXDOMAIN
+	* Many code quality improvements (I hope)
+
 1.8:
 	* REMOVED SUPPORT FOR Python 2.6
 	* LAST RELEASE TO SUPPORT 2.7
