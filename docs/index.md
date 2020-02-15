@@ -57,7 +57,7 @@ Again, adding more logging/alerting methods is simply a case of writing some Pyt
 
 * `pip install simplemonitor` or `pip install --user simplemonitor`
 
-If you are on a Mac and want the Notification Center alerter to work, use `simplemonitor[nc]` for the package name. If you want to be able to query the Ring API for your doorbell battery level, use `simplemonitor[ring]`
+If you want to be able to query the Ring API for your doorbell battery level, use `simplemonitor[ring]`
 
 * Create `monitor.ini` and `monitors.ini`. See [Configuration](configuration.html).
 
@@ -67,7 +67,7 @@ Assuming your $PATH covers where `pip` installs things, you can just run `simple
 
 SimpleMonitor does not fork.
 
-In the [`scripts`](https://github.com/jamesoff/simplemonitor/tree/develop/scripts) folder you can find startup scripts for various systems. You will need to adjust paths, usernames and options before using them! If you want to run it as a Windows Service, you want `winmonitor.exe`.
+In the [`scripts`](https://github.com/jamesoff/simplemonitor/tree/develop/scripts) folder you can find startup scripts for various systems. You will need to adjust paths, usernames and options before using them! If you want to run it as a Windows Service, you want `winmonitor.exe`. I am not a Windows user so cannot offer advice on correctly setting this up.
 
 ## Command line options
 
