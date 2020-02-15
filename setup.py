@@ -15,7 +15,9 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/jamesoff/simplemonitor",
     packages=setuptools.find_packages(exclude="tests"),
-    package_data={"simplemonitor": ["html/*.html"]},
+    package_data={
+        "simplemonitor": ["html/header.html", "html/footer.html", "html/style.css"]
+    },
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Environment :: Console",
