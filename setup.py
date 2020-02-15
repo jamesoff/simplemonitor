@@ -34,7 +34,7 @@ setuptools.setup(
     entry_points={
         "console_scripts": [
             "simplemonitor=simplemonitor.monitor:main",
-            "winmonitor=simplemonitor.winmonitor.main",
+            "winmonitor=simplemonitor.winmonitor:main",
         ]
     },
     extras_require={"nc": ["pync"], "ring": ["ring-doorbell>=0.6.0"]},
