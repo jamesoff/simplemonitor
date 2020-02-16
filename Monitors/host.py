@@ -11,7 +11,7 @@ try:
 except ImportError:
     win32_available = False
 
-from .monitor import Monitor
+from .monitor import Monitor, register
 
 
 def _size_string_to_bytes(s):
@@ -51,6 +51,7 @@ def _bytes_to_size_string(b):
         return str(b)
 
 
+@register
 class MonitorDiskSpace(Monitor):
     """Make sure we have enough disk space."""
 
@@ -78,15 +79,11 @@ class MonitorDiskSpace(Monitor):
                 space = result[2]
                 percent = float(result[2]) / float(result[1]) * 100
         except Exception as e:
-            self.record_fail("Couldn't get free disk space: %s" % e)
-            return False
+            return self.record_fail("Couldn't get free disk space: %s" % e)
 
         if space <= self.limit:
-            self.record_fail("%s free (%d%%)" % (_bytes_to_size_string(space), percent))
-            return False
-        else:
-            self.record_success("%s free (%d%%)" % (_bytes_to_size_string(space), percent))
-            return True
+            return self.record_fail("%s free (%d%%)" % (_bytes_to_size_string(space), percent))
+        return self.record_success("%s free (%d%%)" % (_bytes_to_size_string(space), percent))
 
     def describe(self):
         """Explains what we do."""
@@ -96,6 +93,7 @@ class MonitorDiskSpace(Monitor):
         return (self.limit, self.partition)
 
 
+@register
 class MonitorFileStat(Monitor):
     """Make sure a file exists, isn't too old and/or isn't too small."""
 
@@ -121,23 +119,19 @@ class MonitorFileStat(Monitor):
         try:
             statinfo = os.stat(self.filename)
         except Exception as e:
-            self.record_fail("Unable to check file: %s" % e)
-            return False
+            return self.record_fail("Unable to check file: %s" % e)
 
         if self.minsize:
             if statinfo.st_size < self.minsize:
-                self.record_fail("Size is %d, should be >= %d bytes" % (statinfo.st_size, self.minsize))
-                return False
+                return self.record_fail("Size is %d, should be >= %d bytes" % (statinfo.st_size, self.minsize))
 
         if self.maxage:
             now = time.time()
             diff = now - statinfo.st_mtime
             if diff > self.maxage:
-                self.record_fail("Age is %d, should be < %d seconds" % (diff, self.maxage))
-                return False
+                return self.record_fail("Age is %d, should be < %d seconds" % (diff, self.maxage))
 
-        self.record_success()
-        return True
+        return self.record_success()
 
     def describe(self):
         """Explains what we do"""
@@ -152,6 +146,7 @@ class MonitorFileStat(Monitor):
         return (self.filename, self.minsize, self.maxage)
 
 
+@register
 class MonitorApcupsd(Monitor):
     """Monitor an APC UPS (with apcupsd) to make sure it's ONLINE.
 
@@ -183,11 +178,9 @@ class MonitorApcupsd(Monitor):
         except subprocess.CalledProcessError as e:
             output = e.output
         except OSError as e:
-            self.record_fail("Could not run {0}: {1}".format(executable, e))
-            return False
+            return self.record_fail("Could not run {0}: {1}".format(executable, e))
         except OSError as e:
-            self.record_fail("Error while getting UPS info: {0}".format(e))
-            return False
+            return self.record_fail("Error while getting UPS info: {0}".format(e))
 
         for line in output.splitlines():
             if line.find(":") > -1:
@@ -195,16 +188,12 @@ class MonitorApcupsd(Monitor):
                 info[bits[0].strip()] = bits[1].strip()
 
         if 'STATUS' not in info:
-            self.record_fail("Could not get UPS status")
-            return False
+            return self.record_fail("Could not get UPS status")
 
         if not info["STATUS"] == "ONLINE":
             if 'TIMELEFT' in info:
-                self.record_fail("%s: %s left" % (info["STATUS"], info["TIMELEFT"]))
-                return False
-            else:
-                self.record_fail(info["STATUS"])
-                return False
+                return self.record_fail("%s: %s left" % (info["STATUS"], info["TIMELEFT"]))
+            return self.record_fail(info["STATUS"])
 
         data = ""
         if 'TIMELEFT' in info:
@@ -215,7 +204,6 @@ class MonitorApcupsd(Monitor):
                 data += "; "
             data += "%s%% load" % info["LOADPCT"][0:4]
 
-        self.record_success(data)
         return True
 
     def describe(self):
@@ -225,11 +213,12 @@ class MonitorApcupsd(Monitor):
         return (self.path, )
 
 
+@register
 class MonitorPortAudit(Monitor):
     """Check a host doesn't have outstanding security issues."""
 
     type = "portaudit"
-    regexp = re.compile("(\d+) problem\(s\) in your installed packages found")
+    regexp = re.compile(r"(\d+) problem\(s\) in your installed packages found")
     path = ""
 
     def __init__(self, name, config_options):
@@ -252,11 +241,9 @@ class MonitorPortAudit(Monitor):
             except subprocess.CalledProcessError as e:
                 output = e.output
             except OSError as e:
-                self.record_fail("Error running %s: %s" % (self.path, e))
-                return False
+                return self.record_fail("Error running %s: %s" % (self.path, e))
             except Exception as e:
-                self.record_fail("Error running portaudit: %s" % e)
-                return False
+                return self.record_fail("Error running portaudit: %s" % e)
 
             for line in output.splitlines():
                 matches = self.regexp.match(line)
@@ -264,25 +251,21 @@ class MonitorPortAudit(Monitor):
                     count = int(matches.group(1))
                     # sanity check
                     if count == 0:
-                        self.record_success()
-                        return True
+                        return self.record_success()
                     if count == 1:
-                        self.record_fail("1 problem")
-                    else:
-                        self.record_fail("%d problems" % count)
-                    return False
-            self.record_success()
-            return True
+                        return self.record_fail("1 problem")
+                    return self.record_fail("%d problems" % count)
+            return self.record_success()
         except Exception as e:
-            self.record_fail("Could not run portaudit: %s" % e)
-            return False
+            return self.record_fail("Could not run portaudit: %s" % e)
 
 
+@register
 class MonitorPkgAudit(Monitor):
     """Check a host doesn't have outstanding security issues."""
 
     type = "pkgaudit"
-    regexp = re.compile("(\d+) problem\(s\) in the installed packages found")
+    regexp = re.compile(r"(\d+) problem\(s\) in the installed packages found")
     path = ""
 
     def __init__(self, name, config_options):
@@ -304,11 +287,9 @@ class MonitorPkgAudit(Monitor):
             except subprocess.CalledProcessError as e:
                 output = e.output
             except OSError as e:
-                self.record_fail("Failed to run %s audit: {0} {1}".format(self.path, e))
-                return False
+                return self.record_fail("Failed to run %s audit: {0} {1}".format(self.path, e))
             except Exception as e:
-                self.record_fail("Error running pkg audit: {0}".format(e))
-                return False
+                return self.record_fail("Error running pkg audit: {0}".format(e))
 
             for line in output.splitlines():
                 matches = self.regexp.match(line)
@@ -316,20 +297,16 @@ class MonitorPkgAudit(Monitor):
                     count = int(matches.group(1))
                     # sanity check
                     if count == 0:
-                        self.record_success()
-                        return True
+                        return self.record_success()
                     if count == 1:
-                        self.record_fail("1 problem")
-                    else:
-                        self.record_fail("%d problems" % count)
-                    return False
-            self.record_success()
-            return True
+                        return self.record_fail("1 problem")
+                    return self.record_fail("%d problems" % count)
+            return self.record_success()
         except Exception as e:
-            self.record_fail("Could not run pkg: %s" % e)
-            return False
+            return self.record_fail("Could not run pkg: %s" % e)
 
 
+@register
 class MonitorLoadAvg(Monitor):
     """Check a host's load average isn't too high."""
 
@@ -370,20 +347,17 @@ class MonitorLoadAvg(Monitor):
         try:
             loadavg = os.getloadavg()
         except Exception as e:
-            self.record_fail("Exception getting loadavg: %s" % e)
-            return False
+            return self.record_fail("Exception getting loadavg: %s" % e)
 
         if loadavg[self.which] > self.max:
-            self.record_fail("%0.2f" % loadavg[self.which])
-            return False
-        else:
-            self.record_success("%0.2f" % loadavg[self.which])
-            return True
+            return self.record_fail("%0.2f" % loadavg[self.which])
+        return self.record_success("%0.2f" % loadavg[self.which])
 
     def get_params(self):
         return (self.which, self.max)
 
 
+@register
 class MonitorZap(Monitor):
     """Checks a Zap channel to make sure it is ok"""
 
@@ -409,16 +383,11 @@ class MonitorZap(Monitor):
                 if matches:
                     status = matches.group("status")
                     if status != "OK":
-                        self.record_fail("status is %s" % status)
-                        return False
-                    else:
-                        self.record_success()
-                        return True
-            self.record_fail("Error getting status")
-            return False
+                        return self.record_fail("status is %s" % status)
+                    return self.record_success()
+            return self.record_fail("Error getting status")
         except Exception as e:
-            self.record_fail("Error running ztscan: %s" % e)
-            return False
+            return self.record_fail("Error running ztscan: %s" % e)
 
     def describe(self):
         return "Checking status of zap span %d is OK" % self.span
@@ -427,6 +396,7 @@ class MonitorZap(Monitor):
         return (self.span, )
 
 
+@register
 class MonitorCommand(Monitor):
     """Check the output of a command.
 
@@ -446,7 +416,7 @@ class MonitorCommand(Monitor):
         Monitor.__init__(self, name, config_options)
 
         if sys.version_info[0] == 2 and sys.version_info[1] == 6:
-            print('Warning: Command monitors are unsupported on Python 2.6!')
+            self.monitor_logger.critical('Warning: Command monitors are unsupported on Python 2.6!')
             self.available = False
 
         self.result_regexp_text = Monitor.get_config_option(
@@ -462,7 +432,7 @@ class MonitorCommand(Monitor):
         if self.result_regexp_text != '':
             self.result_regexp = re.compile(self.result_regexp_text)
             if self.result_max is not None:
-                print('Warning: command monitors do not support result_regexp AND result_max settings simultaneously')
+                self.monitor_logger.error('command monitors do not support result_regexp AND result_max settings simultaneously')
                 self.result_max = None
 
         command = Monitor.get_config_option(
@@ -475,35 +445,25 @@ class MonitorCommand(Monitor):
 
     def run_test(self):
         if not self.available:
-            self.record_skip(None)
-            return False
+            return self.record_skip(None)
         try:
             out = subprocess.check_output(self.command)
             if self.result_regexp is not None:
                 out = out.decode('utf-8')
                 matches = self.result_regexp.search(out)
                 if matches:
-                    self.record_success()
-                    return True
-                else:
-                    self.record_fail('could not match regexp in out')
-                    return False
+                    return self.record_success()
+                return self.record_fail('could not match regexp in out')
             elif self.result_max is not None:
                 outasinteger = int(out)
                 if outasinteger < self.result_max:
-                    self.record_success("%s < %s" % (outasinteger, self.result_max))
-                    return True
-                else:
-                    self.record_fail("%s >= %s" % (outasinteger, self.result_max))
-                    return False
-            self.record_success()
-            return True
+                    return self.record_success("%s < %s" % (outasinteger, self.result_max))
+                return self.record_fail("%s >= %s" % (outasinteger, self.result_max))
+            return self.record_success()
         except Exception as e:
-            self.record_fail(e)
-            return False
+            return self.record_fail(e)
 
-        self.record_fail()
-        return False
+        return self.record_fail()
 
     def describe(self):
         """Explains what this instance is checking"""

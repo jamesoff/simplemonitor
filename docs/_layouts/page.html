@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-dark.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/syntax.css" media="screen">
+
+	<title>{{ page.title }}</title>
+  </head>
+
+  <body>
+
+    <header>
+      <div class="container">
+        <h1>Simplemonitor</h1>
+        <h2>A Python-based network and host monitor</h2>
+
+		{% if page.show_downloads %}
+        <section id="downloads">
+          <a href="https://github.com/jamesoff/simplemonitor/zipball/master" class="btn">Download as .zip</a>
+          <a href="https://github.com/jamesoff/simplemonitor/tarball/master" class="btn">Download as .tar.gz</a>
+          <a href="https://github.com/jamesoff/simplemonitor" class="btn btn-github"><span class="icon"></span>View on GitHub</a>
+        </section>
+		{% endif %}
+		<ul class="menu">
+		{% assign ps = site.pages | sort: 'order' %}
+		{% for p in ps %}
+			<li><a href="{{site.baseurl}}{{p.url}}">{{p.title}}</a></li>
+		{% endfor %}
+		</ul>
+      </div>
+    </header>
+
+    <div class="container">
+		{{ content }}
+    </div>
+
+	<footer>
+		<div class="container">
+			<a href="https://jamesoff.net">jamesoff.net</a> | <a href="https://twitter.com/jamesoff">@jamesoff</a>
+		</div>
+	</footer>
+
+<a href="https://github.com/jamesoff/simplemonitor"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/52760788cde945287fbb584134c4cbc2bc36f904/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f77686974655f6666666666662e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_white_ffffff.png"></a>
+  </body>
+</html>

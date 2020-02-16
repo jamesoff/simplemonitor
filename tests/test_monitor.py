@@ -1,4 +1,5 @@
 import unittest
+import datetime
 import Monitors.monitor
 
 
@@ -108,3 +109,21 @@ class TestMonitor(unittest.TestCase):
                 required_type='bool'),
             False
         )
+
+    def test_downtime(self):
+        m = Monitors.monitor.Monitor()
+        m.failed_at = datetime.datetime.utcnow()
+        self.assertEqual(m.get_downtime(), (0, 0, 0, 0))
+
+        m.failed_at = None
+        self.assertEqual(m.get_downtime(), (0, 0, 0, 0))
+
+        now = datetime.datetime.utcnow()
+        two_h_thirty_m_ago = now - datetime.timedelta(hours=2, minutes=30)
+        yesterday = now - datetime.timedelta(days=1)
+
+        m.failed_at = two_h_thirty_m_ago
+        self.assertEqual(m.get_downtime(), (0, 2, 30, 0))
+
+        m.failed_at = yesterday
+        self.assertEqual(m.get_downtime(), (1, 0, 0, 0))

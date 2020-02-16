@@ -1,22 +1,46 @@
 #!/usr/bin/env bash
 
-set -ex
+set -exu
+without_coverage=${WITHOUT_COVERAGE:-0}
 
-rm -f network.log
+if [[ $without_coverage -eq 1 ]]; then
+	my_command="python"
+else
+	my_command="coverage run --debug=dataio"
+fi
 
-# start the master instance
-COVERAGE_FILE=.coverage.1 coverage run --debug=dataio monitor.py -f tests/network/master/monitor.ini -d --loops=2 &
-sleep 1
+run_test() {
+	server_config=$1
+	client_config=$2
 
-# run the client instance
-COVERAGE_FILE=.coverage.2 coverage run --debug=dataio monitor.py -f tests/network/client/monitor.ini -1 -d
+	echo "==> Running network test with server config $server_config and client config $client_config"
 
-# let them run
-sleep 15
+	rm -f network.log
 
-# make sure the client reached the master 
-grep test2 network.log
+	# start the master instance
+	COVERAGE_FILE=.coverage.1 $my_command monitor.py -f "tests/network/master/$server_config" -d --loops=2 &
+	sleep 1
 
-wait
+	# run the client instance
+	COVERAGE_FILE=.coverage.2 $my_command monitor.py -f "tests/network/client/$client_config" -1 -d
 
-coverage combine --append
+	# let them run
+	sleep 15
+
+	# make sure the client reached the master
+	grep test2 network.log
+	grep test3 network.log
+
+	wait
+
+	if [[ $without_coverage -ne 1 ]]; then
+		coverage combine --append
+	fi
+
+	echo "==> Completed network test"
+	echo
+}
+
+run_test monitor.ini monitor.ini
+run_test monitor-no-pickle.ini monitor.ini
+run_test monitor.ini monitor-ipv6.ini

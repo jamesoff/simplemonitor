@@ -1,3 +1,31 @@
+1.8:
+	* REMOVED SUPPORT FOR Python 2.6
+	* LAST RELEASE TO SUPPORT 2.7
+	* CHANGED REMOTE MONITOR PROTOCOL (security fix)
+	* Support Python 3
+	* Add JSON logger
+	* Add 46elks SMS alerter
+	* Add PushBullet alerter
+	* Add Telegram alerter
+	* Add Notification Center alerter (for macOS)
+	* Add systemd unit monitor
+	* Add Home Automation monitor
+	* Add MQTT logger
+	* Improve Slack alerter's configurability
+	* Add basic HTTP Auth and timeouts to HTTP monitor
+	* Verify SSL certificates by defaults
+	* Add notification groups
+	* Add support for environment variables in config values and section names
+	* Add tests
+	* Add sample docker configurations
+	* Use Pipenv for requirements management
+	* Added example startup scripts including a Windows Service
+	* Improved logging output (to stdout, not the Logger class)
+	* IPv6 support for network Logger
+	* DB Loggers now auto-create the database/table as needed, and can update schema version
+	* Email Logger now supports multiple addresses
+	* DNS Monitor now supports multivalue responses
+	* Use JSON format for remote monitor protocol; more secure than pickle
 1.7:
 	+ Add Slack alerter
 	+ Add Command monitor

@@ -13,6 +13,17 @@ htmlcov/
 .coverage
 .idea/
 html/status.html
+html/index.html
 monitor.db
 monitor?.log
 monitor2.db
+_monitor-export/
+venv/
+env/
+*.vscode
+*.swp
+docs/.sass-cache
+docs/vendor
+monitor.log
+monitor.pid
+output.json
