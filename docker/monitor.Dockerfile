@@ -1,11 +1,11 @@
 # -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 # >> python @ alpine
 # -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
-FROM python:2.7-alpine
+FROM python:3.7-alpine
 
 # >> meta :: labels
 LABEL   version_dockerfile="10-07-2018:prod" \
-        version_image="python:2.7-alpine"
+        version_image="python:3.7-alpine"
 
 # >> package :: install
 RUN     apk --no-cache add --update \
