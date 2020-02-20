@@ -189,6 +189,11 @@ class HTMLLogger(Logger):
         failures = monitor.failures
         last_failure = monitor.last_failure
         gap = monitor.minimum_gap
+        skipped = monitor.was_skipped
+        if skipped:
+            skip_dep = monitor.skip_dep
+        else:
+            skip_dep = ""
         if gap == 0:
             gap = (
                 60
@@ -217,6 +222,8 @@ class HTMLLogger(Logger):
             "failures": failures,
             "last_failure": last_failure,
             "gap": gap,
+            "skipped": skipped,
+            "skip_dep": skip_dep,
         }
         self.batch_data[monitor.name] = data_line
 
@@ -226,6 +233,7 @@ class HTMLLogger(Logger):
         fail_count = 0
         old_count = 0
         remote_count = 0
+        skip_count = 0
 
         my_host = short_hostname()
 
@@ -250,6 +258,9 @@ class HTMLLogger(Logger):
             if self.batch_data[entry]["age"] > self.batch_data[entry]["gap"] + 60:
                 status = "OLD"
                 old_count += 1
+            elif self.batch_data[entry]["skipped"]:
+                status = "SKIP"
+                skip_count += 1
             elif self.batch_data[entry]["status"]:
                 status = "OK"
                 ok_count += 1
@@ -300,7 +311,16 @@ class HTMLLogger(Logger):
                 )
             except Exception:
                 output.write("<td>&nbsp;</td>")
-            output.write("<td>%s &nbsp;</td>" % (self.batch_data[entry]["fail_data"]))
+            if self.batch_data[entry]["skip_dep"]:
+                output.write(
+                    "<td>skipped due to failed dependency: {}</td>".format(
+                        self.batch_data[entry]["skip_dep"]
+                    )
+                )
+            else:
+                output.write(
+                    "<td>%s &nbsp;</td>" % (self.batch_data[entry]["fail_data"])
+                )
             if self.batch_data[entry]["failures"] == 0:
                 output.write("<td></td><td></td>")
             else:
@@ -328,8 +348,8 @@ class HTMLLogger(Logger):
         count_data = count_data + ' class="%s">%s' % (cls, cls.upper())
         self.count_data = (
             count_data
-            + '<div id="details"><span class="ok">%d OK</span> <span class="fail">%d FAIL</span> <span class="old">%d OLD</span> <span class="remote">%d remote</span></div></div>'
-            % (ok_count, fail_count, old_count, remote_count)
+            + '<div id="details"><span class="ok">%d OK</span> <span class="fail">%d FAIL</span> <span class="old">%d OLD</span> %d SKIP <span class="remote">%d remote</span></div></div>'
+            % (ok_count, fail_count, old_count, skip_count, remote_count)
         )
 
         self.status = cls.upper()

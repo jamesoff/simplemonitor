@@ -46,6 +46,11 @@ tr td.old, #summary.old {
 	color: white;
 }
 
+tr td.skip {
+	background-color: #555;
+	color: white;
+}
+
 td.vfc {
 	text-align: center;
 }
