@@ -38,6 +38,7 @@ The section name should be the name of your logger. This is the name you should 
 |filename|the filename to write to. Rotating this file underneath SimpleMonitor will likely result in breakage (this will be addressed later).|yes| |
 |buffered|set to 1 if you aren’t going to watch the logfile in real time. If you want to watch it with something like tail -f then set this to 0.|no|1|
 |only_failures|set to 1 if you only want failures to be written to the file.|no|0|
+|dateformat|The date format to write for log lines. Supported values are "timestamp" (UNIX timestamp) or "iso8601" (YYYY-MM-DDTHH:MM:SS).|no|timestamp|
 
 ### <a name="html"></a>html loggers
 
