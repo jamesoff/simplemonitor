@@ -39,11 +39,11 @@ setuptools.setup(
     },
     extras_require={"ring": ["ring-doorbell>=0.6.0"]},
     install_requires=[
-        "requests",
         "boto3",
-        "pyOpenSSL",
         "colorlog",
         "paho-mqtt",
+        "psutil" "pyOpenSSL",
+        "requests",
         'pync; platform_system=="Darwin"',
         'pywin32; platform_system=="Windows"',
     ],
