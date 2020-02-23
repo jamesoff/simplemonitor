@@ -30,3 +30,11 @@ jobs:
         run: make flake8
       - name: Integration tests
         run: make integration-tests
+      - name: Config environment variables tests
+        run: make env-test
+      - name: Unit tests
+        run: make unit-test
+      - name: Network logger tests
+        run: make network-test
+      - name: Upload to codecov
+        run: pipenv run codecov
