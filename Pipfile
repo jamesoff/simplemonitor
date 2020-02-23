@@ -18,6 +18,3 @@ pywin32 = { sys_platform = "== 'win32'"}
 "flake8" = "*"
 codecov = "*"
 coverage = "*"
-
-[requires]
-python_version = "3.7"
