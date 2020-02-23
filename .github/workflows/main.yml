@@ -25,4 +25,8 @@ jobs:
       - name: Install pipenv
         run: pip install pipenv
       - name: pipenv install
-        run: pipenv install --dev
+        run: pipenv --bare install --dev
+      - name: flake8 tests
+        run: make flake8
+      - name: Integration tests
+        run: make integration-tests
