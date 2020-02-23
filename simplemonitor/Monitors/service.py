@@ -85,9 +85,7 @@ class MonitorService(Monitor):
                     "Cannot check for Windows services while running on a non-Windows platform."
                 )
 
-            output = str(
-                subprocess.check_output(["sc", host, "query", self.service_name, "state=all"])
-                , "utf-8")            
+            output = str(subprocess.check_output(["sc", host, "query", self.service_name, "state=all"]),"utf-8")
             lines = output.split(os.linesep)
             lines = [x for x in lines if len(x) > 0]
             if self.want_state in lines[SVC_STATUS_LINE]:
