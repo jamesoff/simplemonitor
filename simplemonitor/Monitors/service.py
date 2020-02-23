@@ -73,7 +73,7 @@ class MonitorService(Monitor):
 
     def run_test(self) -> bool:
         """Check the service is in the desired state"""
-        r = re.compile("STATE +: [0-9]+ +%s" % self.want_state)
+        SVC_STATUS_LINE = 2
         try:
             if platform.system() == "CYGWIN_NT-6.0":
                 host = "\\\\\\\\" + self.host
@@ -86,11 +86,12 @@ class MonitorService(Monitor):
                 )
 
             output = str(
-                subprocess.check_output(["sc", host, "query", self.service_name])
-            )
-            matches = r.search(output)
-            if matches:
-                return self.record_success()
+                subprocess.check_output(["sc", host, "query", self.service_name, "state=all"])
+                , "utf-8")            
+            lines = output.split(os.linesep)
+            lines = [x for x in lines if len(x) > 0]
+            if self.want_state in lines[SVC_STATUS_LINE]:
+                return self.record_success()           
         except Exception as e:
             sys.stderr.write("%s\n" % e)
             pass
