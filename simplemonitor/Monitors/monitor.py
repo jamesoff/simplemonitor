@@ -16,6 +16,7 @@ import logging
 import platform
 import subprocess  # nosec
 import time
+from enum import Enum, auto
 from typing import Any, List, NoReturn, Optional, Tuple, Union
 
 from ..util import (
@@ -26,13 +27,20 @@ from ..util import (
 )
 
 
+class MonitorState(Enum):
+    UNKNOWN = auto()  # state not known yet
+    SKIPPED = auto()  # monitor was skipped
+    OK = auto()  # monitor is ok
+    FAILED = auto()  # monitor has failed
+
+
 class Monitor:
     """Simple monitor. This class is abstract."""
 
     type = "unknown"
     last_result = ""
     error_count = 0
-    failed_at = None
+    _failed_at = None
     success_count = 0
     tests_run = 0
     last_error_count = 0
@@ -41,6 +49,7 @@ class Monitor:
 
     failures = 0
     last_failure = None  # type: Optional[datetime.datetime]
+    uptime_start = None  # type: Optional[datetime.datetime]
 
     # this is the time we last received data into this monitor (if we're remote)
     last_update = None  # type: Optional[datetime.datetime]
@@ -80,8 +89,8 @@ class Monitor:
         )
 
         self.running_on = short_hostname()
-        self.was_skipped = False
         self._last_run = 0
+        self._state = MonitorState.UNKNOWN
 
     def get_config_option(self, key: str, **kwargs: Any) -> Any:
         kwargs["exception"] = MonitorConfigurationError
@@ -132,14 +141,8 @@ class Monitor:
             return True
         return False
 
-    def state(self) -> bool:
-        """Returns false if the last test failed.
-
-        The monitor may not be in a failed state if the number of failed
-        tests are less than the tolerance."""
-        if self.error_count > 0:
-            return False
-        return True
+    def state(self) -> MonitorState:
+        return self._state
 
     def get_result(self) -> str:
         """Return the result info from the last test."""
@@ -210,24 +213,26 @@ class Monitor:
         self.last_update = datetime.datetime.utcnow()
         self.last_result = str(message)
         if self.virtual_fail_count() == 1:
-            self.failed_at = datetime.datetime.utcnow()
+            self._failed_at = datetime.datetime.utcnow()
             self.last_failure = datetime.datetime.utcnow()
             self.failures += 1
+            self._state = MonitorState.FAILED
         self.success_count = 0
         self.tests_run += 1
-        self.was_skipped = False
+        self.uptime_start = None
         return False
 
     def record_success(self, message: str = "") -> bool:
         """Update internal state to show we had a success."""
         if self.error_count > 0:
             self.last_error_count = self.error_count
+        if self.uptime_start is None:
+            self.uptime_start = datetime.datetime.utcnow()
+        self._state = MonitorState.OK
         self.error_count = 0
         self.last_update = datetime.datetime.utcnow()
-        self.last_result = ""
         self.success_count += 1
         self.tests_run += 1
-        self.was_skipped = False
         self.last_result = message
         return True
 
@@ -238,15 +243,17 @@ class Monitor:
         if which_dep is not None:
             # we were skipped because of a dependency
             self.record_success()
-            self.was_skipped = True
             self.skip_dep = which_dep
-        else:
-            # we were skipped because of the gap value
-            self.was_skipped = True
+        self._state = MonitorState.SKIPPED
         return True
 
+    def uptime(self) -> Optional[datetime.timedelta]:
+        if self.uptime_start:
+            return datetime.datetime.utcnow() - self.uptime_start
+        return None
+
     def skipped(self) -> bool:
-        if self.was_skipped:
+        if self._state == MonitorState.SKIPPED:
             return True
         return False
 
@@ -261,18 +268,14 @@ class Monitor:
         if (
             self.last_virtual_fail_count()
             and self.success_count == 1
-            and not self.was_skipped
+            and not self._state == MonitorState.SKIPPED
         ):
             return True
         return False
 
     def first_failure_time(self) -> Optional[datetime.datetime]:
         """Get a datetime object showing when we first failed."""
-        return self.failed_at
-
-    def get_error_count(self) -> int:
-        """Get the number of times we've failed (ignoring tolerance)."""
-        return self.error_count
+        return self._failed_at
 
     @property
     def notify(self) -> bool:
@@ -300,6 +303,10 @@ class Monitor:
                 self._urgent = False
         else:
             raise TypeError("urgent should be a bool, or an int at a push")
+
+    @property
+    def was_skipped(self) -> bool:
+        return self._state == MonitorState.SKIPPED
 
     def should_run(self) -> bool:
         """Check if we should run our tests.
