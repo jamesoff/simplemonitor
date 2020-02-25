@@ -4,6 +4,7 @@ import datetime
 import json
 import re
 import socket
+from enum import Enum, auto
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from .envconfig import EnvironmentAwareConfigParser
@@ -31,6 +32,13 @@ class SimpleMonitorConfigurationError(ValueError):
     """A general config error"""
 
     pass
+
+
+class MonitorState(Enum):
+    UNKNOWN = auto()  # state not known yet
+    SKIPPED = auto()  # monitor was skipped
+    OK = auto()  # monitor is ok
+    FAILED = auto()  # monitor has failed
 
 
 def get_config_option(
@@ -127,6 +135,7 @@ def get_config_dict(
 
 
 DATETIME_MAGIC_TOKEN = "__simplemonitor_datetime"  # nosec
+MONITORSTATE_MAGIC_TOKEN = "__simplemonitor_monitorstate"  # nosec
 FORMAT = "%Y-%m-%d %H:%M:%S.%f"
 
 
@@ -138,6 +147,8 @@ class JSONEncoder(json.JSONEncoder):
             return {DATETIME_MAGIC_TOKEN: obj.strftime(FORMAT)}
         if isinstance(obj, self._regexp_type):
             return "<removed compiled regexp object>"
+        if isinstance(obj, MonitorState):
+            return {MONITORSTATE_MAGIC_TOKEN: obj.name}
         return super(JSONEncoder, self).default(obj)
 
 
@@ -157,6 +168,12 @@ class JSONDecoder(json.JSONDecoder):
             and self._datetime_re.match(obj[0][1])
         ):
             return datetime.datetime.strptime(obj[0][1], FORMAT)
+        elif (
+            len(obj) == 1
+            and obj[0][0] == MONITORSTATE_MAGIC_TOKEN
+            and isinstance(obj[0][1], str)
+        ):
+            return MonitorState[obj[0][1]]
         elif self._original_object_pairs_hook:
             return self._original_object_pairs_hook(obj)
         else:

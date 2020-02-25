@@ -16,22 +16,15 @@ import logging
 import platform
 import subprocess  # nosec
 import time
-from enum import Enum, auto
 from typing import Any, List, NoReturn, Optional, Tuple, Union
 
 from ..util import (
     MonitorConfigurationError,
+    MonitorState,
     get_config_option,
     short_hostname,
     subclass_dict_handler,
 )
-
-
-class MonitorState(Enum):
-    UNKNOWN = auto()  # state not known yet
-    SKIPPED = auto()  # monitor was skipped
-    OK = auto()  # monitor is ok
-    FAILED = auto()  # monitor has failed
 
 
 class Monitor:

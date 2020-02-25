@@ -6,13 +6,9 @@ import unittest
 
 from simplemonitor import monitor
 from simplemonitor.Monitors.compound import CompoundMonitor
-from simplemonitor.Monitors.monitor import (
-    Monitor,
-    MonitorFail,
-    MonitorNull,
-    MonitorState,
-)
+from simplemonitor.Monitors.monitor import Monitor, MonitorFail, MonitorNull
 from simplemonitor.simplemonitor import SimpleMonitor
+from simplemonitor.util import MonitorState
 
 
 class TestMonitor(unittest.TestCase):
