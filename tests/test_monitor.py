@@ -1,6 +1,7 @@
 # type: ignore
 import datetime
 import os
+import platform
 import time
 import unittest
 
@@ -139,7 +140,10 @@ class TestMonitor(unittest.TestCase):
 
     def test_MonitorWindows(self):
         m = Monitor()
-        self.assertFalse(m.is_windows())
+        if platform.system() == "Windows":
+            self.assertTrue(m.is_windows())
+        else:
+            self.assertFalse(m.is_windows())
 
     def test_MonitorSkip(self):
         m = Monitor()

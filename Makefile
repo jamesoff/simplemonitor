@@ -1,18 +1,27 @@
 .PHONY: flake8 dist twine twine-test integration-tests env-test network-test black mypy linting mypy-strict bandit bandit-strict
 
-ENVPATH := $(shell pipenv --venv)
+ifeq ($(OS),Windows_NT)
+ENVPATH := $(shell python -c "import os.path; import sys; print(os.path.join(sys.exec_prefix, 'Scripts'))")\\
+MOCKSPATH := tests\mocks;
+INTEGRATION_CONFIG := tests/monitor-windows.ini
+else
+ENVPATH := $(shell pipenv --venv)/bin/
+MOCKSPATH := $(PWD)/tests/mocks:
+INTEGRATION_CONFIG := tests/monitor.ini
+endif
+PIPENV := $(shell which pipenv)
 
 flake8:
 	pipenv run flake8 --ignore=E501,W503,E203 *.py simplemonitor/
 
 integration-tests:
-	pipenv run env PATH="$(PWD)/tests/mocks:$(PATH)" "$(ENVPATH)/bin/coverage" run monitor.py -1 -v -d -f tests/monitor.ini
+	PATH="$(MOCKSPATH)$(PATH)" $(PIPENV) run coverage run monitor.py -1 -v -d -f $(INTEGRATION_CONFIG)
 
 env-test:
-	pipenv run env TEST_VALUE=myenv "$(ENVPATH)/bin/coverage" run --append monitor.py -t -f tests/monitor-env.ini
+	env TEST_VALUE=myenv pipenv run coverage run --append monitor.py -t -f tests/monitor-env.ini
 
 unit-test:
-	pipenv run "$(ENVPATH)/bin/coverage" run --append -m unittest discover -s tests
+	pipenv run coverage run --append -m unittest discover -s tests
 
 network-test:
 	pipenv run tests/test-network.sh
@@ -28,18 +37,18 @@ twine:
 	pipenv run python -m twine upload dist/*
 
 black:
-	pipenv run "$(ENVPATH)/bin/black" --check --diff *.py simplemonitor/
+	pipenv run black --check --diff *.py simplemonitor/
 
 mypy:
-	pipenv run "$(ENVPATH)/bin/mypy" --ignore-missing-imports *.py simplemonitor/
+	pipenv run mypy --ignore-missing-imports *.py simplemonitor/
 
 mypy-strict:
-	pipenv run "$(ENVPATH)/bin/mypy" --ignore-missing-imports --disallow-untyped-calls --disallow-untyped-defs --disallow-incomplete-defs --disallow-untyped-decorators *.py simplemonitor/
+	pipenv run mypy --ignore-missing-imports --disallow-untyped-calls --disallow-untyped-defs --disallow-incomplete-defs --disallow-untyped-decorators *.py simplemonitor/
 
 bandit:
-	pipenv run "$(ENVPATH)/bin/bandit" -r -ll *.py simplemonitor/
+	pipenv run bandit -r -ll *.py simplemonitor/
 
 bandit-strict:
-	pipenv run "$(ENVPATH)/bin/bandit" -r -l *.py simplemonitor/
+	pipenv run bandit -r -l *.py simplemonitor/
 
 linting: black flake8 mypy bandit
