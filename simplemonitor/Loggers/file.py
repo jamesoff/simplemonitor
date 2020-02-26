@@ -185,7 +185,7 @@ class HTMLLogger(Logger):
             fail_time = ""
             fail_count = 0
             fail_data = monitor.get_result()
-            downtime = (0, 0, 0, 0)
+            downtime = monitor.get_uptime()  # yes, I know
         failures = monitor.failures
         last_failure = monitor.last_failure
         gap = monitor.minimum_gap
@@ -289,15 +289,7 @@ class HTMLLogger(Logger):
                     '<td class="vfc">%s</td>' % self.batch_data[entry]["fail_count"]
                 )
             try:
-                output.write(
-                    "<td>%d+%02d:%02d:%02d</td>"
-                    % (
-                        self.batch_data[entry]["downtime"][0],
-                        self.batch_data[entry]["downtime"][1],
-                        self.batch_data[entry]["downtime"][2],
-                        self.batch_data[entry]["downtime"][3],
-                    )
-                )
+                output.write("<td>%s</td>" % self.batch_data[entry]["downtime"])
             except Exception:
                 output.write("<td>&nbsp;</td>")
             output.write("<td>%s &nbsp;</td>" % (self.batch_data[entry]["fail_data"]))
