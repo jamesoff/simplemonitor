@@ -1,6 +1,6 @@
 -i https://pypi.python.org/simple/
-boto3==1.12.5
-botocore==1.15.5
+boto3==1.12.7
+botocore==1.15.7
 certifi==2019.11.28
 cffi==1.14.0
 chardet==3.0.4
@@ -8,7 +8,7 @@ colorlog==4.1.0
 cryptography==2.8
 docutils==0.15.2
 idna==2.8
-jmespath==0.9.4
+jmespath==0.9.5
 oauthlib==3.1.0
 paho-mqtt==1.5.0
 psutil==5.7.0
