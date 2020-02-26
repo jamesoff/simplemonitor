@@ -21,6 +21,8 @@ from typing import Any, List, NoReturn, Optional, Tuple, Union
 from ..util import (
     MonitorConfigurationError,
     MonitorState,
+    UpDownTime,
+    format_datetime,
     get_config_option,
     short_hostname,
     subclass_dict_handler,
@@ -402,19 +404,36 @@ class Monitor:
         monitor.__setstate__(d)
         return monitor
 
-    def get_downtime(self) -> Tuple[int, int, int, int]:
+    def get_downtime(self) -> UpDownTime:
+        """Get monitor downtime"""
         first_failure_time = self.first_failure_time()
         if first_failure_time is None:
-            return (0, 0, 0, 0)
+            return UpDownTime()
         else:
             downtime = datetime.datetime.utcnow() - first_failure_time
-            downtime_seconds = downtime.seconds
-            (hours, minutes) = (0, 0)
-            if downtime_seconds > 3600:
-                (hours, downtime_seconds) = divmod(downtime_seconds, 3600)
-            if downtime_seconds > 60:
-                (minutes, downtime_seconds) = divmod(downtime_seconds, 60)
-            return (downtime.days, hours, minutes, downtime_seconds)
+            return UpDownTime.from_timedelta(downtime)
+
+    def get_uptime(self) -> UpDownTime:
+        """Get monitor uptime"""
+        return UpDownTime(self.uptime())
+
+    def state_dict(self) -> dict:
+        """Get a dict containing state information about the Monitor to use for logging or alerting"""
+        ret = {
+            "failed_at": format_datetime(self.first_failure_time()),
+            "name": self.name,
+            "host": self.running_on,
+            "is_remote": self.is_remote(),
+            "downtime": str(self.get_downtime()),
+            "uptime": str(self.get_uptime()),
+            "vfc": self.virtual_fail_count(),
+            "info": self.last_result,
+            "description": self.describe(),
+            "recovery_info": self.recover_info,
+            "recovered_info": self.recovered_info,
+            "first_failure_time": self.first_failure_time(),
+        }
+        return ret
 
     def __str__(self) -> str:
         return self.describe()

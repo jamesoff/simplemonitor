@@ -41,7 +41,7 @@ class SlackAlerter(Alerter):
         """Send the message."""
 
         type = self.should_alert(monitor)
-        (days, hours, minutes, seconds) = monitor.get_downtime()
+        downtime = monitor.get_downtime()
 
         message_json = {}  # type: Dict[str, Any]
         if self.channel is not None:
@@ -64,13 +64,7 @@ class SlackAlerter(Alerter):
                     "value": format_datetime(monitor.first_failure_time()),
                     "short": True,
                 },
-                {
-                    "title": "Downtime",
-                    "value": "{}+{:02d}:{:02d}:{:02d}".format(
-                        days, hours, minutes, seconds
-                    ),
-                    "short": True,
-                },
+                {"title": "Downtime", "value": str(downtime), "short": True},
                 {
                     "title": "Virtual failure count",
                     "value": monitor.virtual_fail_count(),
@@ -102,13 +96,7 @@ class SlackAlerter(Alerter):
                     "value": format_datetime(monitor.first_failure_time()),
                     "short": True,
                 },
-                {
-                    "title": "Downtime",
-                    "value": "{}+{:02d}:{:02d}:{:02d}".format(
-                        days, hours, minutes, seconds
-                    ),
-                    "short": True,
-                },
+                {"title": "Downtime", "value": str(downtime), "short": True},
                 {"title": "Host", "value": self.hostname, "short": True},
                 {"title": "Description", "value": monitor.describe()},
             ]

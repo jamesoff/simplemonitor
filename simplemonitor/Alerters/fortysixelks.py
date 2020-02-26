@@ -65,18 +65,15 @@ class FortySixElksAlerter(Alerter):
         message = ""
         url = ""
 
-        (days, hours, minutes, seconds) = monitor.get_downtime()
+        downtime = monitor.get_downtime()
         if alert_type == "":
             return
         elif alert_type == "catchup":
-            message = "catchup: %s failed on %s at %s (%d+%02d:%02d:%02d)\n%s" % (
+            message = "catchup: %s failed on %s at %s (%s)\n%s" % (
                 name,
                 monitor.running_on,
                 format_datetime(monitor.first_failure_time()),
-                days,
-                hours,
-                minutes,
-                seconds,
+                downtime,
                 monitor.get_result(),
             )
             if len(message) > 160:
@@ -86,14 +83,11 @@ class FortySixElksAlerter(Alerter):
             auth = (self.username, self.password)
             params = {"from": self.sender, "to": self.target, "message": message}
         elif alert_type == "failure":
-            message = "%s failed on %s at %s (%d+%02d:%02d:%02d)\n%s" % (
+            message = "%s failed on %s at %s (%s)\n%s" % (
                 name,
                 monitor.running_on,
                 format_datetime(monitor.first_failure_time()),
-                days,
-                hours,
-                minutes,
-                seconds,
+                downtime,
                 monitor.get_result(),
             )
             if len(message) > 160:

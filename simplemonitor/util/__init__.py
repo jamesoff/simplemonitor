@@ -41,6 +41,56 @@ class MonitorState(Enum):
     FAILED = 3  # monitor has failed
 
 
+class UpDownTime:
+    """Represent an up- or downtime"""
+
+    days = 0
+    hours = 0
+    minutes = 0
+    seconds = 0
+
+    def __init__(self, days=0, hours=0, minutes=0, seconds=0) -> None:
+        self.days = days
+        self.hours = hours
+        self.minutes = minutes
+        self.seconds = seconds
+
+    def __str__(self):
+        """Format as d+h:m:s"""
+        return "{}+{:02}:{:02}:{:02}".format(
+            self.days, self.hours, self.minutes, int(self.seconds)
+        )
+
+    def __repr__(self):
+        return "<{}: {}>".format(self.__class__, self.__str__())
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, UpDownTime):
+            return NotImplemented
+        if (
+            self.days == other.days
+            and self.hours == other.hours
+            and self.minutes == other.minutes
+            and self.seconds == other.seconds
+        ):
+            return True
+        return False
+
+    @staticmethod
+    def from_timedelta(td: datetime.timedelta) -> "UpDownTime":
+        """Generate an UpDownTime from a timedelta object"""
+        if td is None:
+            return UpDownTime()
+        else:
+            downtime_seconds = td.seconds
+            (hours, minutes) = (0, 0)
+            if downtime_seconds > 3600:
+                (hours, downtime_seconds) = divmod(downtime_seconds, 3600)
+            if downtime_seconds > 60:
+                (minutes, downtime_seconds) = divmod(downtime_seconds, 60)
+            return UpDownTime(td.days, hours, minutes, downtime_seconds)
+
+
 def get_config_option(
     config_options: dict, key: str, **kwargs: Any
 ) -> Union[None, str, int, float, bool, List[str], List[int]]:

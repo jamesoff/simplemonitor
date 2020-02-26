@@ -43,7 +43,7 @@ class PushoverAlerter(Alerter):
         """Build up the content for the push notification."""
 
         type = self.should_alert(monitor)
-        (days, hours, minutes, seconds) = monitor.get_downtime()
+        downtime = monitor.get_downtime()
 
         if monitor.is_remote():
             host = " on %s " % monitor.running_on
@@ -59,17 +59,14 @@ class PushoverAlerter(Alerter):
             subject = "[%s] Monitor %s Failed!" % (self.hostname, name)
             body = """Monitor %s%s has failed.\n
             Failed at: %s
-            Downtime: %d+%02d:%02d:%02d
+            Downtime: %s
             Virtual failure count: %d
             Additional info: %s
             Description: %s""" % (
                 name,
                 host,
                 format_datetime(monitor.first_failure_time()),
-                days,
-                hours,
-                minutes,
-                seconds,
+                downtime,
                 monitor.virtual_fail_count(),
                 monitor.get_result(),
                 monitor.describe(),
@@ -83,15 +80,12 @@ class PushoverAlerter(Alerter):
         elif type == "success":
             subject = "[%s] Monitor %s succeeded" % (self.hostname, name)
             body = (
-                "Monitor %s%s is back up.\nOriginally failed at: %s\nDowntime: %d+%02d:%02d:%02d\nDescription: %s"
+                "Monitor %s%s is back up.\nOriginally failed at: %s\nDowntime: %s\nDescription: %s"
                 % (
                     name,
                     host,
                     format_datetime(monitor.first_failure_time()),
-                    days,
-                    hours,
-                    minutes,
-                    seconds,
+                    downtime,
                     monitor.describe(),
                 )
             )

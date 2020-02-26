@@ -94,3 +94,36 @@ class TestUtil(unittest.TestCase):
             util.format_datetime(datetime.datetime(2018, 5, 8, 13, 37, 0)),
             "2018-05-08 13:37:00",
         )
+
+
+class TestUpDownTime(unittest.TestCase):
+    def test_blankInit(self):
+        u = util.UpDownTime()
+        self.assertEqual(0, u.days, "days not defaulted to 0")
+        self.assertEqual(0, u.hours, "hours not defaulted to 0")
+        self.assertEqual(0, u.minutes, "minutes not defaulted to 0")
+        self.assertEqual(0, u.seconds, "seconds not defaulted to 0")
+
+    def test_givenInit(self):
+        u = util.UpDownTime(1, 2, 3, 4)
+        self.assertEqual(1, u.days, "days not inited to 1")
+        self.assertEqual(2, u.hours, "hours not inited to 2")
+        self.assertEqual(3, u.minutes, "minutes not inited to 3")
+        self.assertEqual(4, u.seconds, "seconds not inited to 4")
+
+    def test_initTimeDelta(self):
+        diff = datetime.timedelta(1, 90)
+        u = util.UpDownTime.from_timedelta(diff)
+        self.assertEqual(1, u.days, "days not inited to 1")
+        self.assertEqual(0, u.hours, "hours not inited to 0")
+        self.assertEqual(1, u.minutes, "minutes not inited to 1")
+        self.assertEqual(30, u.seconds, "seconds not inited to 30")
+
+    def test_equal(self):
+        u1 = util.UpDownTime(1, 2, 3, 4)
+        u2 = util.UpDownTime(1, 2, 3, 4)
+        self.assertEqual(u1, u2)
+
+    def test_str(self):
+        u1 = util.UpDownTime(1, 2, 3, 4)
+        self.assertEqual(str(u1), "1+02:03:04")

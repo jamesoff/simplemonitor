@@ -52,18 +52,15 @@ class BulkSMSAlerter(Alerter):
         assert isinstance(self.target, str)
         assert isinstance(self.sender, str)
 
-        (days, hours, minutes, seconds) = monitor.get_downtime()
+        downtime = monitor.get_downtime()
         if type_ == "":
             return
         elif type_ == "catchup":
-            message = "catchup: %s failed on %s at %s (%d+%02d:%02d:%02d)\n%s" % (
+            message = "catchup: %s failed on %s at %s (%s)\n%s" % (
                 name,
                 monitor.running_on,
                 format_datetime(monitor.first_failure_time()),
-                days,
-                hours,
-                minutes,
-                seconds,
+                downtime,
                 monitor.get_result(),
             )
             if len(message) > 160:
@@ -79,14 +76,11 @@ class BulkSMSAlerter(Alerter):
                 "repliable": "0",
             }
         elif type_ == "failure":
-            message = "%s failed on %s at %s (%d+%02d:%02d:%02d)\n%s" % (
+            message = "%s failed on %s at %s (%s)\n%s" % (
                 name,
                 monitor.running_on,
                 format_datetime(monitor.first_failure_time()),
-                days,
-                hours,
-                minutes,
-                seconds,
+                downtime,
                 monitor.get_result(),
             )
             if len(message) > 160:

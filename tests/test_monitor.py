@@ -8,7 +8,7 @@ from simplemonitor import monitor
 from simplemonitor.Monitors.compound import CompoundMonitor
 from simplemonitor.Monitors.monitor import Monitor, MonitorFail, MonitorNull
 from simplemonitor.simplemonitor import SimpleMonitor
-from simplemonitor.util import MonitorState
+from simplemonitor.util import MonitorState, UpDownTime
 
 
 class TestMonitor(unittest.TestCase):
@@ -184,20 +184,20 @@ class TestMonitor(unittest.TestCase):
     def test_downtime(self):
         m = Monitor()
         m._failed_at = datetime.datetime.utcnow()
-        self.assertEqual(m.get_downtime(), (0, 0, 0, 0))
+        self.assertEqual(m.get_downtime(), UpDownTime())
 
         m._failed_at = None
-        self.assertEqual(m.get_downtime(), (0, 0, 0, 0))
+        self.assertEqual(m.get_downtime(), UpDownTime())
 
         now = datetime.datetime.utcnow()
         two_h_thirty_m_ago = now - datetime.timedelta(hours=2, minutes=30)
         yesterday = now - datetime.timedelta(days=1)
 
         m._failed_at = two_h_thirty_m_ago
-        self.assertEqual(m.get_downtime(), (0, 2, 30, 0))
+        self.assertEqual(m.get_downtime(), UpDownTime(0, 2, 30, 0))
 
         m._failed_at = yesterday
-        self.assertEqual(m.get_downtime(), (1, 0, 0, 0))
+        self.assertEqual(m.get_downtime(), UpDownTime(1, 0, 0, 0))
 
     def test_sighup(self):
         monitor.setup_signals()

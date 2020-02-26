@@ -41,7 +41,7 @@ class TelegramAlerter(Alerter):
         """Build up the content for the push notification."""
 
         type = self.should_alert(monitor)
-        (days, hours, minutes, seconds) = monitor.get_downtime()
+        downtime = monitor.get_downtime()
 
         if monitor.is_remote():
             host = " on %s " % monitor.running_on
@@ -55,14 +55,11 @@ class TelegramAlerter(Alerter):
         elif type == "failure":
             body = """Monitor %s DOWN
 Failed at: %s
-Downtime: %d+%02d:%02d:%02d
+Downtime: %s
 Description: %s""" % (
                 name,
                 format_datetime(monitor.first_failure_time()),
-                days,
-                hours,
-                minutes,
-                seconds,
+                downtime,
                 monitor.describe(),
             )
             try:
@@ -74,14 +71,11 @@ Description: %s""" % (
         elif type == "success":
             body = """Monitor %s UP
 Originally failed at: %s
-Downtime: %d+%02d:%02d:%02d
+Downtime: %s
 Description: %s""" % (
                 name,
                 format_datetime(monitor.first_failure_time()),
-                days,
-                hours,
-                minutes,
-                seconds,
+                downtime,
                 monitor.describe(),
             )
 
