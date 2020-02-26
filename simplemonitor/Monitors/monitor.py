@@ -415,7 +415,10 @@ class Monitor:
 
     def get_uptime(self) -> UpDownTime:
         """Get monitor uptime"""
-        return UpDownTime(self.uptime())
+        uptime = self.uptime()
+        if uptime is None:
+            return UpDownTime()
+        return UpDownTime.from_timedelta(uptime)
 
     def state_dict(self) -> dict:
         """Get a dict containing state information about the Monitor to use for logging or alerting"""

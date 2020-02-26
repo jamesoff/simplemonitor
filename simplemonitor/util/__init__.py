@@ -49,7 +49,17 @@ class UpDownTime:
     minutes = 0
     seconds = 0
 
-    def __init__(self, days=0, hours=0, minutes=0, seconds=0) -> None:
+    def __init__(
+        self, days: int = 0, hours: int = 0, minutes: int = 0, seconds: int = 0
+    ) -> None:
+        if not isinstance(days, int):
+            raise TypeError("days must be an int")
+        if not isinstance(hours, int):
+            raise TypeError("days must be an int")
+        if not isinstance(minutes, int):
+            raise TypeError("days must be an int")
+        if not isinstance(seconds, int):
+            raise TypeError("days must be an int")
         self.days = days
         self.hours = hours
         self.minutes = minutes
