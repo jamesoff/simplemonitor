@@ -4,7 +4,7 @@ import datetime
 import json
 import re
 import socket
-from enum import Enum, auto
+from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from .envconfig import EnvironmentAwareConfigParser
@@ -35,10 +35,10 @@ class SimpleMonitorConfigurationError(ValueError):
 
 
 class MonitorState(Enum):
-    UNKNOWN = auto()  # state not known yet
-    SKIPPED = auto()  # monitor was skipped
-    OK = auto()  # monitor is ok
-    FAILED = auto()  # monitor has failed
+    UNKNOWN = 0  # state not known yet
+    SKIPPED = 1  # monitor was skipped
+    OK = 2  # monitor is ok
+    FAILED = 3  # monitor has failed
 
 
 def get_config_option(
