@@ -49,6 +49,9 @@ class Monitor:
     # this is the time we last received data into this monitor (if we're remote)
     last_update = None  # type: Optional[datetime.datetime]
 
+    _first_load = None  # type: Optional[datetime.datetime]
+    unavailable_seconds = 0  # type: int
+
     def __init__(
         self, name: str = "unnamed", config_options: Optional[dict] = None
     ) -> None:
@@ -84,8 +87,10 @@ class Monitor:
         )
 
         self.running_on = short_hostname()
-        self._last_run = 0
         self._state = MonitorState.UNKNOWN
+        self._force_run = True  # set to ensure we re-run ASAP after a HUP
+        if self._first_load is None:
+            self._first_load = datetime.datetime.utcnow()
 
     def get_config_option(self, key: str, **kwargs: Any) -> Any:
         kwargs["exception"] = MonitorConfigurationError
@@ -202,9 +207,15 @@ class Monitor:
             return True
         return False
 
+    def _add_unavailable_seconds(self):
+        if self.last_update and self.success_count == 0:
+            unavailable_delta = datetime.datetime.utcnow() - self.last_update
+            self.unavailable_seconds += unavailable_delta.seconds
+
     def record_fail(self, message: str = "") -> bool:
         """Update internal state to show that we had a failure."""
         self.error_count += 1
+        self._add_unavailable_seconds()
         self.last_update = datetime.datetime.utcnow()
         self.last_result = str(message)
         if self.virtual_fail_count() == 1:
@@ -223,6 +234,7 @@ class Monitor:
             self.last_error_count = self.error_count
         if self.uptime_start is None:
             self.uptime_start = datetime.datetime.utcnow()
+        self._add_unavailable_seconds()
         self._state = MonitorState.OK
         self.error_count = 0
         self.last_update = datetime.datetime.utcnow()
@@ -268,6 +280,19 @@ class Monitor:
             return True
         return False
 
+    @property
+    def availability(self) -> float:
+        if self.tests_run <= 1:
+            return 0.0
+        if self._first_load is not None:
+            total_seconds = (
+                datetime.datetime.utcnow() - self._first_load
+            ).total_seconds()
+            availability = 1 - (self.unavailable_seconds / total_seconds)
+        else:
+            availability = 0.0
+        return availability
+
     def first_failure_time(self) -> Optional[datetime.datetime]:
         """Get a datetime object showing when we first failed."""
         return self._failed_at
@@ -310,6 +335,10 @@ class Monitor:
         Otherwise, we run if the last time we ran was more than minimum_gap seconds ago.
         """
         now = int(time.time())
+        if self._force_run:
+            self._force_run = False
+            self._last_run = now
+            return True
         if self.minimum_gap == 0:
             self._last_run = now
             return True

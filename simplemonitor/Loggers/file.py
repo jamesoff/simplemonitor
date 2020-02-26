@@ -217,6 +217,7 @@ class HTMLLogger(Logger):
             "failures": failures,
             "last_failure": last_failure,
             "gap": gap,
+            "availability": monitor.availability,
         }
         self.batch_data[monitor.name] = data_line
 
@@ -289,7 +290,14 @@ class HTMLLogger(Logger):
                     '<td class="vfc">%s</td>' % self.batch_data[entry]["fail_count"]
                 )
             try:
-                output.write("<td>%s</td>" % self.batch_data[entry]["downtime"])
+                output.write(
+                    '<td>%s (<span title="%0.5f%%">%0.1f%%</span>)</td>'
+                    % (
+                        self.batch_data[entry]["downtime"],
+                        self.batch_data[entry]["availability"] * 100,
+                        self.batch_data[entry]["availability"] * 100,
+                    )
+                )
             except Exception:
                 output.write("<td>&nbsp;</td>")
             output.write("<td>%s &nbsp;</td>" % (self.batch_data[entry]["fail_data"]))
