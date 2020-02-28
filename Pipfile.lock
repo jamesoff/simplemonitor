@@ -16,18 +16,18 @@
     "default": {
         "boto3": {
             "hashes": [
-                "sha256:599608a8ed50dc184e83852e3050e6997d7825b404a6e3612c27425e4f12ec10",
-                "sha256:627a0c2366e420383065d9b191fa90a315a4d394fd007c2a85cfa5afa93ba974"
+                "sha256:4d7fb8028bd6cc431b2381f7ddc019a2376bed742ae480339b1bc8b347b3e402",
+                "sha256:acd8c19af1f82cfa011baed100f1659c1dc22daaeeec8d6db0567a4a1bfa103f"
             ],
             "index": "pypi",
-            "version": "==1.12.5"
+            "version": "==1.12.9"
         },
         "botocore": {
             "hashes": [
-                "sha256:8c9fa943e1890b44a7f31be2654cd4f4f88e634adadb931b0f298f1cf03a52a4",
-                "sha256:9de7885e9e9d6dbc30b9846d7edd8f98251db7f00395a6f4cfd765efc7098bdb"
+                "sha256:6a62f52fff679a889ba00191ef6b3de6b5b54e1af9e0056af50931bd2d1fdaa8",
+                "sha256:bce789daa7ee2af73c8f63f5713b5058d4698987575f236ca4df3c91c53bb34c"
             ],
-            "version": "==1.15.5"
+            "version": "==1.15.9"
         },
         "certifi": {
             "hashes": [
@@ -127,10 +127,10 @@
         },
         "jmespath": {
             "hashes": [
-                "sha256:3720a4b1bd659dd2eecad0666459b9788813e032b83e7ba58578e48254e0a0e6",
-                "sha256:bde2aef6f44302dfb30320115b17d030798de8c4110e28d5cf6cf91a7a31074c"
+                "sha256:695cb76fa78a10663425d5b73ddc5714eb711157e52704d69be03b1a02ba4fec",
+                "sha256:cca55c8d153173e21baa59983015ad0daf603f9cb799904ff057bfb8ff8dc2d9"
             ],
-            "version": "==0.9.4"
+            "version": "==0.9.5"
         },
         "oauthlib": {
             "hashes": [
