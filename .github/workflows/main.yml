@@ -28,6 +28,7 @@ jobs:
         run: pipenv --bare install --dev
       - name: check code style with black
         run: make black
+        if: ${{ matrix.python-version }} != 3.5
       - name: flake8 tests
         run: make flake8
       - name: Integration tests
