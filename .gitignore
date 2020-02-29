@@ -32,3 +32,6 @@ simplemonitor.egg-info
 dist
 html
 network.log
+.coverage.*
+.ring_token.cache
+simplemonitor.code-workspace
