@@ -185,7 +185,7 @@ class HTMLLogger(Logger):
             fail_time = ""
             fail_count = 0
             fail_data = monitor.get_result()
-            downtime = (0, 0, 0, 0)
+            downtime = monitor.get_uptime()  # yes, I know
         failures = monitor.failures
         last_failure = monitor.last_failure
         gap = monitor.minimum_gap
@@ -217,6 +217,7 @@ class HTMLLogger(Logger):
             "failures": failures,
             "last_failure": last_failure,
             "gap": gap,
+            "availability": monitor.availability,
         }
         self.batch_data[monitor.name] = data_line
 
@@ -290,12 +291,11 @@ class HTMLLogger(Logger):
                 )
             try:
                 output.write(
-                    "<td>%d+%02d:%02d:%02d</td>"
+                    '<td>%s (<span title="%0.5f%%">%0.1f%%</span>)</td>'
                     % (
-                        self.batch_data[entry]["downtime"][0],
-                        self.batch_data[entry]["downtime"][1],
-                        self.batch_data[entry]["downtime"][2],
-                        self.batch_data[entry]["downtime"][3],
+                        self.batch_data[entry]["downtime"],
+                        self.batch_data[entry]["availability"] * 100,
+                        self.batch_data[entry]["availability"] * 100,
                     )
                 )
             except Exception:

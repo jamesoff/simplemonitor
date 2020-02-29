@@ -146,7 +146,7 @@ class SimpleMonitor:
                     module_logger.exception(
                         "Monitor %s threw exception during run_test()", monitor
                     )
-                if self.monitors[monitor].get_error_count() > 0:
+                if self.monitors[monitor].error_count > 0:
                     if self.monitors[monitor].virtual_fail_count() == 0:
                         module_logger.warning(
                             "monitor failed but within tolerance: %s", monitor

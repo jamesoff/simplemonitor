@@ -36,7 +36,7 @@ class ExecuteAlerter(Alerter):
     def send_alert(self, name: str, monitor: Monitor) -> None:
         type_ = self.should_alert(monitor)
         command = None
-        (days, hours, minutes, seconds) = monitor.get_downtime()
+        downtime = monitor.get_downtime()
         if monitor.is_remote():
             host = monitor.running_on
         else:
@@ -61,10 +61,10 @@ class ExecuteAlerter(Alerter):
         command = command.format(
             hostname=host,
             name=name,
-            days=days,
-            hours=hours,
-            minutes=minutes,
-            seconds=seconds,
+            days=downtime.days,
+            hours=downtime.hours,
+            minutes=downtime.minutes,
+            seconds=downtime.seconds,
             failed_at=format_datetime(monitor.first_failure_time()),
             virtual_fail_count=monitor.virtual_fail_count(),
             info=monitor.get_result(),

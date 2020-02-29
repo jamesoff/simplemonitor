@@ -8,6 +8,7 @@ from simplemonitor import monitor
 from simplemonitor.Monitors.compound import CompoundMonitor
 from simplemonitor.Monitors.monitor import Monitor, MonitorFail, MonitorNull
 from simplemonitor.simplemonitor import SimpleMonitor
+from simplemonitor.util import MonitorState, UpDownTime
 
 
 class TestMonitor(unittest.TestCase):
@@ -78,6 +79,11 @@ class TestMonitor(unittest.TestCase):
             "monitor did not remove dependencies from list",
         )
         m.dependency_succeeded("a")  # should be safe to remove again
+        self.assertEqual(
+            m.state(),
+            MonitorState.UNKNOWN,
+            "monitor did not initialise state correctly",
+        )
 
     def test_MonitorDependencies(self):
         m = Monitor()
@@ -98,24 +104,28 @@ class TestMonitor(unittest.TestCase):
     def test_MonitorSuccess(self):
         m = Monitor()
         m.record_success("yay")
-        self.assertEqual(m.get_error_count(), 0, "Error count is not 0")
+        self.assertEqual(m.error_count, 0, "Error count is not 0")
         self.assertEqual(m.get_success_count(), 1, "Success count is not 1")
         self.assertEqual(m.tests_run, 1, "Tests run is not 1")
         self.assertFalse(m.was_skipped, "was_skipped is not false")
         self.assertEqual(m.last_result, "yay", "Last result is not correct")
-        self.assertEqual(m.state(), True, "monitor did not report state correctly")
+        self.assertEqual(
+            m.state(), MonitorState.OK, "monitor did not report state correctly"
+        )
         self.assertEqual(m.virtual_fail_count(), 0, "monitor did not report VFC of 0")
         self.assertEqual(m.test_success(), True, "test_success is not True")
 
     def test_MonitorFail(self):
         m = Monitor()
         m.record_fail("boo")
-        self.assertEqual(m.get_error_count(), 1, "Error count is not 1")
+        self.assertEqual(m.error_count, 1, "Error count is not 1")
         self.assertEqual(m.get_success_count(), 0, "Success count is not 0")
         self.assertEqual(m.tests_run, 1, "Tests run is not 1")
         self.assertFalse(m.was_skipped, "was_skipped is not false")
         self.assertEqual(m.last_result, "boo", "Last result is not correct")
-        self.assertEqual(m.state(), False, "monitor did not report state correctly")
+        self.assertEqual(
+            m.state(), MonitorState.FAILED, "monitor did not report state correctly"
+        )
         self.assertEqual(
             m.virtual_fail_count(), 1, "monitor did not calculate VFC correctly"
         )
@@ -123,9 +133,9 @@ class TestMonitor(unittest.TestCase):
         self.assertEqual(m.first_failure(), True, "First failure is not False")
 
         m.record_fail("cows")
-        self.assertEqual(m.get_error_count(), 2, "Error count is not 2")
+        self.assertEqual(m.error_count, 2, "Error count is not 2")
         self.assertEqual(m.first_failure(), False, "first_failure is not False")
-        self.assertEqual(m.state(), False, "state is not False")
+        self.assertEqual(m.state(), MonitorState.FAILED, "state is not False")
 
     def test_MonitorWindows(self):
         m = Monitor()
@@ -138,6 +148,9 @@ class TestMonitor(unittest.TestCase):
         self.assertTrue(m.was_skipped, "was_skipped is not true")
         self.assertEqual(m.skip_dep, "a", "skip_dep is not correct")
         self.assertTrue(m.skipped(), "skipped() is not true")
+        self.assertEqual(
+            m.state(), MonitorState.SKIPPED, "monitor did not report state correctly"
+        )
 
     def test_MonitorConfig(self):
         config_options = {
@@ -170,21 +183,21 @@ class TestMonitor(unittest.TestCase):
 
     def test_downtime(self):
         m = Monitor()
-        m.failed_at = datetime.datetime.utcnow()
-        self.assertEqual(m.get_downtime(), (0, 0, 0, 0))
+        m._failed_at = datetime.datetime.utcnow()
+        self.assertEqual(m.get_downtime(), UpDownTime())
 
-        m.failed_at = None
-        self.assertEqual(m.get_downtime(), (0, 0, 0, 0))
+        m._failed_at = None
+        self.assertEqual(m.get_downtime(), UpDownTime())
 
         now = datetime.datetime.utcnow()
         two_h_thirty_m_ago = now - datetime.timedelta(hours=2, minutes=30)
         yesterday = now - datetime.timedelta(days=1)
 
-        m.failed_at = two_h_thirty_m_ago
-        self.assertEqual(m.get_downtime(), (0, 2, 30, 0))
+        m._failed_at = two_h_thirty_m_ago
+        self.assertEqual(m.get_downtime(), UpDownTime(0, 2, 30, 0))
 
-        m.failed_at = yesterday
-        self.assertEqual(m.get_downtime(), (1, 0, 0, 0))
+        m._failed_at = yesterday
+        self.assertEqual(m.get_downtime(), UpDownTime(1, 0, 0, 0))
 
     def test_sighup(self):
         monitor.setup_signals()

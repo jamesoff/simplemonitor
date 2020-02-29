@@ -20,6 +20,9 @@ from typing import Any, List, NoReturn, Optional, Tuple, Union
 
 from ..util import (
     MonitorConfigurationError,
+    MonitorState,
+    UpDownTime,
+    format_datetime,
     get_config_option,
     short_hostname,
     subclass_dict_handler,
@@ -32,7 +35,7 @@ class Monitor:
     type = "unknown"
     last_result = ""
     error_count = 0
-    failed_at = None
+    _failed_at = None
     success_count = 0
     tests_run = 0
     last_error_count = 0
@@ -41,9 +44,13 @@ class Monitor:
 
     failures = 0
     last_failure = None  # type: Optional[datetime.datetime]
+    uptime_start = None  # type: Optional[datetime.datetime]
 
     # this is the time we last received data into this monitor (if we're remote)
     last_update = None  # type: Optional[datetime.datetime]
+
+    _first_load = None  # type: Optional[datetime.datetime]
+    unavailable_seconds = 0  # type: int
 
     def __init__(
         self, name: str = "unnamed", config_options: Optional[dict] = None
@@ -80,8 +87,10 @@ class Monitor:
         )
 
         self.running_on = short_hostname()
-        self.was_skipped = False
-        self._last_run = 0
+        self._state = MonitorState.UNKNOWN
+        self._force_run = True  # set to ensure we re-run ASAP after a HUP
+        if self._first_load is None:
+            self._first_load = datetime.datetime.utcnow()
 
     def get_config_option(self, key: str, **kwargs: Any) -> Any:
         kwargs["exception"] = MonitorConfigurationError
@@ -132,14 +141,8 @@ class Monitor:
             return True
         return False
 
-    def state(self) -> bool:
-        """Returns false if the last test failed.
-
-        The monitor may not be in a failed state if the number of failed
-        tests are less than the tolerance."""
-        if self.error_count > 0:
-            return False
-        return True
+    def state(self) -> MonitorState:
+        return self._state
 
     def get_result(self) -> str:
         """Return the result info from the last test."""
@@ -204,30 +207,39 @@ class Monitor:
             return True
         return False
 
+    def _add_unavailable_seconds(self):
+        if self.last_update and self.success_count == 0:
+            unavailable_delta = datetime.datetime.utcnow() - self.last_update
+            self.unavailable_seconds += unavailable_delta.seconds
+
     def record_fail(self, message: str = "") -> bool:
         """Update internal state to show that we had a failure."""
         self.error_count += 1
+        self._add_unavailable_seconds()
         self.last_update = datetime.datetime.utcnow()
         self.last_result = str(message)
         if self.virtual_fail_count() == 1:
-            self.failed_at = datetime.datetime.utcnow()
+            self._failed_at = datetime.datetime.utcnow()
             self.last_failure = datetime.datetime.utcnow()
             self.failures += 1
+            self._state = MonitorState.FAILED
         self.success_count = 0
         self.tests_run += 1
-        self.was_skipped = False
+        self.uptime_start = None
         return False
 
     def record_success(self, message: str = "") -> bool:
         """Update internal state to show we had a success."""
         if self.error_count > 0:
             self.last_error_count = self.error_count
+        if self.uptime_start is None:
+            self.uptime_start = datetime.datetime.utcnow()
+        self._add_unavailable_seconds()
+        self._state = MonitorState.OK
         self.error_count = 0
         self.last_update = datetime.datetime.utcnow()
-        self.last_result = ""
         self.success_count += 1
         self.tests_run += 1
-        self.was_skipped = False
         self.last_result = message
         return True
 
@@ -238,15 +250,17 @@ class Monitor:
         if which_dep is not None:
             # we were skipped because of a dependency
             self.record_success()
-            self.was_skipped = True
             self.skip_dep = which_dep
-        else:
-            # we were skipped because of the gap value
-            self.was_skipped = True
+        self._state = MonitorState.SKIPPED
         return True
 
+    def uptime(self) -> Optional[datetime.timedelta]:
+        if self.uptime_start:
+            return datetime.datetime.utcnow() - self.uptime_start
+        return None
+
     def skipped(self) -> bool:
-        if self.was_skipped:
+        if self._state == MonitorState.SKIPPED:
             return True
         return False
 
@@ -261,18 +275,27 @@ class Monitor:
         if (
             self.last_virtual_fail_count()
             and self.success_count == 1
-            and not self.was_skipped
+            and not self._state == MonitorState.SKIPPED
         ):
             return True
         return False
 
+    @property
+    def availability(self) -> float:
+        if self.tests_run <= 1:
+            return 0.0
+        if self._first_load is not None:
+            total_seconds = (
+                datetime.datetime.utcnow() - self._first_load
+            ).total_seconds()
+            availability = 1 - (self.unavailable_seconds / total_seconds)
+        else:
+            availability = 0.0
+        return availability
+
     def first_failure_time(self) -> Optional[datetime.datetime]:
         """Get a datetime object showing when we first failed."""
-        return self.failed_at
-
-    def get_error_count(self) -> int:
-        """Get the number of times we've failed (ignoring tolerance)."""
-        return self.error_count
+        return self._failed_at
 
     @property
     def notify(self) -> bool:
@@ -301,6 +324,10 @@ class Monitor:
         else:
             raise TypeError("urgent should be a bool, or an int at a push")
 
+    @property
+    def was_skipped(self) -> bool:
+        return self._state == MonitorState.SKIPPED
+
     def should_run(self) -> bool:
         """Check if we should run our tests.
 
@@ -308,6 +335,10 @@ class Monitor:
         Otherwise, we run if the last time we ran was more than minimum_gap seconds ago.
         """
         now = int(time.time())
+        if self._force_run:
+            self._force_run = False
+            self._last_run = now
+            return True
         if self.minimum_gap == 0:
             self._last_run = now
             return True
@@ -402,19 +433,39 @@ class Monitor:
         monitor.__setstate__(d)
         return monitor
 
-    def get_downtime(self) -> Tuple[int, int, int, int]:
+    def get_downtime(self) -> UpDownTime:
+        """Get monitor downtime"""
         first_failure_time = self.first_failure_time()
         if first_failure_time is None:
-            return (0, 0, 0, 0)
+            return UpDownTime()
         else:
             downtime = datetime.datetime.utcnow() - first_failure_time
-            downtime_seconds = downtime.seconds
-            (hours, minutes) = (0, 0)
-            if downtime_seconds > 3600:
-                (hours, downtime_seconds) = divmod(downtime_seconds, 3600)
-            if downtime_seconds > 60:
-                (minutes, downtime_seconds) = divmod(downtime_seconds, 60)
-            return (downtime.days, hours, minutes, downtime_seconds)
+            return UpDownTime.from_timedelta(downtime)
+
+    def get_uptime(self) -> UpDownTime:
+        """Get monitor uptime"""
+        uptime = self.uptime()
+        if uptime is None:
+            return UpDownTime()
+        return UpDownTime.from_timedelta(uptime)
+
+    def state_dict(self) -> dict:
+        """Get a dict containing state information about the Monitor to use for logging or alerting"""
+        ret = {
+            "failed_at": format_datetime(self.first_failure_time()),
+            "name": self.name,
+            "host": self.running_on,
+            "is_remote": self.is_remote(),
+            "downtime": str(self.get_downtime()),
+            "uptime": str(self.get_uptime()),
+            "vfc": self.virtual_fail_count(),
+            "info": self.last_result,
+            "description": self.describe(),
+            "recovery_info": self.recover_info,
+            "recovered_info": self.recovered_info,
+            "first_failure_time": self.first_failure_time(),
+        }
+        return ret
 
     def __str__(self) -> str:
         return self.describe()

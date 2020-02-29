@@ -637,7 +637,9 @@ def main() -> None:
             else:
                 if m.monitors[this_monitor].error_count > 0:
                     tail_info.append(
-                        "    Monitor {0} failed and shouldn't have".format(this_monitor)
+                        "    Monitor {0} failed and shouldn't have: {1}".format(
+                            this_monitor, m.monitors[this_monitor].last_result
+                        )
                     )
                     ok = False
                 else:

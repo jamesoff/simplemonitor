@@ -51,7 +51,7 @@ class SESAlerter(Alerter):
         """Send the email."""
 
         type = self.should_alert(monitor)
-        (days, hours, minutes, seconds) = monitor.get_downtime()
+        downtime = monitor.get_downtime()
 
         if monitor.is_remote():
             host = " on %s " % monitor.running_on
@@ -73,7 +73,7 @@ class SESAlerter(Alerter):
                 "Text": {
                     "Data": """Monitor %s%s has failed.
             Failed at: %s
-            Downtime: %d+%02d:%02d:%02d
+            Downtime: %s
             Virtual failure count: %d
             Additional info: %s
             Description: %s"""
@@ -81,10 +81,7 @@ class SESAlerter(Alerter):
                         name,
                         host,
                         format_datetime(monitor.first_failure_time()),
-                        days,
-                        hours,
-                        minutes,
-                        seconds,
+                        downtime,
                         monitor.virtual_fail_count(),
                         monitor.get_result(),
                         monitor.describe(),
@@ -105,15 +102,12 @@ class SESAlerter(Alerter):
             }
             message["Body"] = {
                 "Text": {
-                    "Data": "Monitor %s%s is back up.\nOriginally failed at: %s\nDowntime: %d+%02d:%02d:%02d\nDescription: %s"
+                    "Data": "Monitor %s%s is back up.\nOriginally failed at: %s\nDowntime: %s\nDescription: %s"
                     % (
                         name,
                         host,
                         format_datetime(monitor.first_failure_time()),
-                        days,
-                        hours,
-                        minutes,
-                        seconds,
+                        downtime,
                         monitor.describe(),
                     )
                 }

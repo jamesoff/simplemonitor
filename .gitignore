@@ -28,3 +28,7 @@ monitor.log
 monitor.pid
 output.json
 did_recover*
+simplemonitor.egg-info
+dist
+html
+network.log
