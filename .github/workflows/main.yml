@@ -26,6 +26,10 @@ jobs:
         run: pip install pipenv
       - name: pipenv install
         run: pipenv --bare install --dev
+        if: ${{ matrix.python-version }} != 3.5
+      - name: pipenv install (Py3.5)
+        run: pipenv --bare install --dev --skip-lock
+        if: ${{ matrix.python-version }} == 3.5
       - name: check code style with black
         run: make black
         if: ${{ matrix.python-version }} != 3.5
