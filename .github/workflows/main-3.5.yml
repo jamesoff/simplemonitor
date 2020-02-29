@@ -6,17 +6,14 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ['3.6', '3.7', '3.8']
-    name: Python ${{ matrix.python-version }}
+    name: Python 3.5
 
     steps:
       - uses: actions/checkout@v2
       - name: Setup python
         uses: actions/setup-python@v1
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: 3.5
           architecture: x64
       - name: Check pip
         run: pip --version
@@ -24,10 +21,8 @@ jobs:
         run: pip install --upgrade pip
       - name: Install pipenv
         run: pip install pipenv
-      - name: pipenv install
-        run: pipenv --bare install --dev
-      - name: check code style with black
-        run: make black
+      - name: pipenv install (Py3.5)
+        run: pipenv --bare install --dev --skip-lock
       - name: flake8 tests
         run: make flake8
       - name: Integration tests
