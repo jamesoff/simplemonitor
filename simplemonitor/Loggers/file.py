@@ -190,9 +190,7 @@ class HTMLLogger(Logger):
         last_failure = monitor.last_failure
         gap = monitor.minimum_gap
         if gap == 0:
-            gap = (
-                60
-            )  # TODO: figure out a good way to know the interval value for both local and remote monitors
+            gap = 60  # TODO: figure out a good way to know the interval value for both local and remote monitors
 
         try:
             if monitor.last_update is not None:

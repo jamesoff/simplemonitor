@@ -26,3 +26,6 @@ twine-test:
 
 twine:
 	pipenv run python -m twine upload dist/*
+
+black:
+	pipenv run black --check --diff *.py simplemonitor/

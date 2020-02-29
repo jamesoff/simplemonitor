@@ -26,6 +26,8 @@ jobs:
         run: pip install pipenv
       - name: pipenv install
         run: pipenv --bare install --dev
+      - name: check code style with black
+        run: make black
       - name: flake8 tests
         run: make flake8
       - name: Integration tests
