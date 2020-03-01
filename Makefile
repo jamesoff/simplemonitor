@@ -28,4 +28,7 @@ twine:
 	pipenv run python -m twine upload dist/*
 
 black:
-	pipenv run black --check --diff *.py simplemonitor/
+	pipenv run "$(ENVPATH)/bin/black" --check --diff *.py simplemonitor/
+
+mypy:
+	pipenv run "$(ENVPATH)/bin/mypy" --ignore-missing-imports *.py simplemonitor/

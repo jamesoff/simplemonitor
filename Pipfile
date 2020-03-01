@@ -19,6 +19,7 @@ pywin32 = {sys_platform = "== 'win32'"}
 codecov = "*"
 coverage = "*"
 black = { markers="python_version = '>= 3.6'" }
+mypy = "*"
 
 [pipenv]
 allow_prereleases = true
