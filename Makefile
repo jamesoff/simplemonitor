@@ -1,4 +1,4 @@
-.PHONY: flake8 dist twine twine-test
+.PHONY: flake8 dist twine twine-test integration-tests env-test network-test black mypy linting
 
 ENVPATH := $(shell pipenv --venv)
 
@@ -32,3 +32,5 @@ black:
 
 mypy:
 	pipenv run "$(ENVPATH)/bin/mypy" --ignore-missing-imports *.py simplemonitor/
+
+linting: black flake8 mypy
