@@ -21,7 +21,7 @@ except ImportError:
 class MonitorSvc(Monitor):
     """Monitor a service handled by daemontools."""
 
-    type = "svc"
+    _type = "svc"
     path = ""
 
     def __init__(self, name: str, config_options: dict) -> None:
@@ -58,7 +58,7 @@ class MonitorService(Monitor):
     service_name = ""
     want_state = "RUNNING"
     host = "."
-    type = "service"
+    _type = "service"
 
     def __init__(self, name: str, config_options: dict) -> None:
         super().__init__(name, config_options)
@@ -119,7 +119,7 @@ class MonitorRC(Monitor):
     and reports failure if it's non-zero by default.
     """
 
-    type = "rc"
+    _type = "rc"
 
     def __init__(self, name: str, config_options: dict) -> None:
         """Initialise the class.
@@ -176,7 +176,7 @@ class MonitorSystemdUnit(Monitor):
     and reports failure if it is not one of the expected states.
     """
 
-    type = "systemd-unit"
+    _type = "systemd-unit"
 
     # A cached shared by all instances of MonitorSystemdUnit, so a single
     # call is done for all monitors at once.
@@ -281,7 +281,7 @@ class MonitorSystemdUnit(Monitor):
 class MonitorEximQueue(Monitor):
     """Make sure an exim queue isn't too big."""
 
-    type = "eximqueue"
+    _type = "eximqueue"
     max_length = 10
     r = re.compile(r"(?P<count>\d+) matches out of (?P<total>\d+) messages")
     path = "/usr/local/sbin"
@@ -329,7 +329,7 @@ class MonitorWindowsDHCPScope(Monitor):
     # netsh dhcp server \\SERVER scope SCOPE show clients
     # "No of Clients(version N): N in the Scope
 
-    type = "dhcpscope"
+    _type = "dhcpscope"
     max_used = 0
     scope = ""
     server = ""

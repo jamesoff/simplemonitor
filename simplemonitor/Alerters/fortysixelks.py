@@ -9,7 +9,7 @@ from typing import cast
 
 from ..Monitors.monitor import Monitor
 from ..util import AlerterConfigurationError, format_datetime
-from .alerter import Alerter, register
+from .alerter import Alerter, AlertType, register
 
 
 @register
@@ -18,7 +18,7 @@ class FortySixElksAlerter(Alerter):
 
     Account required, see https://www.46elks.com/"""
 
-    type = "46elks"
+    _type = "46elks"
 
     def __init__(self, config_options: dict) -> None:
         super().__init__(config_options)
@@ -66,9 +66,9 @@ class FortySixElksAlerter(Alerter):
         url = ""
 
         downtime = monitor.get_downtime()
-        if alert_type == "":
+        if alert_type == AlertType.NONE:
             return
-        elif alert_type == "catchup":
+        elif alert_type == AlertType.CATCHUP:
             message = "catchup: %s failed on %s at %s (%s)\n%s" % (
                 name,
                 monitor.running_on,
@@ -82,7 +82,7 @@ class FortySixElksAlerter(Alerter):
             url = "https://{}/a1/SMS".format(self.api_host)
             auth = (self.username, self.password)
             params = {"from": self.sender, "to": self.target, "message": message}
-        elif alert_type == "failure":
+        elif alert_type == AlertType.FAILURE:
             message = "%s failed on %s at %s (%s)\n%s" % (
                 name,
                 monitor.running_on,
@@ -103,7 +103,7 @@ class FortySixElksAlerter(Alerter):
         if url == "":
             return
 
-        if not self.dry_run:
+        if not self._dry_run:
             try:
                 response = requests.post(url, data=params, auth=auth)
                 s = response.json()

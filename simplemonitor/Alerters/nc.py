@@ -8,14 +8,14 @@ except Exception:
 import platform
 
 from ..Monitors.monitor import Monitor
-from .alerter import Alerter, register
+from .alerter import Alerter, AlertType, register
 
 
 @register
 class NotificationCenterAlerter(Alerter):
     """Send alerts to the Mac OS X Notification Center."""
 
-    type = "nc"
+    _type = "nc"
 
     def __init__(self, config_options: dict) -> None:
         super().__init__(config_options)
@@ -41,17 +41,17 @@ class NotificationCenterAlerter(Alerter):
         alert_type = self.should_alert(monitor)
         message = ""
 
-        if alert_type == "":
+        if alert_type == AlertType.NONE:
             return
-        elif alert_type == "failure":
+        elif alert_type == AlertType.FAILURE:
             message = "Monitor {} failed!".format(name)
-        elif alert_type == "success":
+        elif alert_type == AlertType.SUCCESS:
             message = "Monitor {} succeeded.".format(name)
         else:
             self.alerter_logger.error("Unknown alert type: {}".format(alert_type))
             return
 
-        if not self.dry_run:
+        if not self._dry_run:
             pync.notify(message=message, title="SimpleMonitor")
         else:
             self.alerter_logger.info("dry_run: would send message: {}".format(message))

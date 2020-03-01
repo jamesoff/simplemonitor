@@ -76,7 +76,7 @@ class SimpleMonitor:
         new_list = []  # type: List[str]
         late_list = []  # type: List[str]
         for monitor in joblist:
-            if self.monitors[monitor].type in ["compound"]:
+            if self.monitors[monitor]._type in ["compound"]:
                 late_list.append(monitor)
             else:
                 new_list.append(monitor)

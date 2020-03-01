@@ -5,14 +5,14 @@ import requests
 
 from ..Monitors.monitor import Monitor
 from ..util import format_datetime
-from .alerter import Alerter, register
+from .alerter import Alerter, AlertType, register
 
 
 @register
 class TelegramAlerter(Alerter):
     """Send push notification via Telegram."""
 
-    type = "telegram"
+    _type = "telegram"
 
     def __init__(self, config_options: dict) -> None:
         super().__init__(config_options)
@@ -40,7 +40,7 @@ class TelegramAlerter(Alerter):
     def send_alert(self, name: str, monitor: Monitor) -> None:
         """Build up the content for the push notification."""
 
-        type = self.should_alert(monitor)
+        alert_type = self.should_alert(monitor)
         downtime = monitor.get_downtime()
 
         if monitor.is_remote():
@@ -50,9 +50,9 @@ class TelegramAlerter(Alerter):
 
         body = ""
 
-        if type == "":
+        if alert_type == AlertType.NONE:
             return
-        elif type == "failure":
+        elif alert_type == AlertType.FAILURE:
             body = """Monitor %s DOWN
 Failed at: %s
 Downtime: %s
@@ -68,7 +68,7 @@ Description: %s""" % (
             except AttributeError:
                 body += "\nNo recovery info available"
 
-        elif type == "success":
+        elif alert_type == AlertType.SUCCESS:
             body = """Monitor %s UP
 Originally failed at: %s
 Downtime: %s
@@ -79,7 +79,7 @@ Description: %s""" % (
                 monitor.describe(),
             )
 
-        elif type == "catchup":
+        elif alert_type == AlertType.CATCHUP:
             body = (
                 "Monitor %s%s failed earlier while this alerter was out of hours.\nFailed at: %s\nDescription: %s"
                 % (
@@ -91,10 +91,10 @@ Description: %s""" % (
             )
 
         else:
-            self.alerter_logger.error("Unknown alert type %s", type)
+            self.alerter_logger.error("Unknown alert type %s", alert_type)
             return
 
-        if not self.dry_run:
+        if not self._dry_run:
             try:
                 self.send_telegram_notification(body)
             except Exception:

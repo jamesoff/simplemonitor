@@ -150,14 +150,14 @@ def load_monitors(m: SimpleMonitor, filename: str) -> SimpleMonitor:
         config_options = default_config.copy()
         config_options.update(get_config_dict(config, this_monitor))
         if m.has_monitor(this_monitor):
-            if m.monitors[this_monitor].type == config_options["type"]:
+            if m.monitors[this_monitor]._type == config_options["type"]:
                 main_logger.info("Updating configuration for monitor %s", this_monitor)
                 m.update_monitor_config(this_monitor, config_options)
             else:
                 main_logger.error(
                     "Cannot update monitor {} from type {} to type {}. Keeping original config for this monitor.".format(
                         this_monitor,
-                        m.monitors[this_monitor].type,
+                        m.monitors[this_monitor]._type,
                         config_options["type"],
                     )
                 )
@@ -204,14 +204,14 @@ def load_loggers(
         config_options = get_config_dict(config, config_logger)
         config_options["_name"] = config_logger
         if m.has_logger(config_logger):
-            if m.loggers[config_logger].type == config_options["type"]:
+            if m.loggers[config_logger]._type == config_options["type"]:
                 main_logger.info("Updating configuration for logger %s", config_logger)
                 m.update_logger_config(config_logger, config_options)
             else:
                 main_logger.error(
                     "Cannot update logger {} from type {} to type {}. Keeping original config for this logger.".format(
                         config_logger,
-                        m.loggers[config_logger].type,
+                        m.loggers[config_logger]._type,
                         config_options["type"],
                     )
                 )
@@ -250,14 +250,14 @@ def load_alerters(
         alerter_type = config.get(this_alerter, "type")
         config_options = get_config_dict(config, this_alerter)
         if m.has_alerter(this_alerter):
-            if m.alerters[this_alerter].type == config_options["type"]:
+            if m.alerters[this_alerter]._type == config_options["type"]:
                 main_logger.info("Updating configuration for alerter %s", this_alerter)
                 m.update_alerter_config(this_alerter, config_options)
             else:
                 main_logger.error(
                     "Cannot update alerter {} from type {} to type {}. Keeping original config for this alerter.".format(
                         this_alerter,
-                        m.alerters[this_alerter].type,
+                        m.alerters[this_alerter]._type,
                         config_options["type"],
                     )
                 )

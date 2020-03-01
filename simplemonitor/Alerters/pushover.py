@@ -5,14 +5,14 @@ import requests
 
 from ..Monitors.monitor import Monitor
 from ..util import format_datetime
-from .alerter import Alerter, register
+from .alerter import Alerter, AlertType, register
 
 
 @register
 class PushoverAlerter(Alerter):
     """Send push notification via Pushover."""
 
-    type = "pushover"
+    _type = "pushover"
 
     def __init__(self, config_options: dict) -> None:
         super().__init__(config_options)
@@ -42,7 +42,7 @@ class PushoverAlerter(Alerter):
     def send_alert(self, name: str, monitor: Monitor) -> None:
         """Build up the content for the push notification."""
 
-        type = self.should_alert(monitor)
+        alert_type = self.should_alert(monitor)
         downtime = monitor.get_downtime()
 
         if monitor.is_remote():
@@ -53,9 +53,9 @@ class PushoverAlerter(Alerter):
         subject = ""
         body = ""
 
-        if type == "":
+        if alert_type == AlertType.NONE:
             return
-        elif type == "failure":
+        elif alert_type == AlertType.FAILURE:
             subject = "[%s] Monitor %s Failed!" % (self.hostname, name)
             body = """Monitor %s%s has failed.\n
             Failed at: %s
@@ -77,7 +77,7 @@ class PushoverAlerter(Alerter):
             except AttributeError:
                 body += "\nNo recovery info available"
 
-        elif type == "success":
+        elif alert_type == AlertType.SUCCESS:
             subject = "[%s] Monitor %s succeeded" % (self.hostname, name)
             body = (
                 "Monitor %s%s is back up.\nOriginally failed at: %s\nDowntime: %s\nDescription: %s"
@@ -90,7 +90,7 @@ class PushoverAlerter(Alerter):
                 )
             )
 
-        elif type == "catchup":
+        elif alert_type == AlertType.CATCHUP:
             subject = "[%s] Monitor %s failed earlier!" % (self.hostname, name)
             body = (
                 "Monitor %s%s failed earlier while this alerter was out of hours.\nFailed at: %s\nVirtual failure count: %d\nAdditional info: %s\nDescription: %s"
@@ -105,10 +105,10 @@ class PushoverAlerter(Alerter):
             )
 
         else:
-            self.alerter_logger.error("Unknown alert type %s", type)
+            self.alerter_logger.error("Unknown alert type %s", alert_type)
             return
 
-        if not self.dry_run:
+        if not self._dry_run:
             try:
                 self.send_pushover_notification(subject, body)
             except Exception:

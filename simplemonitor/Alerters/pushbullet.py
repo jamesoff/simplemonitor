@@ -4,14 +4,14 @@ import requests
 
 from ..Monitors.monitor import Monitor
 from ..util import format_datetime
-from .alerter import Alerter, register
+from .alerter import Alerter, AlertType, register
 
 
 @register
 class PushbulletAlerter(Alerter):
     """Send push notification via Pushbullet."""
 
-    type = "pushbullet"
+    _type = "pushbullet"
 
     def __init__(self, config_options: dict) -> None:
         super().__init__(config_options)
@@ -48,9 +48,9 @@ class PushbulletAlerter(Alerter):
         subject = ""
         body = ""
 
-        if alert_type == "":
+        if alert_type == AlertType.NONE:
             return
-        elif alert_type == "failure":
+        elif alert_type == AlertType.FAILURE:
             subject = "[%s] Monitor %s Failed!" % (self.hostname, name)
             body = """Monitor %s%s has failed.\n
             Failed at: %s
@@ -72,7 +72,7 @@ class PushbulletAlerter(Alerter):
             except AttributeError:
                 body += "\nNo recovery info available"
 
-        elif alert_type == "success":
+        elif alert_type == AlertType.SUCCESS:
             subject = "[%s] Monitor %s succeeded" % (self.hostname, name)
             body = (
                 "Monitor %s%s is back up.\nOriginally failed at: %s\nDowntime: %s\nDescription: %s"
@@ -85,7 +85,7 @@ class PushbulletAlerter(Alerter):
                 )
             )
 
-        elif alert_type == "catchup":
+        elif alert_type == AlertType.CATCHUP:
             subject = "[%s] Monitor %s failed earlier!" % (self.hostname, name)
             body = (
                 "Monitor %s%s failed earlier while this alerter was out of hours.\nFailed at: %s\nVirtual failure count: %d\nAdditional info: %s\nDescription: %s"
@@ -103,7 +103,7 @@ class PushbulletAlerter(Alerter):
             self.alerter_logger.error("Unknown alert type %s", alert_type)
             return
 
-        if not self.dry_run:
+        if not self._dry_run:
             try:
                 self.send_pushbullet_notification(subject, body)
             except Exception:

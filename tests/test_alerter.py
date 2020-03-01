@@ -16,8 +16,8 @@ class TestAlerter(unittest.TestCase):
     def test_times_always(self):
         config_options = {"times_type": "always"}
         a = alerter.Alerter(config_options)
-        self.assertEqual(a.times_type, "always")
-        self.assertEqual(a.time_info, (None, None))
+        self.assertEqual(a._times_type, alerter.AlertTimeFilter.ALWAYS)
+        self.assertEqual(a._time_info, (None, None))
 
     def test_times_only(self):
         config_options = {
@@ -26,8 +26,8 @@ class TestAlerter(unittest.TestCase):
             "time_upper": "11:00",
         }
         a = alerter.Alerter(config_options)
-        self.assertEqual(a.times_type, "only")
-        self.assertEqual(a.time_info, (datetime.time(10, 00), datetime.time(11, 00)))
+        self.assertEqual(a._times_type, alerter.AlertTimeFilter.ONLY)
+        self.assertEqual(a._time_info, (datetime.time(10, 00), datetime.time(11, 00)))
 
     def test_times_not(self):
         config_options = {
@@ -36,8 +36,8 @@ class TestAlerter(unittest.TestCase):
             "time_upper": "11:00",
         }
         a = alerter.Alerter(config_options)
-        self.assertEqual(a.times_type, "not")
-        self.assertEqual(a.time_info, (datetime.time(10, 00), datetime.time(11, 00)))
+        self.assertEqual(a._times_type, alerter.AlertTimeFilter.NOT)
+        self.assertEqual(a._time_info, (datetime.time(10, 00), datetime.time(11, 00)))
 
     def test_times_broken(self):
         config_options = {
@@ -51,22 +51,22 @@ class TestAlerter(unittest.TestCase):
     def test_days(self):
         config_options = {"days": "0,1,4"}
         a = alerter.Alerter(config_options)
-        self.assertEqual(a.days, [0, 1, 4])
+        self.assertEqual(a._days, [0, 1, 4])
 
     def test_delay(self):
         config_options = {"delay": "1"}
         a = alerter.Alerter(config_options)
-        self.assertEqual(a.delay_notification, True)
+        self.assertEqual(a._delay_notification, True)
 
     def test_dryrun(self):
         config_options = {"dry_run": "1"}
         a = alerter.Alerter(config_options)
-        self.assertEqual(a.dry_run, True)
+        self.assertEqual(a._dry_run, True)
 
     def test_oohrecovery(self):
         config_otions = {"ooh_recovery": "1"}
         a = alerter.Alerter(config_otions)
-        self.assertEqual(a.ooh_recovery, True)
+        self.assertEqual(a._ooh_recovery, True)
 
     def test_dependencies(self):
         config_options = {"depend": "a,b,c"}
@@ -86,17 +86,39 @@ class TestAlerter(unittest.TestCase):
     def test_limit(self):
         config_options = {"limit": "5"}
         a = alerter.Alerter(config_options)
-        self.assertEqual(a.limit, 5)
+        self.assertEqual(a._limit, 5)
 
     def test_repeat(self):
         config_options = {"repeat": "5"}
         a = alerter.Alerter(config_options)
-        self.assertEqual(a.repeat, 5)
+        self.assertEqual(a._repeat, 5)
 
-    def test_should_alert(self):
+    def test_should_alert_unavailable(self):
         a = alerter.Alerter(None)
         a.available = False
         m = monitor.MonitorNull()
         self.assertEqual(
-            a.should_alert(m), "", "Alerter did not handle being unavailable"
+            a.should_alert(m),
+            alerter.AlertType.NONE,
+            "Alerter did not handle being unavailable",
         )
+
+    def test_should_alert_basic_failure(self):
+        # no special alert config
+        a = alerter.Alerter(None)
+        m = monitor.MonitorFail("fail", {})
+        m.run_test()
+        self.assertEqual(a.should_alert(m), alerter.AlertType.FAILURE)
+
+    def test_should_alert_basic_none(self):
+        a = alerter.Alerter(None)
+        m = monitor.MonitorNull()
+        m.run_test()
+        self.assertEqual(a.should_alert(m), alerter.AlertType.NONE)
+
+    def test_should_alert_basic_success(self):
+        a = alerter.Alerter(None)
+        m = monitor.MonitorFail("fail", {})
+        for i in range(0, 6):
+            m.run_test()
+        self.assertEqual(a.should_alert(m), alerter.AlertType.SUCCESS)

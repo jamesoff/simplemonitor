@@ -263,8 +263,8 @@ def subclass_dict_handler(
     def register(cls: Any) -> Any:
         """Decorator for monitor classes."""
         _check_is_subclass(cls)
-        assert cls.type != "unknown", cls
-        _subclasses[cls.type] = cls
+        assert cls._type != "unknown", cls
+        _subclasses[cls._type] = cls
         return cls
 
     def get_class(type_: Any) -> Any:

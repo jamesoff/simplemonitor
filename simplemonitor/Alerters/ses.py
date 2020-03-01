@@ -11,14 +11,14 @@ from typing import Any, Dict, cast
 
 from ..Monitors.monitor import Monitor
 from ..util import format_datetime
-from .alerter import Alerter, register
+from .alerter import Alerter, AlertType, register
 
 
 @register
 class SESAlerter(Alerter):
     """Send email alerts using Amazon's SES service."""
 
-    type = "ses"
+    _type = "ses"
 
     def __init__(self, config_options: dict) -> None:
         super().__init__(config_options)
@@ -50,7 +50,7 @@ class SESAlerter(Alerter):
     def send_alert(self, name: str, monitor: Monitor) -> None:
         """Send the email."""
 
-        type = self.should_alert(monitor)
+        alert_type = self.should_alert(monitor)
         downtime = monitor.get_downtime()
 
         if monitor.is_remote():
@@ -62,9 +62,9 @@ class SESAlerter(Alerter):
         mail["Source"] = self.from_addr
         mail["Destination"] = {"ToAddresses": [self.to_addr]}
 
-        if type == "":
+        if alert_type == AlertType.NONE:
             return
-        elif type == "failure":
+        elif alert_type == AlertType.FAILURE:
             message = {}  # type: Dict[str, Any]
             message["Subject"] = {
                 "Data": "[%s] Monitor %s Failed!" % (self.hostname, name)
@@ -96,7 +96,7 @@ class SESAlerter(Alerter):
             except AttributeError:
                 message["Body"]["Text"]["Data"] += "\nNo recovery info available"
 
-        elif type == "success":
+        elif alert_type == AlertType.SUCCESS:
             message = {
                 "Subject": {"Data": "[%s] Monitor %s succeeded" % (self.hostname, name)}
             }
@@ -113,7 +113,7 @@ class SESAlerter(Alerter):
                 }
             }
 
-        elif type == "catchup":
+        elif alert_type == AlertType.CATCHUP:
             message = {
                 "Subject": {
                     "Data": "[%s] Monitor %s failed earlier!" % (self.hostname, name)
@@ -134,12 +134,12 @@ class SESAlerter(Alerter):
             }
 
         else:
-            self.alerter_logger.critical("Unknown alert type %s", type)
+            self.alerter_logger.critical("Unknown alert type %s", alert_type)
             return
 
         mail["Message"] = message
 
-        if not self.dry_run:
+        if not self._dry_run:
             try:
                 client = boto3.client("ses", **self.ses_client_params)
                 client.send_email(**mail)

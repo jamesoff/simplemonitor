@@ -62,7 +62,7 @@ def _bytes_to_size_string(b: int) -> str:
 class MonitorDiskSpace(Monitor):
     """Make sure we have enough disk space."""
 
-    type = "diskspace"
+    _type = "diskspace"
 
     def __init__(self, name: str, config_options: dict) -> None:
         super().__init__(name, config_options)
@@ -117,7 +117,7 @@ class MonitorDiskSpace(Monitor):
 class MonitorFileStat(Monitor):
     """Make sure a file exists, isn't too old and/or isn't too small."""
 
-    type = "filestat"
+    _type = "filestat"
 
     def __init__(self, name: str, config_options: dict) -> None:
         super().__init__(name, config_options)
@@ -195,7 +195,7 @@ class MonitorApcupsd(Monitor):
     to function.
     """
 
-    type = "apcupsd"
+    _type = "apcupsd"
 
     def __init__(self, name: str, config_options: dict) -> None:
         super().__init__(name, config_options)
@@ -257,7 +257,7 @@ class MonitorApcupsd(Monitor):
 class MonitorPortAudit(Monitor):
     """Check a host doesn't have outstanding security issues."""
 
-    type = "portaudit"
+    _type = "portaudit"
     regexp = re.compile(r"(\d+) problem\(s\) in your installed packages found")
 
     def __init__(self, name: str, config_options: dict) -> None:
@@ -305,7 +305,7 @@ class MonitorPortAudit(Monitor):
 class MonitorPkgAudit(Monitor):
     """Check a host doesn't have outstanding security issues."""
 
-    type = "pkgaudit"
+    _type = "pkgaudit"
     regexp = re.compile(r"(\d+) problem\(s\) in \w+ installed package(s|\(s\)) found")
     path = ""
 
@@ -353,7 +353,7 @@ class MonitorPkgAudit(Monitor):
 class MonitorLoadAvg(Monitor):
     """Check a host's load average isn't too high."""
 
-    type = "loadavg"
+    _type = "loadavg"
 
     def __init__(self, name: str, config_options: dict) -> None:
         super().__init__(name, config_options)
@@ -393,7 +393,7 @@ class MonitorLoadAvg(Monitor):
 class MonitorMemory(Monitor):
     """Check for available memory."""
 
-    type = "memory"
+    _type = "memory"
 
     def __init__(self, name: str, config_options: dict) -> None:
         super().__init__(name, config_options)
@@ -427,7 +427,7 @@ class MonitorMemory(Monitor):
 class MonitorZap(Monitor):
     """Checks a Zap channel to make sure it is ok"""
 
-    type = "zap"
+    _type = "zap"
     r = re.compile("^alarms=(?P<status>).+")
 
     def __init__(self, name: str, config_options: dict) -> None:
@@ -466,7 +466,7 @@ class MonitorCommand(Monitor):
     """
 
     result_regexp = None
-    type = "command"
+    _type = "command"
     available = True
 
     def __init__(self, name: str, config_options: dict) -> None:

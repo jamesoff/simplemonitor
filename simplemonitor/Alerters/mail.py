@@ -6,14 +6,14 @@ from typing import Optional, cast
 
 from ..Monitors.monitor import Monitor
 from ..util import format_datetime
-from .alerter import Alerter, register
+from .alerter import Alerter, AlertType, register
 
 
 @register
 class EMailAlerter(Alerter):
     """Send email alerts using SMTP to a mail server."""
 
-    type = "email"
+    _type = "email"
 
     def __init__(self, config_options: dict) -> None:
         super().__init__(config_options)
@@ -55,9 +55,9 @@ class EMailAlerter(Alerter):
         message["From"] = self.from_addr
         message["To"] = self.to_addr
 
-        if alert_type == "":
+        if alert_type == AlertType.NONE:
             return
-        elif alert_type == "failure":
+        elif alert_type == AlertType.FAILURE:
             message["Subject"] = "[%s] Monitor %s Failed!" % (self.hostname, name)
             body = """Monitor %s%s has failed.
             Failed at: %s
@@ -79,7 +79,7 @@ class EMailAlerter(Alerter):
             except AttributeError:
                 body += "\nNo recovery info available"
 
-        elif alert_type == "success":
+        elif alert_type == AlertType.SUCCESS:
             message["Subject"] = "[%s] Monitor %s succeeded" % (self.hostname, name)
             body = (
                 "Monitor %s%s is back up.\nOriginally failed at: %s\nDowntime: %s\nDescription: %s"
@@ -92,7 +92,7 @@ class EMailAlerter(Alerter):
                 )
             )
 
-        elif alert_type == "catchup":
+        elif alert_type == AlertType.CATCHUP:
             message["Subject"] = "[%s] Monitor %s failed earlier!" % (
                 self.hostname,
                 name,
@@ -115,7 +115,7 @@ class EMailAlerter(Alerter):
 
         message.attach(MIMEText(body, "plain"))
 
-        if not self.dry_run:
+        if not self._dry_run:
             try:
                 if self.ssl is None or self.ssl == "starttls":
                     server = smtplib.SMTP(self.mail_host, self.mail_port)

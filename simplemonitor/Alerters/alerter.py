@@ -1,62 +1,94 @@
 # coding=utf-8
-"""A collection of alerters for SimpleMonitor."""
+"""Alerting for SimpleMonitor"""
 
 import datetime
 import logging
+from enum import Enum
 from socket import gethostname
 from typing import Any, List, NoReturn, Optional, Tuple, Union, cast
 
+from ..Monitors.monitor import Monitor
 from ..util import AlerterConfigurationError, get_config_option, subclass_dict_handler
 
 
-class Alerter:
-    """Abstract class basis for alerters."""
+class AlertType(Enum):
+    """What type of alert should be sent"""
 
-    type = "unknown"
+    NONE = 0
+    FAILURE = 1
+    CATCHUP = 2
+    SUCCESS = 3
+
+
+class AlertTimeFilter(Enum):
+    """How should the Alerter times be handled"""
+
+    ALWAYS = 0  # specified times are meaningless
+    NOT = 1  # not allowed between the specified times
+    ONLY = 2  # only allowed between the specified times
+
+
+class Alerter:
+    """BaseClass for Alerters"""
+
+    _type = "unknown"
     _dependencies = None  # type: List[str]
     hostname = gethostname()
     available = False
 
-    debug = False
-    verbose = False
     name = None  # type: Optional[str]
 
-    ooh_failures = []  # type: List[str]
+    _ooh_failures = None  # type: Optional[List[str]]
     # subclasses should set this to true if they support catchup notifications for delays
     support_catchup = False
-
-    type = "unknown"
 
     def __init__(self, config_options: dict = None) -> None:
         if config_options is None:
             config_options = {}
         self._config_options = config_options
-        self.alerter_logger = logging.getLogger("simplemonitor.alerter-" + self.type)
+        self.alerter_logger = logging.getLogger("simplemonitor.alerter-" + self._type)
         self.available = True
+        self.name = cast(str, self.get_config_option("name", default="unamed"))
         self.dependencies = cast(
             List[str],
             self.get_config_option("depend", required_type="[str]", default=[]),
         )
-        self.limit = self.get_config_option(
-            "limit", required_type="int", minimum=1, default=1
+        # require this many failures before firing
+        self._limit = cast(
+            int,
+            self.get_config_option("limit", required_type="int", minimum=1, default=1),
         )
-        self.repeat = self.get_config_option(
+        # fire every time, rather than just once when the Monitor fails
+        self._repeat = self.get_config_option(
             "repeat", required_type="int", default=0, minimum=0
         )
+        # only fire for Monitors with one of these groups
         self._groups = self.get_config_option(
             "groups", required_type="[str]", default=["default"]
         )
-        self.times_type = self.get_config_option(
-            "times_type",
-            required_type="str",
-            allowed_values=["always", "only", "not"],
-            default="always",
+        _times_type = cast(
+            str,
+            self.get_config_option(
+                "times_type",
+                required_type="str",
+                allowed_values=["always", "only", "not"],
+                default="always",
+            ),
         )
-        self.time_info = (
+        self._times_type = AlertTimeFilter.ALWAYS  # type: AlertTimeFilter
+        if _times_type == "always":
+            self._times_type = AlertTimeFilter.ALWAYS
+        elif _times_type == "only":
+            self._times_type = AlertTimeFilter.ONLY
+        elif _times_type == "not":
+            self._times_type = AlertTimeFilter.NOT
+        else:
+            raise ValueError("times_type is not recongnised: {}".format(_times_type))
+        self._time_info = (
             None,
             None,
         )  # type: Tuple[Optional[datetime.time], Optional[datetime.time]]
-        if self.times_type in ["only", "not"]:
+        if self._times_type in [AlertTimeFilter.ONLY, AlertTimeFilter.NOT]:
             time_lower = str(
                 self.get_config_option("time_lower", required_type="str", required=True)
             )
@@ -72,31 +104,37 @@ class Alerter:
                         int(time_upper.split(":")[0]), int(time_upper.split(":")[1])
                     ),
                 ]
-                self.time_info = (time_info[0], time_info[1])
+                self._time_info = (time_info[0], time_info[1])
             except Exception:
                 raise RuntimeError("error processing time limit definition")
-        self.days = self.get_config_option(
-            "days",
-            required_type="[int]",
-            allowed_values=list(range(0, 7)),
-            default=list(range(0, 7)),
+        self._days = cast(
+            List[int],
+            self.get_config_option(
+                "days",
+                required_type="[int]",
+                allowed_values=list(range(0, 7)),
+                default=list(range(0, 7)),
+            ),
         )
-        self.delay_notification = self.get_config_option(
+        self._delay_notification = self.get_config_option(
             "delay", required_type="bool", default=False
         )
-        self.dry_run = self.get_config_option(
+        self._dry_run = self.get_config_option(
             "dry_run", required_type="bool", default=False
         )
-        self.ooh_recovery = self.get_config_option(
+        self._ooh_recovery = self.get_config_option(
             "ooh_recovery", required_type="bool", default=False
         )
 
         if self.get_config_option("debug_times", required_type=bool, default=False):
-            self.time_info = (
+            self._time_info = (
                 (datetime.datetime.utcnow() - datetime.timedelta(minutes=1)).time(),
                 (datetime.datetime.utcnow() + datetime.timedelta(minutes=1)).time(),
             )
-            self.alerter_logger.debug("set times for alerter to %s", self.time_info)
+            self.alerter_logger.debug("set times for alerter to %s", self._time_info)
+
+        if self._ooh_failures is None:
+            self._ooh_failures = []
 
     def get_config_option(
         self, key: str, **kwargs: Any
@@ -138,12 +176,12 @@ class Alerter:
         self.available = True
         return True
 
-    def should_alert(self, monitor: Any) -> str:
+    def should_alert(self, monitor: Monitor) -> AlertType:
         """Check if we should bother alerting, and what type."""
         out_of_hours = False
 
         if not self.available:
-            return ""
+            return AlertType.NONE
 
         if not self.allowed_today():
             out_of_hours = True
@@ -151,43 +189,56 @@ class Alerter:
         if not self.allowed_time():
             out_of_hours = True
 
-        if monitor.virtual_fail_count() > 0:
+        virtual_failure_count = monitor.virtual_fail_count()
+
+        if virtual_failure_count:
             self.alerter_logger.debug("monitor %s has failed", monitor.name)
             # Monitor has failed (not just first time)
-            if self.delay_notification:
+            if self._delay_notification:
+                # Delayed notifications are enabled
                 if not out_of_hours:
-                    if monitor.name in self.ooh_failures:
+                    # Not out of hours
+                    if self._ooh_failures is not None:
                         try:
-                            self.ooh_failures.remove(monitor.name)
-                        except Exception:
-                            self.alerter_logger.warning(
-                                "couldn't remove %s from OOH list; will maybe generate too many alerts.",
-                                monitor.name,
-                            )
-                        if self.support_catchup:
-                            return "catchup"
-                        return "failure"
-            if monitor.virtual_fail_count() == self.limit or (
-                self.repeat and (monitor.virtual_fail_count() % self.limit == 0)
+                            self._ooh_failures.remove(monitor.name)
+                            # if it was in there and we support catchup alerts, do it
+                            if self.support_catchup:
+                                return AlertType.CATCHUP
+                        except ValueError:
+                            pass
+                        return AlertType.FAILURE
+            # Delayed notifications are not enabled
+            if virtual_failure_count == self._limit or (
+                self._repeat and (virtual_failure_count % self._limit == 0)
             ):
                 # This is the first time or nth time we've failed
                 if out_of_hours:
-                    if monitor.name not in self.ooh_failures:
-                        self.ooh_failures.append(monitor.name)
-                        return ""
-                return "failure"
-            return ""
-        if monitor.all_better_now() and monitor.last_virtual_fail_count() >= self.limit:
+                    if (
+                        self._ooh_failures is not None
+                        and monitor.name not in self._ooh_failures
+                    ):
+                        self._ooh_failures.append(monitor.name)
+                        return AlertType.NONE
+                return AlertType.FAILURE
+            return AlertType.NONE
+
+        # Not failed
+        if (
+            monitor.all_better_now()
+            and monitor.last_virtual_fail_count() >= self._limit
+        ):
+            # was failed, and enough to have alerted
             try:
-                self.ooh_failures.remove(monitor.name)
+                if self._ooh_failures is not None:
+                    self._ooh_failures.remove(monitor.name)
             except ValueError:
                 pass
             if out_of_hours:
-                if self.ooh_recovery:
-                    return "success"
-                return ""
-            return "success"
-        return ""
+                if self._ooh_recovery:
+                    return AlertType.SUCCESS
+                return AlertType.NONE
+            return AlertType.SUCCESS
+        return AlertType.NONE
 
     def send_alert(self, name: str, monitor: Any) -> Union[None, NoReturn]:
         """Abstract function to do the alerting."""
@@ -195,29 +246,38 @@ class Alerter:
 
     def allowed_today(self) -> bool:
         """Check if today is an allowed day for an alert."""
-        days = cast(List[int], self.days)
-        if datetime.datetime.now().weekday() not in days:
+        if datetime.datetime.now().weekday() not in self._days:
+            self.alerter_logger.debug("not allowed to alert today")
             return False
         return True
 
     def allowed_time(self) -> bool:
         """Check if now is an allowed time for an alert."""
-        if self.times_type == "always":
+        if self._times_type == AlertTimeFilter.ALWAYS:
             return True
-        if self.time_info[0] is not None and self.time_info[1] is not None:
+        if self._time_info[0] is not None and self._time_info[1] is not None:
             now = datetime.datetime.now().time()
-            if self.times_type == "only":
-                if (now > self.time_info[0]) and (now < self.time_info[1]):
-                    return True
-                return False
-            if self.times_type == "not":
-                if (now > self.time_info[0]) and (now < self.time_info[1]):
-                    return False
-                return True
+            in_time_range = (now > self._time_info[0]) and (now < self._time_info[1])
+            if self._times_type == AlertTimeFilter.ONLY:
+                self.alerter_logger.debug("in_time_range: {}".format(in_time_range))
+                return in_time_range
+            elif self._times_type == AlertTimeFilter.NOT:
+                self.alerter_logger.debug(
+                    "in_time_range: {} (inverting due to AlertTimeFilter.NOT)".format(
+                        in_time_range
+                    )
+                )
+                return not in_time_range
         self.alerter_logger.error(
             "this should never happen! Unknown times_type in alerter"
         )
         return True
+
+    @property
+    def type(self) -> str:
+        """Compatibility with the rename of type to _type. Will be removed in the future."""
+        self.alerter_logger.critical("Access to 'type' instead of '_type'!")
+        return self._type
 
 
 (register, get_class, all_types) = subclass_dict_handler(
