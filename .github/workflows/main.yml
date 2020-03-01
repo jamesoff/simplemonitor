@@ -39,4 +39,4 @@ jobs:
       - name: Network logger tests
         run: make network-test
       - name: Upload to codecov
-        run: pipenv run codecov
+        run: pipenv run codecov --token="${{ secrets.CODECOV_TOKEN }}"
