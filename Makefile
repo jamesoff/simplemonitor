@@ -1,4 +1,4 @@
-.PHONY: flake8 dist twine twine-test integration-tests env-test network-test black mypy linting
+.PHONY: flake8 dist twine twine-test integration-tests env-test network-test black mypy linting mypy-strict bandit bandit-strict
 
 ENVPATH := $(shell pipenv --venv)
 
@@ -33,4 +33,13 @@ black:
 mypy:
 	pipenv run "$(ENVPATH)/bin/mypy" --ignore-missing-imports *.py simplemonitor/
 
-linting: black flake8 mypy
+mypy-strict:
+	pipenv run "$(ENVPATH)/bin/mypy" --ignore-missing-imports --disallow-untyped-calls --disallow-untyped-defs --disallow-incomplete-defs --disallow-untyped-decorators *.py simplemonitor/
+
+bandit:
+	pipenv run "$(ENVPATH)/bin/bandit" -r -ll *.py simplemonitor/
+
+bandit-strict:
+	pipenv run "$(ENVPATH)/bin/bandit" -r -l *.py simplemonitor/
+
+linting: black flake8 mypy bandit

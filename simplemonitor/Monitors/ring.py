@@ -57,7 +57,7 @@ class MonitorRingDoorbell(Monitor):
                 self._ring_auth = None
         self.ring = None  # type: Optional[ring_doorbell.Ring]
 
-    def _token_updated(self, token: str):
+    def _token_updated(self, token: str) -> None:
         self.cache_file.write_text(json.dumps(token))
 
     def run_test(self) -> bool:
@@ -65,7 +65,6 @@ class MonitorRingDoorbell(Monitor):
             return self.record_fail("ring_doorbell library is not installed")
         if self.ring is None:
             self.ring = ring_doorbell.Ring(self._ring_auth)
-        assert self.ring is not None
         self.ring.update_data()
         devices = self.ring.devices()
         # doorbots are doorbells owned by this account

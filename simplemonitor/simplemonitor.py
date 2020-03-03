@@ -3,7 +3,7 @@
 
 import copy
 import logging
-import pickle
+import pickle  # nosec
 import sys
 import time
 from typing import Any, Dict, List

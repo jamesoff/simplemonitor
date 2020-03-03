@@ -30,6 +30,8 @@ jobs:
         run: make black
       - name: flake8 tests
         run: make flake8
+      - name: bandit
+        run: make bandit
       - name: Integration tests
         run: make integration-tests
       - name: Config environment variables tests

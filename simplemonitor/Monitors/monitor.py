@@ -16,7 +16,7 @@ import logging
 import platform
 import subprocess  # nosec
 import time
-from typing import Any, List, NoReturn, Optional, Tuple, Union
+from typing import Any, List, NoReturn, Optional, Tuple, Union, cast
 
 from ..util import (
     MonitorConfigurationError,
@@ -75,8 +75,9 @@ class Monitor:
         self._tolerance = self.get_config_option(
             "tolerance", required_type="int", default=0, minimum=0
         )
-        self.remote_alerting = self.get_config_option(
-            "remote_alert", required_type="bool", default=False
+        self.remote_alerting = cast(
+            bool,
+            self.get_config_option("remote_alert", required_type="bool", default=False),
         )
         self._recover_command = self.get_config_option("recover_command")
         self._recovered_command = self.get_config_option("recovered_command")
@@ -207,7 +208,7 @@ class Monitor:
             return True
         return False
 
-    def _add_unavailable_seconds(self):
+    def _add_unavailable_seconds(self) -> None:
         if self.last_update and self.success_count == 0:
             unavailable_delta = datetime.datetime.utcnow() - self.last_update
             self.unavailable_seconds += unavailable_delta.seconds

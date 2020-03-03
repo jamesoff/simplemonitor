@@ -1,7 +1,7 @@
 import os
 import re
 import shlex
-import subprocess
+import subprocess  # nosec
 import time
 from typing import Optional, Tuple, cast
 
@@ -211,7 +211,7 @@ class MonitorApcupsd(Monitor):
             else:
                 executable = "apcaccess"
         try:
-            _output = subprocess.check_output(executable)
+            _output = subprocess.check_output(executable)  # nosec
             output = _output.decode("utf-8")  # type: str
         except subprocess.CalledProcessError as e:
             output = e.output
@@ -276,9 +276,9 @@ class MonitorPortAudit(Monitor):
             if self.path == "":
                 self.path = "/usr/local/sbin/portaudit"
             try:
-                output = subprocess.check_output([self.path, "-a", "-X", "1"]).decode(
-                    "utf-8"
-                )
+                # nosec
+                _output = subprocess.check_output([self.path, "-a", "-X", "1"])  # nosec
+                output = _output.decode("utf-8")
             except subprocess.CalledProcessError as e:
                 output = e.output
             except OSError as e:
@@ -324,7 +324,8 @@ class MonitorPkgAudit(Monitor):
             if self.path == "":
                 self.path = "/usr/local/sbin/pkg"
             try:
-                output = subprocess.check_output([self.path, "audit"]).decode("utf-8")
+                _output = subprocess.check_output([self.path, "audit"])  # nosec
+                output = _output.decode("utf-8")
             except subprocess.CalledProcessError as e:
                 output = e.output.decode("utf-8")
             except OSError as e:
@@ -419,7 +420,7 @@ class MonitorMemory(Monitor):
     def get_params(self) -> Tuple:
         return (self.percent_free,)
 
-    def describe(self):
+    def describe(self) -> str:
         return "Checking for at least {}% free memory".format(self.percent_free)
 
 
@@ -438,7 +439,7 @@ class MonitorZap(Monitor):
 
     def run_test(self) -> bool:
         try:
-            _output = subprocess.check_output(["ztscan", str(self.span)])
+            _output = subprocess.check_output(["ztscan", str(self.span)])  # nosec
             output = _output.decode("utf-8")
             for line in output:
                 matches = self.r.match(line)
@@ -489,7 +490,7 @@ class MonitorCommand(Monitor):
         if not self.available:
             return self.record_skip(None)
         try:
-            _out = subprocess.check_output(self.command)
+            _out = subprocess.check_output(self.command)  # nosec
             if self.result_regexp is not None:
                 out = _out.decode("utf-8")
                 matches = self.result_regexp.search(out)

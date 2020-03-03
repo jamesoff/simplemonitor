@@ -1,7 +1,7 @@
 # coding=utf-8
 import hmac
 import logging
-import pickle
+import pickle  # nosec
 import socket
 import struct
 from json import JSONDecodeError
@@ -169,7 +169,7 @@ class Listener(Thread):
                 try:
                     result = json_loads(serialized)
                 except JSONDecodeError:
-                    result = pickle.loads(serialized)
+                    result = pickle.loads(serialized)  # nosec
                 try:
                     self.simplemonitor.update_remote_monitor(result, addr[0])
                 except Exception:
