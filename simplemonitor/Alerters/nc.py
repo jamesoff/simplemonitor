@@ -8,7 +8,7 @@ except Exception:
 import platform
 
 from ..Monitors.monitor import Monitor
-from .alerter import Alerter, AlertType, register
+from .alerter import Alerter, AlertLength, AlertType, register
 
 
 @register
@@ -24,7 +24,6 @@ class NotificationCenterAlerter(Alerter):
                 "Pync package is not available, which is necessary to use NotificationCenterAlerter."
             )
             self.alerter_logger.critical("Try: pip install -r requirements.txt")
-            self.alerter_logger.critical("     or pip install simplemonitor[nc]")
             self.available = False
             return
 
@@ -41,15 +40,9 @@ class NotificationCenterAlerter(Alerter):
         alert_type = self.should_alert(monitor)
         message = ""
 
-        if alert_type == AlertType.NONE:
+        if alert_type not in [AlertType.FAILURE, AlertType.CATCHUP]:
             return
-        elif alert_type == AlertType.FAILURE:
-            message = "Monitor {} failed!".format(name)
-        elif alert_type == AlertType.SUCCESS:
-            message = "Monitor {} succeeded.".format(name)
-        else:
-            self.alerter_logger.error("Unknown alert type: {}".format(alert_type))
-            return
+        message = self.build_message(AlertLength.NOTIFICATION, alert_type, monitor)
 
         if not self._dry_run:
             pync.notify(message=message, title="SimpleMonitor")

@@ -175,7 +175,6 @@ class Alerter:
     @property
     def groups(self) -> List[str]:
         """The groups for which we alert"""
-        assert isinstance(self._groups, list)
         retval = cast(List[str], self._groups)
         return retval
 
