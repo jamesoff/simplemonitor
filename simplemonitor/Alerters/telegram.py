@@ -4,8 +4,7 @@ from typing import cast
 import requests
 
 from ..Monitors.monitor import Monitor
-from ..util import format_datetime
-from .alerter import Alerter, AlertType, register
+from .alerter import Alerter, AlertLength, AlertType, register
 
 
 @register
@@ -41,58 +40,10 @@ class TelegramAlerter(Alerter):
         """Build up the content for the push notification."""
 
         alert_type = self.should_alert(monitor)
-        downtime = monitor.get_downtime()
-
-        if monitor.is_remote():
-            host = " on %s " % monitor.running_on
-        else:
-            host = " on host %s" % self.hostname
-
-        body = ""
-
         if alert_type == AlertType.NONE:
             return
-        elif alert_type == AlertType.FAILURE:
-            body = """Monitor %s DOWN
-Failed at: %s
-Downtime: %s
-Description: %s""" % (
-                name,
-                format_datetime(monitor.first_failure_time()),
-                downtime,
-                monitor.describe(),
-            )
-            try:
-                if monitor.recover_info != "":
-                    body += "\nRecovery info: %s" % monitor.recover_info
-            except AttributeError:
-                body += "\nNo recovery info available"
 
-        elif alert_type == AlertType.SUCCESS:
-            body = """Monitor %s UP
-Originally failed at: %s
-Downtime: %s
-Description: %s""" % (
-                name,
-                format_datetime(monitor.first_failure_time()),
-                downtime,
-                monitor.describe(),
-            )
-
-        elif alert_type == AlertType.CATCHUP:
-            body = (
-                "Monitor %s%s failed earlier while this alerter was out of hours.\nFailed at: %s\nDescription: %s"
-                % (
-                    name,
-                    host,
-                    format_datetime(monitor.first_failure_time()),
-                    monitor.describe(),
-                )
-            )
-
-        else:
-            self.alerter_logger.error("Unknown alert type %s", alert_type)
-            return
+        body = self.build_message(AlertLength.FULL, alert_type, monitor)
 
         if not self._dry_run:
             try:
