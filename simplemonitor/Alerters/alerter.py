@@ -3,21 +3,28 @@
 
 import datetime
 import logging
+import textwrap
 from enum import Enum
 from socket import gethostname
 from typing import Any, List, NoReturn, Optional, Tuple, Union, cast
 
 from ..Monitors.monitor import Monitor
-from ..util import AlerterConfigurationError, get_config_option, subclass_dict_handler
+from ..util import (
+    AlerterConfigurationError,
+    MonitorState,
+    format_datetime,
+    get_config_option,
+    subclass_dict_handler,
+)
 
 
 class AlertType(Enum):
     """What type of alert should be sent"""
 
-    NONE = 0
-    FAILURE = 1
-    CATCHUP = 2
-    SUCCESS = 3
+    NONE = "none"
+    FAILURE = "failure"
+    CATCHUP = "catchup"
+    SUCCESS = "success"
 
 
 class AlertTimeFilter(Enum):
@@ -26,6 +33,16 @@ class AlertTimeFilter(Enum):
     ALWAYS = 0  # specified times are meaningless
     NOT = 1  # not allowed between the specified times
     ONLY = 2  # only allowed between the specified times
+
+
+class AlertLength(Enum):
+    """How long should an Alert message be?"""
+
+    NOTIFICATION = 0  # "Monitor has failed"
+    SMS = 1  # <= 140 chars
+    TERSE = 2  # Short but multiline
+    FULL = 3  # Multiline
+    ESSAY = 4  # Everything
 
 
 class Alerter:
@@ -183,10 +200,10 @@ class Alerter:
         if not self.available:
             return AlertType.NONE
 
-        if not self.allowed_today():
+        if not self._allowed_today():
             out_of_hours = True
 
-        if not self.allowed_time():
+        if not self._allowed_time():
             out_of_hours = True
 
         virtual_failure_count = monitor.virtual_fail_count()
@@ -244,14 +261,14 @@ class Alerter:
         """Abstract function to do the alerting."""
         raise NotImplementedError
 
-    def allowed_today(self) -> bool:
+    def _allowed_today(self) -> bool:
         """Check if today is an allowed day for an alert."""
         if datetime.datetime.now().weekday() not in self._days:
             self.alerter_logger.debug("not allowed to alert today")
             return False
         return True
 
-    def allowed_time(self) -> bool:
+    def _allowed_time(self) -> bool:
         """Check if now is an allowed time for an alert."""
         if self._times_type == AlertTimeFilter.ALWAYS:
             return True
@@ -272,6 +289,92 @@ class Alerter:
             "this should never happen! Unknown times_type in alerter"
         )
         return True
+
+    @staticmethod
+    def _get_verb(alert_type: AlertType) -> str:
+        if alert_type == AlertType.CATCHUP:
+            return "failed earlier"
+        elif alert_type == AlertType.FAILURE:
+            return "failed"
+        elif alert_type == AlertType.SUCCESS:
+            return "succeeded"
+        else:
+            return "unknowned"
+
+    def build_message(
+        self, length: AlertLength, alert_type: AlertType, monitor: Monitor
+    ) -> str:
+        if monitor._state == MonitorState.FAILED:
+            downtime = str(monitor.get_downtime())
+        elif monitor._state == MonitorState.OK:
+            downtime = str(monitor.get_uptime())
+        else:
+            downtime = ""
+
+        max_length = None  # type: Optional[int]
+        if length == AlertLength.NOTIFICATION:
+            message = "Monitor {monitor.name} {alert_verb}".format(
+                monitor=monitor, alert_verb=Alerter._get_verb(alert_type)
+            )
+        elif length == AlertLength.SMS:
+            message = "{alert_type}: {monitor.name} {alert_verb} {monitor.running_on} at {failure_time} ({downtime}): {result}".format(
+                alert_type=alert_type.value,
+                alert_verb=Alerter._get_verb(alert_type),
+                downtime=downtime,
+                failure_time=format_datetime(monitor.first_failure_time()),
+                monitor=monitor,
+                result=monitor.get_result(),
+            )
+            max_length = 160
+        elif length == AlertLength.TERSE:
+            raise NotImplementedError
+        elif length == AlertLength.FULL:
+            if alert_type in [AlertType.CATCHUP, AlertType.FAILURE]:
+                message = """
+                Monitor {monitor.name}{host} {alert_verb}!
+                Failed at: {failure_time} (down {downtime})
+                Virtual failure count: {vfc}
+                Additional info: {result}
+                Description: {desc}
+                """
+                if monitor.recover_info != "":
+                    message = message + "Recovery info: {}".format(monitor.recover_info)
+            elif alert_type == AlertType.SUCCESS:
+                message = """
+                Monitor {monitor.name}{host} {alert_verb}!
+                Recovered at: {failure_time}
+                Additional info: {result}
+                Description: {desc}
+                """
+                if monitor.recovered_info != "":
+                    message = message + "Recovery info: {}".format(
+                        monitor.recovered_info
+                    )
+            else:
+                raise ValueError(
+                    "Can't write a message for AlertType {}".format(alert_type)
+                )
+            if monitor.is_remote:
+                host = " on {}".format(monitor.running_on)
+            else:
+                host = ""
+            message = message.format(
+                alert_type=alert_type,
+                monitor=monitor,
+                alert_verb=Alerter._get_verb(alert_type),
+                failure_time=format_datetime(monitor.first_failure_time()),
+                downtime=downtime,
+                result=monitor.get_result(),
+                host=host,
+                desc=monitor.describe(),
+                vfc=monitor.virtual_fail_count(),
+            )
+            message = textwrap.dedent(message)
+        else:
+            raise NotImplementedError
+        if max_length and len(message) > max_length:
+            message = textwrap.shorten(message, width=max_length, placeholder="...")
+        return message
 
     @property
     def type(self) -> str:
