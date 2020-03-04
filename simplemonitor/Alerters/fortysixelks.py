@@ -8,8 +8,8 @@ except ImportError:
 from typing import cast
 
 from ..Monitors.monitor import Monitor
-from ..util import AlerterConfigurationError, format_datetime
-from .alerter import Alerter, AlertType, register
+from ..util import AlerterConfigurationError
+from .alerter import Alerter, AlertLength, AlertType, register
 
 
 @register
@@ -62,46 +62,14 @@ class FortySixElksAlerter(Alerter):
             return
 
         alert_type = self.should_alert(monitor)
-        message = ""
-        url = ""
 
-        downtime = monitor.get_downtime()
-        if alert_type == AlertType.NONE:
+        if alert_type not in [AlertType.CATCHUP, AlertType.FAILURE]:
             return
-        elif alert_type == AlertType.CATCHUP:
-            message = "catchup: %s failed on %s at %s (%s)\n%s" % (
-                name,
-                monitor.running_on,
-                format_datetime(monitor.first_failure_time()),
-                downtime,
-                monitor.get_result(),
-            )
-            if len(message) > 160:
-                self.alerter_logger.warning("Truncating SMS message to 160 chars.")
-                message = message[:156] + "..."
-            url = "https://{}/a1/SMS".format(self.api_host)
-            auth = (self.username, self.password)
-            params = {"from": self.sender, "to": self.target, "message": message}
-        elif alert_type == AlertType.FAILURE:
-            message = "%s failed on %s at %s (%s)\n%s" % (
-                name,
-                monitor.running_on,
-                format_datetime(monitor.first_failure_time()),
-                downtime,
-                monitor.get_result(),
-            )
-            if len(message) > 160:
-                self.alerter_logger.warning("Truncating SMS message to 160 chars.")
-                message = message[:156] + "..."
-            url = "https://{}/a1/SMS".format(self.api_host)
-            auth = (self.username, self.password)
-            params = {"from": self.sender, "to": self.target, "message": message}
-        else:
-            # we don't handle other types of message
-            pass
 
-        if url == "":
-            return
+        message = self.build_message(AlertLength.SMS, alert_type, monitor)
+        url = "https://{}/a1/SMS".format(self.api_host)
+        auth = (self.username, self.password)
+        params = {"from": self.sender, "to": self.target, "message": message}
 
         if not self._dry_run:
             try:
@@ -115,4 +83,3 @@ class FortySixElksAlerter(Alerter):
                 self.available = False
         else:
             self.alerter_logger.info("dry_run: would send SMS: %s", url)
-        return
