@@ -37,7 +37,7 @@ setuptools.setup(
             "winmonitor=simplemonitor.winmonitor:main",
         ]
     },
-    extras_require={"ring": ["ring-doorbell>=0.6.0"]},
+    extras_require={"ring": ["ring-doorbell>=0.6.0"], "arlo": ["pyarlo"]},
     install_requires=[
         "boto3",
         "colorlog",

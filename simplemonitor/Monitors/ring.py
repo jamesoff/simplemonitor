@@ -33,8 +33,12 @@ class MonitorRingDoorbell(Monitor):
             int,
             self.get_config_option("minimum_battery", required_type="int", default=25),
         )
-        self.ring_username = cast(str, self.get_config_option("username"))
-        self.ring_password = cast(str, self.get_config_option("password"))
+        self.ring_username = cast(
+            str, self.get_config_option("username", required=True)
+        )
+        self.ring_password = cast(
+            str, self.get_config_option("password", required=True)
+        )
         self.cache_file = Path(
             self.get_config_option("cache_file", default=".ring_token.cache")
         )

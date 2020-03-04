@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "3720b4a7708aba21265ce6d7546c1710fb26dd158c17d2febec5020e0ff12f22"
+            "sha256": "62b44b009c9d8943d2106209691a4e4da5eba2da90e4d670bffc24638c7be8c4"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -16,18 +16,18 @@
     "default": {
         "boto3": {
             "hashes": [
-                "sha256:08886cd451c2ab89912372262208f2c041f4f88b333291e364723d46e97be5b5",
-                "sha256:f191e02140e9691e91fac8cb87d74ad111015a1c98c3b99a24bba9982dc5ae7e"
+                "sha256:3b00b93d9548ebc0777f54cbd77c11e2721f7bb873ffb371cf4fa66d06750de7",
+                "sha256:3d3973502f96faaa534faec083ce4cd51a969f613d740be9e34cb7e42238f59c"
             ],
             "index": "pypi",
-            "version": "==1.12.12"
+            "version": "==1.12.14"
         },
         "botocore": {
             "hashes": [
-                "sha256:c4efa61c90604913ac093fe4fe9f47e404ad980bc658a9f5fc1c9046e9fe094d",
-                "sha256:f12dd27c759992460b8ce70bfeed600437829b0293e6a08211237f11757678e5"
+                "sha256:37e713b86bc833587e002610d0b2b5c5c88438617d68189d1b541e20726a43d4",
+                "sha256:4f889842519f54d007e285637c625a0645ffbe6aaa291b62ba510f3a25948f77"
             ],
-            "version": "==1.15.12"
+            "version": "==1.15.14"
         },
         "certifi": {
             "hashes": [
@@ -163,11 +163,19 @@
             "index": "pypi",
             "version": "==5.7.0"
         },
+        "pyarlo": {
+            "hashes": [
+                "sha256:2ab6168b3e3329f10eacbf9c29abe0aed281eaf1b51ce071b6d1c04940bed079"
+            ],
+            "index": "pypi",
+            "version": "==0.2.3"
+        },
         "pycparser": {
             "hashes": [
-                "sha256:a988718abfad80b6b157acce7bf130a30876d27603738ac39f140993246b25b3"
+                "sha256:2d475327684562c3a96cc71adf7dc8c4f0565175cf86b6d7a404ff4c771f15f0",
+                "sha256:7582ad22678f0fcd81102833f60ef8d0e57288b6b5fb00323d101be910e35705"
             ],
-            "version": "==2.19"
+            "version": "==2.20"
         },
         "pync": {
             "hashes": [
@@ -253,6 +261,12 @@
                 "sha256:8f3cd2e254d8f793e7f3d6d9df77b92252b52637291d0f0da013c76ea2724b6c"
             ],
             "version": "==1.14.0"
+        },
+        "sseclient-py": {
+            "hashes": [
+                "sha256:db9a95a1f8cac6e71276599a604881ef6ca6c116208a81fd19d4cfbc70b7c918"
+            ],
+            "version": "==1.7"
         },
         "urllib3": {
             "hashes": [

@@ -33,6 +33,7 @@ from .Loggers import db  # noqa: F401
 from .Loggers import file as file_logger  # noqa: F401
 from .Loggers import logger, mqtt  # noqa: F401
 from .Loggers import network as network_logger  # noqa: F401
+from .Monitors import arlo  # noqa: F401
 from .Monitors import compound  # noqa: F401
 from .Monitors import file as file_monitor  # noqa: F401
 from .Monitors import hass, host, monitor  # noqa: F401
