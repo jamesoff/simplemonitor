@@ -13,12 +13,13 @@ paho-mqtt = "*"
 ring-doorbell = ">=0.6.0"
 psutil = "*"
 pywin32 = {sys_platform = "== 'win32'"}
+pyarlo = "*"
 
 [dev-packages]
 "flake8" = "*"
 codecov = "*"
 coverage = "*"
-black = { markers="python_version = '>= 3.6'" }
+black = {markers = "python_version = '>= 3.6'"}
 
 [pipenv]
 allow_prereleases = true

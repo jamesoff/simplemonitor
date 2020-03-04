@@ -219,3 +219,19 @@
     - name: percent_free
       desc: The minimum percent of available (as per psutils' definition) memory
       required: 'yes'
+- name: arlo_camera
+  oneline: Check Arlo camera battery level
+  params:
+    - name: username
+      desc: Arlo username
+      required: 'yes'
+    - name: password
+      desc: Arlo password
+      required: 'yes'
+    - name: device_name
+      desc: Camera device name (e.g. "Front")
+      required: 'yes'
+    - name: base_station_id
+      desc: The number of your base station; only required if you have more than one. It's an array index, but figuring out which one is which is an exercise left the reader
+      required: 'no'
+      default: 0
