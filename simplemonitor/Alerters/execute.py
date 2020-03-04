@@ -1,7 +1,7 @@
 # coding=utf-8
 import shlex
-import subprocess
-from typing import cast
+import subprocess  # nosec
+from typing import Optional, cast
 
 from ..Monitors.monitor import Monitor
 from ..util import AlerterConfigurationError, format_datetime
@@ -35,7 +35,7 @@ class ExecuteAlerter(Alerter):
 
     def send_alert(self, name: str, monitor: Monitor) -> None:
         alert_type = self.should_alert(monitor)
-        command = None
+        command = None  # type: Optional[str]
         downtime = monitor.get_downtime()
         if monitor.is_remote():
             host = monitor.running_on
@@ -75,7 +75,7 @@ class ExecuteAlerter(Alerter):
         if not self._dry_run:
             self.alerter_logger.debug("About to execute command: %s", command)
             try:
-                subprocess.call(shlex.split(command))
+                subprocess.call(shlex.split(command))  # nosec
                 self.alerter_logger.debug("Command has finished.")
             except Exception:
                 self.alerter_logger.exception(
