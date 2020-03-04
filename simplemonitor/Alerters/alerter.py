@@ -40,6 +40,7 @@ class AlertLength(Enum):
 
     NOTIFICATION = 0  # "Monitor has failed"
     SMS = 1  # <= 140 chars
+    ONELINE = 5  # SMS but not length limited
     TERSE = 2  # Short but multiline
     FULL = 3  # Multiline
     ESSAY = 4  # Everything
@@ -316,7 +317,7 @@ class Alerter:
             message = "Monitor {monitor.name} {alert_verb}".format(
                 monitor=monitor, alert_verb=Alerter._get_verb(alert_type)
             )
-        elif length == AlertLength.SMS:
+        elif length in [AlertLength.SMS, AlertLength.ONELINE]:
             message = "{alert_type}: {monitor.name} {alert_verb} {monitor.running_on} at {failure_time} ({downtime}): {result}".format(
                 alert_type=alert_type.value,
                 alert_verb=Alerter._get_verb(alert_type),
@@ -325,7 +326,8 @@ class Alerter:
                 monitor=monitor,
                 result=monitor.get_result(),
             )
-            max_length = 160
+            if length == AlertLength.SMS:
+                max_length = 160
         elif length == AlertLength.TERSE:
             raise NotImplementedError
         elif length == AlertLength.FULL:
