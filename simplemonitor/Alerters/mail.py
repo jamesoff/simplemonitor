@@ -5,8 +5,7 @@ from email.mime.text import MIMEText
 from typing import Optional, cast
 
 from ..Monitors.monitor import Monitor
-from ..util import format_datetime
-from .alerter import Alerter, AlertType, register
+from .alerter import Alerter, AlertLength, AlertType, register
 
 
 @register
@@ -44,12 +43,6 @@ class EMailAlerter(Alerter):
         """Send the email."""
 
         alert_type = self.should_alert(monitor)
-        downtime = monitor.get_downtime()
-
-        if monitor.is_remote():
-            host = " on %s " % monitor.running_on
-        else:
-            host = " on host %s" % self.hostname
 
         message = MIMEMultipart()
         message["From"] = self.from_addr
@@ -57,62 +50,10 @@ class EMailAlerter(Alerter):
 
         if alert_type == AlertType.NONE:
             return
-        elif alert_type == AlertType.FAILURE:
-            message["Subject"] = "[%s] Monitor %s Failed!" % (self.hostname, name)
-            body = """Monitor %s%s has failed.
-            Failed at: %s
-            Downtime: %s
-            Virtual failure count: %d
-            Additional info: %s
-            Description: %s""" % (
-                name,
-                host,
-                format_datetime(monitor.first_failure_time()),
-                downtime,
-                monitor.virtual_fail_count(),
-                monitor.get_result(),
-                monitor.describe(),
-            )
-            try:
-                if monitor.recover_info != "":
-                    body += "\nRecovery info: %s" % monitor.recover_info
-            except AttributeError:
-                body += "\nNo recovery info available"
-
-        elif alert_type == AlertType.SUCCESS:
-            message["Subject"] = "[%s] Monitor %s succeeded" % (self.hostname, name)
-            body = (
-                "Monitor %s%s is back up.\nOriginally failed at: %s\nDowntime: %s\nDescription: %s"
-                % (
-                    name,
-                    host,
-                    format_datetime(monitor.first_failure_time()),
-                    downtime,
-                    monitor.describe(),
-                )
-            )
-
-        elif alert_type == AlertType.CATCHUP:
-            message["Subject"] = "[%s] Monitor %s failed earlier!" % (
-                self.hostname,
-                name,
-            )
-            body = (
-                "Monitor %s%s failed earlier while this alerter was out of hours.\nFailed at: %s\nVirtual failure count: %d\nAdditional info: %s\nDescription: %s"
-                % (
-                    name,
-                    host,
-                    format_datetime(monitor.first_failure_time()),
-                    monitor.virtual_fail_count(),
-                    monitor.get_result(),
-                    monitor.describe(),
-                )
-            )
-
-        else:
-            self.alerter_logger.critical("unknown alert type %s", alert_type)
-            return
-
+        message["Subject"] = self.build_message(
+            AlertLength.NOTIFICATION, alert_type, monitor
+        )
+        body = self.build_message(AlertLength.FULL, alert_type, monitor)
         message.attach(MIMEText(body, "plain"))
 
         if not self._dry_run:
