@@ -301,8 +301,9 @@ class Alerter:
         else:
             return "unknowned"
 
+    @staticmethod
     def build_message(
-        self, length: AlertLength, alert_type: AlertType, monitor: Monitor
+        length: AlertLength, alert_type: AlertType, monitor: Monitor
     ) -> str:
         if monitor._state == MonitorState.FAILED:
             downtime = str(monitor.get_downtime())

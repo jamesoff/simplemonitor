@@ -119,6 +119,6 @@ class TestAlerter(unittest.TestCase):
     def test_should_alert_basic_success(self):
         a = alerter.Alerter(None)
         m = monitor.MonitorFail("fail", {})
-        for i in range(0, 6):
+        for _ in range(0, 6):
             m.run_test()
         self.assertEqual(a.should_alert(m), alerter.AlertType.SUCCESS)

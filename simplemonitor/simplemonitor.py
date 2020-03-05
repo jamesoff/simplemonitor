@@ -173,7 +173,6 @@ class SimpleMonitor:
             logger.save_result2(key, self.monitors[key])
         try:
             for key in list(self.remote_monitors.keys()):
-                module_logger.info("remote logging for %s", key)
                 logger.save_result2(key, self.remote_monitors[key])
         except Exception:  # pragma: no cover
             module_logger.exception("exception while logging remote monitors")
@@ -183,8 +182,9 @@ class SimpleMonitor:
         """Use the given alerter object to send an alert, if needed."""
         alerter.check_dependencies(self.failed + self.still_failing + self.skipped)
         for key in list(self.monitors.keys()):
+            this_monitor = self.monitors[key]  # type: Monitor
             # Don't generate alerts for monitors which want it done remotely
-            if self.monitors[key].remote_alerting:
+            if this_monitor.remote_alerting:
                 # TODO: could potentially disable alerts by setting a monitor to remote alerting, but not having anywhere to send it!
                 module_logger.debug(
                     "skipping alert for monitor %s as it wants remote alerting", key
@@ -192,15 +192,15 @@ class SimpleMonitor:
                 continue
             module_logger.debug(
                 "considering alert for monitor %s (group: %s) with alerter %s (groups: %s)",
-                self.monitors[key].name,
-                self.monitors[key].group,
+                this_monitor.name,
+                this_monitor.group,
                 alerter.name,
                 alerter.groups,
             )
             try:
-                if self.monitors[key].group in alerter.groups:
+                if this_monitor.group in alerter.groups:
                     # Only notifications for services that have it enabled
-                    if self.monitors[key].notify:
+                    if this_monitor.notify:
                         module_logger.debug("notifying alerter %s", alerter.name)
                         alerter.send_alert(key, self.monitors[key])
                     else:
@@ -214,17 +214,19 @@ class SimpleMonitor:
             except Exception:  # pragma: no cover
                 module_logger.exception("exception caught while alerting for %s", key)
         for key in list(self.remote_monitors.keys()):
+            this_monitor = self.remote_monitors[key]
             try:
-                if self.remote_monitors[key].remote_alerting:
-                    alerter.send_alert(key, self.remote_monitors[key])
+                if this_monitor.remote_alerting:
+                    alerter.send_alert(key, this_monitor)
                 else:
                     module_logger.debug(
                         "not alerting for monitor %s as it doesn't want remote alerts",
                         key,
                     )
-                    continue
             except Exception:  # pragma: no cover
-                module_logger.exception("exception caught while alerting for %s", key)
+                module_logger.exception(
+                    "exception caught while alerting for remote monitor %s", key
+                )
 
     def count_monitors(self) -> int:
         """Gets the number of monitors we have defined."""
