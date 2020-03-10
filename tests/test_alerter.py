@@ -2,6 +2,8 @@
 import datetime
 import unittest
 
+from freezegun import freeze_time
+
 from simplemonitor import util
 from simplemonitor.Alerters import alerter
 from simplemonitor.Monitors import monitor
@@ -122,3 +124,159 @@ class TestAlerter(unittest.TestCase):
         for _ in range(0, 6):
             m.run_test()
         self.assertEqual(a.should_alert(m), alerter.AlertType.SUCCESS)
+
+    @freeze_time("2020-03-10")  # a Tuesday
+    def test_not_allowed_today(self):
+        a = alerter.Alerter({"days": "0,2,3,4,5,6"})
+        self.assertFalse(a._allowed_today())
+
+    @freeze_time("2020-03-10")
+    def test_allowed_today(self):
+        a = alerter.Alerter({"days": "1"})
+        self.assertTrue(a._allowed_today())
+
+    @freeze_time("2020-03-10")
+    def test_allowed_default(self):
+        a = alerter.Alerter({})
+        self.assertTrue(a._allowed_today())
+
+    @freeze_time("10:00")
+    def test_allowed_always(self):
+        a = alerter.Alerter({})
+        self.assertTrue(a._allowed_time())
+
+    def test_allowed_only(self):
+        a = alerter.Alerter(
+            {"times_type": "only", "time_lower": "10:00", "time_upper": "11:00"}
+        )
+        with freeze_time("09:00"):
+            self.assertFalse(a._allowed_time())
+        with freeze_time("10:30"):
+            self.assertTrue(a._allowed_time())
+        with freeze_time("12:00"):
+            self.assertFalse(a._allowed_time())
+
+    def test_allowed_not(self):
+        a = alerter.Alerter(
+            {"times_type": "not", "time_lower": "10:00", "time_upper": "11:00"}
+        )
+        with freeze_time("09:00"):
+            self.assertTrue(a._allowed_time())
+        with freeze_time("10:30"):
+            self.assertFalse(a._allowed_time())
+        with freeze_time("12:00"):
+            self.assertTrue(a._allowed_time())
+
+    def test_should_not_alert_ooh(self):
+        config = {
+            "times_type": "only",
+            "time_lower": "10:00",
+            "time_upper": "11:00",
+        }
+        a = alerter.Alerter(config)
+        m = monitor.MonitorFail("fail", {})
+        m.run_test()
+        with freeze_time("2020-03-10 09:00"):
+            # out of hours on the right day; shouldn't alert
+            self.assertEqual(a.should_alert(m), alerter.AlertType.NONE)
+            self.assertEqual(a._ooh_failures, ["fail"])
+        a = alerter.Alerter(config)
+        with freeze_time("2020-03-10 12:00"):
+            self.assertEqual(a.should_alert(m), alerter.AlertType.NONE)
+            self.assertEqual(a._ooh_failures, ["fail"])
+
+    def test_should_alert_ooh(self):
+        config = {
+            "times_type": "only",
+            "time_lower": "10:00",
+            "time_upper": "11:00",
+        }
+        a = alerter.Alerter(config)
+        m = monitor.MonitorFail("fail", {})
+        m.run_test()
+        with freeze_time("2020-03-10 10:30"):
+            self.assertEqual(a.should_alert(m), alerter.AlertType.FAILURE)
+            self.assertEqual(a._ooh_failures, [])
+
+    def test_should_alert_limit(self):
+        config = {
+            "times_type": "only",
+            "time_lower": "10:00",
+            "time_upper": "11:00",
+            "limit": 2,
+        }
+        a = alerter.Alerter(config)
+        m = monitor.MonitorFail("fail", {})
+        m.run_test()
+        with freeze_time("2020-03-10 10:30"):
+            self.assertEqual(a.should_alert(m), alerter.AlertType.NONE)
+            self.assertEqual(a._ooh_failures, [])
+
+            m.run_test()
+            self.assertEqual(a.should_alert(m), alerter.AlertType.FAILURE)
+            self.assertEqual(a._ooh_failures, [])
+
+            m.run_test()
+            self.assertEqual(a.should_alert(m), alerter.AlertType.NONE)
+            self.assertEqual(a._ooh_failures, [])
+
+    def test_should_alert_limit_ooh(self):
+        config = {
+            "times_type": "only",
+            "time_lower": "10:00",
+            "time_upper": "11:00",
+            "limit": 2,
+        }
+        a = alerter.Alerter(config)
+        m = monitor.MonitorFail("fail", {})
+        m.run_test()
+        with freeze_time("2020-03-10 09:00"):
+            self.assertEqual(a.should_alert(m), alerter.AlertType.NONE)
+            self.assertEqual(a._ooh_failures, [])
+
+            a = alerter.Alerter(config)
+            m.run_test()
+            self.assertEqual(a.should_alert(m), alerter.AlertType.NONE)
+            self.assertEqual(a._ooh_failures, ["fail"])
+
+            a = alerter.Alerter(config)
+            m.run_test()
+            self.assertEqual(a.should_alert(m), alerter.AlertType.NONE)
+            self.assertEqual(a._ooh_failures, [])
+
+    def test_should_alert_catchup(self):
+        config = {
+            "delay": 1,
+            "times_type": "only",
+            "time_lower": "10:00",
+            "time_upper": "11:00",
+        }
+        a = alerter.Alerter(config)
+        a.support_catchup = True
+        m = monitor.MonitorFail("fail", {})
+        m.run_test()
+        with freeze_time("2020-03-10 09:00"):
+            self.assertEqual(a.should_alert(m), alerter.AlertType.NONE)
+            self.assertEqual(a._ooh_failures, ["fail"])
+
+        with freeze_time("2020-03-10 10:30"):
+            self.assertEqual(a.should_alert(m), alerter.AlertType.CATCHUP)
+            self.assertEqual(a._ooh_failures, [])
+
+    def test_should_alert_no_catchup(self):
+        config = {
+            "delay": 1,
+            "times_type": "only",
+            "time_lower": "10:00",
+            "time_upper": "11:00",
+        }
+        a = alerter.Alerter(config)
+        m = monitor.MonitorFail("fail", {})
+        m.run_test()
+        with freeze_time("2020-03-10 09:00"):
+            self.assertEqual(a.should_alert(m), alerter.AlertType.NONE)
+            self.assertEqual(a._ooh_failures, ["fail"])
+
+        with freeze_time("2020-03-10 10:30"):
+            self.assertEqual(a.should_alert(m), alerter.AlertType.FAILURE)
+            self.assertEqual(a._ooh_failures, [])
