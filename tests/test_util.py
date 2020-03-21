@@ -131,8 +131,11 @@ class TestUpDownTime(unittest.TestCase):
     def test_bad_values(self):
         with self.assertRaises(TypeError):
             util.UpDownTime("a", 2, 3, 4)
+        with self.assertRaises(TypeError):
             util.UpDownTime(1, "a", 3, 4)
+        with self.assertRaises(TypeError):
             util.UpDownTime(1, 2, "a", 4)
+        with self.assertRaises(TypeError):
             util.UpDownTime(1, 2, 3, "a")
 
     def test_bad_compare(self):
