@@ -20,6 +20,9 @@ pyarlo = "*"
 codecov = "*"
 coverage = "*"
 black = {markers = "python_version = '>= 3.6'"}
+mypy = "*"
+bandit = "*"
+freezegun = "*"
 
 [pipenv]
 allow_prereleases = true

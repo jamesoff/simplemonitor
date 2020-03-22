@@ -9,7 +9,7 @@ from ..util import LoggerConfigurationError, get_config_option, subclass_dict_ha
 class Logger:
     """Abstract class basis for loggers."""
 
-    type = "unknown"
+    _type = "unknown"
 
     supports_batch = False
     doing_batch = False
@@ -91,6 +91,12 @@ class Logger:
 
     def __str__(self) -> str:
         return self.describe()
+
+    @property
+    def type(self) -> str:
+        """Compatibility with the rename of type to _type. Will be removed in the future."""
+        self.logger_logger.critical("Access to 'type' instead of '_type'!")
+        return self._type
 
 
 (register, get_class, all_types) = subclass_dict_handler(

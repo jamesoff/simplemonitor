@@ -112,7 +112,7 @@ class DBLogger(Logger):
 class DBFullLogger(DBLogger):
     """Logs results to a sqlite3 db."""
 
-    type = "db"
+    _type = "db"
 
     def save_result(
         self,
@@ -157,7 +157,7 @@ class DBFullLogger(DBLogger):
         else:
             result = 0
         self.save_result(
-            name, monitor.type, str(monitor.get_params()), result, monitor.describe()
+            name, monitor._type, str(monitor.get_params()), result, monitor.describe()
         )
 
     def describe(self) -> str:
@@ -168,7 +168,7 @@ class DBFullLogger(DBLogger):
 class DBStatusLogger(DBLogger):
     """Maintains status snapshot in db."""
 
-    type = "dbstatus"
+    _type = "dbstatus"
 
     def save_result(
         self,
@@ -201,7 +201,7 @@ class DBStatusLogger(DBLogger):
         else:
             result = 0
         self.save_result(
-            name, monitor.type, str(monitor.get_params()), result, monitor.describe()
+            name, monitor._type, str(monitor.get_params()), result, monitor.describe()
         )
 
     def describe(self) -> str:

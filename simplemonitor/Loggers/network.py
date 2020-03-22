@@ -1,7 +1,7 @@
 # coding=utf-8
 import hmac
 import logging
-import pickle
+import pickle  # nosec
 import socket
 import struct
 from json import JSONDecodeError
@@ -24,7 +24,7 @@ _DIGEST_NAME = "md5"
 class NetworkLogger(Logger):
     """Send our results over the network to another instance."""
 
-    type = "network"
+    _type = "network"
     supports_batch = True
 
     def __init__(self, config_options: dict) -> None:
@@ -51,18 +51,18 @@ class NetworkLogger(Logger):
             )
             return
         self.logger_logger.debug("network logger: %s %s", name, monitor)
-        if monitor.type == "unknown":
+        if monitor._type == "unknown":
             self.logger_logger.error(
                 "Cannot serialize monitor %s, has type 'unknown'." % name
             )
             return
         try:
-            if monitor.type == "compound":
+            if monitor._type == "compound":
                 self.logger_logger.error(
                     "not pickling compound monitor - currently incompatible with network loggers"
                 )
             else:
-                data = {"cls_type": monitor.type, "data": monitor.to_python_dict()}
+                data = {"cls_type": monitor._type, "data": monitor.to_python_dict()}
                 # TODO: why does the line below make mypy cross?
                 self.batch_data[monitor.name] = data  # type: ignore
         except Exception:
@@ -169,7 +169,7 @@ class Listener(Thread):
                 try:
                     result = json_loads(serialized)
                 except JSONDecodeError:
-                    result = pickle.loads(serialized)
+                    result = pickle.loads(serialized)  # nosec
                 try:
                     self.simplemonitor.update_remote_monitor(result, addr[0])
                 except Exception:

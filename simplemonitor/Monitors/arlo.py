@@ -14,7 +14,7 @@ from ..Monitors.monitor import Monitor, register
 class MonitorArloCamera(Monitor):
     """Monitor the battery life on an Arlo camera."""
 
-    type = "arlo_camera"
+    _type = "arlo_camera"
 
     def __init__(self, name: str, config_options: dict) -> None:
         if "gap" not in config_options:

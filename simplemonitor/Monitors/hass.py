@@ -10,7 +10,7 @@ from .monitor import Monitor, register
 
 @register
 class MonitorSensor(Monitor):
-    type = "hass_sensor"
+    _type = "hass_sensor"
 
     def __init__(self, name: str, config_options: dict) -> None:
         super().__init__(name, config_options)

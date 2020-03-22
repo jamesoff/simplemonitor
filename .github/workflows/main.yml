@@ -30,6 +30,8 @@ jobs:
         run: make black
       - name: flake8 tests
         run: make flake8
+      - name: bandit
+        run: make bandit
       - name: Integration tests
         run: make integration-tests
       - name: Config environment variables tests
@@ -39,4 +41,4 @@ jobs:
       - name: Network logger tests
         run: make network-test
       - name: Upload to codecov
-        run: pipenv run codecov
+        run: pipenv run codecov --token="${{ secrets.CODECOV_TOKEN }}"

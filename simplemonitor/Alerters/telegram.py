@@ -4,15 +4,14 @@ from typing import cast
 import requests
 
 from ..Monitors.monitor import Monitor
-from ..util import format_datetime
-from .alerter import Alerter, register
+from .alerter import Alerter, AlertLength, AlertType, register
 
 
 @register
 class TelegramAlerter(Alerter):
     """Send push notification via Telegram."""
 
-    type = "telegram"
+    _type = "telegram"
 
     def __init__(self, config_options: dict) -> None:
         super().__init__(config_options)
@@ -40,61 +39,13 @@ class TelegramAlerter(Alerter):
     def send_alert(self, name: str, monitor: Monitor) -> None:
         """Build up the content for the push notification."""
 
-        type = self.should_alert(monitor)
-        downtime = monitor.get_downtime()
-
-        if monitor.is_remote():
-            host = " on %s " % monitor.running_on
-        else:
-            host = " on host %s" % self.hostname
-
-        body = ""
-
-        if type == "":
-            return
-        elif type == "failure":
-            body = """Monitor %s DOWN
-Failed at: %s
-Downtime: %s
-Description: %s""" % (
-                name,
-                format_datetime(monitor.first_failure_time()),
-                downtime,
-                monitor.describe(),
-            )
-            try:
-                if monitor.recover_info != "":
-                    body += "\nRecovery info: %s" % monitor.recover_info
-            except AttributeError:
-                body += "\nNo recovery info available"
-
-        elif type == "success":
-            body = """Monitor %s UP
-Originally failed at: %s
-Downtime: %s
-Description: %s""" % (
-                name,
-                format_datetime(monitor.first_failure_time()),
-                downtime,
-                monitor.describe(),
-            )
-
-        elif type == "catchup":
-            body = (
-                "Monitor %s%s failed earlier while this alerter was out of hours.\nFailed at: %s\nDescription: %s"
-                % (
-                    name,
-                    host,
-                    format_datetime(monitor.first_failure_time()),
-                    monitor.describe(),
-                )
-            )
-
-        else:
-            self.alerter_logger.error("Unknown alert type %s", type)
+        alert_type = self.should_alert(monitor)
+        if alert_type == AlertType.NONE:
             return
 
-        if not self.dry_run:
+        body = self.build_message(AlertLength.FULL, alert_type, monitor)
+
+        if not self._dry_run:
             try:
                 self.send_telegram_notification(body)
             except Exception:

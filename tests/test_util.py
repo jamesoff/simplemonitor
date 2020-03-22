@@ -127,3 +127,31 @@ class TestUpDownTime(unittest.TestCase):
     def test_str(self):
         u1 = util.UpDownTime(1, 2, 3, 4)
         self.assertEqual(str(u1), "1+02:03:04")
+
+    def test_bad_values(self):
+        with self.assertRaises(TypeError):
+            util.UpDownTime("a", 2, 3, 4)
+        with self.assertRaises(TypeError):
+            util.UpDownTime(1, "a", 3, 4)
+        with self.assertRaises(TypeError):
+            util.UpDownTime(1, 2, "a", 4)
+        with self.assertRaises(TypeError):
+            util.UpDownTime(1, 2, 3, "a")
+
+    def test_bad_compare(self):
+        u = util.UpDownTime(1, 2, 3, 4)
+        self.assertFalse(u == "a")
+
+    def test_false_compare(self):
+        u1 = util.UpDownTime(1, 2, 3, 4)
+        u2 = util.UpDownTime(1, 2, 3, 5)
+        self.assertNotEqual(u1, u2)
+
+        u2 = util.UpDownTime(1, 2, 4, 4)
+        self.assertNotEqual(u1, u2)
+
+        u2 = util.UpDownTime(1, 3, 3, 4)
+        self.assertNotEqual(u1, u2)
+
+        u2 = util.UpDownTime(2, 2, 3, 4)
+        self.assertNotEqual(u1, u2)

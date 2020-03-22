@@ -10,15 +10,14 @@ import os
 from typing import Any, Dict, cast
 
 from ..Monitors.monitor import Monitor
-from ..util import format_datetime
-from .alerter import Alerter, register
+from .alerter import Alerter, AlertLength, AlertType, register
 
 
 @register
 class SESAlerter(Alerter):
     """Send email alerts using Amazon's SES service."""
 
-    type = "ses"
+    _type = "ses"
 
     def __init__(self, config_options: dict) -> None:
         super().__init__(config_options)
@@ -50,96 +49,26 @@ class SESAlerter(Alerter):
     def send_alert(self, name: str, monitor: Monitor) -> None:
         """Send the email."""
 
-        type = self.should_alert(monitor)
-        downtime = monitor.get_downtime()
-
-        if monitor.is_remote():
-            host = " on %s " % monitor.running_on
-        else:
-            host = " on host %s" % self.hostname
+        alert_type = self.should_alert(monitor)
 
         mail = {}  # type: Dict[str, Any]
         mail["Source"] = self.from_addr
         mail["Destination"] = {"ToAddresses": [self.to_addr]}
+        message = {}  # type: Dict[str, Any]
 
-        if type == "":
+        if alert_type == AlertType.NONE:
             return
-        elif type == "failure":
-            message = {}  # type: Dict[str, Any]
-            message["Subject"] = {
-                "Data": "[%s] Monitor %s Failed!" % (self.hostname, name)
-            }
-            message["Body"] = {
-                "Text": {
-                    "Data": """Monitor %s%s has failed.
-            Failed at: %s
-            Downtime: %s
-            Virtual failure count: %d
-            Additional info: %s
-            Description: %s"""
-                    % (
-                        name,
-                        host,
-                        format_datetime(monitor.first_failure_time()),
-                        downtime,
-                        monitor.virtual_fail_count(),
-                        monitor.get_result(),
-                        monitor.describe(),
-                    )
-                }
-            }
-            try:
-                if monitor.recover_info != "":
-                    message["Body"]["Text"]["Data"] += (
-                        "\nRecovery info: %s" % monitor.recover_info
-                    )
-            except AttributeError:
-                message["Body"]["Text"]["Data"] += "\nNo recovery info available"
 
-        elif type == "success":
-            message = {
-                "Subject": {"Data": "[%s] Monitor %s succeeded" % (self.hostname, name)}
-            }
-            message["Body"] = {
-                "Text": {
-                    "Data": "Monitor %s%s is back up.\nOriginally failed at: %s\nDowntime: %s\nDescription: %s"
-                    % (
-                        name,
-                        host,
-                        format_datetime(monitor.first_failure_time()),
-                        downtime,
-                        monitor.describe(),
-                    )
-                }
-            }
-
-        elif type == "catchup":
-            message = {
-                "Subject": {
-                    "Data": "[%s] Monitor %s failed earlier!" % (self.hostname, name)
-                }
-            }
-            message["Body"] = {
-                "Text": {
-                    "Data": "Monitor %s%s failed earlier while this alerter was out of hours.\nFailed at: %s\nVirtual failure count: %d\nAdditional info: %s\nDescription: %s"
-                    % (
-                        name,
-                        host,
-                        format_datetime(monitor.first_failure_time()),
-                        monitor.virtual_fail_count(),
-                        monitor.get_result(),
-                        monitor.describe(),
-                    )
-                }
-            }
-
-        else:
-            self.alerter_logger.critical("Unknown alert type %s", type)
-            return
+        message["Subject"] = {
+            "Data": self.build_message(AlertLength.NOTIFICATION, alert_type, monitor)
+        }
+        message["Body"] = {
+            "Text": {"Data": self.build_message(AlertLength.FULL, alert_type, monitor)}
+        }
 
         mail["Message"] = message
 
-        if not self.dry_run:
+        if not self._dry_run:
             try:
                 client = boto3.client("ses", **self.ses_client_params)
                 client.send_email(**mail)

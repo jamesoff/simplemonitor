@@ -24,7 +24,7 @@ class MonitorHTTP(Monitor):
     regexp_text = ""
     allowed_codes = []  # type: List[int]
 
-    type = "http"
+    _type = "http"
 
     # optional - for HTTPS client authentication only
     certfile = None
@@ -156,7 +156,7 @@ class MonitorTCP(Monitor):
 
     host = ""
     port = 0
-    type = "tcp"
+    _type = "tcp"
 
     def __init__(self, name: str, config_options: dict) -> None:
         """Constructor"""
@@ -195,7 +195,7 @@ class MonitorHost(Monitor):
     host = ""
     ping_command = ""
     ping_regexp = ""
-    type = "host"
+    _type = "host"
     time_regexp = ""
     r = ""  # type: Union[str, Pattern[str]]
     r2 = ""  # type: Union[str, Pattern[str]]
@@ -271,7 +271,7 @@ class MonitorHost(Monitor):
 class MonitorDNS(Monitor):
     """Monitor DNS server."""
 
-    type = "dns"
+    _type = "dns"
     path = ""
     command = "dig"
 

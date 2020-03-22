@@ -3,15 +3,14 @@ from typing import cast
 import requests
 
 from ..Monitors.monitor import Monitor
-from ..util import format_datetime
-from .alerter import Alerter, register
+from .alerter import Alerter, AlertLength, AlertType, register
 
 
 @register
 class PushbulletAlerter(Alerter):
     """Send push notification via Pushbullet."""
 
-    type = "pushbullet"
+    _type = "pushbullet"
 
     def __init__(self, config_options: dict) -> None:
         super().__init__(config_options)
@@ -38,72 +37,13 @@ class PushbulletAlerter(Alerter):
         """Build up the content for the push notification."""
 
         alert_type = self.should_alert(monitor)
-        downtime = monitor.get_downtime()
-
-        if monitor.is_remote():
-            host = " on %s " % monitor.running_on
-        else:
-            host = " on host %s" % self.hostname
-
-        subject = ""
-        body = ""
-
-        if alert_type == "":
-            return
-        elif alert_type == "failure":
-            subject = "[%s] Monitor %s Failed!" % (self.hostname, name)
-            body = """Monitor %s%s has failed.\n
-            Failed at: %s
-            Downtime: %s
-            Virtual failure count: %d
-            Additional info: %s
-            Description: %s""" % (
-                name,
-                host,
-                format_datetime(monitor.first_failure_time()),
-                downtime,
-                monitor.virtual_fail_count(),
-                monitor.get_result(),
-                monitor.describe(),
-            )
-            try:
-                if monitor.recover_info != "":
-                    body += "\nRecovery info: %s" % monitor.recover_info
-            except AttributeError:
-                body += "\nNo recovery info available"
-
-        elif alert_type == "success":
-            subject = "[%s] Monitor %s succeeded" % (self.hostname, name)
-            body = (
-                "Monitor %s%s is back up.\nOriginally failed at: %s\nDowntime: %s\nDescription: %s"
-                % (
-                    name,
-                    host,
-                    format_datetime(monitor.first_failure_time()),
-                    downtime,
-                    monitor.describe(),
-                )
-            )
-
-        elif alert_type == "catchup":
-            subject = "[%s] Monitor %s failed earlier!" % (self.hostname, name)
-            body = (
-                "Monitor %s%s failed earlier while this alerter was out of hours.\nFailed at: %s\nVirtual failure count: %d\nAdditional info: %s\nDescription: %s"
-                % (
-                    name,
-                    host,
-                    format_datetime(monitor.first_failure_time()),
-                    monitor.virtual_fail_count(),
-                    monitor.get_result(),
-                    monitor.describe(),
-                )
-            )
-
-        else:
-            self.alerter_logger.error("Unknown alert type %s", alert_type)
+        if alert_type == AlertType.NONE:
             return
 
-        if not self.dry_run:
+        subject = self.build_message(AlertLength.NOTIFICATION, alert_type, monitor)
+        body = self.build_message(AlertLength.FULL, alert_type, monitor)
+
+        if not self._dry_run:
             try:
                 self.send_pushbullet_notification(subject, body)
             except Exception:

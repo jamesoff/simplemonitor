@@ -9,14 +9,14 @@ from typing import Any, Dict, cast
 
 from ..Monitors.monitor import Monitor
 from ..util import format_datetime
-from .alerter import Alerter, register
+from .alerter import Alerter, AlertType, register
 
 
 @register
 class SlackAlerter(Alerter):
     """Send alerts to a Slack webhook."""
 
-    type = "slack"
+    _type = "slack"
 
     channel = None
     username = None
@@ -53,9 +53,9 @@ class SlackAlerter(Alerter):
 
         message_json["attachments"] = [{}]
 
-        if type == "":
+        if type == AlertType.NONE:
             return
-        elif type == "failure":
+        elif type == AlertType.FAILURE:
             message_json["text"] = "Monitor {} failed!".format(name)
             message_json["attachments"][0]["color"] = "danger"
             fields = [
@@ -88,7 +88,7 @@ class SlackAlerter(Alerter):
                 pass
             message_json["attachments"][0]["fields"] = fields
 
-        elif type == "success":
+        elif type == AlertType.SUCCESS:
             message_json["text"] = "Monitor {} succeeded.".format(name)
             fields = [
                 {
@@ -107,7 +107,7 @@ class SlackAlerter(Alerter):
             self.alerter_logger.error("unknown alert type %s", type)
             return
 
-        if not self.dry_run:
+        if not self._dry_run:
             try:
                 r = requests.post(self.url, json=message_json)
                 if not r.status_code == 200:

@@ -1,7 +1,7 @@
 import os
 import re
 import shlex
-import subprocess
+import subprocess  # nosec
 import time
 from typing import Optional, Tuple, cast
 
@@ -62,7 +62,7 @@ def _bytes_to_size_string(b: int) -> str:
 class MonitorDiskSpace(Monitor):
     """Make sure we have enough disk space."""
 
-    type = "diskspace"
+    _type = "diskspace"
 
     def __init__(self, name: str, config_options: dict) -> None:
         super().__init__(name, config_options)
@@ -117,7 +117,7 @@ class MonitorDiskSpace(Monitor):
 class MonitorFileStat(Monitor):
     """Make sure a file exists, isn't too old and/or isn't too small."""
 
-    type = "filestat"
+    _type = "filestat"
 
     def __init__(self, name: str, config_options: dict) -> None:
         super().__init__(name, config_options)
@@ -195,7 +195,7 @@ class MonitorApcupsd(Monitor):
     to function.
     """
 
-    type = "apcupsd"
+    _type = "apcupsd"
 
     def __init__(self, name: str, config_options: dict) -> None:
         super().__init__(name, config_options)
@@ -211,7 +211,7 @@ class MonitorApcupsd(Monitor):
             else:
                 executable = "apcaccess"
         try:
-            _output = subprocess.check_output(executable)
+            _output = subprocess.check_output(executable)  # nosec
             output = _output.decode("utf-8")  # type: str
         except subprocess.CalledProcessError as e:
             output = e.output
@@ -257,7 +257,7 @@ class MonitorApcupsd(Monitor):
 class MonitorPortAudit(Monitor):
     """Check a host doesn't have outstanding security issues."""
 
-    type = "portaudit"
+    _type = "portaudit"
     regexp = re.compile(r"(\d+) problem\(s\) in your installed packages found")
 
     def __init__(self, name: str, config_options: dict) -> None:
@@ -276,9 +276,9 @@ class MonitorPortAudit(Monitor):
             if self.path == "":
                 self.path = "/usr/local/sbin/portaudit"
             try:
-                output = subprocess.check_output([self.path, "-a", "-X", "1"]).decode(
-                    "utf-8"
-                )
+                # nosec
+                _output = subprocess.check_output([self.path, "-a", "-X", "1"])  # nosec
+                output = _output.decode("utf-8")
             except subprocess.CalledProcessError as e:
                 output = e.output
             except OSError as e:
@@ -305,7 +305,7 @@ class MonitorPortAudit(Monitor):
 class MonitorPkgAudit(Monitor):
     """Check a host doesn't have outstanding security issues."""
 
-    type = "pkgaudit"
+    _type = "pkgaudit"
     regexp = re.compile(r"(\d+) problem\(s\) in \w+ installed package(s|\(s\)) found")
     path = ""
 
@@ -324,7 +324,8 @@ class MonitorPkgAudit(Monitor):
             if self.path == "":
                 self.path = "/usr/local/sbin/pkg"
             try:
-                output = subprocess.check_output([self.path, "audit"]).decode("utf-8")
+                _output = subprocess.check_output([self.path, "audit"])  # nosec
+                output = _output.decode("utf-8")
             except subprocess.CalledProcessError as e:
                 output = e.output.decode("utf-8")
             except OSError as e:
@@ -353,7 +354,7 @@ class MonitorPkgAudit(Monitor):
 class MonitorLoadAvg(Monitor):
     """Check a host's load average isn't too high."""
 
-    type = "loadavg"
+    _type = "loadavg"
 
     def __init__(self, name: str, config_options: dict) -> None:
         super().__init__(name, config_options)
@@ -393,7 +394,7 @@ class MonitorLoadAvg(Monitor):
 class MonitorMemory(Monitor):
     """Check for available memory."""
 
-    type = "memory"
+    _type = "memory"
 
     def __init__(self, name: str, config_options: dict) -> None:
         super().__init__(name, config_options)
@@ -419,7 +420,7 @@ class MonitorMemory(Monitor):
     def get_params(self) -> Tuple:
         return (self.percent_free,)
 
-    def describe(self):
+    def describe(self) -> str:
         return "Checking for at least {}% free memory".format(self.percent_free)
 
 
@@ -427,7 +428,7 @@ class MonitorMemory(Monitor):
 class MonitorZap(Monitor):
     """Checks a Zap channel to make sure it is ok"""
 
-    type = "zap"
+    _type = "zap"
     r = re.compile("^alarms=(?P<status>).+")
 
     def __init__(self, name: str, config_options: dict) -> None:
@@ -438,7 +439,7 @@ class MonitorZap(Monitor):
 
     def run_test(self) -> bool:
         try:
-            _output = subprocess.check_output(["ztscan", str(self.span)])
+            _output = subprocess.check_output(["ztscan", str(self.span)])  # nosec
             output = _output.decode("utf-8")
             for line in output:
                 matches = self.r.match(line)
@@ -466,7 +467,7 @@ class MonitorCommand(Monitor):
     """
 
     result_regexp = None
-    type = "command"
+    _type = "command"
     available = True
 
     def __init__(self, name: str, config_options: dict) -> None:
@@ -489,7 +490,7 @@ class MonitorCommand(Monitor):
         if not self.available:
             return self.record_skip(None)
         try:
-            _out = subprocess.check_output(self.command)
+            _out = subprocess.check_output(self.command)  # nosec
             if self.result_regexp is not None:
                 out = _out.decode("utf-8")
                 matches = self.result_regexp.search(out)

@@ -65,13 +65,13 @@ class UpDownTime:
         self.minutes = minutes
         self.seconds = seconds
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Format as d+h:m:s"""
         return "{}+{:02}:{:02}:{:02}".format(
             self.days, self.hours, self.minutes, int(self.seconds)
         )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "<{}: {}>".format(self.__class__, self.__str__())
 
     def __eq__(self, other: object) -> bool:
@@ -263,8 +263,9 @@ def subclass_dict_handler(
     def register(cls: Any) -> Any:
         """Decorator for monitor classes."""
         _check_is_subclass(cls)
-        assert cls.type != "unknown", cls
-        _subclasses[cls.type] = cls
+        if cls is None or cls._type == "unknown":
+            raise ValueError("Cannot register this class")
+        _subclasses[cls._type] = cls
         return cls
 
     def get_class(type_: Any) -> Any:
