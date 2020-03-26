@@ -12,6 +12,7 @@ Alerters can also have a time configuration for hours when they are or are not a
 
 The types of alerter are:
 
+* [sns](#sns): Sends an alert with Amazon Simple Notification Service
 * [email](#email): Sends an email when a monitor fails. Sends an email when it succeeds again. Requires an SMTP server to talk to. Non-urgent (all monitors will trigger this alerter.)
 * [bulksms](#bulksms): Sends an SMS alert when a monitor fails. Does not send an alert for when it succeeds again. Uses the [BulkSMS](http://www.bulksms.co.uk) service, which requires subscription. The messages are sent over HTTP on port 5567. (Urgent, so urgent=0 monitors will not trigger an SMS.)
 * [syslog](#syslog): Writes an entry to the syslog when something fails or succeeds. Not supported on Windows.
@@ -69,6 +70,20 @@ time_lower=07:30
 time_upper=22:00
 delay=1
 {% endhighlight %}
+
+## <a name=sns"></a>SNS alerters
+
+*DO NOT COMMIT YOUR CREDENTIALS TO A PUBLIC REPO*
+
+| setting | description | required | default |
+|---|---|---|---|
+|topic|The ARN of the topic to publish to. Specify this OR number, not both|no| |
+|number|The phone number to SMS. Give the number as e.g. 447777123456 (country code then number)|no| |
+|aws_region|The AWS region to use|no| |
+|aws_access_key_id|The AWS access key to use|no| |
+|aws_secret_access_key|The AWS secret access key|no| |
+
+You do not need to specify the `aws_*` settings if suitable values are available in a way that boto3 can find them (e.g. in the environment, or specified in a profile). To send an SMS, you must use a region with supports SMS sending (e.g. us-east-1).
 
 ## <a name="email"></a>Email alerters
 
