@@ -28,6 +28,7 @@ from .Alerters import (  # noqa: F401
     slack,
     syslogger,
     telegram,
+    sns
 )
 from .Loggers import db  # noqa: F401
 from .Loggers import file as file_logger  # noqa: F401
