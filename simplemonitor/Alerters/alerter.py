@@ -318,7 +318,7 @@ class Alerter:
                 monitor=monitor, alert_verb=Alerter._get_verb(alert_type)
             )
         elif length in [AlertLength.SMS, AlertLength.ONELINE]:
-            message = "{alert_type}: {monitor.name} {alert_verb} {monitor.running_on} at {failure_time} ({downtime}): {result}".format(
+            message = "{alert_type}: {monitor.name} {alert_verb} on {monitor.running_on} at {failure_time} ({downtime}): {result}".format(
                 alert_type=alert_type.value,
                 alert_verb=Alerter._get_verb(alert_type),
                 downtime=downtime,

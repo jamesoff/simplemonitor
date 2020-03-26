@@ -5,7 +5,7 @@ import unittest
 from freezegun import freeze_time
 
 from simplemonitor import util
-from simplemonitor.Alerters import alerter
+from simplemonitor.Alerters import alerter, sns
 from simplemonitor.Monitors import monitor
 
 
@@ -168,11 +168,7 @@ class TestAlerter(unittest.TestCase):
             self.assertTrue(a._allowed_time())
 
     def test_should_not_alert_ooh(self):
-        config = {
-            "times_type": "only",
-            "time_lower": "10:00",
-            "time_upper": "11:00",
-        }
+        config = {"times_type": "only", "time_lower": "10:00", "time_upper": "11:00"}
         a = alerter.Alerter(config)
         m = monitor.MonitorFail("fail", {})
         m.run_test()
@@ -186,11 +182,7 @@ class TestAlerter(unittest.TestCase):
             self.assertEqual(a._ooh_failures, ["fail"])
 
     def test_should_alert_ooh(self):
-        config = {
-            "times_type": "only",
-            "time_lower": "10:00",
-            "time_upper": "11:00",
-        }
+        config = {"times_type": "only", "time_lower": "10:00", "time_upper": "11:00"}
         a = alerter.Alerter(config)
         m = monitor.MonitorFail("fail", {})
         m.run_test()
@@ -280,3 +272,11 @@ class TestAlerter(unittest.TestCase):
         with freeze_time("2020-03-10 10:30"):
             self.assertEqual(a.should_alert(m), alerter.AlertType.FAILURE)
             self.assertEqual(a._ooh_failures, [])
+
+
+class TestSNSAlerter(unittest.TestCase):
+    def test_config(self):
+        with self.assertRaises(util.AlerterConfigurationError):
+            sns.SNSAlerter({})
+        with self.assertRaises(util.AlerterConfigurationError):
+            sns.SNSAlerter({"topic": "a", "number": "b"})
