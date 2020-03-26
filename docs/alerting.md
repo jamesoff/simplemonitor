@@ -80,7 +80,7 @@ delay=1
 |topic|The ARN of the topic to publish to. Specify this OR number, not both|no| |
 |number|The phone number to SMS. Give the number as e.g. 447777123456 (country code then number)|no| |
 |aws_region|The AWS region to use|no| |
-|aws_access_key_id|The AWS access key to use|no| |
+|aws_access_key|The AWS access key to use|no| |
 |aws_secret_access_key|The AWS secret access key|no| |
 
 You do not need to specify the `aws_*` settings if suitable values are available in a way that boto3 can find them (e.g. in the environment, or specified in a profile). To send an SMS, you must use a region with supports SMS sending (e.g. us-east-1).
