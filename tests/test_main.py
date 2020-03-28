@@ -8,7 +8,8 @@ import time
 import unittest
 from unittest.mock import patch
 
-from simplemonitor import monitor
+from simplemonitor import Alerters, monitor, simplemonitor
+from simplemonitor.Loggers import network
 
 
 class TestMonitor(unittest.TestCase):
@@ -40,3 +41,19 @@ class TestMonitor(unittest.TestCase):
             "check_hup_file should not have triggered",
         )
         os.unlink(temp_file_name)
+
+
+class TestSanity(unittest.TestCase):
+    def test_config_has_alerting(self):
+        m = simplemonitor.SimpleMonitor()
+        self.assertFalse(m.verify_alerting())
+
+        m.add_alerter("testing", Alerters.alerter.Alerter({}))
+        self.assertTrue(m.verify_alerting())
+
+        m = simplemonitor.SimpleMonitor()
+        m.add_logger(
+            "testing",
+            network.NetworkLogger({"host": "localhost", "port": 1234, "key": "hello"}),
+        )
+        self.assertTrue(m.verify_alerting())

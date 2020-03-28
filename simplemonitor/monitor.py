@@ -502,6 +502,9 @@ def main() -> None:
             remote_port = int(config.get("monitor", "remote_port"))
     key = config.get("monitor", "key", fallback=None)
 
+    if not m.verify_alerting():
+        main_logger.critical("No alerters defined and no remote logger found")
+
     if options.test:
         main_logger.warning("Config test complete. Exiting.")
         sys.exit(0)
