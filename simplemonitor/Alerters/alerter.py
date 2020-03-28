@@ -151,6 +151,10 @@ class Alerter:
             )
             self.alerter_logger.debug("set times for alerter to %s", self._time_info)
 
+        self._only_failures = self.get_config_option(
+            "only_failures", required_type=bool, default=False
+        )
+
         if self._ooh_failures is None:
             self._ooh_failures = []
 
@@ -251,10 +255,11 @@ class Alerter:
             except ValueError:
                 pass
             if out_of_hours:
-                if self._ooh_recovery:
+                if self._ooh_recovery and not self._only_failures:
                     return AlertType.SUCCESS
                 return AlertType.NONE
-            return AlertType.SUCCESS
+            if not self._only_failures:
+                return AlertType.SUCCESS
         return AlertType.NONE
 
     def send_alert(self, name: str, monitor: Any) -> Union[None, NoReturn]:
