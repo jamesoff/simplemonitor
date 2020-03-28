@@ -345,7 +345,13 @@ class Alerter:
                 Description: {desc}
                 """
                 if monitor.recover_info != "":
-                    message = message + "Recovery info: {}".format(monitor.recover_info)
+                    message = message + "Recovery info: {}\n".format(
+                        monitor.recover_info
+                    )
+                if monitor.failure_doc:
+                    message = message + "Documentation: {}\n".format(
+                        monitor.failure_doc
+                    )
             elif alert_type == AlertType.SUCCESS:
                 message = """
                 Monitor {monitor.name}{host} {alert_verb}!

@@ -86,6 +86,9 @@ class Monitor:
         self.minimum_gap = self.get_config_option(
             "gap", required_type="int", minimum=0, default=0
         )
+        self.failure_doc = cast(
+            Optional[str], self.get_config_option("failure_doc", default=None)
+        )
 
         self.running_on = short_hostname()
         self._state = MonitorState.UNKNOWN

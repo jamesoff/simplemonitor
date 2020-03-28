@@ -21,6 +21,7 @@ All monitor types share the following configuration options:
 |recovered_command| A command to execute once when this monitor succeeds the first time after being failed.|no| |
 |group|The group the monitor belongs to. Alerters will only fire for monitors which appear in their groups.|no|`default`|
 |notify|If the monitor should alert at all|no|1|
+|failure_doc|Information to include in alerts on failure (e.g. a URL to a runbook)|no| |
 {% for monitor in m %}
 <a name="{{monitor.name}}"></a>
 
