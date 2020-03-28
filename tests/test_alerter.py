@@ -112,6 +112,13 @@ class TestAlerter(unittest.TestCase):
         m.run_test()
         self.assertEqual(a.should_alert(m), alerter.AlertType.FAILURE)
 
+    def test_should_alert_only_failure(self):
+        # no special alert config
+        a = alerter.Alerter({"only_failures": True})
+        m = monitor.MonitorFail("fail", {})
+        m.run_test()
+        self.assertEqual(a.should_alert(m), alerter.AlertType.FAILURE)
+
     def test_should_alert_basic_none(self):
         a = alerter.Alerter(None)
         m = monitor.MonitorNull()
@@ -124,6 +131,13 @@ class TestAlerter(unittest.TestCase):
         for _ in range(0, 6):
             m.run_test()
         self.assertEqual(a.should_alert(m), alerter.AlertType.SUCCESS)
+
+    def test_should_not_alert_basic_success(self):
+        a = alerter.Alerter({"only_failures": True})
+        m = monitor.MonitorFail("fail", {})
+        for _ in range(0, 6):
+            m.run_test()
+        self.assertEqual(a.should_alert(m), alerter.AlertType.NONE)
 
     @freeze_time("2020-03-10")  # a Tuesday
     def test_not_allowed_today(self):
