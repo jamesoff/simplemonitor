@@ -127,6 +127,8 @@ class MonitorHTTP(Monitor):
                     r.status_code, r.reason, self.regexp_text
                 )
             )
+        except requests.exceptions.SSLError:
+            return self.record_fail("SSL error during connection")
         except requests.exceptions.RequestException as e:
             return self.record_fail(
                 "Requests exception while opening URL: {0}".format(e)
