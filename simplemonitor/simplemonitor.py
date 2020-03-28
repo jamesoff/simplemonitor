@@ -71,6 +71,17 @@ class SimpleMonitor:
                     ok = False
         return ok
 
+    def verify_alerting(self) -> bool:
+        """Sanity check the configuration to see if we have at least an alerter, or network logging."""
+        sane = True
+        if len(self.alerters) == 0:
+            for _, logger in self.loggers.items():
+                if logger._type == "network":
+                    break
+            else:
+                sane = False
+        return sane
+
     def sort_joblist(self, joblist: List[str]) -> List[str]:
         """Order a list of monitors so that compound monitors are at the end"""
         new_list = []  # type: List[str]
