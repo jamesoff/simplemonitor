@@ -321,7 +321,9 @@ class TestMessageBuilding(unittest.TestCase):
                 alerter.Alerter.build_message(
                     alerter.AlertLength.ONELINE, alerter.AlertType.FAILURE, m
                 ),
-                "failure: test failed on babylon5 at 2020-03-10 09:00:00 (0+00:00:00): This monitor always fails.",
+                "failure: test failed on {hostname} at 2020-03-10 09:00:00 (0+00:00:00): This monitor always fails.".format(
+                    hostname=util.short_hostname()
+                ),
             )
 
     def test_oneline_format_success(self):
@@ -331,7 +333,10 @@ class TestMessageBuilding(unittest.TestCase):
                 m.run_test()
             m.last_result = "a " * 80
             desired = (
-                "success: winning succeeded on babylon5 at  (0+00:00:00): " + "a " * 80
+                "success: winning succeeded on {hostname} at  (0+00:00:00): ".format(
+                    hostname=util.short_hostname()
+                )
+                + "a " * 80
             )
             output = alerter.Alerter.build_message(
                 alerter.AlertLength.ONELINE, alerter.AlertType.SUCCESS, m
@@ -346,7 +351,9 @@ class TestMessageBuilding(unittest.TestCase):
                 alerter.Alerter.build_message(
                     alerter.AlertLength.SMS, alerter.AlertType.FAILURE, m
                 ),
-                "failure: test failed on babylon5 at 2020-03-10 09:00:00 (0+00:00:00): This monitor always fails.",
+                "failure: test failed on {hostname} at 2020-03-10 09:00:00 (0+00:00:00): This monitor always fails.".format(
+                    hostname=util.short_hostname()
+                ),
             )
 
     def test_sms_format_success(self):
@@ -359,7 +366,9 @@ class TestMessageBuilding(unittest.TestCase):
                 alerter.Alerter.build_message(
                     alerter.AlertLength.SMS, alerter.AlertType.SUCCESS, m
                 ),
-                "success: winning succeeded on babylon5 at (0+00:00:00): a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a...",
+                "success: winning succeeded on {hostname} at (0+00:00:00): a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a...".format(
+                    hostname=util.short_hostname()
+                ),
             )
 
     def test_full_format_failure(self):
@@ -372,12 +381,14 @@ class TestMessageBuilding(unittest.TestCase):
                 ),
                 textwrap.dedent(
                     """
-                    Monitor test on babylon5 failed!
+                    Monitor test on {hostname} failed!
                     Failed at: 2020-03-10 09:00:00 (down 0+00:00:00)
                     Virtual failure count: 1
                     Additional info: This monitor always fails.
                     Description: A monitor which always fails.
-                    """
+                    """.format(
+                        hostname=util.short_hostname()
+                    )
                 ),
             )
 
@@ -391,13 +402,15 @@ class TestMessageBuilding(unittest.TestCase):
                 ),
                 textwrap.dedent(
                     """
-                    Monitor test on babylon5 failed!
+                    Monitor test on {hostname} failed!
                     Failed at: 2020-03-10 09:00:00 (down 0+00:00:00)
                     Virtual failure count: 1
                     Additional info: This monitor always fails.
                     Description: A monitor which always fails.
                     Documentation: whoops
-                    """
+                    """.format(
+                        hostname=util.short_hostname()
+                    )
                 ),
             )
 
@@ -412,11 +425,13 @@ class TestMessageBuilding(unittest.TestCase):
                 ),
                 textwrap.dedent(
                     """
-                    Monitor winning on babylon5 succeeded!
-                    Recovered at:
-                    Additional info:
+                    Monitor winning on {hostname} succeeded!
+                    Recovered at: 
+                    Additional info: 
                     Description: (Monitor did not write an auto-biography.)
-                    """  # noqa: W291
+                    """.format(  # noqa: W291
+                        hostname=util.short_hostname()
+                    )
                 ),
             )
 
