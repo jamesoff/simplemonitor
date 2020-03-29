@@ -1,5 +1,6 @@
 # type: ignore
 import datetime
+import textwrap
 import unittest
 
 from freezegun import freeze_time
@@ -286,6 +287,153 @@ class TestAlerter(unittest.TestCase):
         with freeze_time("2020-03-10 10:30"):
             self.assertEqual(a.should_alert(m), alerter.AlertType.FAILURE)
             self.assertEqual(a._ooh_failures, [])
+
+
+class TestMessageBuilding(unittest.TestCase):
+    def test_notification_format_failure(self):
+        m = monitor.MonitorFail("test", {})
+        with freeze_time("2020-03-10 09:00"):
+            m.run_test()
+            self.assertEqual(
+                alerter.Alerter.build_message(
+                    alerter.AlertLength.NOTIFICATION, alerter.AlertType.FAILURE, m
+                ),
+                "Monitor test failed",
+            )
+
+    def test_notification_format_success(self):
+        m = monitor.MonitorNull("winning", {})
+        with freeze_time("2020-03-10 09:00"):
+            for _ in range(0, 6):
+                m.run_test()
+            self.assertEqual(
+                alerter.Alerter.build_message(
+                    alerter.AlertLength.NOTIFICATION, alerter.AlertType.SUCCESS, m
+                ),
+                "Monitor winning succeeded",
+            )
+
+    def test_oneline_format_failure(self):
+        m = monitor.MonitorFail("test", {})
+        with freeze_time("2020-03-10 09:00"):
+            m.run_test()
+            self.assertEqual(
+                alerter.Alerter.build_message(
+                    alerter.AlertLength.ONELINE, alerter.AlertType.FAILURE, m
+                ),
+                "failure: test failed on {hostname} at 2020-03-10 09:00:00 (0+00:00:00): This monitor always fails.".format(
+                    hostname=util.short_hostname()
+                ),
+            )
+
+    def test_oneline_format_success(self):
+        m = monitor.MonitorNull("winning", {})
+        with freeze_time("2020-03-10 09:00"):
+            for _ in range(0, 6):
+                m.run_test()
+            m.last_result = "a " * 80
+            desired = (
+                "success: winning succeeded on {hostname} at  (0+00:00:00): ".format(
+                    hostname=util.short_hostname()
+                )
+                + "a " * 80
+            )
+            output = alerter.Alerter.build_message(
+                alerter.AlertLength.ONELINE, alerter.AlertType.SUCCESS, m
+            )
+            self.assertEqual(desired, output)
+
+    def test_sms_format_failure(self):
+        m = monitor.MonitorFail("test", {})
+        with freeze_time("2020-03-10 09:00"):
+            m.run_test()
+            self.assertEqual(
+                alerter.Alerter.build_message(
+                    alerter.AlertLength.SMS, alerter.AlertType.FAILURE, m
+                ),
+                "failure: test failed on {hostname} at 2020-03-10 09:00:00 (0+00:00:00): This monitor always fails.".format(
+                    hostname=util.short_hostname()
+                ),
+            )
+
+    def test_sms_format_success(self):
+        m = monitor.MonitorNull("winning", {})
+        with freeze_time("2020-03-10 09:00"):
+            for _ in range(0, 6):
+                m.run_test()
+            m.last_result = "a " * 80
+            self.assertEqual(
+                alerter.Alerter.build_message(
+                    alerter.AlertLength.SMS, alerter.AlertType.SUCCESS, m
+                ),
+                "success: winning succeeded on {hostname} at (0+00:00:00): a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a...".format(
+                    hostname=util.short_hostname()
+                ),
+            )
+
+    def test_full_format_failure(self):
+        m = monitor.MonitorFail("test", {})
+        with freeze_time("2020-03-10 09:00"):
+            m.run_test()
+            self.assertEqual(
+                alerter.Alerter.build_message(
+                    alerter.AlertLength.FULL, alerter.AlertType.FAILURE, m
+                ),
+                textwrap.dedent(
+                    """
+                    Monitor test on {hostname} failed!
+                    Failed at: 2020-03-10 09:00:00 (down 0+00:00:00)
+                    Virtual failure count: 1
+                    Additional info: This monitor always fails.
+                    Description: A monitor which always fails.
+                    """.format(
+                        hostname=util.short_hostname()
+                    )
+                ),
+            )
+
+    def test_full_format_failure_docs(self):
+        m = monitor.MonitorFail("test", {"failure_doc": "whoops"})
+        with freeze_time("2020-03-10 09:00"):
+            m.run_test()
+            self.assertEqual(
+                alerter.Alerter.build_message(
+                    alerter.AlertLength.FULL, alerter.AlertType.FAILURE, m
+                ),
+                textwrap.dedent(
+                    """
+                    Monitor test on {hostname} failed!
+                    Failed at: 2020-03-10 09:00:00 (down 0+00:00:00)
+                    Virtual failure count: 1
+                    Additional info: This monitor always fails.
+                    Description: A monitor which always fails.
+                    Documentation: whoops
+                    """.format(
+                        hostname=util.short_hostname()
+                    )
+                ),
+            )
+
+    def test_full_format_success(self):
+        m = monitor.MonitorNull("winning", {})
+        with freeze_time("2020-03-10 09:00"):
+            for _ in range(0, 6):
+                m.run_test()
+            self.assertEqual(
+                alerter.Alerter.build_message(
+                    alerter.AlertLength.FULL, alerter.AlertType.SUCCESS, m
+                ),
+                textwrap.dedent(
+                    """
+                    Monitor winning on {hostname} succeeded!
+                    Recovered at: 
+                    Additional info: 
+                    Description: (Monitor did not write an auto-biography.)
+                    """.format(  # noqa: W291
+                        hostname=util.short_hostname()
+                    )
+                ),
+            )
 
 
 class TestSNSAlerter(unittest.TestCase):
