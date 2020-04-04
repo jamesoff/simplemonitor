@@ -1,4 +1,4 @@
-name: CI (Windows)
+name: Tests (Windows)
 
 on: [push]
 
