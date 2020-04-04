@@ -4,12 +4,15 @@ import os
 import platform
 import re
 import subprocess
-import sys
 import time
 from typing import Any, List, Tuple, cast
 
-from ..util import MonitorConfigurationError
 from .monitor import Monitor, register
+
+try:
+    import psutil
+except ImportError:
+    psutil = None
 
 try:
     import pydbus
@@ -62,43 +65,50 @@ class MonitorService(Monitor):
 
     def __init__(self, name: str, config_options: dict) -> None:
         super().__init__(name, config_options)
-        self.service_name = self.get_config_option("service", required=True)
-        self.want_state = self.get_config_option("state", default="RUNNING")
-        self.host = self.get_config_option("host", default=".")
-
-        if self.want_state not in ["RUNNING", "STOPPED"]:
-            raise MonitorConfigurationError(
-                "invalid state {0} for MonitorService".format(self.want_state)
-            )
+        if psutil is None:
+            self.monitor_logger.critical("psutil is not installed.")
+            self.monitor_logger.critical("Try: pip install -r requirements.txt")
+        self.service_name = cast(str, self.get_config_option("service", required=True))
+        self.want_state = cast(
+            str,
+            self.get_config_option(
+                "state",
+                default="RUNNING",
+                allowed_values=[
+                    "RUNNING",
+                    "STOPPED",
+                    "PAUSED",
+                    "START_PENDING",
+                    "PAUSE_PENDING",
+                    "CONTINUE_PENDING",
+                    "STOP_PENDING",
+                ],
+            ),
+        )
+        self.host = cast(str, self.get_config_option("host", default="."))
 
     def run_test(self) -> bool:
         """Check the service is in the desired state"""
-        SVC_STATUS_LINE = 2
+        if psutil is None:
+            return self.record_fail("psutil is not installed")
         try:
-            if platform.system() == "CYGWIN_NT-6.0":
-                host = "\\\\\\\\" + self.host
-            elif platform.system() in ["Microsoft", "Windows"]:
-                host = "\\\\" + self.host
-            else:
-                # we need windows for sc
-                return self.record_fail(
-                    "Cannot check for Windows services while running on a non-Windows platform."
-                )
-
-            output = str(
-                subprocess.check_output(
-                    ["sc", host, "query", self.service_name, "state=all"]
-                ),
-                "utf-8",
+            service = psutil.win_service_get(self.service_name)
+        except psutil.NoSuchProcess:
+            return self.record_fail(
+                "service {} does not exist".format(self.service_name)
             )
-            lines = output.split(os.linesep)
-            lines = [x for x in lines if len(x) > 0]
-            if self.want_state in lines[SVC_STATUS_LINE]:
-                return self.record_success()
-        except Exception as e:
-            sys.stderr.write("%s\n" % e)
-            pass
-        return self.record_fail()
+        except AttributeError:
+            return self.record_fail("not supported on this platform")
+        except Exception:
+            self.monitor_logger.exception("Failed to get service")
+            return self.record_fail("Unable to get service")
+
+        state = service.status().upper()
+        if state != self.want_state:
+            return self.record_fail(
+                "Service state is {} (wanted {})".format(state, self.want_state)
+            )
+        return self.record_success()
 
     def describe(self) -> str:
         """Explains what this instance is checking"""
