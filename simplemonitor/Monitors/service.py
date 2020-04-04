@@ -62,7 +62,6 @@ class MonitorService(Monitor):
     want_state = "RUNNING"
     host = "."
     _type = "service"
-    type = "service"
 
     def __init__(self, name: str, config_options: dict) -> None:
         super().__init__(name, config_options)
@@ -93,7 +92,7 @@ class MonitorService(Monitor):
         if psutil is None:
             return self.record_fail("psutil is not installed")
         try:
-            service = psutil.windows_service_get(self.service_name)
+            service = psutil.win_service_get(self.service_name)
         except psutil.NoSuchProcess:
             return self.record_fail(
                 "service {} does not exist".format(self.service_name)
