@@ -1,45 +1,51 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html>
+<!DOCTYPE html>
+<html lang="en">
 	<head>
+        <meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
 		<title>_STATUS_@_HOST_ monitor</title>
+
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
 		<link rel="stylesheet" type="text/css" href="style.css" />
-		<meta http-equiv="refresh" content="30" />
+		<meta http-equiv="refresh" content="_INTERVAL_" />
 		<script language="javascript" type="text/javascript">
 			function too_old() {
-				var summary_element = document.getElementById("summary");
-				summary_element.innerHTML = summary_element.innerHTML + " [STALE]";
-				summary_element.setAttribute("class", "stale");
+				$("#refresh_badge").removeClass("d-none");
+				$("#refresh_status").addClass("d-inline");
+				$("#summary").removeClass("border-success border-danger");
+				$("#summary").addClass("border-warning");
 			}
 
 			function check_age() {
 				var generated = _TIMESTAMP_;
 				var now = Date.parse(new Date()) / 1000;
-				if ((now - generated) > 60) {
-					var summary_element = document.getElementById("summary");
-					summary_element.innerHTML = "[OLD] " + summary_element.innerHTML;
-					summary_element.setAttribute("class", "stale");
+				var diff = now - generated;
+				if ((now - generated) > (_INTERVAL_ * 2)) {
+					too_old();
 				}
 			}
 
-			setTimeout("too_old();", 60000);
-			//setTimeout("check_age();", 5000);
 		</script>
 	</head>
 
 	<body onload="check_age();">
-		_COUNTS_
-		<span class="generated">Generated at _NOW_ by _HOST_.</span>
-	<table>
+		<div class="navbar navbar-light bg-light border-bottom _STATUS_BORDER_" id="summary">
+			<div class="navbar-brand">SimpleMonitor</div>
+			<div class="navbar-text d-none d-lg-block" id="updated">Updated at _NOW_ by _HOST_ (_VERSION_)</div>
+			<div class="navbar-text" id="refresh_status"><span class="badge badge-warning d-none" id="refresh_badge">OUT OF DATE</span></div>
+			<div class="navbar-text">_COUNTS_</div>
+		</div>
+	<table class="table table-borderless table-striped table-hover table-sm">
 		<tr>
-			<th>Monitor</th>
-			<th>Status</th>
-			<th>Host</th>
-			<th>Failed at</th>
-			<th>VFC</th>
-			<th>Up/downtime</th>
-			<th>Detail</th>
-			<th>Failures</th>
-			<th>Last Failure</th>
-			<th>Age</th>
+			<th scope="col">Monitor</th>
+			<th scope="col">Status</th>
+			<th scope="col">Host</th>
+			<th scope="col">Failed at</th>
+			<th scope="col">VFC</th>
+			<th scope="col">Up/downtime</th>
+			<th scope="col">Detail</th>
+			<th scope="col">Failures</th>
+			<th scope="col">Last Failure</th>
+			<th scope="col">Age</th>
 			</tr>
