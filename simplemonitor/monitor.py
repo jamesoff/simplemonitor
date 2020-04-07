@@ -227,7 +227,8 @@ def load_loggers(
                 ", ".join(logger.all_types()),
             )
             continue
-        new_logger = logger_cls(config_options)
+        new_logger = logger_cls(config_options)  # type: logger.Logger
+        new_logger.set_global_info({"interval": config.getint("monitor", "interval")})
         main_logger.info(
             "Adding %s logger %s: %s", logger_type, config_logger, new_logger
         )

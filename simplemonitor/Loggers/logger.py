@@ -26,6 +26,13 @@ class Logger:
         )
         if self.batch_data is None:
             self.batch_data = {}
+        self._global_info = None  # type: Optional[dict]
+
+    def set_global_info(self, info: dict) -> None:
+        """Receive global info about the SimpleMonitor state.
+
+        Includes but not limited to refresh interval, known remote instances, etc"""
+        self._global_info = info
 
     def get_config_option(self, key: str, **kwargs: Any) -> Any:
         kwargs["exception"] = LoggerConfigurationError

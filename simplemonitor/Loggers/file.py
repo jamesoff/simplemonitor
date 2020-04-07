@@ -14,6 +14,7 @@ from typing import Any, List, Optional, TextIO, cast
 
 from ..Monitors.monitor import Monitor
 from ..util import format_datetime, short_hostname
+from ..version import VERSION
 from .logger import Logger, register
 
 
@@ -163,6 +164,65 @@ class HTMLLogger(Logger):
             self.get_config_option("upload_command", required=False, allow_empty=False),
         )
         self._resource_files = ["style.css"]  # type: List[str]
+        self._my_host = short_hostname()
+
+    def _make_html_row(self, name: str, entry: dict) -> str:
+        row = ""
+        row_class = ""
+        cell_class = ""
+        if entry["age"] > entry["gap"] + 60:
+            status = "OLD"
+            cell_class = "table-warning"
+        elif entry["status"]:
+            status = "OK"
+            cell_class = "table-success"
+        else:
+            status = "FAIL"
+            row_class = "table-danger"
+        try:
+            monitor_name = name.split("/")[1]
+        except Exception:
+            monitor_name = name
+        if row_class:
+            row = f'<tr class="{row_class}">'
+        else:
+            row = "<tr>"
+        row = (
+            row
+            + f'<td><span data-toggle="tooltip" data-placement="right" title="{entry["description"]}">{monitor_name}</span></td>'
+        )
+
+        if cell_class:
+            row = row + f'<td class="{cell_class}">'
+        else:
+            row = row + "<td>"
+        row = row + status + "</td>"
+
+        row = row + f'<td>{entry["host"]}</td><td>{entry["fail_time"]}'
+        if not entry["fail_count"]:
+            row = row + "<td></td>"
+        else:
+            row = row + f'<td>{entry["fail_count"]}</td>'
+        row = row + (
+            f'<td>{entry["downtime"]} '
+            f'(<span data-toggle="tooltip" data-placement="right" title="{entry["availability"] * 100:0.5f}%">{entry["availability"] * 100:0.2f}%</span>)'
+            "</td>"
+        )
+        row = row + f'<td>{entry["fail_data"]}</td>'
+
+        if entry["failures"] == 0:
+            row = row + "<td></td><td></td>"
+        else:
+            row = row + (
+                f'<td>{entry["failures"]}</td>'
+                f'<td>{format_datetime(entry["last_failure"])}</td>'
+            )
+        if entry["host"] == self._my_host:
+            row = row + "<td></td>"
+        else:
+            row = row + f'<td>{entry["age"]}</td>'
+        row = row + "</tr>\n"
+        return row
 
     def save_result2(self, name: str, monitor: Monitor) -> None:
         if not self.doing_batch:
@@ -216,6 +276,8 @@ class HTMLLogger(Logger):
             "last_failure": last_failure,
             "gap": gap,
             "availability": monitor.availability,
+            "description": monitor.describe(),
+            "link": monitor.failure_doc,
         }
         self.batch_data[monitor.name] = data_line
 
@@ -225,8 +287,6 @@ class HTMLLogger(Logger):
         fail_count = 0
         old_count = 0
         remote_count = 0
-
-        my_host = short_hostname()
 
         try:
             temp_file = tempfile.mkstemp()
@@ -246,91 +306,44 @@ class HTMLLogger(Logger):
         keys = list(self.batch_data.keys())
         keys.sort()
         for entry in keys:
-            if self.batch_data[entry]["age"] > self.batch_data[entry]["gap"] + 60:
-                status = "OLD"
+            this_entry = self.batch_data[entry]
+            output = output_ok
+            if this_entry["age"] > this_entry["gap"] + 60:
                 old_count += 1
-            elif self.batch_data[entry]["status"]:
-                status = "OK"
+            elif this_entry["status"]:
                 ok_count += 1
             else:
-                status = "FAIL"
                 fail_count += 1
-            if self.batch_data[entry]["host"] != my_host:
-                remote_count += 1
-            try:
-                monitor_name = entry.split("/")[1]
-            except Exception:
-                monitor_name = entry
-            if status == "FAIL":
                 output = output_fail
-            else:
-                output = output_ok
-            output.write('<tr class="%srow">' % status.lower())
-            output.write(
-                """
-            <td class="monitor_name">%s</td>
-            <td class="status %s">%s</td>
-            <td>%s</td>
-            <td>%s</td>
-            """
-                % (
-                    monitor_name,
-                    status.lower(),
-                    status,
-                    self.batch_data[entry]["host"],
-                    self.batch_data[entry]["fail_time"],
-                )
-            )
-            if self.batch_data[entry]["fail_count"] == 0:
-                output.write('<td class="vfc">&nbsp;</td>')
-            else:
-                output.write(
-                    '<td class="vfc">%s</td>' % self.batch_data[entry]["fail_count"]
-                )
-            try:
-                output.write(
-                    '<td>%s (<span title="%0.5f%%">%0.1f%%</span>)</td>'
-                    % (
-                        self.batch_data[entry]["downtime"],
-                        self.batch_data[entry]["availability"] * 100,
-                        self.batch_data[entry]["availability"] * 100,
-                    )
-                )
-            except Exception:
-                output.write("<td>&nbsp;</td>")
-            output.write("<td>%s &nbsp;</td>" % (self.batch_data[entry]["fail_data"]))
-            if self.batch_data[entry]["failures"] == 0:
-                output.write("<td></td><td></td>")
-            else:
-                output.write(
-                    """<td>%s</td>
-                <td>%s</td>"""
-                    % (
-                        self.batch_data[entry]["failures"],
-                        format_datetime(self.batch_data[entry]["last_failure"]),
-                    )
-                )
-            if self.batch_data[entry]["host"] == my_host:
-                output.write("<td></td>")
-            else:
-                output.write("<td>%d</td>" % self.batch_data[entry]["age"])
-            output.write("</tr>\n")
-        count_data = '<div id="summary"'
+            if this_entry["host"] != self._my_host:
+                remote_count += 1
+            output.write(self._make_html_row(entry, this_entry))
         if old_count > 0:
-            cls = "old"
+            self.header_class = "border-warning"
+            self.status = "OLD"
         elif fail_count > 0:
-            cls = "fail"
+            self.header_class = "border-danger"
+            self.status = "FAIL"
         else:
-            cls = "ok"
+            self.header_class = "border-success"
+            self.status = "OK"
 
-        count_data = count_data + ' class="%s">%s' % (cls, cls.upper())
-        self.count_data = (
-            count_data
-            + '<div id="details"><span class="ok">%d OK</span> <span class="fail">%d FAIL</span> <span class="old">%d OLD</span> <span class="remote">%d remote</span></div></div>'
-            % (ok_count, fail_count, old_count, remote_count)
+        self.count_data = " ".join(
+            [
+                f'<span class="badge badge-success">{ok_count} OK</span> '
+                if ok_count
+                else "",
+                f'<span class="badge badge-danger">{fail_count} FAIL</span> '
+                if fail_count
+                else "",
+                f'<span class="badge badge-warning">{old_count} OLD</span> '
+                if old_count
+                else "",
+                f'<span class="badge badge-info">{remote_count} remote</span> '
+                if remote_count
+                else "",
+            ]
         )
-
-        self.status = cls.upper()
 
         with open(os.path.join(self.source_folder, self.header), "r") as file_input:
             file_handle.writelines(self.parse_file(file_input))
@@ -375,7 +388,13 @@ class HTMLLogger(Logger):
             line = line.replace("_HOST_", socket.gethostname())
             line = line.replace("_COUNTS_", self.count_data)
             line = line.replace("_TIMESTAMP_", str(int(time.time())))
+            line = line.replace("_STATUS_BORDER_", self.header_class)
             line = line.replace("_STATUS_", self.status)
+            line = line.replace("_VERSION_", VERSION)
+            if self._global_info:
+                line = line.replace(
+                    "_INTERVAL_", str(max(30, self._global_info["interval"]))
+                )
             lines.append(line)
         return lines
 
