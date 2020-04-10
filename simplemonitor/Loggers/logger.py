@@ -24,6 +24,10 @@ class Logger:
             List[str],
             self.get_config_option("depend", required_type="[str]", default=[]),
         )
+        # only log for Monitors with one of these groups
+        self._groups = self.get_config_option(
+            "groups", required_type="[str]", default=["default"]
+        )
         if self.batch_data is None:
             self.batch_data = {}
         self._global_info = None  # type: Optional[dict]

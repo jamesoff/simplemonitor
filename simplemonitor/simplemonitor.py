@@ -181,7 +181,15 @@ class SimpleMonitor:
         logger.check_dependencies(self.failed + self.still_failing + self.skipped)
         logger.start_batch()
         for key in list(self.monitors.keys()):
-            logger.save_result2(key, self.monitors[key])
+            if self.monitors[key].group in logger._groups:
+                logger.save_result2(key, self.monitors[key])
+            else:
+                module_logger.debug(
+                    "not logging for %s due to group mismatch (monitor in group %s, logger has groups %s",
+                    key,
+                    self.monitors[key].group,
+                    logger._groups,
+                )
         try:
             for key in list(self.remote_monitors.keys()):
                 logger.save_result2(key, self.remote_monitors[key])
@@ -201,13 +209,6 @@ class SimpleMonitor:
                     "skipping alert for monitor %s as it wants remote alerting", key
                 )
                 continue
-            module_logger.debug(
-                "considering alert for monitor %s (group: %s) with alerter %s (groups: %s)",
-                this_monitor.name,
-                this_monitor.group,
-                alerter.name,
-                alerter.groups,
-            )
             try:
                 if this_monitor.group in alerter.groups:
                     # Only notifications for services that have it enabled
@@ -220,7 +221,10 @@ class SimpleMonitor:
                         )
                 else:
                     module_logger.info(
-                        "skipping alerter %s as monitor is not in group", alerter.name
+                        "skipping alerter %s as monitor %s is not in group %s",
+                        alerter.name,
+                        this_monitor.name,
+                        alerter.groups,
                     )
             except Exception:  # pragma: no cover
                 module_logger.exception("exception caught while alerting for %s", key)

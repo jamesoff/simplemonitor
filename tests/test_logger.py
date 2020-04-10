@@ -1,7 +1,10 @@
 # type: ignore
 import unittest
+from unittest.mock import patch
 
 from simplemonitor.Loggers import logger
+from simplemonitor.Monitors.monitor import MonitorNull
+from simplemonitor.simplemonitor import SimpleMonitor
 
 
 class TestLogger(unittest.TestCase):
@@ -39,3 +42,18 @@ class TestLogger(unittest.TestCase):
         self.assertEqual(
             test_logger.connected, False, "logger thought it was connected"
         )
+
+    def test_groups(self):
+        with patch.object(logger.Logger, "save_result2") as mock_method:
+            this_logger = logger.Logger({"groups": "nondefault"})
+            s = SimpleMonitor()
+            s.add_monitor("test", MonitorNull())
+            s.log_result(this_logger)
+        mock_method.assert_not_called()
+
+        with patch.object(logger.Logger, "save_result2") as mock_method:
+            this_logger = logger.Logger({"groups": "nondefault"})
+            s = SimpleMonitor()
+            s.add_monitor("test", MonitorNull("unnamed", {"group": "nondefault"}))
+            s.log_result(this_logger)
+        mock_method.assert_called_once()
