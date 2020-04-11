@@ -425,6 +425,40 @@ class MonitorMemory(Monitor):
 
 
 @register
+class MonitorSwap(Monitor):
+    """Check for available swap."""
+
+    _type = "swap"
+
+    def __init__(self, name: str, config_options: dict) -> None:
+        super().__init__(name, config_options)
+        if psutil is None:
+            self.monitor_logger.critical("psutil is not installed.")
+            self.monitor_logger.critical("Try: pip install -r requirements.txt")
+        self.percent_free = cast(
+            int,
+            self.get_config_option("percent_free", required_type="int", required=True),
+        )
+
+    def run_test(self) -> bool:
+        if psutil is None:
+            return self.record_fail("psutil is not installed")
+        stats = psutil.swap_memory()
+        percent = stats.percent
+        message = "{}% free".format(percent)
+        if percent < self.percent_free:
+            return self.record_fail(message)
+        else:
+            return self.record_success(message)
+
+    def get_params(self) -> Tuple:
+        return (self.percent_free,)
+
+    def describe(self) -> str:
+        return "Checking for at least {}% free swap".format(self.percent_free)
+
+
+@register
 class MonitorZap(Monitor):
     """Checks a Zap channel to make sure it is ok"""
 
