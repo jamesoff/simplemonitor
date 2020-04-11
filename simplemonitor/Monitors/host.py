@@ -444,7 +444,7 @@ class MonitorSwap(Monitor):
         if psutil is None:
             return self.record_fail("psutil is not installed")
         stats = psutil.swap_memory()
-        percent = stats.percent
+        percent = 100 - stats.percent
         message = "{}% free".format(percent)
         if percent < self.percent_free:
             return self.record_fail(message)
