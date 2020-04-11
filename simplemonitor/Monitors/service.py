@@ -138,7 +138,7 @@ class MonitorRC(Monitor):
         super().__init__(name, config_options)
         self.service_name = cast(str, self.get_config_option("service", required=True))
         self.script_path = cast(
-            str, self.get_config_option("path", default="/usr/local/etc/rc.d")
+            str, self.get_config_option("path", default="/usr/local/etc/rc.d/")
         )
         self.want_return_code = cast(
             str, self.get_config_option("return_code", required_type="int", default=0)
