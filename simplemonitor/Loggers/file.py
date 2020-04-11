@@ -395,6 +395,8 @@ class HTMLLogger(Logger):
                 line = line.replace(
                     "_INTERVAL_", str(max(30, self._global_info["interval"]))
                 )
+            else:
+                line = line.replace("_INTERVAL_", "30")
             lines.append(line)
         return lines
 
