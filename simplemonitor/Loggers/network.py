@@ -172,6 +172,11 @@ class Listener(Thread):
                     result = pickle.loads(serialized)  # nosec
                 try:
                     self.simplemonitor.update_remote_monitor(result, addr[0])
+                except KeyError:
+                    self.logger.exception(
+                        "Could not add remote monitor from host %s; possibly a monitor type we don't know?",
+                        addr[0],
+                    )
                 except Exception:
                     self.logger.exception("Error adding remote monitor")
             except socket.error as e:
