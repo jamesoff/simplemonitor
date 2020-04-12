@@ -11,12 +11,13 @@ functions.
 """
 
 import copy
-import datetime
 import logging
 import platform
 import subprocess  # nosec
 import time
 from typing import Any, List, NoReturn, Optional, Tuple, Union, cast
+
+import arrow
 
 from ..util import (
     MonitorConfigurationError,
@@ -43,13 +44,13 @@ class Monitor:
     skip_dep = None  # type: Optional[str]
 
     failures = 0
-    last_failure = None  # type: Optional[datetime.datetime]
-    uptime_start = None  # type: Optional[datetime.datetime]
+    last_failure = None  # type: Optional[arrow.Arrow]
+    uptime_start = None  # type: Optional[arrow.Arrow]
 
     # this is the time we last received data into this monitor (if we're remote)
-    last_update = None  # type: Optional[datetime.datetime]
+    last_update = None  # type: Optional[arrow.Arrow]
 
-    _first_load = None  # type: Optional[datetime.datetime]
+    _first_load = None  # type: Optional[arrow.Arrow]
     unavailable_seconds = 0  # type: int
 
     def __init__(
@@ -94,7 +95,7 @@ class Monitor:
         self._state = MonitorState.UNKNOWN
         self._force_run = True  # set to ensure we re-run ASAP after a HUP
         if self._first_load is None:
-            self._first_load = datetime.datetime.utcnow()
+            self._first_load = arrow.utcnow()
 
     def get_config_option(self, key: str, **kwargs: Any) -> Any:
         kwargs["exception"] = MonitorConfigurationError
@@ -213,18 +214,18 @@ class Monitor:
 
     def _add_unavailable_seconds(self) -> None:
         if self.last_update and self.success_count == 0:
-            unavailable_delta = datetime.datetime.utcnow() - self.last_update
+            unavailable_delta = arrow.utcnow() - self.last_update
             self.unavailable_seconds += unavailable_delta.seconds
 
     def record_fail(self, message: str = "") -> bool:
         """Update internal state to show that we had a failure."""
         self.error_count += 1
         self._add_unavailable_seconds()
-        self.last_update = datetime.datetime.utcnow()
+        self.last_update = arrow.utcnow()
         self.last_result = str(message)
         if self.virtual_fail_count() == 1:
-            self._failed_at = datetime.datetime.utcnow()
-            self.last_failure = datetime.datetime.utcnow()
+            self._failed_at = arrow.utcnow()
+            self.last_failure = arrow.utcnow()
             self.failures += 1
             self._state = MonitorState.FAILED
         self.success_count = 0
@@ -237,11 +238,11 @@ class Monitor:
         if self.error_count > 0:
             self.last_error_count = self.error_count
         if self.uptime_start is None:
-            self.uptime_start = datetime.datetime.utcnow()
+            self.uptime_start = arrow.utcnow()
         self._add_unavailable_seconds()
         self._state = MonitorState.OK
         self.error_count = 0
-        self.last_update = datetime.datetime.utcnow()
+        self.last_update = arrow.utcnow()
         self.success_count += 1
         self.tests_run += 1
         self.last_result = message
@@ -258,9 +259,9 @@ class Monitor:
         self._state = MonitorState.SKIPPED
         return True
 
-    def uptime(self) -> Optional[datetime.timedelta]:
+    def uptime(self) -> Optional[arrow.Arrow]:
         if self.uptime_start:
-            return datetime.datetime.utcnow() - self.uptime_start
+            return arrow.utcnow() - self.uptime_start
         return None
 
     def skipped(self) -> bool:
@@ -289,16 +290,14 @@ class Monitor:
         if self.tests_run <= 1:
             return 0.0
         if self._first_load is not None:
-            total_seconds = (
-                datetime.datetime.utcnow() - self._first_load
-            ).total_seconds()
+            total_seconds = (arrow.utcnow() - self._first_load).total_seconds()
             availability = 1 - (self.unavailable_seconds / total_seconds)
         else:
             availability = 0.0
         return availability
 
-    def first_failure_time(self) -> Optional[datetime.datetime]:
-        """Get a datetime object showing when we first failed."""
+    def first_failure_time(self) -> Optional[arrow.Arrow]:
+        """Get an Arrow object showing when we first failed."""
         return self._failed_at
 
     @property
@@ -443,7 +442,7 @@ class Monitor:
         if first_failure_time is None:
             return UpDownTime()
         else:
-            downtime = datetime.datetime.utcnow() - first_failure_time
+            downtime = arrow.utcnow() - first_failure_time
             return UpDownTime.from_timedelta(downtime)
 
     def get_uptime(self) -> UpDownTime:

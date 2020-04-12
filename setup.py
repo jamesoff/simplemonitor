@@ -39,6 +39,7 @@ setuptools.setup(
     },
     extras_require={"ring": ["ring-doorbell>=0.6.0"], "arlo": ["pyarlo"]},
     install_requires=[
+        "arrow",
         "boto3",
         "colorlog",
         "paho-mqtt",

@@ -3,6 +3,7 @@ import datetime
 import textwrap
 import unittest
 
+import arrow
 from freezegun import freeze_time
 
 from simplemonitor import util
@@ -11,6 +12,12 @@ from simplemonitor.Monitors import monitor
 
 
 class TestAlerter(unittest.TestCase):
+    def setUp(self):
+        # Work around to fix the freezegun times later to our local TZ, else they're UTC
+        # and the time compared to is local (as it should be)
+        a = arrow.now()
+        self.utcoffset = a.utcoffset()
+
     def test_groups(self):
         config_options = {"groups": "a,b,c"}
         a = alerter.Alerter(config_options)
@@ -164,22 +171,22 @@ class TestAlerter(unittest.TestCase):
         a = alerter.Alerter(
             {"times_type": "only", "time_lower": "10:00", "time_upper": "11:00"}
         )
-        with freeze_time("09:00"):
+        with freeze_time("09:00", tz_offset=-self.utcoffset):
             self.assertFalse(a._allowed_time())
-        with freeze_time("10:30"):
+        with freeze_time("10:30", tz_offset=-self.utcoffset):
             self.assertTrue(a._allowed_time())
-        with freeze_time("12:00"):
+        with freeze_time("12:00", tz_offset=-self.utcoffset):
             self.assertFalse(a._allowed_time())
 
     def test_allowed_not(self):
         a = alerter.Alerter(
             {"times_type": "not", "time_lower": "10:00", "time_upper": "11:00"}
         )
-        with freeze_time("09:00"):
+        with freeze_time("09:00", tz_offset=-self.utcoffset):
             self.assertTrue(a._allowed_time())
-        with freeze_time("10:30"):
+        with freeze_time("10:30", tz_offset=-self.utcoffset):
             self.assertFalse(a._allowed_time())
-        with freeze_time("12:00"):
+        with freeze_time("12:00", tz_offset=-self.utcoffset):
             self.assertTrue(a._allowed_time())
 
     def test_should_not_alert_ooh(self):
@@ -321,7 +328,7 @@ class TestMessageBuilding(unittest.TestCase):
                 alerter.Alerter.build_message(
                     alerter.AlertLength.ONELINE, alerter.AlertType.FAILURE, m
                 ),
-                "failure: test failed on {hostname} at 2020-03-10 09:00:00 (0+00:00:00): This monitor always fails.".format(
+                "failure: test failed on {hostname} at 2020-03-10 09:00:00+00:00 (0+00:00:00): This monitor always fails.".format(
                     hostname=util.short_hostname()
                 ),
             )
@@ -351,7 +358,7 @@ class TestMessageBuilding(unittest.TestCase):
                 alerter.Alerter.build_message(
                     alerter.AlertLength.SMS, alerter.AlertType.FAILURE, m
                 ),
-                "failure: test failed on {hostname} at 2020-03-10 09:00:00 (0+00:00:00): This monitor always fails.".format(
+                "failure: test failed on {hostname} at 2020-03-10 09:00:00+00:00 (0+00:00:00): This monitor always fails.".format(
                     hostname=util.short_hostname()
                 ),
             )
@@ -382,7 +389,7 @@ class TestMessageBuilding(unittest.TestCase):
                 textwrap.dedent(
                     """
                     Monitor test on {hostname} failed!
-                    Failed at: 2020-03-10 09:00:00 (down 0+00:00:00)
+                    Failed at: 2020-03-10 09:00:00+00:00 (down 0+00:00:00)
                     Virtual failure count: 1
                     Additional info: This monitor always fails.
                     Description: A monitor which always fails.
@@ -403,7 +410,7 @@ class TestMessageBuilding(unittest.TestCase):
                 textwrap.dedent(
                     """
                     Monitor test on {hostname} failed!
-                    Failed at: 2020-03-10 09:00:00 (down 0+00:00:00)
+                    Failed at: 2020-03-10 09:00:00+00:00 (down 0+00:00:00)
                     Virtual failure count: 1
                     Additional info: This monitor always fails.
                     Description: A monitor which always fails.

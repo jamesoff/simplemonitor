@@ -1,7 +1,6 @@
 # coding=utf-8
 """Network-related monitors for SimpleMonitor."""
 
-import datetime
 import json
 import re
 import socket
@@ -9,6 +8,7 @@ import subprocess
 import sys
 from typing import List, Pattern, Tuple, Union, cast
 
+import arrow
 import requests
 from requests.auth import HTTPBasicAuth
 
@@ -70,7 +70,7 @@ class MonitorHTTP(Monitor):
         self.password = config_options.get("password")
 
     def run_test(self) -> bool:
-        start_time = datetime.datetime.now()
+        start_time = arrow.get()
         end_time = None
         try:
             if self.certfile is None and self.username is None:
@@ -97,7 +97,7 @@ class MonitorHTTP(Monitor):
                     headers=self.headers,
                 )
 
-            end_time = datetime.datetime.now()
+            end_time = arrow.get()
             load_time = end_time - start_time
             if r.status_code not in self.allowed_codes:
                 return self.record_fail(

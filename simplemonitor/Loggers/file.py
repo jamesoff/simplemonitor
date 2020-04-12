@@ -1,5 +1,4 @@
 # coding=utf-8
-import datetime
 import json
 import os
 import shutil
@@ -11,6 +10,8 @@ import tempfile
 import time
 from io import StringIO
 from typing import Any, List, Optional, TextIO, cast
+
+import arrow
 
 from ..Monitors.monitor import Monitor
 from ..util import format_datetime, short_hostname
@@ -63,7 +64,7 @@ class FileLogger(Logger):
 
     def _get_datestring(self) -> str:
         if self.dateformat == "iso8601":
-            return format_datetime(datetime.datetime.now())
+            return format_datetime(arrow.now())
         return str(int(time.time()))
 
     def save_result2(self, name: str, monitor: Monitor) -> None:
@@ -254,7 +255,7 @@ class HTMLLogger(Logger):
 
         try:
             if monitor.last_update is not None:
-                age = datetime.datetime.utcnow() - monitor.last_update
+                age = arrow.utcnow() - monitor.last_update
                 age_seconds = age.days * 3600 + age.seconds
                 update = str(monitor.last_update)
             else:
@@ -384,10 +385,10 @@ class HTMLLogger(Logger):
     def parse_file(self, file_handle: TextIO) -> List[str]:
         lines = []  # type: List[str]
         for line in file_handle:
-            line = line.replace("_NOW_", format_datetime(datetime.datetime.now()))
+            line = line.replace("_NOW_", format_datetime(arrow.now()))
             line = line.replace("_HOST_", socket.gethostname())
             line = line.replace("_COUNTS_", self.count_data)
-            line = line.replace("_TIMESTAMP_", str(int(time.time())))
+            line = line.replace("_TIMESTAMP_", str(arrow.now().timestamp))
             line = line.replace("_STATUS_BORDER_", self.header_class)
             line = line.replace("_STATUS_", self.status)
             line = line.replace("_VERSION_", VERSION)
@@ -466,19 +467,19 @@ class JsonLogger(Logger):
 
     def process_batch(self) -> None:
         payload = MonitorJsonPayload()
-        payload.generated = format_datetime(datetime.datetime.now())
-        assert self.batch_data is not None
-        payload.monitors = self.batch_data
+        payload.generated = format_datetime(arrow.now())
+        if self.batch_data is not None:
+            payload.monitors = self.batch_data
 
-        with open(self.filename, "w") as outfile:
-            json.dump(
-                payload,
-                outfile,
-                indent=4,
-                separators=(",", ":"),
-                ensure_ascii=False,
-                cls=PayloadEncoder,
-            )
+            with open(self.filename, "w") as outfile:
+                json.dump(
+                    payload,
+                    outfile,
+                    indent=4,
+                    separators=(",", ":"),
+                    ensure_ascii=False,
+                    cls=PayloadEncoder,
+                )
         self.batch_data = {}
 
     def describe(self) -> str:

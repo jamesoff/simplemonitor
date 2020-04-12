@@ -7,6 +7,8 @@ import socket
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
+import arrow
+
 from .envconfig import EnvironmentAwareConfigParser
 
 
@@ -165,15 +167,18 @@ def get_config_option(
     return value
 
 
-def format_datetime(the_datetime: Optional[datetime.datetime]) -> str:
+def format_datetime(
+    the_datetime: Optional[Union[arrow.Arrow, datetime.datetime]]
+) -> str:
     """Return an isoformat()-like datetime without the microseconds."""
     if the_datetime is None:
-        return ""
-
-    if isinstance(the_datetime, datetime.datetime):
+        retval = ""
+    elif isinstance(the_datetime, (arrow.Arrow, datetime.datetime)):
         the_datetime = the_datetime.replace(microsecond=0)
-        return the_datetime.isoformat(" ")
-    return the_datetime
+        retval = the_datetime.isoformat(" ")
+    else:
+        retval = str(the_datetime)
+    return retval
 
 
 def short_hostname() -> str:

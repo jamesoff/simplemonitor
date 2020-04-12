@@ -5,6 +5,8 @@ import platform
 import time
 import unittest
 
+import arrow
+
 from simplemonitor import monitor
 from simplemonitor.Monitors.compound import CompoundMonitor
 from simplemonitor.Monitors.monitor import Monitor, MonitorFail, MonitorNull
@@ -187,13 +189,13 @@ class TestMonitor(unittest.TestCase):
 
     def test_downtime(self):
         m = Monitor()
-        m._failed_at = datetime.datetime.utcnow()
+        m._failed_at = arrow.utcnow()
         self.assertEqual(m.get_downtime(), UpDownTime())
 
         m._failed_at = None
         self.assertEqual(m.get_downtime(), UpDownTime())
 
-        now = datetime.datetime.utcnow()
+        now = arrow.utcnow()
         two_h_thirty_m_ago = now - datetime.timedelta(hours=2, minutes=30)
         yesterday = now - datetime.timedelta(days=1)
 
