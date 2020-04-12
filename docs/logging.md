@@ -24,6 +24,7 @@ The section name should be the name of your logger. This is the name you should 
 |---|---|---|---|
 |type|the type of logger to create. Choose one of the five in the list above.|yes| |
 |depend|lists (comma-separated, no spaces) the names of the monitors this logger depends on. Use this if the database file lives over the network. If a monitor it depends on fails, no attempt will be made to update the database.| no | |
+|groups|comma-separated list of monitor groups this logger should operate for|no|"default"|
 
 ### <a name="db"></a><a name="dbstatus"></a>db and dbstatus loggers
 
