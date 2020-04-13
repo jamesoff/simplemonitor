@@ -166,7 +166,8 @@ def get_config_option(
 
 
 def format_datetime(
-    the_datetime: Optional[Union[arrow.Arrow, datetime.datetime]]
+    the_datetime: Optional[Union[arrow.Arrow, datetime.datetime]],
+    tz: Optional[str] = None,
 ) -> str:
     """Return an isoformat()-like datetime without the microseconds."""
     if the_datetime is None:
@@ -174,6 +175,9 @@ def format_datetime(
     elif isinstance(the_datetime, (arrow.Arrow, datetime.datetime)):
         the_datetime = the_datetime.replace(microsecond=0)
         retval = the_datetime.isoformat(" ")
+        if isinstance(the_datetime, arrow.Arrow):
+            if tz is not None:
+                retval = the_datetime.to(tz).isoformat(" ")
     else:
         retval = str(the_datetime)
     return retval

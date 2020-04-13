@@ -64,7 +64,7 @@ class FileLogger(Logger):
 
     def _get_datestring(self) -> str:
         if self.dateformat == "iso8601":
-            return format_datetime(arrow.now())
+            return format_datetime(arrow.now(), self.tz)
         return str(int(time.time()))
 
     def save_result2(self, name: str, monitor: Monitor) -> None:
@@ -78,7 +78,7 @@ class FileLogger(Logger):
                     % (
                         self._get_datestring(),
                         name,
-                        format_datetime(monitor.first_failure_time()),
+                        format_datetime(monitor.first_failure_time(), self.tz),
                         monitor.virtual_fail_count(),
                         monitor.get_result(),
                         monitor.last_run_duration,
@@ -216,7 +216,7 @@ class HTMLLogger(Logger):
         else:
             row = row + (
                 f'<td>{entry["failures"]}</td>'
-                f'<td>{format_datetime(entry["last_failure"])}</td>'
+                f'<td>{format_datetime(entry["last_failure"], self.tz)}</td>'
             )
         if entry["host"] == self._my_host:
             row = row + "<td></td>"
@@ -238,7 +238,7 @@ class HTMLLogger(Logger):
         else:
             status = False
         if not status:
-            fail_time = format_datetime(monitor.first_failure_time())
+            fail_time = format_datetime(monitor.first_failure_time(), self.tz)
             fail_count = monitor.virtual_fail_count()
             fail_data = monitor.get_result()
             downtime = monitor.get_downtime()
@@ -385,7 +385,7 @@ class HTMLLogger(Logger):
     def parse_file(self, file_handle: TextIO) -> List[str]:
         lines = []  # type: List[str]
         for line in file_handle:
-            line = line.replace("_NOW_", format_datetime(arrow.now()))
+            line = line.replace("_NOW_", format_datetime(arrow.now(), self.tz))
             line = line.replace("_HOST_", socket.gethostname())
             line = line.replace("_COUNTS_", self.count_data)
             line = line.replace("_TIMESTAMP_", str(arrow.now().timestamp))

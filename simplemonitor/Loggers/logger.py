@@ -30,6 +30,7 @@ class Logger:
         )
         if self.batch_data is None:
             self.batch_data = {}
+        self.tz = cast(Optional[str], self.get_config_option("tz"))
         self._global_info = None  # type: Optional[dict]
 
     def set_global_info(self, info: dict) -> None:
