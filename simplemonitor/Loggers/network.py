@@ -9,7 +9,8 @@ from threading import Thread
 from typing import Any, cast
 
 from ..Monitors.monitor import Monitor
-from ..util import LoggerConfigurationError, json_dumps, json_loads
+from ..util import LoggerConfigurationError
+from ..util.json_encoding import json_dumps, json_loads
 from .logger import Logger, register
 
 # From the docs:
