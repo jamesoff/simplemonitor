@@ -43,7 +43,8 @@ class JSONDecoder(json.JSONDecoder):
             and isinstance(obj[0][1], str)
             and self._datetime_re.match(obj[0][1])
         ):
-            return datetime.datetime.strptime(obj[0][1], FORMAT)
+            # convert incoming datetimes to Arrow
+            return arrow.get(obj[0][1])
         elif (
             len(obj) == 1
             and obj[0][0] == MONITORSTATE_MAGIC_TOKEN

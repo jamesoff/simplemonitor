@@ -443,7 +443,7 @@ class Monitor:
             return UpDownTime()
         else:
             downtime = arrow.utcnow() - first_failure_time
-            return UpDownTime.from_timedelta(downtime)
+        return UpDownTime.from_timedelta(downtime)
 
     def get_uptime(self) -> UpDownTime:
         """Get monitor uptime"""
