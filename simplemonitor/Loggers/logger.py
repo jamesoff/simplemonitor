@@ -15,6 +15,7 @@ class Logger:
     doing_batch = False
     batch_data = None  # type: Optional[Dict[str, Any]]
     connected = True
+    _global_info = None  # type: Optional[dict]
 
     def __init__(self, config_options: dict) -> None:
         self._config_options = config_options
@@ -31,7 +32,8 @@ class Logger:
         if self.batch_data is None:
             self.batch_data = {}
         self.tz = cast(Optional[str], self.get_config_option("tz"))
-        self._global_info = None  # type: Optional[dict]
+        if self._global_info is None:
+            self._global_info = {}
 
     def set_global_info(self, info: dict) -> None:
         """Receive global info about the SimpleMonitor state.
