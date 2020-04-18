@@ -40,7 +40,6 @@ class FileLogger(Logger):
             raise RuntimeError(
                 "Couldn't open log file %s for appending: %s" % (self.filename, e)
             )
-        self.file_handle = open(self.filename, "a+")
 
         self.only_failures = self.get_config_option(
             "only_failures", required_type="bool", default=False
