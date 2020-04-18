@@ -1,5 +1,6 @@
 # type: ignore
 import os.path
+import socket
 import tempfile
 import time
 import unittest
@@ -8,8 +9,8 @@ from unittest.mock import patch
 from freezegun import freeze_time
 
 from simplemonitor.Loggers import logger
-from simplemonitor.Loggers.file import FileLogger
-from simplemonitor.Monitors.monitor import MonitorNull
+from simplemonitor.Loggers.file import FileLogger, HTMLLogger
+from simplemonitor.Monitors.monitor import MonitorFail, MonitorNull
 from simplemonitor.simplemonitor import SimpleMonitor
 
 
@@ -191,3 +192,41 @@ class TestFileLogger(unittest.TestCase):
         except PermissionError:
             # Windows won't remove a file which is in use
             pass
+
+
+class TestHTMLLogger(unittest.TestCase):
+    @freeze_time("2020-04-18 12:00:00+00:00")
+    def _write_html(self, logger_options: dict = None) -> str:
+        if logger_options is None:
+            logger_options = {}
+        with patch.object(socket, "gethostname", return_value="fake_hostname.local"):
+            temp_htmlfile = tempfile.mkstemp()[1]
+            logger_options.update({"filename": temp_htmlfile})
+            html_logger = HTMLLogger(logger_options)
+            monitor1 = MonitorNull()
+            monitor2 = MonitorFail("fail", {})
+            monitor1.run_test()
+            monitor2.run_test()
+            html_logger.start_batch()
+            html_logger.save_result2("null", monitor1)
+            html_logger.save_result2("fail", monitor2)
+            html_logger.end_batch()
+        return temp_htmlfile
+
+    def _compare_files(self, test_file, golden_file):
+        test_fh = open(test_file, "r")
+        golden_fh = open(golden_file, "r")
+        self.maxDiff = 6000
+        self.assertMultiLineEqual(test_fh.read(), golden_fh.read())
+        test_fh.close()
+        golden_fh.close()
+
+    def test_html(self):
+        test_file = self._write_html()
+        golden_file = "tests/html/test1.html"
+        self._compare_files(test_file, golden_file)
+
+    def test_html_tz(self):
+        test_file = self._write_html({"tz": "Europe/Warsaw"})
+        golden_file = "tests/html/test2.html"
+        self._compare_files(test_file, golden_file)
