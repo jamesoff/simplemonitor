@@ -59,7 +59,17 @@ class FileLogger(Logger):
             ),
         )
 
-        self.file_handle.write("%s: simplemonitor starting" % self._get_datestring())
+        self.file_handle.write(
+            "{} simplemonitor starting\n".format(self._get_datestring())
+        )
+        if not self.buffered:
+            self.file_handle.flush()
+
+    def __del__(self) -> None:
+        try:
+            self.file_handle.close()
+        except Exception:
+            pass
 
     def _get_datestring(self) -> str:
         if self.dateformat == "iso8601":
