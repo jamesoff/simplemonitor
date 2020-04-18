@@ -40,7 +40,7 @@ class SlackAlerter(Alerter):
     def send_alert(self, name: str, monitor: Monitor) -> None:
         """Send the message."""
 
-        type = self.should_alert(monitor)
+        alert_type = self.should_alert(monitor)
         downtime = monitor.get_downtime()
 
         message_json = {}  # type: Dict[str, Any]
@@ -53,9 +53,9 @@ class SlackAlerter(Alerter):
 
         message_json["attachments"] = [{}]
 
-        if type == AlertType.NONE:
+        if alert_type == AlertType.NONE:
             return
-        elif type == AlertType.FAILURE:
+        if alert_type == AlertType.FAILURE:
             message_json["text"] = "Monitor {} failed!".format(name)
             message_json["attachments"][0]["color"] = "danger"
             fields = [
@@ -88,7 +88,7 @@ class SlackAlerter(Alerter):
                 pass
             message_json["attachments"][0]["fields"] = fields
 
-        elif type == AlertType.SUCCESS:
+        elif alert_type == AlertType.SUCCESS:
             message_json["text"] = "Monitor {} succeeded.".format(name)
             fields = [
                 {
@@ -104,7 +104,7 @@ class SlackAlerter(Alerter):
             message_json["attachments"][0]["fields"] = fields
 
         else:
-            self.alerter_logger.error("unknown alert type %s", type)
+            self.alerter_logger.error("unknown alert type %s", alert_type)
             return
 
         if not self._dry_run:
