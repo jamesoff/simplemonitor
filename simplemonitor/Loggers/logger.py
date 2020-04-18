@@ -31,7 +31,7 @@ class Logger:
         )
         if self.batch_data is None:
             self.batch_data = {}
-        self.tz = cast(Optional[str], self.get_config_option("tz"))
+        self.tz = cast(Optional[str], self.get_config_option("tz", default="UTC"))
         if self._global_info is None:
             self._global_info = {}
 
