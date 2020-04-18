@@ -83,7 +83,11 @@ class TestFileLogger(unittest.TestCase):
                 fh.readline().strip(), "{} simplemonitor starting".format(ts)
             )
             self.assertEqual(fh.readline().strip(), "{} null: ok (0.000s)".format(ts))
-        os.unlink(temp_logfile)
+        try:
+            os.unlink(temp_logfile)
+        except PermissionError:
+            # Windows won't remove a file which is in use
+            pass
 
     @freeze_time("2020-04-18 12:00+01:00")
     def test_file_nonutc(self):
@@ -99,7 +103,11 @@ class TestFileLogger(unittest.TestCase):
                 fh.readline().strip(), "{} simplemonitor starting".format(ts)
             )
             self.assertEqual(fh.readline().strip(), "{} null: ok (0.000s)".format(ts))
-        os.unlink(temp_logfile)
+        try:
+            os.unlink(temp_logfile)
+        except PermissionError:
+            # Windows won't remove a file which is in use
+            pass
 
     @freeze_time("2020-04-18 12:00+00:00")
     def test_file_utc_iso(self):
@@ -121,7 +129,11 @@ class TestFileLogger(unittest.TestCase):
                 fh.readline().strip(),
                 "2020-04-18 12:00:00+00:00 null: ok (0.000s)".format(ts),
             )
-        os.unlink(temp_logfile)
+        try:
+            os.unlink(temp_logfile)
+        except PermissionError:
+            # Windows won't remove a file which is in use
+            pass
 
     @freeze_time("2020-04-18 12:00+01:00")
     def test_file_nonutc_iso_utctz(self):
@@ -143,7 +155,11 @@ class TestFileLogger(unittest.TestCase):
                 fh.readline().strip(),
                 "2020-04-18 11:00:00+00:00 null: ok (0.000s)".format(ts),
             )
-        os.unlink(temp_logfile)
+        try:
+            os.unlink(temp_logfile)
+        except PermissionError:
+            # Windows won't remove a file which is in use
+            pass
 
     @freeze_time("2020-04-18 12:00+01:00")
     def test_file_nonutc_iso_nonutctz(self):
@@ -170,4 +186,8 @@ class TestFileLogger(unittest.TestCase):
                 fh.readline().strip(),
                 "2020-04-18 13:00:00+02:00 null: ok (0.000s)".format(ts),
             )
-        os.unlink(temp_logfile)
+        try:
+            os.unlink(temp_logfile)
+        except PermissionError:
+            # Windows won't remove a file which is in use
+            pass
