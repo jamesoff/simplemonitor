@@ -66,10 +66,7 @@ class FileLogger(Logger):
             self.file_handle.flush()
 
     def __del__(self) -> None:
-        try:
-            self.file_handle.close()
-        except Exception:
-            pass
+        self.file_handle.close()
 
     def _get_datestring(self) -> str:
         if self.dateformat == "iso8601":

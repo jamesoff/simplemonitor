@@ -16,16 +16,16 @@ FORMAT = "%Y-%m-%d %H:%M:%S.%f"
 class JSONEncoder(json.JSONEncoder):
     _regexp_type = type(re.compile(""))
 
-    def default(self, obj: Any) -> Any:
-        if isinstance(obj, datetime.datetime):
-            return {DATETIME_MAGIC_TOKEN: obj.strftime(FORMAT)}
-        if isinstance(obj, self._regexp_type):
+    def default(self, o: Any) -> Any:  # pylint: disable=E0202
+        if isinstance(o, datetime.datetime):
+            return {DATETIME_MAGIC_TOKEN: o.strftime(FORMAT)}
+        if isinstance(o, self._regexp_type):
             return "<removed compiled regexp object>"
-        if isinstance(obj, MonitorState):
-            return {MONITORSTATE_MAGIC_TOKEN: obj.name}
-        if isinstance(obj, arrow.Arrow):
-            return {ARROW_MAGIC_TOKEN: obj.for_json()}
-        return super(JSONEncoder, self).default(obj)
+        if isinstance(o, MonitorState):
+            return {MONITORSTATE_MAGIC_TOKEN: o.name}
+        if isinstance(o, arrow.Arrow):
+            return {ARROW_MAGIC_TOKEN: o.for_json()}
+        return super(JSONEncoder, self).default(o)
 
 
 class JSONDecoder(json.JSONDecoder):
@@ -36,7 +36,7 @@ class JSONDecoder(json.JSONDecoder):
 
     _datetime_re = re.compile(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{6}")
 
-    def object_pairs_hook(self, obj: Any) -> Any:
+    def object_pairs_hook(self, obj: Any) -> Any:  # pylint: disable=E0202
         if (
             len(obj) == 1
             and obj[0][0] == DATETIME_MAGIC_TOKEN
