@@ -37,6 +37,7 @@ class Monitor:
     last_result = ""
     error_count = 0
     _failed_at = None
+    _last_run = 0
     success_count = 0
     tests_run = 0
     last_error_count = 0
@@ -280,7 +281,7 @@ class Monitor:
         if (
             self.last_virtual_fail_count()
             and self.success_count == 1
-            and not self._state == MonitorState.SKIPPED
+            and self._state != MonitorState.SKIPPED
         ):
             return True
         return False
@@ -411,21 +412,6 @@ class Monitor:
 
     def to_python_dict(self) -> dict:
         return self.__getstate__()
-
-    """
-    TODO
-    from typing import Type, TypeVar
-
-    T = TypeVar('T', bound='TrivialClass')
-
-    class TrivialClass:
-        # ...
-
-    @classmethod
-    def from_int(cls: Type[T], int_arg: int) -> T:
-        # ...
-        return cls(...)
-    """
 
     @classmethod
     def from_python_dict(

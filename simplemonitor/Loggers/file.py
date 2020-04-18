@@ -160,9 +160,7 @@ class HTMLLogger(Logger):
             str, self.get_config_option("folder", required=False, default="html")
         )
         if not os.path.isdir(self.folder):
-            self.logger_logger.critical(
-                "output folder {} does not exist".format(self.folder)
-            )
+            self.logger_logger.critical("output folder %s does not exist", self.folder)
         self.copy_resources = cast(
             bool,
             self.get_config_option(
@@ -175,6 +173,8 @@ class HTMLLogger(Logger):
         )
         self._resource_files = ["style.css"]  # type: List[str]
         self._my_host = short_hostname()
+        self.status = ""
+        self.header_class = ""
 
     def _make_html_row(self, name: str, entry: dict) -> str:
         row = ""
@@ -372,7 +372,7 @@ class HTMLLogger(Logger):
             )
             if not os.path.isdir(self.folder):
                 self.logger_logger.critical(
-                    "Target folder {} does not exist".format(self.folder)
+                    "Target folder %s does not exist", self.folder
                 )
                 return
             shutil.move(file_name, os.path.join(self.folder, self.filename))
@@ -440,8 +440,7 @@ class PayloadEncoder(json.JSONEncoder):
     def default(self, obj: Any) -> Any:
         if hasattr(obj, "json_representation"):
             return obj.json_representation()
-        else:
-            return json.JSONEncoder.default(self, obj.__dict__)
+        return json.JSONEncoder.default(self, obj.__dict__)
 
 
 @register
@@ -470,7 +469,7 @@ class JsonLogger(Logger):
             result.status = "Skipped"
         elif monitor.virtual_fail_count() <= 0:
             result.status = "OK"
-        result.dependencies = monitor._dependencies
+        result.dependencies = monitor.dependencies
 
         self.batch_data[name] = result
 

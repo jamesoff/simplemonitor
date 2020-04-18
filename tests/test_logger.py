@@ -120,15 +120,13 @@ class TestFileLogger(unittest.TestCase):
         monitor.run_test()
         file_logger.save_result2("null", monitor)
         self.assertTrue(os.path.exists(temp_logfile))
-        ts = str(int(time.time()))
         with open(temp_logfile, "r") as fh:
             self.assertEqual(
                 fh.readline().strip(),
-                "2020-04-18 12:00:00+00:00 simplemonitor starting".format(ts),
+                "2020-04-18 12:00:00+00:00 simplemonitor starting",
             )
             self.assertEqual(
-                fh.readline().strip(),
-                "2020-04-18 12:00:00+00:00 null: ok (0.000s)".format(ts),
+                fh.readline().strip(), "2020-04-18 12:00:00+00:00 null: ok (0.000s)",
             )
         try:
             os.unlink(temp_logfile)
@@ -146,15 +144,13 @@ class TestFileLogger(unittest.TestCase):
         monitor.run_test()
         file_logger.save_result2("null", monitor)
         self.assertTrue(os.path.exists(temp_logfile))
-        ts = str(int(time.time()))
         with open(temp_logfile, "r") as fh:
             self.assertEqual(
                 fh.readline().strip(),
-                "2020-04-18 11:00:00+00:00 simplemonitor starting".format(ts),
+                "2020-04-18 11:00:00+00:00 simplemonitor starting",
             )
             self.assertEqual(
-                fh.readline().strip(),
-                "2020-04-18 11:00:00+00:00 null: ok (0.000s)".format(ts),
+                fh.readline().strip(), "2020-04-18 11:00:00+00:00 null: ok (0.000s)",
             )
         try:
             os.unlink(temp_logfile)
@@ -177,15 +173,13 @@ class TestFileLogger(unittest.TestCase):
         monitor.run_test()
         file_logger.save_result2("null", monitor)
         self.assertTrue(os.path.exists(temp_logfile))
-        ts = str(int(time.time()))
         with open(temp_logfile, "r") as fh:
             self.assertEqual(
                 fh.readline().strip(),
-                "2020-04-18 13:00:00+02:00 simplemonitor starting".format(ts),
+                "2020-04-18 13:00:00+02:00 simplemonitor starting",
             )
             self.assertEqual(
-                fh.readline().strip(),
-                "2020-04-18 13:00:00+02:00 null: ok (0.000s)".format(ts),
+                fh.readline().strip(), "2020-04-18 13:00:00+02:00 null: ok (0.000s)",
             )
         try:
             os.unlink(temp_logfile)
@@ -195,8 +189,9 @@ class TestFileLogger(unittest.TestCase):
 
 
 class TestHTMLLogger(unittest.TestCase):
+    @staticmethod
     @freeze_time("2020-04-18 12:00:00+00:00")
-    def _write_html(self, logger_options: dict = None) -> str:
+    def _write_html(logger_options: dict = None) -> str:
         if logger_options is None:
             logger_options = {}
         with patch.object(socket, "gethostname", return_value="fake_hostname.local"):
