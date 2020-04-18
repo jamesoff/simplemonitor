@@ -1,2 +1,2 @@
 ignore:
-  - Monitors/file.py
+  - "tests/test_*.py"
