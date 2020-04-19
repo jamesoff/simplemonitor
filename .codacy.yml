@@ -3,3 +3,5 @@ engines:
   pylint:
     enabled: true
     python_verison: 3
+exclude_paths:
+  - "tests/**"
