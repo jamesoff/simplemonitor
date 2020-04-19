@@ -21,6 +21,8 @@ from .logger import Logger, register
 
 @register
 class FileLogger(Logger):
+    """Log monitor status to a file."""
+
     _type = "logfile"
     filename = ""
     only_failures = False
@@ -34,12 +36,7 @@ class FileLogger(Logger):
         self.filename = self.get_config_option(
             "filename", required=True, allow_empty=False
         )
-        try:
-            self.file_handle = open(self.filename, "a+")
-        except Exception as e:
-            raise RuntimeError(
-                "Couldn't open log file %s for appending: %s" % (self.filename, e)
-            )
+        self.file_handle = open(self.filename, "a+")
 
         self.only_failures = self.get_config_option(
             "only_failures", required_type="bool", default=False
@@ -99,17 +96,17 @@ class FileLogger(Logger):
 
             if not self.buffered:
                 self.file_handle.flush()
-        except Exception:
+        except OSError:
             self.logger_logger.exception("Error writing to logfile %s", self.filename)
 
     def hup(self) -> None:
         """Close and reopen log file."""
-        self.file_handle.close()
         try:
+            self.file_handle.close()
             self.file_handle = open(self.filename, "a+")
-        except Exception as e:
-            raise RuntimeError(
-                "Couldn't reopen log file %s after HUP: %s" % (self.filename, e)
+        except OSError:
+            self.logger_logger.exception(
+                "Couldn't reopen log file %s after HUP", self.filename
             )
 
     def describe(self) -> str:
@@ -188,7 +185,7 @@ class HTMLLogger(Logger):
             row_class = "table-danger"
         try:
             monitor_name = name.split("/")[1]
-        except Exception:
+        except IndexError:
             monitor_name = name
         if row_class:
             row = f'<tr class="{row_class}">'
@@ -299,7 +296,7 @@ class HTMLLogger(Logger):
             temp_file = tempfile.mkstemp()
             file_handle = os.fdopen(temp_file[0], "w")
             file_name = temp_file[1]
-        except Exception:
+        except OSError:
             self.logger_logger.exception(
                 "Couldn't create temporary file for HTML output"
             )
@@ -376,19 +373,20 @@ class HTMLLogger(Logger):
             if self.copy_resources:
                 for filename in self._resource_files:
                     shutil.copy(os.path.join(self.source_folder, filename), self.folder)
-        except Exception:
+        except OSError:
             self.logger_logger.exception(
                 "problem closing/moving temporary file for HTML output"
             )
         if self.upload_command:
             try:
-                subprocess.run(self.upload_command.split(" "))  # nosec
-            except Exception:
+                subprocess.run(self.upload_command.split(" "), check=True)  # nosec
+            except subprocess.SubprocessError:
                 self.logger_logger.exception(
                     "Failed to run upload command for HTML files"
                 )
 
     def parse_file(self, file_handle: TextIO) -> List[str]:
+        """Process a file an substitute in template values."""
         lines = []  # type: List[str]
         for line in file_handle:
             line = line.replace("_NOW_", format_datetime(arrow.now(), self.tz))
@@ -412,6 +410,8 @@ class HTMLLogger(Logger):
 
 
 class MonitorResult(object):
+    """Represent the current status of a Monitor."""
+
     def __init__(self) -> None:
         self.virtual_fail_count = 0
         self.result = None  # type: Optional[str]
@@ -434,14 +434,16 @@ class MonitorJsonPayload(object):
 
 
 class PayloadEncoder(json.JSONEncoder):
-    def default(self, obj: Any) -> Any:
-        if hasattr(obj, "json_representation"):
-            return obj.json_representation()
-        return json.JSONEncoder.default(self, obj.__dict__)
+    def default(self, o: Any) -> Any:
+        if hasattr(o, "json_representation"):
+            return o.json_representation()
+        return json.JSONEncoder.default(self, o.__dict__)
 
 
 @register
 class JsonLogger(Logger):
+    """Write monitor status to a JSON file."""
+
     _type = "json"
     filename = ""  # type: str
     supports_batch = True
