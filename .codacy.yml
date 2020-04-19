@@ -3,5 +3,8 @@ engines:
   pylint:
     enabled: true
     python_verison: 3
+  remark-stringify:
+    listItemIndent: space
+    paddedTable: false
 exclude_paths:
   - "tests/**"
