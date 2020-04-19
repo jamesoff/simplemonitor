@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "b8437267a70dcbea262c99815f64654a433ffafb709cfd6261d55357e94e9465"
+            "sha256": "d386106a758dfbe5cd11771c1db7e3b1d4ef8362d646385c225b28f400c0cbd1"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -14,13 +14,21 @@
         ]
     },
     "default": {
-        "boto3": {
+        "arrow": {
             "hashes": [
-                "sha256:0f716513fa495cbef3a50a8b46182cb069c475f423b02bcd7440eb7c5a86878f",
-                "sha256:5effba33ceb55a524e26f245dfe008bf3caca96a6a3d52886ae2fc9ddc06bb64"
+                "sha256:5390e464e2c5f76971b60ffa7ee29c598c7501a294bc9f5e6dadcb251a5d027b",
+                "sha256:70729bcc831da496ca3cb4b7e89472c8e2d27d398908155e0796179f6d2d41ee"
             ],
             "index": "pypi",
-            "version": "==1.12.37"
+            "version": "==0.15.5"
+        },
+        "boto3": {
+            "hashes": [
+                "sha256:970bd7b332e73d7b51077ed36772c634811b38c81b0cc6ed0f910e50d7ebadf8",
+                "sha256:cdd79a3a7bbe1f33a365f0acfcc75c4405b482b3eb9ce3f4e6b16c418e201ac3"
+            ],
+            "index": "pypi",
+            "version": "==1.12.39"
         },
         "botocore": {
             "hashes": [
@@ -252,6 +260,10 @@
                 "sha256:921a37e2aefc64145e7b73d50c71bb4f26f46e4c9f414dc648c6245ff92cf7db"
             ],
             "version": "==0.3.3"
+        },
+        "simplemonitor": {
+            "editable": true,
+            "path": "."
         },
         "six": {
             "hashes": [

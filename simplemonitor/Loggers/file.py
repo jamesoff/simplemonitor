@@ -1,5 +1,4 @@
 # coding=utf-8
-import datetime
 import json
 import os
 import shutil
@@ -12,6 +11,8 @@ import time
 from io import StringIO
 from typing import Any, List, Optional, TextIO, cast
 
+import arrow
+
 from ..Monitors.monitor import Monitor
 from ..util import format_datetime, short_hostname
 from ..version import VERSION
@@ -20,6 +21,8 @@ from .logger import Logger, register
 
 @register
 class FileLogger(Logger):
+    """Log monitor status to a file."""
+
     _type = "logfile"
     filename = ""
     only_failures = False
@@ -33,12 +36,6 @@ class FileLogger(Logger):
         self.filename = self.get_config_option(
             "filename", required=True, allow_empty=False
         )
-        try:
-            self.file_handle = open(self.filename, "a+")
-        except Exception as e:
-            raise RuntimeError(
-                "Couldn't open log file %s for appending: %s" % (self.filename, e)
-            )
         self.file_handle = open(self.filename, "a+")
 
         self.only_failures = self.get_config_option(
@@ -59,11 +56,18 @@ class FileLogger(Logger):
             ),
         )
 
-        self.file_handle.write("%s: simplemonitor starting" % self._get_datestring())
+        self.file_handle.write(
+            "{} simplemonitor starting\n".format(self._get_datestring())
+        )
+        if not self.buffered:
+            self.file_handle.flush()
+
+    def __del__(self) -> None:
+        self.file_handle.close()
 
     def _get_datestring(self) -> str:
         if self.dateformat == "iso8601":
-            return format_datetime(datetime.datetime.now())
+            return format_datetime(arrow.now(), self.tz)
         return str(int(time.time()))
 
     def save_result2(self, name: str, monitor: Monitor) -> None:
@@ -77,7 +81,7 @@ class FileLogger(Logger):
                     % (
                         self._get_datestring(),
                         name,
-                        format_datetime(monitor.first_failure_time()),
+                        format_datetime(monitor.first_failure_time(), self.tz),
                         monitor.virtual_fail_count(),
                         monitor.get_result(),
                         monitor.last_run_duration,
@@ -92,17 +96,17 @@ class FileLogger(Logger):
 
             if not self.buffered:
                 self.file_handle.flush()
-        except Exception:
+        except OSError:
             self.logger_logger.exception("Error writing to logfile %s", self.filename)
 
     def hup(self) -> None:
         """Close and reopen log file."""
-        self.file_handle.close()
         try:
+            self.file_handle.close()
             self.file_handle = open(self.filename, "a+")
-        except Exception as e:
-            raise RuntimeError(
-                "Couldn't reopen log file %s after HUP: %s" % (self.filename, e)
+        except OSError:
+            self.logger_logger.exception(
+                "Couldn't reopen log file %s after HUP", self.filename
             )
 
     def describe(self) -> str:
@@ -150,9 +154,7 @@ class HTMLLogger(Logger):
             str, self.get_config_option("folder", required=False, default="html")
         )
         if not os.path.isdir(self.folder):
-            self.logger_logger.critical(
-                "output folder {} does not exist".format(self.folder)
-            )
+            self.logger_logger.critical("output folder %s does not exist", self.folder)
         self.copy_resources = cast(
             bool,
             self.get_config_option(
@@ -165,6 +167,8 @@ class HTMLLogger(Logger):
         )
         self._resource_files = ["style.css"]  # type: List[str]
         self._my_host = short_hostname()
+        self.status = ""
+        self.header_class = ""
 
     def _make_html_row(self, name: str, entry: dict) -> str:
         row = ""
@@ -181,7 +185,7 @@ class HTMLLogger(Logger):
             row_class = "table-danger"
         try:
             monitor_name = name.split("/")[1]
-        except Exception:
+        except IndexError:
             monitor_name = name
         if row_class:
             row = f'<tr class="{row_class}">'
@@ -215,7 +219,7 @@ class HTMLLogger(Logger):
         else:
             row = row + (
                 f'<td>{entry["failures"]}</td>'
-                f'<td>{format_datetime(entry["last_failure"])}</td>'
+                f'<td>{format_datetime(entry["last_failure"], self.tz)}</td>'
             )
         if entry["host"] == self._my_host:
             row = row + "<td></td>"
@@ -237,7 +241,7 @@ class HTMLLogger(Logger):
         else:
             status = False
         if not status:
-            fail_time = format_datetime(monitor.first_failure_time())
+            fail_time = format_datetime(monitor.first_failure_time(), self.tz)
             fail_count = monitor.virtual_fail_count()
             fail_data = monitor.get_result()
             downtime = monitor.get_downtime()
@@ -254,7 +258,7 @@ class HTMLLogger(Logger):
 
         try:
             if monitor.last_update is not None:
-                age = datetime.datetime.utcnow() - monitor.last_update
+                age = arrow.utcnow() - monitor.last_update
                 age_seconds = age.days * 3600 + age.seconds
                 update = str(monitor.last_update)
             else:
@@ -292,7 +296,7 @@ class HTMLLogger(Logger):
             temp_file = tempfile.mkstemp()
             file_handle = os.fdopen(temp_file[0], "w")
             file_name = temp_file[1]
-        except Exception:
+        except OSError:
             self.logger_logger.exception(
                 "Couldn't create temporary file for HTML output"
             )
@@ -362,32 +366,33 @@ class HTMLLogger(Logger):
             )
             if not os.path.isdir(self.folder):
                 self.logger_logger.critical(
-                    "Target folder {} does not exist".format(self.folder)
+                    "Target folder %s does not exist", self.folder
                 )
                 return
             shutil.move(file_name, os.path.join(self.folder, self.filename))
             if self.copy_resources:
                 for filename in self._resource_files:
                     shutil.copy(os.path.join(self.source_folder, filename), self.folder)
-        except Exception:
+        except OSError:
             self.logger_logger.exception(
                 "problem closing/moving temporary file for HTML output"
             )
         if self.upload_command:
             try:
-                subprocess.run(self.upload_command.split(" "))  # nosec
-            except Exception:
+                subprocess.run(self.upload_command.split(" "), check=True)  # nosec
+            except subprocess.SubprocessError:
                 self.logger_logger.exception(
                     "Failed to run upload command for HTML files"
                 )
 
     def parse_file(self, file_handle: TextIO) -> List[str]:
+        """Process a file an substitute in template values."""
         lines = []  # type: List[str]
         for line in file_handle:
-            line = line.replace("_NOW_", format_datetime(datetime.datetime.now()))
+            line = line.replace("_NOW_", format_datetime(arrow.now(), self.tz))
             line = line.replace("_HOST_", socket.gethostname())
             line = line.replace("_COUNTS_", self.count_data)
-            line = line.replace("_TIMESTAMP_", str(int(time.time())))
+            line = line.replace("_TIMESTAMP_", str(arrow.now().timestamp))
             line = line.replace("_STATUS_BORDER_", self.header_class)
             line = line.replace("_STATUS_", self.status)
             line = line.replace("_VERSION_", VERSION)
@@ -405,6 +410,8 @@ class HTMLLogger(Logger):
 
 
 class MonitorResult(object):
+    """Represent the current status of a Monitor."""
+
     def __init__(self) -> None:
         self.virtual_fail_count = 0
         self.result = None  # type: Optional[str]
@@ -427,15 +434,16 @@ class MonitorJsonPayload(object):
 
 
 class PayloadEncoder(json.JSONEncoder):
-    def default(self, obj: Any) -> Any:
-        if hasattr(obj, "json_representation"):
-            return obj.json_representation()
-        else:
-            return json.JSONEncoder.default(self, obj.__dict__)
+    def default(self, o: Any) -> Any:
+        if hasattr(o, "json_representation"):
+            return o.json_representation()
+        return json.JSONEncoder.default(self, o.__dict__)
 
 
 @register
 class JsonLogger(Logger):
+    """Write monitor status to a JSON file."""
+
     _type = "json"
     filename = ""  # type: str
     supports_batch = True
@@ -460,25 +468,25 @@ class JsonLogger(Logger):
             result.status = "Skipped"
         elif monitor.virtual_fail_count() <= 0:
             result.status = "OK"
-        result.dependencies = monitor._dependencies
+        result.dependencies = monitor.dependencies
 
         self.batch_data[name] = result
 
     def process_batch(self) -> None:
         payload = MonitorJsonPayload()
-        payload.generated = format_datetime(datetime.datetime.now())
-        assert self.batch_data is not None
-        payload.monitors = self.batch_data
+        payload.generated = format_datetime(arrow.now())
+        if self.batch_data is not None:
+            payload.monitors = self.batch_data
 
-        with open(self.filename, "w") as outfile:
-            json.dump(
-                payload,
-                outfile,
-                indent=4,
-                separators=(",", ":"),
-                ensure_ascii=False,
-                cls=PayloadEncoder,
-            )
+            with open(self.filename, "w") as outfile:
+                json.dump(
+                    payload,
+                    outfile,
+                    indent=4,
+                    separators=(",", ":"),
+                    ensure_ascii=False,
+                    cls=PayloadEncoder,
+                )
         self.batch_data = {}
 
     def describe(self) -> str:

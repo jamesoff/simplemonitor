@@ -18,6 +18,8 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           architecture: x64
+      - name: Create html dir
+        run: mkdir -p html
       - name: Check pip
         run: pip --version
       - name: Update pip

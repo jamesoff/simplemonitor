@@ -14,6 +14,8 @@ ring-doorbell = ">=0.6.0"
 psutil = "*"
 pywin32 = {sys_platform = "== 'win32'"}
 pyarlo = "*"
+arrow = "*"
+"simplemonitor" = {editable = true, path = "."}
 
 [dev-packages]
 "flake8" = "*"

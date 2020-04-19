@@ -157,11 +157,10 @@ def load_monitors(m: SimpleMonitor, filename: str) -> SimpleMonitor:
                 m.update_monitor_config(this_monitor, config_options)
             else:
                 main_logger.error(
-                    "Cannot update monitor {} from type {} to type {}. Keeping original config for this monitor.".format(
-                        this_monitor,
-                        m.monitors[this_monitor]._type,
-                        config_options["type"],
-                    )
+                    "Cannot update monitor %s from type %s to type %s Keeping original config for this monitor.",
+                    this_monitor,
+                    m.monitors[this_monitor]._type,
+                    config_options["type"],
                 )
             continue
 
@@ -211,11 +210,10 @@ def load_loggers(
                 m.update_logger_config(config_logger, config_options)
             else:
                 main_logger.error(
-                    "Cannot update logger {} from type {} to type {}. Keeping original config for this logger.".format(
-                        config_logger,
-                        m.loggers[config_logger]._type,
-                        config_options["type"],
-                    )
+                    "Cannot update logger %s from type %s to type %s Keeping original config for this logger.",
+                    config_logger,
+                    m.loggers[config_logger]._type,
+                    config_options["type"],
                 )
             continue
         try:
@@ -258,11 +256,10 @@ def load_alerters(
                 m.update_alerter_config(this_alerter, config_options)
             else:
                 main_logger.error(
-                    "Cannot update alerter {} from type {} to type {}. Keeping original config for this alerter.".format(
-                        this_alerter,
-                        m.alerters[this_alerter]._type,
-                        config_options["type"],
-                    )
+                    "Cannot update alerter %s from type %s to type %s Keeping original config for this alerter.",
+                    this_alerter,
+                    m.alerters[this_alerter]._type,
+                    config_options["type"],
                 )
             continue
         try:
@@ -522,9 +519,8 @@ def main() -> None:
             else:
                 allowing_pickle = ""
             main_logger.info(
-                "Starting remote listener thread ({0}allowing pickle data)".format(
-                    allowing_pickle
-                )
+                "Starting remote listener thread (%sallowing pickle data)",
+                allowing_pickle,
             )
         remote_listening_thread = network_logger.Listener(
             m, remote_port, key, allow_pickle=allow_pickle

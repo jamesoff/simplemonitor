@@ -26,6 +26,8 @@ jobs:
         run: pip install pipenv
       - name: pipenv install
         run: pipenv --bare install --dev
+      - name: create HTML output folder
+        run: mkdir html
       - name: Integration tests
         run: make integration-tests
       - name: Unit tests

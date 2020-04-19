@@ -9,7 +9,8 @@ from threading import Thread
 from typing import Any, cast
 
 from ..Monitors.monitor import Monitor
-from ..util import LoggerConfigurationError, json_dumps, json_loads
+from ..util import LoggerConfigurationError
+from ..util.json_encoding import json_dumps, json_loads
 from .logger import Logger, register
 
 # From the docs:
@@ -53,7 +54,7 @@ class NetworkLogger(Logger):
         self.logger_logger.debug("network logger: %s %s", name, monitor)
         if monitor._type == "unknown":
             self.logger_logger.error(
-                "Cannot serialize monitor %s, has type 'unknown'." % name
+                "Cannot serialize monitor %s, has type 'unknown'.", name
             )
             return
         try:
@@ -147,9 +148,9 @@ class Listener(Thread):
                     my_digest = mac.digest()
                 except IndexError:  # pragma: no cover
                     raise ValueError(
-                        "Did not receive any or enough data from %s", addr[0]
+                        "Did not receive any or enough data from {}".format(addr[0])
                     )
-                if type(my_digest) is str:
+                if isinstance(my_digest, str):
                     self.logger.debug(
                         "Computed my digest to be %s; remote is %s",
                         my_digest,

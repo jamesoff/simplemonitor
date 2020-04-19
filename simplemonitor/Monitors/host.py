@@ -26,16 +26,16 @@ def _size_string_to_bytes(s: str) -> Optional[int]:
         return None
     if s.endswith("G"):
         gigs = int(s[:-1])
-        bytes = gigs * (1024 ** 3)
+        _bytes = gigs * (1024 ** 3)
     elif s.endswith("M"):
         megs = int(s[:-1])
-        bytes = megs * (1024 ** 2)
+        _bytes = megs * (1024 ** 2)
     elif s.endswith("K"):
         kilos = int(s[:-1])
-        bytes = kilos * 1024
+        _bytes = kilos * 1024
     else:
         return int(s)
-    return bytes
+    return _bytes
 
 
 def _bytes_to_size_string(b: int) -> str:
@@ -48,14 +48,13 @@ def _bytes_to_size_string(b: int) -> str:
 
     if b > tb:
         return "%0.2fTiB" % (b / float(tb))
-    elif b > gb:
+    if b > gb:
         return "%0.2fGiB" % (b / float(gb))
-    elif b > mb:
+    if b > mb:
         return "%0.2fMiB" % (b / float(mb))
-    elif b > kb:
+    if b > kb:
         return "%0.2fKiB" % (b / float(kb))
-    else:
-        return str(b)
+    return str(b)
 
 
 @register
@@ -217,7 +216,7 @@ class MonitorApcupsd(Monitor):
             output = e.output
         except OSError as e:
             return self.record_fail("Could not run {0}: {1}".format(executable, e))
-        except OSError as e:
+        except Exception as e:
             return self.record_fail("Error while getting UPS info: {0}".format(e))
 
         for line in output.splitlines():

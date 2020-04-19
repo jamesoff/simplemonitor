@@ -30,7 +30,7 @@ output.json
 did_recover*
 simplemonitor.egg-info
 dist
-html
+/html
 network.log
 .coverage.*
 .ring_token.cache

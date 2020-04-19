@@ -2,6 +2,8 @@
 import datetime
 import unittest
 
+import arrow
+
 from simplemonitor import util
 
 
@@ -93,6 +95,14 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(
             util.format_datetime(datetime.datetime(2018, 5, 8, 13, 37, 0)),
             "2018-05-08 13:37:00",
+        )
+        self.assertEqual(
+            util.format_datetime(arrow.get("2020-03-13 13:37:00+00:00")),
+            "2020-03-13 13:37:00+00:00",
+        )
+        self.assertEqual(
+            util.format_datetime(arrow.get("2020-04-11 13:37:00"), "Europe/London"),
+            "2020-04-11 14:37:00+01:00",
         )
 
 

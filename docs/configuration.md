@@ -27,6 +27,7 @@ The `hup_file` setting really exists for platforms which don't have SIGHUP (e.g.
 Note: The config reload will pick up new, modified and removed monitors, loggers, and alerters. Other than the `interval` setting, no other configuration options are reloaded. Note also that monitors, loggers and alerters cannot change type during a reload.
 
 ## Reporting section
+
 *loggers* lists (comma-separated, no spaces) the names of the loggers you have defined. (You can define loggers and not add them to this setting.) Not required; no default.
 
 *alerters* lists the names of the alerters you have defined. Not required; no default.
@@ -37,6 +38,7 @@ If you do not define any loggers or alerters, then the only way to monitor the s
 * [Configuring alerting](alerting.html)
 
 ## Monitors
+
 Monitors go in monitors.ini (or another file, if you changed the *monitors* setting above).
 
 Let’s have a look at an example configuration.

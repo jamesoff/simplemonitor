@@ -61,7 +61,7 @@ class SimpleMonitor:
     def verify_dependencies(self) -> bool:
         ok = True
         for k in list(self.monitors.keys()):
-            for dependency in self.monitors[k]._dependencies:
+            for dependency in self.monitors[k].dependencies:
                 if dependency not in list(self.monitors.keys()):
                     module_logger.critical(
                         "Configuration error: dependency %s of monitor %s is not defined!",
@@ -263,7 +263,7 @@ class SimpleMonitor:
 
         Used to tidy up after a config reload (which may have removed monitors)"""
         delete_list = []
-        for monitor in self.monitors.keys():
+        for monitor in self.monitors:
             if monitor not in retain:
                 module_logger.info("Removing monitor %s", monitor)
                 delete_list.append(monitor)
@@ -280,7 +280,7 @@ class SimpleMonitor:
 
         Used to tidy up after a config reload (which may have removed alerters)"""
         delete_list = []
-        for alerter in self.alerters.keys():
+        for alerter in self.alerters:
             if alerter not in retain:
                 module_logger.info("Removing alerter %s", alerter)
                 delete_list.append(alerter)
@@ -292,7 +292,7 @@ class SimpleMonitor:
 
         Used to tidy up after a config reload (which may have removed logger)"""
         delete_list = []
-        for logger in self.loggers.keys():
+        for logger in self.loggers:
             if logger not in retain:
                 module_logger.info("Removing logger %s", logger)
                 delete_list.append(logger)

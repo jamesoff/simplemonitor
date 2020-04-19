@@ -8,6 +8,8 @@ from enum import Enum
 from socket import gethostname
 from typing import Any, List, NoReturn, Optional, Tuple, Union, cast
 
+import arrow
+
 from ..Monitors.monitor import Monitor
 from ..util import (
     AlerterConfigurationError,
@@ -268,7 +270,7 @@ class Alerter:
 
     def _allowed_today(self) -> bool:
         """Check if today is an allowed day for an alert."""
-        if datetime.datetime.now().weekday() not in self._days:
+        if arrow.now().weekday() not in self._days:
             self.alerter_logger.debug("not allowed to alert today")
             return False
         return True
@@ -278,7 +280,7 @@ class Alerter:
         if self._times_type == AlertTimeFilter.ALWAYS:
             return True
         if self._time_info[0] is not None and self._time_info[1] is not None:
-            now = datetime.datetime.now().time()
+            now = arrow.now().time()
             in_time_range = (now > self._time_info[0]) and (now < self._time_info[1])
             if self._times_type == AlertTimeFilter.ONLY:
                 self.alerter_logger.debug("in_time_range: {}".format(in_time_range))

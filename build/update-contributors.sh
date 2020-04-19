@@ -1,4 +1,4 @@
-#1/usr/bin/env bash
+#!/usr/bin/env bash
 
 contributors=CONTRIBUTORS
 [[ -f "$contributors".tmp ]] && rm -f "$contributors".tmp
