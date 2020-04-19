@@ -25,29 +25,31 @@ The types of alerter are:
 * [nc](#nc): Sends notifications via macOS Notification Center
 
 ## Defining an alerter
+
 The section name should be the name of your alerter. This is the name you should give in the "alerters" setting in the reporting section of the main configuration. All alerters share these settings:
 
 | setting | description | required | default |
 |---|---|---|---|
-|type|the type of the alerter, from the list above|yes| |
-|depend|a list of monitors this alerter depends on. If any of them fail, no attempt will be made to send the alert. (For example, there's no point trying to send an email alert to an external address if your route(s) to the Internet are down.)|no| |
-|limit|the number of times a monitor must fail before this alerter will fire. You can use this to escalate an alert to another email address if the problem is ongoing for too long, for example.|no|1|
-|dry_run|makes an alerter do everything except actually send the message. Instead it will print some information about what it would do. Use when you want to test your configuration without generating emails/SMSes. Set to 1 to enable.|no|0|
-|ooh_success|makes an alerter trigger its success action even if out-of-hours (0 or 1)|no|0|
-|groups|comma-separated list of group names this alerter will fire for. See the `group` setting for monitors|no|`default`|
-|only_failures|set to 1 to only fire this alerters for failure notifications (or catchups), not recoveries|no|0|
+| type | the type of the alerter, from the list above | yes| |
+| depend | a list of monitors this alerter depends on. If any of them fail, no attempt will be made to send the alert. (For example, there's no point trying to send an email alert to an external address if your route(s) to the Internet are down.) | no| |
+| limit | the number of times a monitor must fail before this alerter will fire. You can use this to escalate an alert to another email address if the problem is ongoing for too long, for example. | no | 1 |
+| dry_run | makes an alerter do everything except actually send the message. Instead it will print some information about what it would do. Use when you want to test your configuration without generating emails/SMSes. Set to 1 to enable. | no | 0 |
+| ooh_success | makes an alerter trigger its success action even if out-of-hours (0 or 1) | no | 0 |
+| groups | comma-separated list of group names this alerter will fire for. See the `group` setting for monitors | no | `default` |
+| only_failures | set to 1 to only fire this alerters for failure notifications (or catchups), not recoveries | no | 0 |
 
 The *limit* uses the virtual fail count of a monitor, which means if a monitor has a tolerance of 3 and the alerter has a limit of 2, the monitor must fail 5 times before an alert is sent.
 
 ## Time periods
+
 All alerters accept time period configuration. By default, an alerter is active at all times, so you will always immediately receive an alert at the point where a monitor has failed enough (more times than the *limit*). To set limits on when an alerter can send:
 
 | setting | description | required | default |
 |---|---|---|---|
-|day|Which days an alerter can operate on. This is a comma-separated list of integers. 0 is Monday and 6 is Sunday.|no|(all days)|
-|times_type|Set to one of always, only, or not. “Only” means that the limits define the period that an alerter can operate. “Not” means that the limits define the period during which it will not operate.|no|always|
-|time_lower and time_upper| If *times_type* is only or not, these two settings define the time limits. time_lower must always be the lower time. The time format is hh:mm using 24-hour clock. Both are required if times_type is anything other than always.|when *times_type* is not `always`| |
-|delay|If any kind of time/day restriction applies, the alerter will notify you of any monitors that failed while they were unable to alert you and are still failed. If a monitor fails and recovers during the restricted period, no catch-up alert is generated. Set to 1 to enable.|no|0|
+| day | Which days an alerter can operate on. This is a comma-separated list of integers. 0 is Monday and 6 is Sunday. | no | (all days)|
+| times_type | Set to one of always, only, or not. “Only” means that the limits define the period that an alerter can operate. “Not” means that the limits define the period during which it will not operate. | no | always |
+| time_lower and time_upper| If *times_type* is only or not, these two settings define the time limits. time_lower must always be the lower time. The time format is hh:mm using 24-hour clock. Both are required if times_type is anything other than always. | when *times_type* is not `always` | |
+| delay | If any kind of time/day restriction applies, the alerter will notify you of any monitors that failed while they were unable to alert you and are still failed. If a monitor fails and recovers during the restricted period, no catch-up alert is generated. Set to 1 to enable. | no | 0 |
 
 Here’s a quick example of setting time periods (some other configuration values omitted):
 
@@ -78,11 +80,11 @@ delay=1
 
 | setting | description | required | default |
 |---|---|---|---|
-|topic|The ARN of the topic to publish to. Specify this OR number, not both|no| |
-|number|The phone number to SMS. Give the number as e.g. 447777123456 (country code then number)|no| |
-|aws_region|The AWS region to use|no| |
-|aws_access_key|The AWS access key to use|no| |
-|aws_secret_access_key|The AWS secret access key|no| |
+| topic | The ARN of the topic to publish to. Specify this OR number, not both | no | |
+| number | The phone number to SMS. Give the number as e.g. 447777123456 (country code then number) | no | |
+| aws_region | The AWS region to use | no | |
+| aws_access_key | The AWS access key to use | no | |
+| aws_secret_access_key | The AWS secret access key | no | |
 
 You do not need to specify the `aws_*` settings if suitable values are available in a way that boto3 can find them (e.g. in the environment, or specified in a profile). To send an SMS, you must use a region with supports SMS sending (e.g. us-east-1).
 
@@ -92,13 +94,13 @@ You do not need to specify the `aws_*` settings if suitable values are available
 
 | setting | description | required | default |
 |---|---|---|---|
-|host|the email server to send the message to (via SMTP).|yes| |
-|port|the port the email server is listening to.|no|25|
-|from|the email address the email should come from.|yes| |
-|to|the email address to email should go to. You can set multiple addresses separated by ;|yes| |
-|username|username to log into the SMTP server|no| |
-|password|password to log into the SMTP server|no| |
-|ssl|`starttls` to use StartTLS; `yes` to use SMTP_SSL (untested); otherwise no SSL is used at all|no| |
+| host | the email server to send the message to (via SMTP). | yes | |
+| port | the port the email server is listening to. | no | 25 |
+| from | the email address the email should come from. | yes | |
+| to | the email address to email should go to. You can set multiple addresses separated by ; | yes | |
+| username | username to log into the SMTP server | no | |
+| password | password to log into the SMTP server | no | |
+| ssl | `starttls` to use StartTLS; `yes` to use SMTP_SSL (untested); otherwise no SSL is used at all | no | |
 
 ## <a name="bulksms"></a>BulkSMS alerters
 
@@ -106,21 +108,22 @@ You do not need to specify the `aws_*` settings if suitable values are available
 
 | setting | description | required | default |
 |---|---|---|---|
-|sender|who the SMS should appear to be from. Max 11 chars. Try to avoid non alphanumeric characters.|no|SmplMntr|
-|username|your BulkSMS username.|yes| |
-|password|your BulkSMS password.|yes| |
-|target|the number to send the SMS to. Prefix the country code but drop the +. UK example: 447777123456.|yes| |
+| sender | who the SMS should appear to be from. Max 11 chars. Try to avoid non alphanumeric characters. | no | SmplMntr |
+| username | your BulkSMS username. | yes | |
+| password | your BulkSMS password. | yes | |
+| target | the number to send the SMS to. Prefix the country code but drop the +. UK example: 447777123456. | yes | |
 
 ## <a name="syslog"></a>Syslog alerters
+
 Syslog alerters have no additional options.
 
 ## <a name="execute"></a>Execute alerters
 
 | setting | description | required | default |
 |---|---|---|---|
-|fail_command|The command to execute when a monitor fails.|no| |
-|success_command|The command to execute when a monitor recovered.|no| |
-|catchup_command|THe command to execute when a previously-failed but not-alerted monitor enters a time period when it can alert. See the `delay` option above.|no| |
+| fail_command | The command to execute when a monitor fails. | no | |
+| success_command | The command to execute when a monitor recovered. | no | |
+| catchup_command | THe command to execute when a previously-failed but not-alerted monitor enters a time period when it can alert. See the `delay` option above. | no | |
 
 You can use the string `fail_command` for catchup_command to make it use the value of fail_command.
 
@@ -142,7 +145,7 @@ The commands are executed directly by Python. If you require shell features, suc
 
 First, set up a webhook for this to use.
 
-1. Go to https://slack.com/apps/manage
+1. Go to <https://slack.com/apps/manage>
 2. Add a new webhook
 3. Configure it to taste (channel, name, icon)
 4. Copy the webhook URL for your configuration below
@@ -153,9 +156,9 @@ This alerter requires the `requests` library to be installed.  You can install i
 
 | setting | description | required | default |
 |---|---|---|---|
-|url|The Slack webhook URL as configured on your account|yes| |
-|channel|The channel to send to|no|uses the channel configured on the webhook|
-|username|A username to send to|no| |
+| url | The Slack webhook URL as configured on your account | yes | |
+| channel | The channel to send to | no | uses the channel configured on the webhook |
+| username | A username to send to | no | |
 
 ## <a name="ses"></a>ses alerters
 
@@ -167,10 +170,10 @@ This alerter requires the `boto3` library to be installed.
 
 | setting | description | required | default |
 |---|---|---|---|
-|from|The email address to send from|yes| |
-|to|The address to send to|yes| |
-|aws_access_key|The AWS access key id|no|(the SDK will look for credentials in the usual locations)|
-|aws_secret_access_key|The AWS secret access key|no|(the SDK will look for credentials in the usual locations)|
+| from | The email address to send from | yes | |
+| to | The address to send to | yes | |
+| aws_access_key | The AWS access key id | no | (the SDK will look for credentials in the usual locations) |
+| aws_secret_access_key | The AWS secret access key | no | (the SDK will look for credentials in the usual locations) |
 
 ## <a name="46elks"></a>46elks alerters
 
@@ -180,11 +183,11 @@ You will need to register for an account at [46elks](https://46elks.com).
 
 | setting | description | required | default |
 |---|---|---|---|
-|username| your 46elks username| yes | |
-|password| your 46elks password| yes | |
-|target| 46elks target value | yes | |
-|sender| your SMS sender field; start with + if using a phone number | no | SmplMntr |
-|api_host| 46elks API endpoint| no | api.46elks.com |
+| username| your 46elks username | yes | |
+| password| your 46elks password | yes | |
+| target| 46elks target value | yes | |
+| sender| your SMS sender field; start with + if using a phone number | no | SmplMntr |
+| api_host| 46elks API endpoint | no | api.46elks.com |
 
 ## <a name="pushpullet"></a>pushbullet alerters
 
@@ -194,7 +197,7 @@ You will need to be registered at [pushbullet](https://www.pushbullet.com).
 
 | setting | description | required | default |
 |---|---|---|---|
-|token|your pushbullet token| yes | |
+| token | your pushbullet token | yes | |
 
 ## <a name="pushover"></a>pushover alerters
 
@@ -204,8 +207,8 @@ You will need to be registered at [pushover](https://pushover.net).
 
 | setting | description | required | default |
 |---|---|---|---|
-|user|your pushover username| yes | |
-|token|your pushover token| yes | |
+| user | your pushover username | yes | |
+| token | your pushover token| yes | |
 
 ## <a name="nc"></a>nc alerters
 
@@ -219,5 +222,5 @@ Send alerts to a Telegram chat.
 
 | setting | description | required | default |
 |---|---|---|---|
-|token|The token to access telegram|yes| |
-|chat_id|The chat to send to|yes| |
+| token | The token to access telegram | yes | |
+| chat_id | The chat to send to | yes | |
