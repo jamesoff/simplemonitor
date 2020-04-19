@@ -6,5 +6,6 @@ engines:
   remark-stringify:
     listItemIndent: space
     paddedTable: false
+    tablePipeAlign: false
 exclude_paths:
   - "tests/**"
