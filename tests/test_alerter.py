@@ -433,7 +433,7 @@ class TestMessageBuilding(unittest.TestCase):
                 textwrap.dedent(
                     """
                     Monitor winning on {hostname} succeeded!
-                    Recovered at: 
+                    Recovered at: 2020-03-10 09:00:00+00:00
                     Additional info: 
                     Description: (Monitor did not write an auto-biography.)
                     """.format(  # noqa: W291

@@ -357,7 +357,7 @@ class Alerter:
             elif alert_type == AlertType.SUCCESS:
                 message = """
                 Monitor {monitor.name}{host} {alert_verb}!
-                Recovered at: {failure_time}
+                Recovered at: {recovered_time}
                 Additional info: {result}
                 Description: {desc}
                 """
@@ -383,6 +383,7 @@ class Alerter:
                 host=host,
                 desc=monitor.describe(),
                 vfc=monitor.virtual_fail_count(),
+                recovered_time=format_datetime(monitor.last_update),
             )
             message = textwrap.dedent(message)
         else:
