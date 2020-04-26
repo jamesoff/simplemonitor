@@ -245,3 +245,21 @@
       desc: The state the service should be in; either `running` (command exits 0) or `stopped` (command exits 1)
       required: 'no'
       default: running
+- name: process
+  oneline: Check for a running process
+  params:
+    - name: process_name
+      desc: The process name to check for
+      requried: 'yes'
+    - name: min_count
+      desc: The minimum number of processes to require
+      required: 'no'
+      default: 1
+    - name: max_count
+      desc: The maximum number of processes allowed
+      required: 'no'
+      default: infinity
+    - name: username
+      desc: Limit matches to processes owned by this username
+      required: 'no'
+      default: blank (any user)

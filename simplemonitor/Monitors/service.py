@@ -5,7 +5,7 @@ import platform
 import re
 import subprocess
 import time
-from typing import Any, List, Tuple, cast
+from typing import Any, List, Optional, Tuple, cast
 
 from .monitor import Monitor, register
 
@@ -203,9 +203,13 @@ class MonitorUnixService(Monitor):
 
     def run_test(self) -> bool:
         try:
-            returncode = subprocess.check_call(
-                ["service", self.service_name, "status"]
+            result = subprocess.run(
+                ["service", self.service_name, "status"],
+                check=True,
+                stderr=subprocess.PIPE,
+                stdin=subprocess.PIPE,
             )  # nosec
+            returncode = result.returncode
         except subprocess.CalledProcessError as exception:
             returncode = exception.returncode
             if returncode == self._want_return_code:
@@ -336,6 +340,81 @@ class MonitorSystemdUnit(Monitor):
 
     def describe(self) -> str:
         return "Checks unit %s is running" % self.name
+
+
+@register
+class MonitorProcess(Monitor):
+    """Check for a running process."""
+
+    _type = "process"
+
+    def __init__(
+        self, name: str = "unnamed", config_options: Optional[dict] = None
+    ) -> None:
+        super().__init__(name=name, config_options=config_options)
+        if config_options is None:
+            config_options = {}
+        if psutil is None:
+            self.monitor_logger.critical("psutil is not installed.")
+            self.monitor_logger.critical("Try: pip install -r requirements.txt")
+        self.process_name = cast(
+            str, self.get_config_option("process_name", required=True)
+        )
+        self.max_count = cast(
+            int, self.get_config_option("max_count", required_type="int", default=-1)
+        )
+        self.min_count = cast(
+            int, self.get_config_option("min_count", required_type="int", default=1)
+        )
+        self.username = cast(
+            Optional[str], self.get_config_option("username", required_type="str")
+        )
+
+    @staticmethod
+    def _find_process_by_name(
+        name: str, username: Optional[str] = None
+    ) -> List[psutil.Process]:
+        processes = []
+        for process in psutil.process_iter(["name", "exe", "cmdline", "username"]):
+            if (
+                name == process.info["name"]
+                or (
+                    process.info["exe"]
+                    and os.path.basename(process.info["exe"]) == name
+                )
+                or (process.info["cmdline"] and process.info["cmdline"][0] == name)
+            ):
+                if username is None or username == process.info["username"]:
+                    processes.append(process)
+        return processes
+
+    def run_test(self) -> bool:
+        if psutil is None:
+            return self.record_fail("psutil is not installed")
+        processes = self._find_process_by_name(self.process_name, self.username)
+        count = len(processes)
+        if count == 1:
+            message = "1 matching process running"
+        else:
+            message = "{} matching processes running".format(count)
+        if count < self.min_count:
+            return self.record_fail(message)
+        if self.max_count > -1 and count > self.max_count:
+            return self.record_fail(message)
+        return self.record_success(message)
+
+    def get_params(self) -> Tuple:
+        return (self.process_name, self.min_count, self.max_count, self.username)
+
+    def describe(self) -> str:
+        desc = "Checking for at least {} and at most {} processes matching {}".format(
+            self.min_count,
+            "infinity" if self.max_count == -1 else self.max_count,
+            self.process_name,
+        )
+        if self.username:
+            desc = desc + " owned by {}".format(self.username)
+        return desc
 
 
 @register

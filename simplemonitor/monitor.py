@@ -625,6 +625,9 @@ def main() -> None:
                     tail_info.append(
                         "    Monitor {0} should have failed".format(this_monitor)
                     )
+                    tail_info.append(
+                        "        {}".format(m.monitors[this_monitor].last_result)
+                    )
                     ok = False
                 else:
                     print("    Monitor {0} was ok (failed)".format(this_monitor))
@@ -644,6 +647,9 @@ def main() -> None:
                         )
                     )
                     ok = False
+                    tail_info.append(
+                        "        {}".format(m.monitors[this_monitor].last_result)
+                    )
                 else:
                     print("    Monitor {0} was ok".format(this_monitor))
         if len(tail_info):
