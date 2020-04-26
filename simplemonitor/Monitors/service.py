@@ -178,6 +178,57 @@ class MonitorRC(Monitor):
 
 
 @register
+class MonitorUnixService(Monitor):
+    """Monitor a service handled by a generic "service" command.
+
+    If "service X status" exits 0 for the service being up, and non-zero
+    otherwise, this is for you.
+    """
+
+    _type = "unix_service"
+
+    def __init__(self, name: str = "unnamed", config_options: dict = None) -> None:
+        super().__init__(name=name, config_options=config_options)
+        self.service_name = cast(str, self.get_config_option("service", required=True))
+        self.want_state = cast(
+            str,
+            self.get_config_option(
+                "state", allowed_values=["running", "stopped"], default="running"
+            ),
+        )
+        if self.want_state == "running":
+            self._want_return_code = 0
+        else:
+            self._want_return_code = 1
+
+    def run_test(self) -> bool:
+        try:
+            returncode = subprocess.check_call(
+                ["service", self.service_name, "status"]
+            )  # nosec
+        except subprocess.CalledProcessError as exception:
+            returncode = exception.returncode
+            if returncode == self._want_return_code:
+                return self.record_success()
+            self.record_fail(
+                "Failed to run 'service {} status: {}".format(
+                    self.service_name, exception.output
+                )
+            )
+        if returncode == self._want_return_code:
+            return self.record_success()
+        return self.record_fail(
+            "Got exit code {}, wanted {}".format(returncode, self._want_return_code)
+        )
+
+    def get_params(self) -> Tuple:
+        return (self.service_name, self.want_state)
+
+    def describe(self) -> str:
+        return "Checking service {} is {}".format(self.service_name, self.want_state)
+
+
+@register
 class MonitorSystemdUnit(Monitor):
     """Monitor a systemd unit.
 

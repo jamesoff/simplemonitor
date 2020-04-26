@@ -235,3 +235,13 @@
       desc: The number of your base station; only required if you have more than one. It's an array index, but figuring out which one is which is an exercise left the reader
       required: 'no'
       default: 0
+- name: unix_service
+  oneline: Check a generic unix service with the "service" command
+  params:
+    - name: service
+      desc: Name of the service to check
+      required: 'yes'
+    - name: state
+      desc: The state the service should be in; either `running` (command exits 0) or `stopped` (command exits 1)
+      required: 'no'
+      default: running
