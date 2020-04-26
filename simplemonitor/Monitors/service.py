@@ -203,9 +203,12 @@ class MonitorUnixService(Monitor):
 
     def run_test(self) -> bool:
         try:
-            returncode = subprocess.check_call(
-                ["service", self.service_name, "status"]
+            result = subprocess.run(
+                ["service", self.service_name, "status"],
+                check=True,
+                capture_output=True,
             )  # nosec
+            returncode = result.returncode
         except subprocess.CalledProcessError as exception:
             returncode = exception.returncode
             if returncode == self._want_return_code:
