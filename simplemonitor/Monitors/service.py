@@ -206,7 +206,8 @@ class MonitorUnixService(Monitor):
             result = subprocess.run(
                 ["service", self.service_name, "status"],
                 check=True,
-                capture_output=True,
+                stderr=subprocess.PIPE,
+                stdin=subprocess.PIPE,
             )  # nosec
             returncode = result.returncode
         except subprocess.CalledProcessError as exception:
