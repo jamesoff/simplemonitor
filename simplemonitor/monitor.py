@@ -14,34 +14,15 @@ import argparse
 from socket import gethostname
 from typing import Any, Optional
 
-# fmt: off
-from .Alerters import (  # noqa: F401
-    alerter,
-    bulksms,
-    execute,
-    fortysixelks,
-    mail,
-    nc,
-    pushbullet,
-    pushover,
-    ses,
-    slack,
-    syslogger,
-    telegram,
-    sns
-)
-from .Loggers import db  # noqa: F401
-from .Loggers import file as file_logger  # noqa: F401
-from .Loggers import logger, mqtt  # noqa: F401
-from .Loggers import network as network_logger  # noqa: F401
-from .Monitors import arlo  # noqa: F401
-from .Monitors import compound  # noqa: F401
-from .Monitors import file as file_monitor  # noqa: F401
-from .Monitors import hass, host, monitor  # noqa: F401
-from .Monitors import network as network_monitor  # noqa: F401
-from .Monitors import ring, service  # noqa: F401
-# fmt: on
+
+import simplemonitor.Alerters as Alerters  # noqa: F401
+import simplemonitor.Loggers as Loggers  # noqa: F401
+import simplemonitor.Monitors as Monitors  # noqa: F401
+import simplemonitor.Loggers.logger as logger
+import simplemonitor.Monitors.monitor as monitor
+import simplemonitor.Alerters.alerter as alerter
 from .simplemonitor import SimpleMonitor
+
 from .util import get_config_dict
 from .util.envconfig import EnvironmentAwareConfigParser
 
@@ -522,7 +503,7 @@ def main() -> None:
                 "Starting remote listener thread (%sallowing pickle data)",
                 allowing_pickle,
             )
-        remote_listening_thread = network_logger.Listener(
+        remote_listening_thread = Loggers.Listener(
             m,
             remote_port,
             key,
@@ -590,7 +571,7 @@ def main() -> None:
         if loop and enable_remote:
             if not remote_listening_thread.isAlive():
                 main_logger.error("Listener thread died :(")
-                remote_listening_thread = network_logger.Listener(
+                remote_listening_thread = Loggers.Listener(
                     m, remote_port, key, allow_pickle=allow_pickle
                 )
                 remote_listening_thread.start()
