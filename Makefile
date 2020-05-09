@@ -12,7 +12,7 @@ endif
 PIPENV := $(shell which pipenv)
 
 flake8:
-	pipenv run flake8 --ignore=E501,W503,E203 *.py simplemonitor/
+	pipenv run flake8 *.py simplemonitor/
 
 integration-tests:
 	PATH="$(MOCKSPATH)$(PATH)" $(PIPENV) run coverage run monitor.py -1 -v -d -f $(INTEGRATION_CONFIG)
@@ -40,10 +40,10 @@ black:
 	pipenv run black --check --diff *.py simplemonitor/
 
 mypy:
-	pipenv run mypy --ignore-missing-imports *.py simplemonitor/
+	pipenv run mypy *.py simplemonitor/
 
 mypy-strict:
-	pipenv run mypy --ignore-missing-imports --disallow-untyped-calls --disallow-untyped-defs --disallow-incomplete-defs --disallow-untyped-decorators *.py simplemonitor/
+	pipenv run mypy --disallow-untyped-calls --disallow-untyped-defs --disallow-incomplete-defs --disallow-untyped-decorators *.py simplemonitor/
 
 bandit:
 	pipenv run bandit -r -ll *.py simplemonitor/
