@@ -21,7 +21,7 @@
 				var generated = _TIMESTAMP_;
 				var now = Date.parse(new Date()) / 1000;
 				var diff = now - generated;
-				if ((now - generated) > (_INTERVAL_ * 2)) {
+				if (diff > (_INTERVAL_ * 2)) {
 					too_old();
 				}
 			}
