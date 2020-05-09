@@ -95,7 +95,12 @@ class Listener(Thread):
     Here seemed a reasonable place to put it."""
 
     def __init__(
-        self, simplemonitor: Any, port: int, key: str = None, allow_pickle: bool = True
+        self,
+        simplemonitor: Any,
+        port: int,
+        key: str = None,
+        allow_pickle: bool = True,
+        bind_host: str = "",
     ) -> None:
         """Set up the thread.
 
@@ -111,7 +116,7 @@ class Listener(Thread):
             self.sock.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, False)
         except OSError:
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.bind(("", port))
+        self.sock.bind((bind_host, port))
         self.simplemonitor = simplemonitor
         self.key = bytearray(key, "utf-8")
         self.logger = logging.getLogger("simplemonitor.logger.networklistener")

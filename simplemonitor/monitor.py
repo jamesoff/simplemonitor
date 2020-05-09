@@ -523,7 +523,11 @@ def main() -> None:
                 allowing_pickle,
             )
         remote_listening_thread = network_logger.Listener(
-            m, remote_port, key, allow_pickle=allow_pickle
+            m,
+            remote_port,
+            key,
+            allow_pickle=allow_pickle,
+            bind_host=config.get("monitor", "bind_host", fallback=""),
         )
         remote_listening_thread.daemon = True
         remote_listening_thread.start()

@@ -21,7 +21,7 @@
 				var generated = 1587211200;
 				var now = Date.parse(new Date()) / 1000;
 				var diff = now - generated;
-				if ((now - generated) > (30 * 2)) {
+				if (diff > (30 * 2)) {
 					too_old();
 				}
 			}
@@ -63,7 +63,7 @@
 $(function () {
     $('[data-toggle="tooltip"]').tooltip();
     check_age();
-    setTimeout("too_old();", (30 * 2000));
+    setTimeout(too_old, (30 * 2000));
 })
 </script>
 </body>

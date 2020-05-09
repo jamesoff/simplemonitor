@@ -21,6 +21,7 @@ Section names and option values (but not option names) support environment varia
 | remote_port | gives the TCP port to listen on for data. | if `remote` is enabled | |
 | key | shared secret for validating data from remote instances. | if `remote` is enabled | |
 | hup_file | a file to watch the modification time on, and if it increases, reload the config | no | |
+| bind_host | the local address to bind to listen for data. | no | all interfaces |
 
 The `hup_file` setting really exists for platforms which don't have SIGHUP (e.g. Windows). On platforms which do, you should send the SimpleMonitor process SIGHUP to trigger a config reload.
 

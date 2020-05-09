@@ -530,7 +530,7 @@ class MonitorCommand(Monitor):
                 if matches:
                     return self.record_success()
                 return self.record_fail("could not match regexp in out")
-            elif self.result_max is not None:
+            if self.result_max is not None:
                 outasinteger = int(_out)
                 if outasinteger < self.result_max:
                     return self.record_success(
@@ -538,10 +538,8 @@ class MonitorCommand(Monitor):
                     )
                 return self.record_fail("%s >= %s" % (outasinteger, self.result_max))
             return self.record_success()
-        except Exception as e:
-            return self.record_fail(str(e))
-
-        return self.record_fail()
+        except Exception as exception:
+            return self.record_fail(str(exception))
 
     def describe(self) -> str:
         """Explains what this instance is checking"""
@@ -550,13 +548,12 @@ class MonitorCommand(Monitor):
                 " ".join(self.command),
                 self.result_regexp_text,
             )
-        elif self.result_max is not None:
+        if self.result_max is not None:
             return 'checking command "%s" returns a value < %d' % (
                 " ".join(self.command),
                 self.result_max,
             )
-        else:
-            return 'checking command "%s" has return status 0' % " ".join(self.command)
+        return 'checking command "%s" has return status 0' % " ".join(self.command)
 
     def get_params(self) -> Tuple:
         return (self.command, self.result_regexp_text, self.result_max)

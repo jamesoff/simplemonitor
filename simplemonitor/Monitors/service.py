@@ -351,9 +351,9 @@ class MonitorProcess(Monitor):
     def __init__(
         self, name: str = "unnamed", config_options: Optional[dict] = None
     ) -> None:
-        super().__init__(name=name, config_options=config_options)
         if config_options is None:
             config_options = {}
+        super().__init__(name=name, config_options=config_options)
         if psutil is None:
             self.monitor_logger.critical("psutil is not installed.")
             self.monitor_logger.critical("Try: pip install -r requirements.txt")
