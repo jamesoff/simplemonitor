@@ -1,5 +1,5 @@
 - name: host
-  oneline: Pings a host (once per iteration) to see if it’s available. Multiplatform.
+  oneline: Pings a host (once per iteration) to see if it’s available. Multiplatform. See also the "ping" monitor.
   params:
       - name: host
         desc: The hostname to ping.
@@ -263,3 +263,13 @@
       desc: Limit matches to processes owned by this username
       required: 'no'
       default: blank (any user)
+- name: ping
+  oneline: Pings a host to make sure it's up. Uses a Python ping module instead of calling out to an external app, but needs to be run as root.
+  params:
+    - name: host
+      desc: The host/IP to ping.
+      required: 'yes'
+    - name: timeout
+      desc: The timeout for the ping in seconds
+      required: 'no'
+      default: 5
