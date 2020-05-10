@@ -43,6 +43,7 @@ setuptools.setup(
         "boto3",
         "colorlog",
         "paho-mqtt",
+        "ping3",
         "psutil",
         "pyOpenSSL",
         "requests",

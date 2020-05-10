@@ -15,7 +15,8 @@ psutil = "*"
 pywin32 = {sys_platform = "== 'win32'"}
 pyarlo = "*"
 arrow = "*"
-"simplemonitor" = {editable = true, path = "."}
+simplemonitor = {editable = true,path = "."}
+ping3 = "*"
 
 [dev-packages]
 "flake8" = "*"

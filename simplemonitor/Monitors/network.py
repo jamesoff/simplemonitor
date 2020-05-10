@@ -14,6 +14,13 @@ from requests.auth import HTTPBasicAuth
 
 from .monitor import Monitor, register
 
+try:
+    import ping3
+
+    ping3.EXCEPTIONS = True
+except ImportError:
+    pass
+
 
 @register
 class MonitorHTTP(Monitor):
@@ -343,3 +350,37 @@ class MonitorDNS(Monitor):
 
     def get_params(self) -> Tuple:
         return (self.path,)
+
+
+@register
+class MonitorPing(Monitor):
+    _type = "ping"
+
+    def __init__(self, name: str, config_options: dict) -> None:
+        if config_options is None:
+            config_options = {}
+        super().__init__(name=name, config_options=config_options)
+        self.host = cast(str, self.get_config_option("host", required=True))
+        self.timeout = cast(
+            int, self.get_config_option("timeout", required_type="int", default=5)
+        )
+
+    def run_test(self) -> bool:
+        if "ping3" not in sys.modules:
+            return self.record_fail("Missing required ping3 module")
+        try:
+            response_time = ping3.ping(self.host, timeout=self.timeout)
+            return self.record_success("Ping time {}ms".format(response_time))
+        except ping3.errors.PingError as excepton:
+            return self.record_fail(str(excepton))
+        except PermissionError:
+            return self.record_fail(
+                "ping monitor requires root to work; "
+                "try the 'host' monitor if this is not an option for you"
+            )
+
+    def get_params(self) -> Tuple:
+        return (self.host, self.timeout)
+
+    def describe(self) -> str:
+        return "Checking {} pings within {} seconds".format(self.host, self.timeout)
