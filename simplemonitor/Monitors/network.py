@@ -375,8 +375,8 @@ class MonitorPing(Monitor):
         if "ping3" not in sys.modules:
             return self.record_fail("Missing required ping3 module")
         try:
-            response_time = ping3.ping(self.host, timeout=self.timeout)
-            return self.record_success("Ping time {}ms".format(response_time))
+            response_time = ping3.ping(self.host, timeout=self.timeout, unit="ms")
+            return self.record_success("Ping time {:0.3f}ms".format(response_time))
         except ping3.errors.PingError as excepton:
             return self.record_fail(str(excepton))
         except PermissionError:
