@@ -1,9 +1,17 @@
 - name: host
-  oneline: Pings a host (once per iteration) to see if it’s available. Multiplatform. See also the "ping" monitor.
+  oneline: Pings a host (once per iteration) to see if it’s available. Multiplatform, but can break on non-English ping output without additional config. See also the "ping" monitor.
   params:
       - name: host
         desc: The hostname to ping.
         required: 'yes'
+      - name: ping_regexp
+        desc: The regexp which matches a successful ping line. You may need to set this if your ping output is not in English
+        required: 'no'
+        default: auto
+      - name: time_regexp
+        desc: The regexp which matches the ping time in the output. Must set a match group named "ms". you may need to set this if your ping output is not in English.
+        required: 'no'
+        default: auto
 - name: service
   oneline: Checks a Windows service to make sure it’s running. Windows only.
   params:

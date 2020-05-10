@@ -236,6 +236,12 @@ class MonitorHost(Monitor):
             self.time_regexp = r"min/avg/max/stddev = [\d.]+/(?P<ms>[\d.]+)/"
         else:
             RuntimeError("Don't know how to run ping on this platform, help!")
+        self.ping_regexp = self.get_config_option(
+            "ping_regexp", required=False, default=self.ping_regexp
+        )
+        self.time_regexp = self.get_config_option(
+            "time_regexp", required=False, default=self.ping_regexp
+        )
 
         self.host = self.get_config_option("host", required=True)
 
@@ -256,10 +262,10 @@ class MonitorHost(Monitor):
                 if matches:
                     success = True
                 else:
-                    assert isinstance(self.r2, Pattern)
-                    matches = self.r2.search(line)
-                    if matches:
-                        pingtime = float(matches.group("ms"))
+                    if isinstance(self.r2, Pattern):
+                        matches = self.r2.search(line)
+                        if matches:
+                            pingtime = float(matches.group("ms"))
         except Exception as e:
             return self.record_fail(str(e))
         if success:
