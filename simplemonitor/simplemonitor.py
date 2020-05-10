@@ -153,9 +153,12 @@ class SimpleMonitor:
                         not_run = True
                         self.monitors[monitor].record_skip(None)
                         module_logger.info("Not run: %s", monitor)
-                except Exception:
+                except Exception as exeception:
                     module_logger.exception(
                         "Monitor %s threw exception during run_test()", monitor
+                    )
+                    self.monitors[monitor].record_fail(
+                        "Unhandled exception: {}".format(exeception)
                     )
                 if self.monitors[monitor].error_count > 0:
                     if self.monitors[monitor].virtual_fail_count() == 0:
