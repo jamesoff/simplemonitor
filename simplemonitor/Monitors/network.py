@@ -247,25 +247,19 @@ class MonitorHost(Monitor):
         success = False
         pingtime = 0.0
 
-        if isinstance(self.r, str):
-            self.monitor_logger.debug("Creating pre-compiled regexp")
-            self.r = re.compile(self.ping_regexp)
-            self.r2 = re.compile(self.time_regexp)
-
         try:
             cmd = (self.ping_command % self.host).split(" ")
             output = subprocess.check_output(cmd)
             for line in str(output).split("\n"):
-                matches = self.r.search(line)
+                matches = re.search(self.ping_regexp, line)
                 if matches:
                     success = True
                 else:
-                    if isinstance(self.r2, Pattern):
-                        matches = self.r2.search(line)
-                        if matches:
-                            pingtime = float(matches.group("ms"))
-        except Exception as e:
-            return self.record_fail(str(e))
+                    matches = re.search(self.time_regexp, line)
+                    if matches:
+                        pingtime = float(matches.group("ms"))
+        except subprocess.CalledProcessError as exception:
+            return self.record_fail(str(exception))
         if success:
             if pingtime > 0:
                 return self.record_success("%sms" % pingtime)
