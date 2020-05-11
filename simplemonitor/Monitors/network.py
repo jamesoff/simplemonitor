@@ -14,6 +14,13 @@ from requests.auth import HTTPBasicAuth
 
 from .monitor import Monitor, register
 
+try:
+    import ping3
+
+    ping3.EXCEPTIONS = True
+except ImportError:
+    pass
+
 
 @register
 class MonitorHTTP(Monitor):
@@ -229,6 +236,12 @@ class MonitorHost(Monitor):
             self.time_regexp = r"min/avg/max/stddev = [\d.]+/(?P<ms>[\d.]+)/"
         else:
             RuntimeError("Don't know how to run ping on this platform, help!")
+        self.ping_regexp = self.get_config_option(
+            "ping_regexp", required=False, default=self.ping_regexp
+        )
+        self.time_regexp = self.get_config_option(
+            "time_regexp", required=False, default=self.ping_regexp
+        )
 
         self.host = self.get_config_option("host", required=True)
 
@@ -249,10 +262,10 @@ class MonitorHost(Monitor):
                 if matches:
                     success = True
                 else:
-                    assert isinstance(self.r2, Pattern)
-                    matches = self.r2.search(line)
-                    if matches:
-                        pingtime = float(matches.group("ms"))
+                    if isinstance(self.r2, Pattern):
+                        matches = self.r2.search(line)
+                        if matches:
+                            pingtime = float(matches.group("ms"))
         except Exception as e:
             return self.record_fail(str(e))
         if success:
@@ -343,3 +356,37 @@ class MonitorDNS(Monitor):
 
     def get_params(self) -> Tuple:
         return (self.path,)
+
+
+@register
+class MonitorPing(Monitor):
+    _type = "ping"
+
+    def __init__(self, name: str, config_options: dict) -> None:
+        if config_options is None:
+            config_options = {}
+        super().__init__(name=name, config_options=config_options)
+        self.host = cast(str, self.get_config_option("host", required=True))
+        self.timeout = cast(
+            int, self.get_config_option("timeout", required_type="int", default=5)
+        )
+
+    def run_test(self) -> bool:
+        if "ping3" not in sys.modules:
+            return self.record_fail("Missing required ping3 module")
+        try:
+            response_time = ping3.ping(self.host, timeout=self.timeout, unit="ms")
+            return self.record_success("Ping time {:0.3f}ms".format(response_time))
+        except ping3.errors.PingError as excepton:
+            return self.record_fail(str(excepton))
+        except PermissionError:
+            return self.record_fail(
+                "ping monitor requires root to work; "
+                "try the 'host' monitor if this is not an option for you"
+            )
+
+    def get_params(self) -> Tuple:
+        return (self.host, self.timeout)
+
+    def describe(self) -> str:
+        return "Checking {} pings within {} seconds".format(self.host, self.timeout)
