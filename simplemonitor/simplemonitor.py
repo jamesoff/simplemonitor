@@ -188,7 +188,8 @@ class SimpleMonitor:
                 logger.save_result2(key, self.monitors[key])
             else:
                 module_logger.debug(
-                    "not logging for %s due to group mismatch (monitor in group %s, logger has groups %s",
+                    "not logging for %s due to group mismatch (monitor in group %s, "
+                    "logger has groups %s",
                     key,
                     self.monitors[key].group,
                     logger._groups,
@@ -326,10 +327,17 @@ class SimpleMonitor:
         for (name, state) in data.items():
             module_logger.info("updating remote monitor %s", name)
             if isinstance(state, dict):
-                remote_monitor = get_class(state["cls_type"]).from_python_dict(
-                    state["data"]
-                )
-                self.remote_monitors[name] = remote_monitor
+                try:
+                    remote_monitor = get_class(state["cls_type"]).from_python_dict(
+                        state["data"]
+                    )
+                    self.remote_monitors[name] = remote_monitor
+                except KeyError:
+                    module_logger.exception(
+                        "Could not add remote monitor from host %s; "
+                        "possibly a monitor type we don't know?",
+                        hostname,
+                    )
             elif self.allow_pickle:
                 # Fallback for old remote monitors
                 try:
