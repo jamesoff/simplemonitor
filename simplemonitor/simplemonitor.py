@@ -16,6 +16,8 @@ module_logger = logging.getLogger("simplemonitor")
 
 
 class SimpleMonitor:
+    """A fairly simple monitor."""
+
     def __init__(self, allow_pickle: bool = True) -> None:
         """Main class turn on."""
         self.allow_pickle = allow_pickle
@@ -30,35 +32,43 @@ class SimpleMonitor:
         self.alerters = {}  # type: Dict[str, Alerter]
 
     def add_monitor(self, name: str, monitor: Monitor) -> None:
+        """Add a monitor."""
         self.monitors[name] = monitor
 
     def update_monitor_config(self, name: str, config_options: dict) -> None:
+        """Update the configuration for a monitor."""
         self.monitors[name].__init__(name, config_options)  # type: ignore
 
     def update_logger_config(self, name: str, config_options: dict) -> None:
+        """Update the configration for a logger."""
         self.loggers[name].__init__(config_options)  # type: ignore
 
     def update_alerter_config(self, name: str, config_options: dict) -> None:
+        """Update the configuration for an alerter."""
         self.alerters[name].__init__(config_options)  # type: ignore
 
     def set_urgency(self, monitor: str, urgency: bool) -> None:
         self.monitors[monitor].urgent = urgency
 
     def has_monitor(self, monitor: str) -> bool:
+        """Check if a montitor is known."""
         return monitor in self.monitors.keys()
 
     def has_logger(self, logger: str) -> bool:
+        """Check if a logger is known."""
         return logger in self.loggers.keys()
 
     def has_alerter(self, alerter: str) -> bool:
+        """Check if an alerter is known."""
         return alerter in self.alerters.keys()
 
     def reset_monitors(self) -> None:
-        """Clear all the monitors' dependency info back to default."""
+        """Clear all all monitors' dependency info back to default."""
         for key in list(self.monitors.keys()):
             self.monitors[key].reset_dependencies()
 
     def verify_dependencies(self) -> bool:
+        """Check if all monitors have valid dependencies."""
         ok = True
         for k in list(self.monitors.keys()):
             for dependency in self.monitors[k].dependencies:
@@ -95,6 +105,7 @@ class SimpleMonitor:
         return new_list
 
     def run_tests(self) -> None:
+        """Run the tests for all the monitors."""
         self.reset_monitors()
 
         joblist = list(self.monitors.keys())
@@ -209,7 +220,6 @@ class SimpleMonitor:
             this_monitor = self.monitors[key]  # type: Monitor
             # Don't generate alerts for monitors which want it done remotely
             if this_monitor.remote_alerting:
-                # TODO: could potentially disable alerts by setting a monitor to remote alerting, but not having anywhere to send it!
                 module_logger.debug(
                     "skipping alert for monitor %s as it wants remote alerting", key
                 )
