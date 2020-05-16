@@ -337,6 +337,8 @@ class SimpleMonitor:
     def update_remote_monitor(self, data: Any, hostname: str) -> None:
         """Process a list of monitors received from a remote host."""
         seen_monitors = []  # type: List[str]
+        if hostname not in self.remote_monitors:
+            self.remote_monitors[hostname] = {}
         for (name, state) in data.items():
             module_logger.info("updating remote monitor %s", name)
             if isinstance(state, dict):
@@ -344,7 +346,7 @@ class SimpleMonitor:
                     remote_monitor = get_class(state["cls_type"]).from_python_dict(
                         state["data"]
                     )
-                    self.remote_monitors[name] = remote_monitor
+                    self.remote_monitors[hostname][name] = remote_monitor
                     seen_monitors.append(name)
                 except KeyError:
                     module_logger.exception(
@@ -359,7 +361,7 @@ class SimpleMonitor:
                 except pickle.UnpicklingError:
                     module_logger.critical("Could not unpickle monitor %s", name)
                 else:
-                    self.remote_monitors[name] = remote_monitor
+                    self.remote_monitors[hostname][name] = remote_monitor
                     seen_monitors.append(name)
             else:
                 module_logger.critical(
@@ -374,12 +376,15 @@ class SimpleMonitor:
     def _trim_remote_monitors(self, hostname: str, seen_monitors: List[str]) -> None:
         """Remove remote monitors for a host which aren't in the given list."""
         host_monitors = self.remote_monitors[hostname]
+        forget_monitors = []
         for name in host_monitors.keys():
             if name not in seen_monitors:
                 module_logger.info(
                     "forgetting remote monitor %s from host %s", name, hostname
                 )
-                del host_monitors[name]
+                forget_monitors.append(name)
+        for name in forget_monitors:
+            del self.remote_monitors[hostname][name]
 
     def run_loop(self) -> None:
         """Run the complete monitor loop once."""
