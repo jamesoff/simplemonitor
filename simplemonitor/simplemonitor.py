@@ -47,9 +47,6 @@ class SimpleMonitor:
         """Update the configuration for an alerter."""
         self.alerters[name].__init__(config_options)  # type: ignore
 
-    def set_urgency(self, monitor: str, urgency: bool) -> None:
-        self.monitors[monitor].urgent = urgency
-
     def has_monitor(self, monitor: str) -> bool:
         """Check if a montitor is known."""
         return monitor in self.monitors.keys()
@@ -82,7 +79,8 @@ class SimpleMonitor:
         return ok
 
     def verify_alerting(self) -> bool:
-        """Sanity check the configuration to see if we have at least an alerter, or network logging."""
+        """Sanity check the configuration to see if we have at least an
+        alerter, or network logging."""
         sane = True
         if len(self.alerters) == 0:
             for _, logger in self.loggers.items():
@@ -133,7 +131,8 @@ class SimpleMonitor:
                             failed,
                         )
                         if dep in failed:
-                            # oh wait, actually one of its deps failed, so we'll never be able to run it
+                            # oh wait, actually one of its deps failed, so
+                            # we'll never be able to run it
                             module_logger.info(
                                 "Doesn't look like %s worked, skipping %s", dep, monitor
                             )
@@ -141,9 +140,10 @@ class SimpleMonitor:
                             self.monitors[monitor].record_skip(dep)
                             try:
                                 new_joblist.remove(monitor)
-                            except Exception:
+                            except ValueError:
                                 module_logger.exception(
-                                    "Exception caught while trying to remove monitor %s with failed deps from new joblist.",
+                                    "Exception caught while trying to remove monitor %s "
+                                    "with failed deps from new joblist.",
                                     monitor,
                                 )
                                 module_logger.debug(
@@ -263,9 +263,16 @@ class SimpleMonitor:
         return len(self.monitors)
 
     def add_alerter(self, name: str, alerter: Alerter) -> None:
-        self.alerters[name] = alerter
+        """Add an alerter."""
+        if isinstance(alerter, Alerter):
+            self.alerters[name] = alerter
+        else:
+            module_logger.critical(
+                "Failed to add alerter because it is not the right type"
+            )
 
     def add_logger(self, name: str, logger: Logger) -> None:
+        """Add a logger."""
         if isinstance(logger, Logger):
             self.loggers[name] = logger
         else:
@@ -315,24 +322,29 @@ class SimpleMonitor:
             del self.loggers[logger]
 
     def do_alerts(self) -> None:
-        for key in list(self.alerters.keys()):
-            self.do_alert(self.alerters[key])
+        """Run the alert process for each alerter."""
+        for alerter in self.alerters.values():
+            self.do_alert(alerter)
 
     def do_recovery(self) -> None:
-        for key in list(self.monitors.keys()):
-            self.monitors[key].attempt_recover()
+        """Attempt recovery for each monitor."""
+        for monitor in self.monitors.values():
+            monitor.attempt_recover()
 
     def do_recovered(self) -> None:
-        for key in list(self.monitors.keys()):
-            self.monitors[key].run_recovered()
+        """Run the recovered action for each monitor."""
+        for monitor in self.monitors.values():
+            monitor.run_recovered()
 
     def hup_loggers(self) -> None:
-        for logger in self.loggers:
-            self.loggers[logger].hup()
+        """Inform each logger they need to HUP."""
+        for logger in self.loggers.values():
+            logger.hup()
 
     def do_logs(self) -> None:
-        for key in list(self.loggers.keys()):
-            self.log_result(self.loggers[key])
+        """Log result for each logger."""
+        for logger in self.loggers.values():
+            self.log_result(logger)
 
     def update_remote_monitor(self, data: Any, hostname: str) -> None:
         """Process a list of monitors received from a remote host."""
