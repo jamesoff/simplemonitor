@@ -81,14 +81,14 @@ class MonitorHTTP(Monitor):
         end_time = None
         try:
             if self.certfile is None and self.username is None:
-                r = requests.get(
+                response = requests.get(
                     self.url,
                     timeout=self.request_timeout,
                     verify=self.verify_hostname,
                     headers=self.headers,
                 )
             elif self.certfile is None and self.username is not None:
-                r = requests.get(
+                response = requests.get(
                     self.url,
                     timeout=self.request_timeout,
                     auth=HTTPBasicAuth(self.username, self.password),
@@ -96,7 +96,7 @@ class MonitorHTTP(Monitor):
                     headers=self.headers,
                 )
             else:
-                r = requests.get(
+                response = requests.get(
                     self.url,
                     timeout=self.request_timeout,
                     cert=(self.certfile, self.keyfile),
@@ -106,42 +106,40 @@ class MonitorHTTP(Monitor):
 
             end_time = arrow.get()
             load_time = end_time - start_time
-            if r.status_code not in self.allowed_codes:
+            if response.status_code not in self.allowed_codes:
                 return self.record_fail(
                     "Got status '{0} {1}' instead of {2}".format(
-                        r.status_code, r.reason, self.allowed_codes
+                        response.status_code, response.reason, self.allowed_codes
                     )
                 )
             if self.regexp is None:
                 return self.record_success(
                     "%s in %0.2fs"
                     % (
-                        r.status_code,
+                        response.status_code,
                         (load_time.seconds + (load_time.microseconds / 1000000.2)),
                     )
                 )
-            matches = self.regexp.search(r.text)
+            matches = self.regexp.search(response.text)
             if matches:
                 return self.record_success(
                     "%s in %0.2fs"
                     % (
-                        r.status_code,
+                        response.status_code,
                         (load_time.seconds + (load_time.microseconds / 1000000.2)),
                     )
                 )
             return self.record_fail(
                 "Got '{0} {1}' but couldn't match /{2}/ in page.".format(
-                    r.status_code, r.reason, self.regexp_text
+                    response.status_code, response.reason, self.regexp_text
                 )
             )
         except requests.exceptions.SSLError:
             return self.record_fail("SSL error during connection")
-        except requests.exceptions.RequestException as e:
+        except requests.exceptions.RequestException as exception:
             return self.record_fail(
-                "Requests exception while opening URL: {0}".format(e)
+                "Requests exception while opening URL: {0}".format(exception)
             )
-        except Exception as e:
-            return self.record_fail("Exception while trying to open url: {0}".format(e))
 
     def describe(self) -> str:
         """Explains what we do."""
@@ -180,13 +178,13 @@ class MonitorTCP(Monitor):
 
     def run_test(self) -> bool:
         """Check the port is open on the remote host"""
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
-            s.settimeout(5.0)
-            s.connect((self.host, self.port))
-        except Exception:
-            return self.record_fail()
-        s.close()
+            sock.settimeout(5.0)
+            sock.connect((self.host, self.port))
+        except OSError as exception:
+            return self.record_fail(str(exception))
+        sock.close()
         return self.record_success()
 
     def describe(self) -> str:
@@ -249,25 +247,19 @@ class MonitorHost(Monitor):
         success = False
         pingtime = 0.0
 
-        if isinstance(self.r, str):
-            self.monitor_logger.debug("Creating pre-compiled regexp")
-            self.r = re.compile(self.ping_regexp)
-            self.r2 = re.compile(self.time_regexp)
-
         try:
             cmd = (self.ping_command % self.host).split(" ")
             output = subprocess.check_output(cmd)
             for line in str(output).split("\n"):
-                matches = self.r.search(line)
+                matches = re.search(self.ping_regexp, line)
                 if matches:
                     success = True
                 else:
-                    if isinstance(self.r2, Pattern):
-                        matches = self.r2.search(line)
-                        if matches:
-                            pingtime = float(matches.group("ms"))
-        except Exception as e:
-            return self.record_fail(str(e))
+                    matches = re.search(self.time_regexp, line)
+                    if matches:
+                        pingtime = float(matches.group("ms"))
+        except subprocess.CalledProcessError as exception:
+            return self.record_fail(str(exception))
         if success:
             if pingtime > 0:
                 return self.record_success("%sms" % pingtime)
@@ -327,14 +319,10 @@ class MonitorDNS(Monitor):
                     % (self.desired_val, result)
                 )
             return self.record_success()
-        except subprocess.CalledProcessError as e:
+        except subprocess.CalledProcessError as exception:
             return self.record_fail(
                 "Command '%s' exited non-zero (%d)"
-                % (" ".join(self.params), e.returncode)
-            )
-        except Exception as e:
-            return self.record_fail(
-                "Exception while executing '%s': %s" % (" ".join(self.params), e)
+                % (" ".join(self.params), exception.returncode)
             )
 
     def describe(self) -> str:
@@ -360,6 +348,8 @@ class MonitorDNS(Monitor):
 
 @register
 class MonitorPing(Monitor):
+    """Ping a host to make sure it's up, using native Python"""
+
     _type = "ping"
 
     def __init__(self, name: str, config_options: dict) -> None:

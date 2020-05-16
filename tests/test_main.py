@@ -10,6 +10,7 @@ from unittest.mock import patch
 
 from simplemonitor import Alerters, monitor, simplemonitor
 from simplemonitor.Loggers import network
+from simplemonitor.Monitors.monitor import MonitorNull
 
 
 class TestMonitor(unittest.TestCase):
@@ -57,3 +58,32 @@ class TestSanity(unittest.TestCase):
             network.NetworkLogger({"host": "localhost", "port": 1234, "key": "hello"}),
         )
         self.assertTrue(m.verify_alerting())
+
+
+class TestNetworkMonitors(unittest.TestCase):
+    def test_simple(self):
+        s = simplemonitor.SimpleMonitor()
+        m = MonitorNull()
+        data = {
+            "test1": {"cls_type": m._type, "data": m.to_python_dict()},
+            "test2": {"cls_type": m._type, "data": m.to_python_dict()},
+        }
+        s.update_remote_monitor(data, "remote.host")
+        self.assertIn("remote.host", s.remote_monitors)
+        self.assertIn("test1", s.remote_monitors["remote.host"])
+        self.assertIn("test2", s.remote_monitors["remote.host"])
+
+    def test_removal(self):
+        s = simplemonitor.SimpleMonitor()
+        m = MonitorNull()
+        data = {
+            "test1": {"cls_type": m._type, "data": m.to_python_dict()},
+            "test2": {"cls_type": m._type, "data": m.to_python_dict()},
+        }
+        s.update_remote_monitor(data, "remote.host")
+        data = {
+            "test1": {"cls_type": m._type, "data": m.to_python_dict()},
+        }
+        s.update_remote_monitor(data, "remote.host")
+        self.assertIn("test1", s.remote_monitors["remote.host"])
+        self.assertNotIn("test2", s.remote_monitors["remote.host"])

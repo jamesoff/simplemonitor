@@ -16,6 +16,8 @@ module_logger = logging.getLogger("simplemonitor")
 
 
 class SimpleMonitor:
+    """A fairly simple monitor."""
+
     def __init__(self, allow_pickle: bool = True) -> None:
         """Main class turn on."""
         self.allow_pickle = allow_pickle
@@ -24,41 +26,49 @@ class SimpleMonitor:
         self.still_failing = []  # type: List[str]
         self.skipped = []  # type: List[str]
         self.warning = []  # type: List[str]
-        self.remote_monitors = {}  # type: Dict[str, Monitor]
+        self.remote_monitors = {}  # type: Dict[str, Dict[str, Monitor]]
 
         self.loggers = {}  # type: Dict[str, Logger]
         self.alerters = {}  # type: Dict[str, Alerter]
 
     def add_monitor(self, name: str, monitor: Monitor) -> None:
+        """Add a monitor."""
         self.monitors[name] = monitor
 
     def update_monitor_config(self, name: str, config_options: dict) -> None:
+        """Update the configuration for a monitor."""
         self.monitors[name].__init__(name, config_options)  # type: ignore
 
     def update_logger_config(self, name: str, config_options: dict) -> None:
+        """Update the configration for a logger."""
         self.loggers[name].__init__(config_options)  # type: ignore
 
     def update_alerter_config(self, name: str, config_options: dict) -> None:
+        """Update the configuration for an alerter."""
         self.alerters[name].__init__(config_options)  # type: ignore
 
     def set_urgency(self, monitor: str, urgency: bool) -> None:
         self.monitors[monitor].urgent = urgency
 
     def has_monitor(self, monitor: str) -> bool:
+        """Check if a montitor is known."""
         return monitor in self.monitors.keys()
 
     def has_logger(self, logger: str) -> bool:
+        """Check if a logger is known."""
         return logger in self.loggers.keys()
 
     def has_alerter(self, alerter: str) -> bool:
+        """Check if an alerter is known."""
         return alerter in self.alerters.keys()
 
     def reset_monitors(self) -> None:
-        """Clear all the monitors' dependency info back to default."""
+        """Clear all all monitors' dependency info back to default."""
         for key in list(self.monitors.keys()):
             self.monitors[key].reset_dependencies()
 
     def verify_dependencies(self) -> bool:
+        """Check if all monitors have valid dependencies."""
         ok = True
         for k in list(self.monitors.keys()):
             for dependency in self.monitors[k].dependencies:
@@ -95,6 +105,7 @@ class SimpleMonitor:
         return new_list
 
     def run_tests(self) -> None:
+        """Run the tests for all the monitors."""
         self.reset_monitors()
 
         joblist = list(self.monitors.keys())
@@ -188,14 +199,16 @@ class SimpleMonitor:
                 logger.save_result2(key, self.monitors[key])
             else:
                 module_logger.debug(
-                    "not logging for %s due to group mismatch (monitor in group %s, logger has groups %s",
+                    "not logging for %s due to group mismatch (monitor in group %s, "
+                    "logger has groups %s",
                     key,
                     self.monitors[key].group,
                     logger._groups,
                 )
         try:
-            for key in list(self.remote_monitors.keys()):
-                logger.save_result2(key, self.remote_monitors[key])
+            for host_monitors in self.remote_monitors.values():
+                for (name, monitor) in host_monitors.items():
+                    logger.save_result2(name, monitor)
         except Exception:  # pragma: no cover
             module_logger.exception("exception while logging remote monitors")
         logger.end_batch()
@@ -207,7 +220,6 @@ class SimpleMonitor:
             this_monitor = self.monitors[key]  # type: Monitor
             # Don't generate alerts for monitors which want it done remotely
             if this_monitor.remote_alerting:
-                # TODO: could potentially disable alerts by setting a monitor to remote alerting, but not having anywhere to send it!
                 module_logger.debug(
                     "skipping alert for monitor %s as it wants remote alerting", key
                 )
@@ -231,20 +243,20 @@ class SimpleMonitor:
                     )
             except Exception:  # pragma: no cover
                 module_logger.exception("exception caught while alerting for %s", key)
-        for key in list(self.remote_monitors.keys()):
-            this_monitor = self.remote_monitors[key]
-            try:
-                if this_monitor.remote_alerting:
-                    alerter.send_alert(key, this_monitor)
-                else:
-                    module_logger.debug(
-                        "not alerting for monitor %s as it doesn't want remote alerts",
-                        key,
+        for host_monitors in self.remote_monitors.values():
+            for (name, monitor) in host_monitors.items():
+                try:
+                    if monitor.remote_alerting:
+                        alerter.send_alert(name, monitor)
+                    else:
+                        module_logger.debug(
+                            "not alerting for monitor %s as it doesn't want remote alerts",
+                            name,
+                        )
+                except Exception:  # pragma: no cover
+                    module_logger.exception(
+                        "exception caught while alerting for remote monitor %s", name
                     )
-            except Exception:  # pragma: no cover
-                module_logger.exception(
-                    "exception caught while alerting for remote monitor %s", key
-                )
 
     def count_monitors(self) -> int:
         """Gets the number of monitors we have defined."""
@@ -323,13 +335,25 @@ class SimpleMonitor:
             self.log_result(self.loggers[key])
 
     def update_remote_monitor(self, data: Any, hostname: str) -> None:
+        """Process a list of monitors received from a remote host."""
+        seen_monitors = []  # type: List[str]
+        if hostname not in self.remote_monitors:
+            self.remote_monitors[hostname] = {}
         for (name, state) in data.items():
             module_logger.info("updating remote monitor %s", name)
             if isinstance(state, dict):
-                remote_monitor = get_class(state["cls_type"]).from_python_dict(
-                    state["data"]
-                )
-                self.remote_monitors[name] = remote_monitor
+                try:
+                    remote_monitor = get_class(state["cls_type"]).from_python_dict(
+                        state["data"]
+                    )
+                    self.remote_monitors[hostname][name] = remote_monitor
+                    seen_monitors.append(name)
+                except KeyError:
+                    module_logger.exception(
+                        "Could not add remote monitor from host %s; "
+                        "possibly a monitor type we don't know?",
+                        hostname,
+                    )
             elif self.allow_pickle:
                 # Fallback for old remote monitors
                 try:
@@ -337,7 +361,8 @@ class SimpleMonitor:
                 except pickle.UnpicklingError:
                     module_logger.critical("Could not unpickle monitor %s", name)
                 else:
-                    self.remote_monitors[name] = remote_monitor
+                    self.remote_monitors[hostname][name] = remote_monitor
+                    seen_monitors.append(name)
             else:
                 module_logger.critical(
                     "Could not deserialize state of monitor %s. "
@@ -346,6 +371,20 @@ class SimpleMonitor:
                     "in the [monitor] section.",
                     name,
                 )
+        self._trim_remote_monitors(hostname, seen_monitors)
+
+    def _trim_remote_monitors(self, hostname: str, seen_monitors: List[str]) -> None:
+        """Remove remote monitors for a host which aren't in the given list."""
+        host_monitors = self.remote_monitors[hostname]
+        forget_monitors = []
+        for name in host_monitors.keys():
+            if name not in seen_monitors:
+                module_logger.info(
+                    "forgetting remote monitor %s from host %s", name, hostname
+                )
+                forget_monitors.append(name)
+        for name in forget_monitors:
+            del self.remote_monitors[hostname][name]
 
     def run_loop(self) -> None:
         """Run the complete monitor loop once."""

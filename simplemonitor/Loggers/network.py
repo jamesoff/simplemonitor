@@ -1,4 +1,9 @@
 # coding=utf-8
+
+"""
+Network logging support for SimpleMonitor
+"""
+
 import hmac
 import logging
 import pickle  # nosec
@@ -64,33 +69,39 @@ class NetworkLogger(Logger):
                 )
             else:
                 data = {"cls_type": monitor._type, "data": monitor.to_python_dict()}
-                # TODO: why does the line below make mypy cross?
-                self.batch_data[monitor.name] = data  # type: ignore
-        except Exception:
+                if self.batch_data is not None:
+                    self.batch_data[monitor.name] = data
+                else:
+                    self.batch_data = {monitor.name: data}
+        except Exception:  # pylint: disable=broad-except
             self.logger_logger.exception("Failed to serialize monitor %s", name)
 
     def process_batch(self) -> None:
         try:
-            p = json_dumps(self.batch_data)
-            mac = hmac.new(self.key, p, _DIGEST_NAME)
-            send_bytes = struct.pack("B", mac.digest_size) + mac.digest() + p
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            payload = json_dumps(self.batch_data)
+            mac = hmac.new(self.key, payload, _DIGEST_NAME)
+            send_bytes = struct.pack("B", mac.digest_size) + mac.digest() + payload
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             try:
                 try:
-                    s.connect((self.host, self.port))
+                    sock.connect((self.host, self.port))
                 except socket.error:
-                    s.close()
-                    s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
-                    s.connect((self.host, self.port))
-                s.send(send_bytes)
+                    sock.close()
+                    sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+                    sock.connect((self.host, self.port))
+                sock.send(send_bytes)
             finally:
-                s.close()
-        except Exception:
-            self.logger_logger.exception("Failed to send network data")
+                sock.close()
+        except Exception as exception:  # pylint: disable=broad-except
+            self.logger_logger.exception("Failed to send network data: %s", exception)
 
 
 class Listener(Thread):
-    """This class isn't actually a Logger, but is the receiving-end implementation for network logging.
+    """
+    Handle incoming remote connections.
+
+    This class isn't actually a Logger, but is the receiving-end
+    implementation for network logging.
 
     Here seemed a reasonable place to put it."""
 
@@ -169,24 +180,16 @@ class Listener(Thread):
                     )
                 if not hmac.compare_digest(their_digest, my_digest):
                     raise Exception(
-                        "Mismatched MAC for network logging data from %s\nMismatched key? Old version of SimpleMonitor?\n"
-                        % addr[0]
+                        "Mismatched MAC for network logging data from %s\n"
+                        "Mismatched key? Old version of SimpleMonitor?\n" % addr[0]
                     )
                 try:
                     result = json_loads(serialized)
                 except JSONDecodeError:
                     result = pickle.loads(serialized)  # nosec
-                try:
-                    self.simplemonitor.update_remote_monitor(result, addr[0])
-                except KeyError:
-                    self.logger.exception(
-                        "Could not add remote monitor from host %s; possibly a monitor type we don't know?",
-                        addr[0],
-                    )
-                except Exception:
-                    self.logger.exception("Error adding remote monitor")
-            except socket.error as e:
-                if e.errno == 4:
+                self.simplemonitor.update_remote_monitor(result, addr[0])
+            except socket.error as exception:
+                if exception.errno == 4:
                     # Interrupted system call
                     self.logger.warning(
                         "Interrupted system call in thread, I think that's a ^C"
@@ -194,6 +197,6 @@ class Listener(Thread):
                     self.running = False
                     self.sock.close()
                 if self.running:
-                    self.logger.exception("Socket error caught in thread: %s")
-            except Exception:
-                self.logger.exception("Listener thread caught exception %s")
+                    self.logger.exception("Socket error caught in thread")
+            except Exception:  # pylint: disable=broad-except
+                self.logger.exception("Listener thread caught exception")
