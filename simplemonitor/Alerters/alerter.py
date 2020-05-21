@@ -51,7 +51,7 @@ class AlertLength(Enum):
 class Alerter:
     """BaseClass for Alerters"""
 
-    _type = "unknown"
+    alerter_type = "unknown"
     _dependencies = None  # type: List[str]
     hostname = gethostname()
     available = False
@@ -66,7 +66,9 @@ class Alerter:
         if config_options is None:
             config_options = {}
         self._config_options = config_options
-        self.alerter_logger = logging.getLogger("simplemonitor.alerter-" + self._type)
+        self.alerter_logger = logging.getLogger(
+            "simplemonitor.alerter-" + self.alerter_type
+        )
         self.available = True
         self.name = cast(str, self.get_config_option("name", default="unamed"))
         self.dependencies = cast(
@@ -392,13 +394,7 @@ class Alerter:
             message = textwrap.shorten(message, width=max_length, placeholder="...")
         return message
 
-    @property
-    def type(self) -> str:
-        """Compatibility with the rename of type to _type. Will be removed in the future."""
-        self.alerter_logger.critical("Access to 'type' instead of '_type'!")
-        return self._type
-
 
 (register, get_class, all_types) = subclass_dict_handler(
-    "simplemonitor.Alerters.alerter", Alerter
+    "simplemonitor.Alerters.alerter", Alerter, "alerter_type"
 )

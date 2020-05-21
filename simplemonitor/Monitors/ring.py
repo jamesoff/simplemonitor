@@ -18,7 +18,7 @@ RING_USER_AGENT = "SimpleMonitor/{}".format(VERSION)
 class MonitorRingDoorbell(Monitor):
     """Monitor the battery life on a Ring doorbell."""
 
-    _type = "ring_doorbell"
+    monitor_type = "ring_doorbell"
 
     def __init__(self, name: str, config_options: dict) -> None:
         if "gap" not in config_options:

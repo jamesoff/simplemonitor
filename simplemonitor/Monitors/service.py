@@ -24,7 +24,7 @@ except ImportError:
 class MonitorSvc(Monitor):
     """Monitor a service handled by daemontools."""
 
-    _type = "svc"
+    monitor_type = "svc"
     path = ""
 
     def __init__(self, name: str, config_options: dict) -> None:
@@ -61,7 +61,7 @@ class MonitorService(Monitor):
     service_name = ""
     want_state = "RUNNING"
     host = "."
-    _type = "service"
+    monitor_type = "service"
 
     def __init__(self, name: str, config_options: dict) -> None:
         super().__init__(name, config_options)
@@ -129,7 +129,7 @@ class MonitorRC(Monitor):
     and reports failure if it's non-zero by default.
     """
 
-    _type = "rc"
+    monitor_type = "rc"
 
     def __init__(self, name: str, config_options: dict) -> None:
         """Initialise the class.
@@ -185,7 +185,7 @@ class MonitorUnixService(Monitor):
     otherwise, this is for you.
     """
 
-    _type = "unix_service"
+    monitor_type = "unix_service"
 
     def __init__(self, name: str = "unnamed", config_options: dict = None) -> None:
         super().__init__(name=name, config_options=config_options)
@@ -241,7 +241,7 @@ class MonitorSystemdUnit(Monitor):
     and reports failure if it is not one of the expected states.
     """
 
-    _type = "systemd-unit"
+    monitor_type = "systemd-unit"
 
     # A cached shared by all instances of MonitorSystemdUnit, so a single
     # call is done for all monitors at once.
@@ -346,7 +346,7 @@ class MonitorSystemdUnit(Monitor):
 class MonitorProcess(Monitor):
     """Check for a running process."""
 
-    _type = "process"
+    monitor_type = "process"
 
     def __init__(
         self, name: str = "unnamed", config_options: Optional[dict] = None
@@ -421,7 +421,7 @@ class MonitorProcess(Monitor):
 class MonitorEximQueue(Monitor):
     """Make sure an exim queue isn't too big."""
 
-    _type = "eximqueue"
+    monitor_type = "eximqueue"
     max_length = 10
     r = re.compile(r"(?P<count>\d+) matches out of (?P<total>\d+) messages")
     path = "/usr/local/sbin"
@@ -469,7 +469,7 @@ class MonitorWindowsDHCPScope(Monitor):
     # netsh dhcp server \\SERVER scope SCOPE show clients
     # "No of Clients(version N): N in the Scope
 
-    _type = "dhcpscope"
+    monitor_type = "dhcpscope"
     max_used = 0
     scope = ""
     server = ""

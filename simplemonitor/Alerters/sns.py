@@ -17,7 +17,7 @@ from .alerter import Alerter, AlertLength, AlertType, register
 class SNSAlerter(Alerter):
     """Send notifications using Amazon SNS"""
 
-    _type = "sns"
+    alerter_type = "sns"
 
     def __init__(self, config_options: dict) -> None:
         super().__init__(config_options)

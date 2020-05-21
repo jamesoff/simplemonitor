@@ -65,8 +65,8 @@ class TestNetworkMonitors(unittest.TestCase):
         s = simplemonitor.SimpleMonitor()
         m = MonitorNull()
         data = {
-            "test1": {"cls_type": m._type, "data": m.to_python_dict()},
-            "test2": {"cls_type": m._type, "data": m.to_python_dict()},
+            "test1": {"cls_type": m.monitor_type, "data": m.to_python_dict()},
+            "test2": {"cls_type": m.monitor_type, "data": m.to_python_dict()},
         }
         s.update_remote_monitor(data, "remote.host")
         self.assertIn("remote.host", s.remote_monitors)
@@ -77,12 +77,12 @@ class TestNetworkMonitors(unittest.TestCase):
         s = simplemonitor.SimpleMonitor()
         m = MonitorNull()
         data = {
-            "test1": {"cls_type": m._type, "data": m.to_python_dict()},
-            "test2": {"cls_type": m._type, "data": m.to_python_dict()},
+            "test1": {"cls_type": m.monitor_type, "data": m.to_python_dict()},
+            "test2": {"cls_type": m.monitor_type, "data": m.to_python_dict()},
         }
         s.update_remote_monitor(data, "remote.host")
         data = {
-            "test1": {"cls_type": m._type, "data": m.to_python_dict()},
+            "test1": {"cls_type": m.monitor_type, "data": m.to_python_dict()},
         }
         s.update_remote_monitor(data, "remote.host")
         self.assertIn("test1", s.remote_monitors["remote.host"])

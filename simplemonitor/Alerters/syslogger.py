@@ -10,7 +10,7 @@ from .alerter import Alerter, AlertType, register
 
 @register
 class SyslogAlerter(Alerter):
-    _type = "syslog"
+    alerter_type = "syslog"
 
     def send_alert(self, name: str, monitor: Monitor) -> None:
         alert_type = self.should_alert(monitor)

@@ -21,7 +21,7 @@ from .logger import Logger, register
 
 @register
 class MQTTLogger(Logger):
-    _type = "mqtt"
+    logger_type = "mqtt"
     only_failures = False
     buffered = False
     dateformat = None

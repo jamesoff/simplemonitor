@@ -33,7 +33,7 @@ from ..util import (
 class Monitor:
     """Simple monitor. This class is abstract."""
 
-    _type = "unknown"
+    monitor_type = "unknown"
     last_result = ""
     error_count = 0
     _failed_at = None
@@ -459,15 +459,9 @@ class Monitor:
     def __str__(self) -> str:
         return self.describe()
 
-    @property
-    def type(self) -> str:
-        """Compatibility with the rename of type to _type. Will be removed in the future."""
-        self.monitor_logger.critical("Access to 'type' instead of '_type'!")
-        return self._type
-
 
 (register, get_class, all_types) = subclass_dict_handler(
-    "simplemonitor.Monitors.monitor", Monitor
+    "simplemonitor.Monitors.monitor", Monitor, "monitor_type"
 )
 
 
@@ -477,7 +471,7 @@ class MonitorFail(Monitor):
 
     Use for testing alerters etc. The default interval for successes is 5."""
 
-    _type = "fail"
+    monitor_type = "fail"
 
     def __init__(self, name: str, config_options: dict):
         Monitor.__init__(self, name, config_options)
@@ -513,7 +507,7 @@ class MonitorFail(Monitor):
 class MonitorNull(Monitor):
     """A monitor which always passes."""
 
-    _type = "null"
+    monitor_type = "null"
 
     def run_test(self) -> bool:
         return self.record_success()

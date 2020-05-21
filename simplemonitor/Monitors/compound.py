@@ -14,7 +14,7 @@ class CompoundMonitor(Monitor):
     Check most recent proble of provided monitors, if all are fail, then report fail.
     """
 
-    _type = "compound"
+    monitor_type = "compound"
     m = None  # type: Optional[WeakValueDictionary[str, Monitor]]
     mt = None  # type: Optional[WeakValueDictionary[str, Monitor]]
 

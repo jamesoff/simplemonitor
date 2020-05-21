@@ -84,7 +84,7 @@ class SimpleMonitor:
         sane = True
         if len(self.alerters) == 0:
             for _, logger in self.loggers.items():
-                if logger._type == "network":
+                if logger.logger_type == "network":
                     break
             else:
                 sane = False
@@ -95,7 +95,7 @@ class SimpleMonitor:
         new_list = []  # type: List[str]
         late_list = []  # type: List[str]
         for monitor in joblist:
-            if self.monitors[monitor]._type in ["compound"]:
+            if self.monitors[monitor].monitor_type in ["compound"]:
                 late_list.append(monitor)
             else:
                 new_list.append(monitor)

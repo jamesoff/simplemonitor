@@ -202,7 +202,7 @@ def get_config_dict(
 
 
 def subclass_dict_handler(
-    mod: str, base_cls: type
+    mod: str, base_cls: type, type_attr: str
 ) -> Tuple[Callable, Callable, Callable]:
     def _check_is_subclass(cls: Any) -> None:
         if not issubclass(cls, base_cls):
@@ -216,9 +216,9 @@ def subclass_dict_handler(
     def register(cls: Any) -> Any:
         """Decorator for monitor classes."""
         _check_is_subclass(cls)
-        if cls is None or cls._type == "unknown":
+        if cls is None or getattr(cls, type_attr, "unknown") == "unknown":
             raise ValueError("Cannot register this class")
-        _subclasses[cls._type] = cls
+        _subclasses[getattr(cls, type_attr)] = cls
         return cls
 
     def get_class(type_: Any) -> Any:

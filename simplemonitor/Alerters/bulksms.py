@@ -14,7 +14,7 @@ class BulkSMSAlerter(Alerter):
 
     Subscription required, see http://www.bulksms.co.uk"""
 
-    _type = "bulksms"
+    alerter_type = "bulksms"
 
     def __init__(self, config_options: dict) -> None:
         super().__init__(config_options)

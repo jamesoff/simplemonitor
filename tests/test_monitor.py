@@ -215,18 +215,26 @@ class TestMonitor(unittest.TestCase):
         m = SimpleMonitor()
         m = monitor.load_monitors(m, "tests/monitors-prehup.ini")
         self.assertEqual(
-            m.monitors["monitor1"]._type, "null", "monitor1 did not load correctly"
+            m.monitors["monitor1"].monitor_type,
+            "null",
+            "monitor1 did not load correctly",
         )
         self.assertEqual(
-            m.monitors["monitor2"]._type, "host", "monitor2 did not load correctly"
+            m.monitors["monitor2"].monitor_type,
+            "host",
+            "monitor2 did not load correctly",
         )
         self.assertEqual(
             m.monitors["monitor2"].host, "127.0.0.1", "monitor2 did not load correctly"
         )
 
         m = monitor.load_monitors(m, "tests/monitors-posthup.ini")
-        self.assertEqual(m.monitors["monitor1"]._type, "null", "monitor1 changed type")
-        self.assertEqual(m.monitors["monitor2"]._type, "host", "monitor2 changed type")
+        self.assertEqual(
+            m.monitors["monitor1"].monitor_type, "null", "monitor1 changed type"
+        )
+        self.assertEqual(
+            m.monitors["monitor2"].monitor_type, "host", "monitor2 changed type"
+        )
         self.assertEqual(
             m.monitors["monitor2"].host, "127.0.0.2", "monitor2 did not update config"
         )

@@ -11,7 +11,7 @@ from .alerter import Alerter, AlertLength, AlertType, register
 class TelegramAlerter(Alerter):
     """Send push notification via Telegram."""
 
-    _type = "telegram"
+    alerter_type = "telegram"
 
     def __init__(self, config_options: dict) -> None:
         super().__init__(config_options)

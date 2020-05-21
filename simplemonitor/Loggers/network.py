@@ -30,7 +30,7 @@ _DIGEST_NAME = "md5"
 class NetworkLogger(Logger):
     """Send our results over the network to another instance."""
 
-    _type = "network"
+    logger_type = "network"
     supports_batch = True
 
     def __init__(self, config_options: dict) -> None:
@@ -57,18 +57,21 @@ class NetworkLogger(Logger):
             )
             return
         self.logger_logger.debug("network logger: %s %s", name, monitor)
-        if monitor._type == "unknown":
+        if monitor.monitor_type == "unknown":
             self.logger_logger.error(
                 "Cannot serialize monitor %s, has type 'unknown'.", name
             )
             return
         try:
-            if monitor._type == "compound":
+            if monitor.monitor_type == "compound":
                 self.logger_logger.error(
                     "not pickling compound monitor - currently incompatible with network loggers"
                 )
             else:
-                data = {"cls_type": monitor._type, "data": monitor.to_python_dict()}
+                data = {
+                    "cls_type": monitor.monitor_type,
+                    "data": monitor.to_python_dict(),
+                }
                 if self.batch_data is not None:
                     self.batch_data[monitor.name] = data
                 else:
