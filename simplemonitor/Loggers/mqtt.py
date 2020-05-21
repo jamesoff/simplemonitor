@@ -1,7 +1,8 @@
 # coding=utf-8
 
 # Simplemonitor logger for MQTT
-# It is intended to be used with Home Assistant and its MQTT Discovery feature (this the default topic)
+# It is intended to be used with Home Assistant and its MQTT Discovery feature
+# (this the default topic)
 # but can be used in any other context
 # Python 3 only
 # contact: dev@swtk.info
@@ -35,7 +36,6 @@ class MQTTLogger(Logger):
             self.logger_logger.error("Missing paho.mqtt module!")
             return
 
-        # TODO: add configuration for authenticated calls, port, will, etc.
         self.host = cast(
             str, self.get_config_option("host", required=True, allow_empty=False)
         )
@@ -76,7 +76,9 @@ class MQTTLogger(Logger):
 
         # registry of monitors which registered with HA
         # not used if not Home Assistant context
-        # also see https://github.com/jamesoff/simplemonitor/issues/236#issuecomment-462481900 for rationale
+        # also see
+        # https://github.com/jamesoff/simplemonitor/issues/236#issuecomment-462481900
+        # for rationale
         self.registered = []  # type: List[str]
 
     def save_result2(self, name: str, monitor: Monitor) -> None:
@@ -97,14 +99,12 @@ class MQTTLogger(Logger):
                     )
                 except Exception as e:
                     self.logger_logger.error(
-                        "cannot send {device} to MQTT: {e}".format(
-                            device=monitor.name, e=e
-                        )
+                        "cannot send %s to MQTT: %s", monitor.name, e
                     )
                 else:
                     self.registered.append(monitor.name)
                     self.logger_logger.debug(
-                        "registered {device} in MQTT".format(device=monitor.name)
+                        "registered %s in MQTT", device=monitor.name
                     )
 
         if self.only_failures and monitor.virtual_fail_count() == 0:
@@ -117,9 +117,7 @@ class MQTTLogger(Logger):
         else:
             topic = "{root}/{monitor}".format(root=self.topic, monitor=monitor.name)
         self.logger_logger.debug(
-            "{monitor} failed {n} times".format(
-                monitor=monitor.name, n=monitor.virtual_fail_count()
-            )
+            "%s failed %d times", monitor.name, monitor.virtual_fail_count()
         )
         payload = (
             "ON"
@@ -135,15 +133,9 @@ class MQTTLogger(Logger):
                 client_id="simplemonitor_{monitor}".format(monitor=monitor.name),
             )
         except Exception as e:
-            self.logger_logger.error(
-                "cannot send state {payload} to {topic}: {e}".format(
-                    payload=payload, topic=topic, e=e
-                )
-            )
+            self.logger_logger.error("cannot send state %s to %s %s", payload, topic, e)
         else:
-            self.logger_logger.debug(
-                "state {state} sent to {topic}".format(state=payload, topic=topic)
-            )
+            self.logger_logger.debug("state %s sent to %s", payload, topic)
 
     def describe(self) -> str:
         return "Sends monitoring status to a MQTT broker"
