@@ -56,6 +56,7 @@ class Logger:
 
     @property
     def dependencies(self) -> list:
+        """The dependencies of this Logger."""
         return self._dependencies
 
     @dependencies.setter
@@ -71,6 +72,11 @@ class Logger:
             if dependency in self._dependencies:
                 self.connected = False
         return self.connected
+
+    @property
+    def groups(self) -> List[str]:
+        """The groups this Logger belongs to."""
+        return self._groups
 
     def start_batch(self) -> None:
         """Prepare to process a batch of results"""

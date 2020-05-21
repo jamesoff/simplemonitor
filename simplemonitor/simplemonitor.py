@@ -67,13 +67,14 @@ class SimpleMonitor:
     def verify_dependencies(self) -> bool:
         """Check if all monitors have valid dependencies."""
         ok = True
-        for k in list(self.monitors.keys()):
-            for dependency in self.monitors[k].dependencies:
-                if dependency not in list(self.monitors.keys()):
+        monitors = self.monitors.keys()
+        for key, monitor in self.monitors.items():
+            for dependency in monitor.dependencies:
+                if dependency not in monitors:
                     module_logger.critical(
                         "Configuration error: dependency %s of monitor %s is not defined!",
                         dependency,
-                        k,
+                        key,
                     )
                     ok = False
         return ok
@@ -164,12 +165,12 @@ class SimpleMonitor:
                         not_run = True
                         self.monitors[monitor].record_skip(None)
                         module_logger.info("Not run: %s", monitor)
-                except Exception as exeception:
+                except Exception as exception:
                     module_logger.exception(
                         "Monitor %s threw exception during run_test()", monitor
                     )
                     self.monitors[monitor].record_fail(
-                        "Unhandled exception: {}".format(exeception)
+                        "Unhandled exception: {}".format(exception)
                     )
                 if self.monitors[monitor].error_count > 0:
                     if self.monitors[monitor].virtual_fail_count() == 0:
@@ -194,16 +195,16 @@ class SimpleMonitor:
         """Use the given logger object to log our state."""
         logger.check_dependencies(self.failed + self.still_failing + self.skipped)
         logger.start_batch()
-        for key in list(self.monitors.keys()):
-            if self.monitors[key].group in logger._groups:
-                logger.save_result2(key, self.monitors[key])
+        for key, monitor in self.monitors.items():
+            if monitor.group in logger.groups:
+                logger.save_result2(key, monitor)
             else:
                 module_logger.debug(
                     "not logging for %s due to group mismatch (monitor in group %s, "
                     "logger has groups %s",
                     key,
-                    self.monitors[key].group,
-                    logger._groups,
+                    monitor.group,
+                    logger.groups,
                 )
         try:
             for host_monitors in self.remote_monitors.values():
