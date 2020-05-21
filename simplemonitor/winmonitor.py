@@ -65,15 +65,15 @@ class AppServerSvc(win32serviceutil.ServiceFramework):
 
         # Setup logger
         self.logger = LOGGER
-        self.logger.info("Initialised {} service".format(self._svc_display_name_))
+        self.logger.info("Initialised %s service", self._svc_display_name_)
 
     def SvcStop(self) -> None:
-        self.logger.info("Stopping {} service".format(self._svc_display_name_))
+        self.logger.info("Stopping %s service", self._svc_display_name_)
         self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
         win32event.SetEvent(self.hWaitStop)
 
     def SvcDoRun(self) -> None:
-        self.logger.info("Starting {} service".format(self._svc_display_name_))
+        self.logger.info("Starting %s service", self._svc_display_name_)
         import servicemanager
 
         servicemanager.LogMsg(
@@ -85,7 +85,7 @@ class AppServerSvc(win32serviceutil.ServiceFramework):
         # Start monitor
         p_mon = mp.Process(target=run_monitor)
         p_mon.start()
-        self.logger.info("Started {} service".format(self._svc_display_name_))
+        self.logger.info("Started %s service", self._svc_display_name_)
 
         # Wait for Monitor to finish
         while True:
@@ -104,12 +104,10 @@ class AppServerSvc(win32serviceutil.ServiceFramework):
                     break
                 self.logger.debug("Still running...")
             except KeyboardInterrupt:
-                self.logger.warning(
-                    "Interrupted {} service".format(self._svc_display_name_)
-                )
+                self.logger.warning("Interrupted %s service", self._svc_display_name_)
                 break
 
-        self.logger.info("Stopped {} service".format(self._svc_display_name_))
+        self.logger.info("Stopped %s service", self._svc_display_name_)
 
 
 def run_monitor() -> None:
