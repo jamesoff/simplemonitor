@@ -285,13 +285,12 @@ class Alerter:
             now = arrow.now().time()
             in_time_range = (now > self._time_info[0]) and (now < self._time_info[1])
             if self._times_type == AlertTimeFilter.ONLY:
-                self.alerter_logger.debug("in_time_range: {}".format(in_time_range))
+                self.alerter_logger.debug("in_time_range: %s", in_time_range)
                 return in_time_range
             elif self._times_type == AlertTimeFilter.NOT:
                 self.alerter_logger.debug(
-                    "in_time_range: {} (inverting due to AlertTimeFilter.NOT)".format(
-                        in_time_range
-                    )
+                    "in_time_range: %s (inverting due to AlertTimeFilter.NOT)",
+                    in_time_range,
                 )
                 return not in_time_range
         self.alerter_logger.error(

@@ -89,9 +89,7 @@ class SNSAlerter(Alerter):
                 target = self.number
             else:
                 target = self.topic
-            self.alerter_logger.info(
-                "dry_run: would send notifiction to {}:".format(target)
-            )
+            self.alerter_logger.info("dry_run: would send notifiction to %s:", target)
             if subject is not None:
                 self.alerter_logger.info("    Subject: %s", subject)
             self.alerter_logger.info("    Message: %s", message)

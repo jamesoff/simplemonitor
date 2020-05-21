@@ -47,4 +47,4 @@ class NotificationCenterAlerter(Alerter):
         if not self._dry_run:
             pync.notify(message=message, title="SimpleMonitor")
         else:
-            self.alerter_logger.info("dry_run: would send message: {}".format(message))
+            self.alerter_logger.info("dry_run: would send message: %s", message)
