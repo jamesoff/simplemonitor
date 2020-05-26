@@ -15,7 +15,7 @@ from .alerter import Alerter, AlertLength, AlertType, register
 class NotificationCenterAlerter(Alerter):
     """Send alerts to the Mac OS X Notification Center."""
 
-    _type = "nc"
+    alerter_type = "nc"
 
     def __init__(self, config_options: dict) -> None:
         super().__init__(config_options)
@@ -47,4 +47,4 @@ class NotificationCenterAlerter(Alerter):
         if not self._dry_run:
             pync.notify(message=message, title="SimpleMonitor")
         else:
-            self.alerter_logger.info("dry_run: would send message: {}".format(message))
+            self.alerter_logger.info("dry_run: would send message: %s", message)

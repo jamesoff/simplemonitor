@@ -12,7 +12,7 @@ from .alerter import Alerter, AlertType, register
 class ExecuteAlerter(Alerter):
     """Execute an external command when a monitor fails or recovers."""
 
-    _type = "execute"
+    alerter_type = "execute"
 
     def __init__(self, config_options: dict) -> None:
         super().__init__(config_options)

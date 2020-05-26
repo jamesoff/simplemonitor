@@ -25,6 +25,7 @@ from .simplemonitor import SimpleMonitor
 
 from .util import get_config_dict
 from .util.envconfig import EnvironmentAwareConfigParser
+from configparser import Error as ConfigError
 
 try:
     import colorlog
@@ -39,7 +40,11 @@ hup_timestamp = None
 
 
 def setup_signals() -> None:
-    _message = "Unable to trap SIGHUP... maybe it doesn't exist on this platform. Set 'hup_file' in config and touch that file to trigger a config reload."
+    """Set up the SIGHUP handler."""
+    _message = (
+        "Unable to trap SIGHUP... maybe it doesn't exist on this platform. "
+        "Set 'hup_file' in config and touch that file to trigger a config reload."
+    )
     try:
         signal.signal(signal.SIGHUP, handle_sighup)
     except ValueError:  # pragma: no cover
@@ -48,7 +53,8 @@ def setup_signals() -> None:
         main_logger.warning(_message)
 
 
-def handle_sighup(sig_number: Any, stack_frame: Any) -> None:
+def handle_sighup(*_: Any) -> None:
+    """Receive SIGHUP and process it."""
     global need_hup
     main_logger.warning("Received SIGHUP")
     need_hup = True
@@ -98,9 +104,8 @@ def load_config(config_file: str) -> EnvironmentAwareConfigParser:
         sys.exit(1)
     try:
         config.read(config_file)
-    except Exception as e:
-        main_logger.critical("Unable to read configuration file")
-        main_logger.critical(e)
+    except ConfigError:
+        main_logger.exception("Unable to read configuration file")
         sys.exit(1)
     return config
 
@@ -133,14 +138,15 @@ def load_monitors(m: SimpleMonitor, filename: str) -> SimpleMonitor:
         config_options = default_config.copy()
         config_options.update(get_config_dict(config, this_monitor))
         if m.has_monitor(this_monitor):
-            if m.monitors[this_monitor]._type == config_options["type"]:
+            if m.monitors[this_monitor].monitor_type == config_options["type"]:
                 main_logger.info("Updating configuration for monitor %s", this_monitor)
                 m.update_monitor_config(this_monitor, config_options)
             else:
                 main_logger.error(
-                    "Cannot update monitor %s from type %s to type %s Keeping original config for this monitor.",
+                    "Cannot update monitor %s from type %s to type %s. "
+                    "Keeping original config for this monitor.",
                     this_monitor,
-                    m.monitors[this_monitor]._type,
+                    m.monitors[this_monitor].monitor_type,
                     config_options["type"],
                 )
             continue
@@ -186,14 +192,15 @@ def load_loggers(
         config_options = get_config_dict(config, config_logger)
         config_options["_name"] = config_logger
         if m.has_logger(config_logger):
-            if m.loggers[config_logger]._type == config_options["type"]:
+            if m.loggers[config_logger].logger_type == config_options["type"]:
                 main_logger.info("Updating configuration for logger %s", config_logger)
                 m.update_logger_config(config_logger, config_options)
             else:
                 main_logger.error(
-                    "Cannot update logger %s from type %s to type %s Keeping original config for this logger.",
+                    "Cannot update logger %s from type %s to type %s. "
+                    "Keeping original config for this logger.",
                     config_logger,
-                    m.loggers[config_logger]._type,
+                    m.loggers[config_logger].logger_type,
                     config_options["type"],
                 )
             continue
@@ -232,14 +239,15 @@ def load_alerters(
         alerter_type = config.get(this_alerter, "type")
         config_options = get_config_dict(config, this_alerter)
         if m.has_alerter(this_alerter):
-            if m.alerters[this_alerter]._type == config_options["type"]:
+            if m.alerters[this_alerter].alerter_type == config_options["type"]:
                 main_logger.info("Updating configuration for alerter %s", this_alerter)
                 m.update_alerter_config(this_alerter, config_options)
             else:
                 main_logger.error(
-                    "Cannot update alerter %s from type %s to type %s Keeping original config for this alerter.",
+                    "Cannot update alerter %s from type %s to type %s. "
+                    "Keeping original config for this alerter.",
                     this_alerter,
-                    m.alerters[this_alerter]._type,
+                    m.alerters[this_alerter].alerter_type,
                     config_options["type"],
                 )
             continue
@@ -335,7 +343,10 @@ def main() -> None:
         action="store_true",
         dest="one_shot",
         default=False,
-        help='Run the monitors once only, without alerting. Require monitors without "fail" in the name to succeed. Exit zero or non-zero accordingly.',
+        help=(
+            "Run the monitors once only, without alerting. Require monitors without "
+            '"fail" in the name to succeed. Exit zero or non-zero accordingly.'
+        ),
     )
     testing_group.add_argument(
         "--loops",
@@ -437,7 +448,7 @@ def main() -> None:
 
     try:
         interval = config.getint("monitor", "interval")
-    except Exception:
+    except ConfigError:
         main_logger.critical(
             'Missing [monitor] section from config file, or missing the "interval" setting in it'
         )
@@ -453,7 +464,7 @@ def main() -> None:
         try:
             with open(pidfile, "w") as file_handle:
                 file_handle.write("%d\n" % my_pid)
-        except Exception:
+        except IOError:
             main_logger.error("Couldn't write to pidfile!")
             pidfile = None
 
@@ -490,7 +501,8 @@ def main() -> None:
 
     if options.one_shot:
         main_logger.warning(
-            "One-shot mode: expecting monitors without 'fail' in the name to succeed, and with to fail. Will exit zero or non-zero accordingly."
+            "One-shot mode: expecting monitors without 'fail' in the name to succeed, "
+            "and with to fail. Will exit zero or non-zero accordingly."
         )
 
     if enable_remote:
@@ -566,7 +578,6 @@ def main() -> None:
             main_logger.info("Received ^C")
             loop = False
         except Exception:
-            sys.exc_info()
             main_logger.exception("Caught unhandled exception during main loop")
         if loop and enable_remote:
             if not remote_listening_thread.isAlive():

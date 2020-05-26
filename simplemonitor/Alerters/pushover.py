@@ -11,7 +11,7 @@ from .alerter import Alerter, AlertLength, AlertType, register
 class PushoverAlerter(Alerter):
     """Send push notification via Pushover."""
 
-    _type = "pushover"
+    alerter_type = "pushover"
 
     def __init__(self, config_options: dict) -> None:
         super().__init__(config_options)

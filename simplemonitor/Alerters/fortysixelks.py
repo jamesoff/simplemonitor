@@ -18,7 +18,7 @@ class FortySixElksAlerter(Alerter):
 
     Account required, see https://www.46elks.com/"""
 
-    _type = "46elks"
+    alerter_type = "46elks"
 
     def __init__(self, config_options: dict) -> None:
         super().__init__(config_options)

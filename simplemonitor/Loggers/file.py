@@ -23,7 +23,7 @@ from .logger import Logger, register
 class FileLogger(Logger):
     """Log monitor status to a file."""
 
-    _type = "logfile"
+    logger_type = "logfile"
     filename = ""
     only_failures = False
     buffered = True
@@ -117,7 +117,7 @@ class FileLogger(Logger):
 class HTMLLogger(Logger):
     """A batching logger which writes a simple HTML page of the current state."""
 
-    _type = "html"
+    logger_type = "html"
     supports_batch = True
     filename = ""
     count_data = ""
@@ -444,7 +444,7 @@ class PayloadEncoder(json.JSONEncoder):
 class JsonLogger(Logger):
     """Write monitor status to a JSON file."""
 
-    _type = "json"
+    logger_type = "json"
     filename = ""  # type: str
     supports_batch = True
 

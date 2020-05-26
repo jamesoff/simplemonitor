@@ -21,7 +21,7 @@ jobs:
       - name: Check pip
         run: pip --version
       - name: Update pip
-        run: pip install --upgrade pip
+        run: pip install --user --upgrade pip
       - name: Install pipenv
         run: pip install pipenv
       - name: pipenv install

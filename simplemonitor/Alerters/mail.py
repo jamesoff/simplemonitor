@@ -12,7 +12,7 @@ from .alerter import Alerter, AlertLength, AlertType, register
 class EMailAlerter(Alerter):
     """Send email alerts using SMTP to a mail server."""
 
-    _type = "email"
+    alerter_type = "email"
 
     def __init__(self, config_options: dict) -> None:
         super().__init__(config_options)

@@ -10,7 +10,7 @@ from .alerter import Alerter, AlertLength, AlertType, register
 class PushbulletAlerter(Alerter):
     """Send push notification via Pushbullet."""
 
-    _type = "pushbullet"
+    alerter_type = "pushbullet"
 
     def __init__(self, config_options: dict) -> None:
         super().__init__(config_options)

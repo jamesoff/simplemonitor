@@ -17,7 +17,7 @@ from .alerter import Alerter, AlertLength, AlertType, register
 class SESAlerter(Alerter):
     """Send email alerts using Amazon's SES service."""
 
-    _type = "ses"
+    alerter_type = "ses"
 
     def __init__(self, config_options: dict) -> None:
         super().__init__(config_options)

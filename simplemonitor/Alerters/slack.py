@@ -16,7 +16,7 @@ from .alerter import Alerter, AlertType, register
 class SlackAlerter(Alerter):
     """Send alerts to a Slack webhook."""
 
-    _type = "slack"
+    alerter_type = "slack"
 
     channel = None
     username = None
