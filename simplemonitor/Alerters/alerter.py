@@ -316,9 +316,9 @@ class Alerter:
         length: AlertLength, alert_type: AlertType, monitor: Monitor
     ) -> str:
         """Create a message for an Alerter to send."""
-        if monitor.state == MonitorState.FAILED:
+        if monitor.state() == MonitorState.FAILED:
             downtime = str(monitor.get_downtime())
-        elif monitor.state == MonitorState.OK:
+        elif monitor.state() == MonitorState.OK:
             downtime = str(monitor.get_uptime())
         else:
             downtime = ""
