@@ -147,7 +147,6 @@ class Monitor:
             return True
         return False
 
-    @property
     def state(self) -> MonitorState:
         return self._state
 
