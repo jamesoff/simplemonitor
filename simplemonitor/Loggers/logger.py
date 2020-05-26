@@ -1,4 +1,11 @@
 # coding=utf-8
+
+"""Logging for SimpleMonitor.
+
+Loggers process every monitor, every iteration, to record their state in some fashion.
+"""
+
+
 import logging
 from typing import Any, Dict, List, Optional, cast
 
@@ -42,6 +49,9 @@ class Logger:
         self._global_info = info
 
     def get_config_option(self, key: str, **kwargs: Any) -> Any:
+        """Get a config value.
+
+        Throws the right flavour exception if something is wrong."""
         kwargs["exception"] = LoggerConfigurationError
         return get_config_option(self._config_options, key, **kwargs)
 
@@ -52,6 +62,9 @@ class Logger:
         return  # pragma: no cover
 
     def save_result2(self, name: str, monitor: Monitor) -> None:
+        """Record a result.
+
+        Subclasses must override this with their implementation."""
         raise NotImplementedError
 
     @property
@@ -66,7 +79,8 @@ class Logger:
         self._dependencies = dependency_list
 
     def check_dependencies(self, failed_list: List[str]) -> bool:
-        """Compare a list of failed monitors to our dependencies, and mark the Logger as offline if one failed"""
+        """Compare a list of failed monitors to our dependencies, and mark
+        the Logger as offline if one failed"""
         self.connected = True
         for dependency in failed_list:
             if dependency in self._dependencies:

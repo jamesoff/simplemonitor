@@ -171,7 +171,9 @@ class Alerter:
     @property
     def dependencies(self) -> List[str]:
         """The Monitors we depend on.
-        If a monitor we depend on fails, it means we can't reach the database, so we shouldn't bother trying to write to it."""
+
+        If a monitor we depend on fails, it means we can't reach the database,
+        so we shouldn't bother trying to write to it."""
         return self._dependencies
 
     @dependencies.setter
@@ -313,9 +315,10 @@ class Alerter:
     def build_message(
         length: AlertLength, alert_type: AlertType, monitor: Monitor
     ) -> str:
-        if monitor._state == MonitorState.FAILED:
+        """Create a message for an Alerter to send."""
+        if monitor.state() == MonitorState.FAILED:
             downtime = str(monitor.get_downtime())
-        elif monitor._state == MonitorState.OK:
+        elif monitor.state() == MonitorState.OK:
             downtime = str(monitor.get_uptime())
         else:
             downtime = ""
@@ -326,7 +329,10 @@ class Alerter:
                 monitor=monitor, alert_verb=Alerter._get_verb(alert_type)
             )
         elif length in [AlertLength.SMS, AlertLength.ONELINE]:
-            message = "{alert_type}: {monitor.name} {alert_verb} on {monitor.running_on} at {failure_time} ({downtime}): {result}".format(
+            message = (
+                "{alert_type}: {monitor.name} {alert_verb} on {monitor.running_on} "
+                "at {failure_time} ({downtime}): {result}"
+            ).format(
                 alert_type=alert_type.value,
                 alert_verb=Alerter._get_verb(alert_type),
                 downtime=downtime,

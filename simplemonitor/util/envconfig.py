@@ -1,3 +1,5 @@
+"""A version of ConfigParser which supports subsitutions from environment variables."""
+
 import os
 import re
 from configparser import BasicInterpolation, ConfigParser
@@ -43,6 +45,8 @@ class EnvironmentAwareConfigParser(ConfigParser):
 
 
 class EnvironmentAwareInterpolation(BasicInterpolation):
+    """An interpolation which substitutes values from the environment."""
+
     r = re.compile("%env:([a-zA-Z0-9_]+)%")
 
     def before_get(
