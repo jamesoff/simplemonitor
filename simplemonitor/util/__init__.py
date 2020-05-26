@@ -13,28 +13,22 @@ from .envconfig import EnvironmentAwareConfigParser
 class MonitorConfigurationError(ValueError):
     """A config error for a Monitor"""
 
-    pass
-
 
 class AlerterConfigurationError(ValueError):
     """A config error for an Alerter"""
-
-    pass
 
 
 class LoggerConfigurationError(ValueError):
     """A config error for a Logger"""
 
-    pass
-
 
 class SimpleMonitorConfigurationError(ValueError):
     """A general config error"""
 
-    pass
-
 
 class MonitorState(Enum):
+    """Represent the state of a Monitor."""
+
     UNKNOWN = 0  # state not known yet
     SKIPPED = 1  # monitor was skipped
     OK = 2  # monitor is ok

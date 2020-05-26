@@ -13,6 +13,7 @@ import time
 import argparse
 from socket import gethostname
 from typing import Any, Optional
+from configparser import Error as ConfigError
 
 
 import simplemonitor.Alerters as Alerters  # noqa: F401
@@ -25,7 +26,6 @@ from .simplemonitor import SimpleMonitor
 
 from .util import get_config_dict
 from .util.envconfig import EnvironmentAwareConfigParser
-from configparser import Error as ConfigError
 
 try:
     import colorlog
