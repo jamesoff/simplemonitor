@@ -73,6 +73,29 @@ class MQTTLogger(Logger):
                 else "homeassistant/binary_sensor",
             ),
         )
+        # username for authentication
+        self.username = cast(
+            str,
+            self.get_config_option(
+                "username",
+                required=False,
+                allow_empty=True,
+            ),
+        )
+        # password for authentication
+        self.password = cast(
+            str,
+            self.get_config_option(
+                "password",
+                required=False,
+                allow_empty=True,
+            ),
+        )
+
+        if self.username and self.password:
+            self.auth = {"username": self.username, "password": self.password}
+        else:
+            self.auth = {}
 
         # registry of monitors which registered with HA
         # not used if not Home Assistant context
@@ -93,6 +116,7 @@ class MQTTLogger(Logger):
                         payload=json.dumps({"name": monitor.name}),
                         retain=True,
                         hostname=self.host,
+                        auth=self.auth,
                         client_id="simplemonitor_{monitor}".format(
                             monitor=monitor.name
                         ),
@@ -130,6 +154,7 @@ class MQTTLogger(Logger):
                 payload=payload,
                 retain=True,
                 hostname=self.host,
+                auth=self.auth,
                 client_id="simplemonitor_{monitor}".format(monitor=monitor.name),
             )
         except Exception as e:
