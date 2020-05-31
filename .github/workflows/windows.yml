@@ -32,5 +32,4 @@ jobs:
         run: make integration-tests
       - name: Unit tests
         run: make unit-test
-      - name: Upload to codecov
-        run: pipenv run codecov
+      - uses: codecov/codecov-action@v1

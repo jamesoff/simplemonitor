@@ -158,6 +158,7 @@ class Alerter:
         self._only_failures = self.get_config_option(
             "only_failures", required_type=bool, default=False
         )
+        self._tz = cast(str, self.get_config_option("tz", default="UTC"))
 
         if self._ooh_failures is None:
             self._ooh_failures = []
@@ -311,9 +312,8 @@ class Alerter:
         else:
             return "unknowned"
 
-    @staticmethod
     def build_message(
-        length: AlertLength, alert_type: AlertType, monitor: Monitor
+        self, length: AlertLength, alert_type: AlertType, monitor: Monitor
     ) -> str:
         """Create a message for an Alerter to send."""
         if monitor.state() == MonitorState.FAILED:
@@ -336,7 +336,7 @@ class Alerter:
                 alert_type=alert_type.value,
                 alert_verb=Alerter._get_verb(alert_type),
                 downtime=downtime,
-                failure_time=format_datetime(monitor.first_failure_time()),
+                failure_time=format_datetime(monitor.first_failure_time(), self._tz),
                 monitor=monitor,
                 result=monitor.get_result(),
             )
@@ -384,13 +384,13 @@ class Alerter:
                 alert_type=alert_type,
                 monitor=monitor,
                 alert_verb=Alerter._get_verb(alert_type),
-                failure_time=format_datetime(monitor.first_failure_time()),
+                failure_time=format_datetime(monitor.first_failure_time(), self._tz),
                 downtime=downtime,
                 result=monitor.get_result(),
                 host=host,
                 desc=monitor.describe(),
                 vfc=monitor.virtual_fail_count(),
-                recovered_time=format_datetime(monitor.last_update),
+                recovered_time=format_datetime(monitor.last_update, self._tz),
             )
             message = textwrap.dedent(message)
         else:

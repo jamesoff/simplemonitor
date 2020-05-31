@@ -37,6 +37,7 @@ The section name should be the name of your alerter. This is the name you should
 | ooh_success | makes an alerter trigger its success action even if out-of-hours (0 or 1) | no | 0 |
 | groups | comma-separated list of group names this alerter will fire for. See the `group` setting for monitors | no | `default` |
 | only_failures | set to 1 to only fire this alerters for failure notifications (or catchups), not recoveries | no | 0 |
+| tz | timezone to use in alert messages | no | UTC |
 
 The *limit* uses the virtual fail count of a monitor, which means if a monitor has a tolerance of 3 and the alerter has a limit of 2, the monitor must fail 5 times before an alert is sent.
 
