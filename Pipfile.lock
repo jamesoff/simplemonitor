@@ -24,6 +24,7 @@
         },
         "boto3": {
             "hashes": [
+                "sha256:2e58368d32171f42100353007fb48fe583ea9deafd0ec556aa2bc1ce1582d06d",
                 "sha256:c774003dc13d6de74b5e19d2b84d625da4456e64bd97f44baa1fcf40d808d29a"
             ],
             "index": "pypi",
@@ -153,11 +154,11 @@
         },
         "ping3": {
             "hashes": [
-                "sha256:afb7b37ad1f3c706e7d3b42a173c0cf6edd1780cf506566c97355145e986993e",
-                "sha256:d68b567b0516dadbb2b1e4834aabb5c5a955deda5c5d0b96ae5c9878d1a4378c"
+                "sha256:73e2561d0b3b26a540749a1fcf3de2759df03c538a14dce89a40faf01b5f7742",
+                "sha256:a2d8edfbdc025e0b43f00689a7e8ad3e83bd1771394df5ec9563f0c1f09240c6"
             ],
             "index": "pypi",
-            "version": "==2.6.2"
+            "version": "==2.6.5"
         },
         "psutil": {
             "hashes": [
@@ -416,10 +417,10 @@
         },
         "gitpython": {
             "hashes": [
-                "sha256:864a47472548f3ba716ca202e034c1900f197c0fb3a08f641c20c3cafd15ed94",
-                "sha256:da3b2cf819974789da34f95ac218ef99f515a928685db141327c09b73dd69c09"
+                "sha256:e107af4d873daed64648b4f4beb89f89f0cfbe3ef558fc7821ed2331c2f8da1a",
+                "sha256:ef1d60b01b5ce0040ad3ec20bc64f783362d41fa0822a2742d3586e1f49bb8ac"
             ],
-            "version": "==3.1.2"
+            "version": "==3.1.3"
         },
         "idna": {
             "hashes": [
