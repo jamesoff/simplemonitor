@@ -1,4 +1,4 @@
-name: Linting
+name: Docker
 
 on: [push, pull_request]
 
