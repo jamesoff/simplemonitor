@@ -1,0 +1,14 @@
+name: Linting
+
+on: [push, pull_request]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build standalone container
+        run: docker build -f docker/monitor.Dockerfile .
+      - name: Build docker-compose environment
+        run: docker-compose build

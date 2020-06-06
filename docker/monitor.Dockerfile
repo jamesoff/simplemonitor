@@ -48,7 +48,7 @@ COPY    $SOURCE_ROOT $DOCKER_ROOT
 WORKDIR $DOCKER_ROOT
 
 # >> install :: py-requirements
-RUN     pip install --no-cache-dir -r "$DOCKER_ROOT"/requirements.txt
+RUN     pip install --no-cache-dir "$DOCKER_ROOT"
 
 # >> setup :: html-backup
 # __ this is a workaround for well known problems with docker-volumes.

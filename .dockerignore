@@ -2,11 +2,22 @@
 # + + + + + + + + + + + + + + + + + + + +
 .idea/
 venv/
+.vscode
+.git
 
 # python specific
 # + + + + + + + + + + + + + + + + + + + +
 *.pyc
+.python-version
 
 # volumes
 # + + + + + + + + + + + + + + + + + + + +
 _monitor-export
+
+# other bits of the project not required
+.github/
+build
+dist
+docs
+tests
+tags
