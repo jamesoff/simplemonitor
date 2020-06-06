@@ -3,14 +3,27 @@
 
 import copy
 import logging
+import os
 import pickle  # nosec
+import signal
 import sys
 import time
-from typing import Any, Dict, List
+from pathlib import Path
+from socket import gethostname
+from typing import Any, Dict, List, Optional
 
 from .Alerters.alerter import Alerter
+from .Alerters.alerter import all_types as all_alerter_types
+from .Alerters.alerter import get_class as get_alerter_class
 from .Loggers.logger import Logger
-from .Monitors.monitor import Monitor, get_class
+from .Loggers.logger import all_types as all_logger_types
+from .Loggers.logger import get_class as get_logger_class
+from .Loggers.network import Listener
+from .Monitors.monitor import Monitor
+from .Monitors.monitor import all_types as all_monitor_types
+from .Monitors.monitor import get_class as get_monitor_class
+from .util import get_config_dict
+from .util.envconfig import EnvironmentAwareConfigParser
 
 module_logger = logging.getLogger("simplemonitor")
 
@@ -18,9 +31,19 @@ module_logger = logging.getLogger("simplemonitor")
 class SimpleMonitor:
     """A fairly simple monitor."""
 
-    def __init__(self, allow_pickle: bool = True) -> None:
+    def __init__(
+        self,
+        config_file: Path,
+        *,
+        hup_file: Optional[Path] = None,
+        no_network: bool = False,
+        max_loops: int = -1,
+        heartbeat: bool = True,
+        one_shot: bool = False
+    ) -> None:
         """Main class turn on."""
-        self.allow_pickle = allow_pickle
+        self._config_file = config_file
+
         self.monitors = {}  # type: Dict[str, Monitor]
         self.failed = []  # type: List[str]
         self.still_failing = []  # type: List[str]
@@ -30,6 +53,292 @@ class SimpleMonitor:
 
         self.loggers = {}  # type: Dict[str, Logger]
         self.alerters = {}  # type: Dict[str, Alerter]
+
+        self._hup_file = hup_file
+        self._need_hup = False
+        self._hup_timestamp = None  # type: Optional[float]
+        self._no_network = no_network
+        self._remote_listening_thread = None  # type: Optional[Listener]
+        self._max_loops = max_loops
+        self.heartbeat = heartbeat
+        self.one_shot = one_shot
+
+        self._setup_signals()
+        self._load_config()
+
+    def _load_config(self) -> None:
+        """Load config, monitors, alerters and loggers."""
+
+        config = EnvironmentAwareConfigParser()
+        if not os.path.exists(self._config_file):
+            raise RuntimeError(
+                "Configuration file {} does not exist".format(self._config_file)
+            )
+        config.read(self._config_file)
+
+        self._allow_pickle = config.getboolean("monitor", "allow_pickle", fallback=True)
+        self.interval = config.getint("monitor", "interval")
+        self.pidfile = config.get("monitor", "pidfile", fallback=None)
+        hup_file = config.get("monitor", "hup_file", fallback=None)
+        if hup_file is not None:
+            self._hup_file = Path(hup_file)
+            module_logger.info(
+                "Watching modification time of %s; increase it to trigger a config reload",
+                hup_file,
+            )
+            self._check_hup_file()
+
+        else:
+            self._hup_file = None
+
+        if (
+            not self._no_network
+            and config.get("monitor", "remote", fallback="0") == "1"
+        ):
+            self._network = True
+            self._remote_port = int(config.get("monitor", "remote_port"))
+            self._network_key = config.get("monitor", "key", fallback=None)
+            self._network_bind_host = config.get("monitor", "bind_host", fallback="")
+        else:
+            self._network = False
+
+        monitors_file = config.get("monitor", "monitors", fallback="monitors.ini")
+        self._load_monitors(monitors_file)
+        count = self.count_monitors()
+        if count == 0:
+            module_logger.critical("No monitors loaded :(")
+            raise RuntimeError
+        self._load_loggers(config)
+        self._load_alerters(config)
+        if not self._verify_dependencies():
+            raise RuntimeError("Broken dependency configuration")
+        if not self.verify_alerting():
+            module_logger.critical("No alerters defined and no remote logger found")
+        if self._network:
+            self._start_network_thread()
+
+    def _start_network_thread(self) -> None:
+        if self._network:
+            if not self._allow_pickle:
+                allowing_pickle = "not "
+            else:
+                allowing_pickle = ""
+            module_logger.info(
+                "Starting remote listener thread (%sallowing pickle data)",
+                allowing_pickle,
+            )
+            self._remote_listening_thread = Listener(
+                self,
+                self._remote_port,
+                self._network_key,
+                allow_pickle=self._allow_pickle,
+                bind_host=self._network_bind_host,
+            )
+            self._remote_listening_thread.daemon = True
+            self._remote_listening_thread.start()
+        else:
+            if self._remote_listening_thread:
+                self._remote_listening_thread.running = False
+
+    def _load_monitors(self, filename: str) -> None:
+        """Load all the monitors from the config file."""
+        module_logger.info("Loading monitor config from %s", filename)
+        config = EnvironmentAwareConfigParser()
+        config.read(filename)
+        monitors = config.sections()
+        if "defaults" in monitors:
+            default_config = get_config_dict(config, "defaults")
+            monitors.remove("defaults")
+        else:
+            default_config = {}
+
+        myhostname = gethostname().lower()
+
+        module_logger.info("=== Loading monitors")
+        for this_monitor in monitors:
+            if config.has_option(this_monitor, "runon"):
+                if myhostname != config.get(this_monitor, "runon").lower():
+                    module_logger.warning(
+                        "Ignoring monitor %s because it's only for host %s",
+                        this_monitor,
+                        config.get(this_monitor, "runon"),
+                    )
+                    continue
+            monitor_type = config.get(this_monitor, "type")
+            new_monitor = None
+            config_options = default_config.copy()
+            config_options.update(get_config_dict(config, this_monitor))
+            if self.has_monitor(this_monitor):
+                if self.monitors[this_monitor].monitor_type == config_options["type"]:
+                    module_logger.info(
+                        "Updating configuration for monitor %s", this_monitor
+                    )
+                    self.update_monitor_config(this_monitor, config_options)
+                else:
+                    module_logger.error(
+                        "Cannot update monitor %s from type %s to type %s. "
+                        "Keeping original config for this monitor.",
+                        this_monitor,
+                        self.monitors[this_monitor].monitor_type,
+                        config_options["type"],
+                    )
+                continue
+
+            try:
+                cls = get_monitor_class(monitor_type)
+            except KeyError:
+                module_logger.error(
+                    "Unknown monitor type %s; valid types are: %s",
+                    monitor_type,
+                    ", ".join(all_monitor_types()),
+                )
+                continue
+            new_monitor = cls(this_monitor, config_options)
+            # new_monitor.set_mon_refs(m)
+
+            module_logger.info(
+                "Adding %s monitor %s: %s", monitor_type, this_monitor, new_monitor
+            )
+            self.add_monitor(this_monitor, new_monitor)
+
+        for monitor in self.monitors.values():
+            monitor.set_mon_refs(self.monitors)
+            monitor.post_config_setup()
+        self.prune_monitors(monitors)
+        module_logger.info("--- Loaded %d monitors", self.count_monitors())
+
+    def _load_loggers(self, config: EnvironmentAwareConfigParser) -> None:
+        """Load the loggers listed in the config object."""
+
+        if config.has_option("reporting", "loggers"):
+            loggers = config.get("reporting", "loggers").split(",")
+        else:
+            loggers = []
+
+        module_logger.info("=== Loading loggers")
+        for config_logger in loggers:
+            logger_type = config.get(config_logger, "type")
+            config_options = get_config_dict(config, config_logger)
+            config_options["_name"] = config_logger
+            if self.has_logger(config_logger):
+                if self.loggers[config_logger].logger_type == config_options["type"]:
+                    module_logger.info(
+                        "Updating configuration for logger %s", config_logger
+                    )
+                    self.update_logger_config(config_logger, config_options)
+                else:
+                    module_logger.error(
+                        "Cannot update logger %s from type %s to type %s. "
+                        "Keeping original config for this logger.",
+                        config_logger,
+                        self.loggers[config_logger].logger_type,
+                        config_options["type"],
+                    )
+                continue
+            try:
+                logger_cls = get_logger_class(logger_type)
+            except KeyError:
+                module_logger.error(
+                    "Unknown logger type %s; valid types are: %s",
+                    logger_type,
+                    ", ".join(all_logger_types()),
+                )
+                continue
+            new_logger = logger_cls(config_options)  # type: Logger
+            new_logger.set_global_info(
+                {"interval": config.getint("monitor", "interval")}
+            )
+            module_logger.info(
+                "Adding %s logger %s: %s", logger_type, config_logger, new_logger
+            )
+            self.add_logger(config_logger, new_logger)
+            del new_logger
+        self.prune_loggers(loggers)
+        module_logger.info("--- Loaded %d loggers", len(self.loggers))
+
+    def _load_alerters(self, config: EnvironmentAwareConfigParser) -> None:
+        """Load the alerters listed in the config object."""
+        if config.has_option("reporting", "alerters"):
+            alerters = config.get("reporting", "alerters").split(",")
+        else:
+            alerters = []
+
+        module_logger.info("=== Loading alerters")
+        for this_alerter in alerters:
+            alerter_type = config.get(this_alerter, "type")
+            config_options = get_config_dict(config, this_alerter)
+            if self.has_alerter(this_alerter):
+                if self.alerters[this_alerter].alerter_type == config_options["type"]:
+                    module_logger.info(
+                        "Updating configuration for alerter %s", this_alerter
+                    )
+                    self.update_alerter_config(this_alerter, config_options)
+                else:
+                    module_logger.error(
+                        "Cannot update alerter %s from type %s to type %s. "
+                        "Keeping original config for this alerter.",
+                        this_alerter,
+                        self.alerters[this_alerter].alerter_type,
+                        config_options["type"],
+                    )
+                continue
+            try:
+                alerter_cls = get_alerter_class(alerter_type)
+            except KeyError:
+                module_logger.error(
+                    "Unknown alerter type %s; valid types are: %s",
+                    alerter_type,
+                    ", ".join(all_alerter_types()),
+                )
+                continue
+            new_alerter = alerter_cls(config_options)
+            module_logger.info("Adding %s alerter %s", alerter_type, this_alerter)
+            new_alerter.name = this_alerter
+            self.add_alerter(this_alerter, new_alerter)
+            del new_alerter
+        self.prune_alerters(alerters)
+        module_logger.info("--- Loaded %d alerters", len(self.alerters))
+
+    def _setup_signals(self) -> None:
+        """Set up the SIGHUP handler."""
+        _message = (
+            "Unable to trap SIGHUP... maybe it doesn't exist on this platform. "
+            "Set 'hup_file' in config and touch that file to trigger a config reload."
+        )
+        try:
+            signal.signal(signal.SIGHUP, self._handle_sighup)
+        except ValueError:  # pragma: no cover
+            module_logger.warning(_message)
+        except AttributeError:  # pragma: no cover
+            module_logger.warning(_message)
+
+    def _handle_sighup(self, *_: Any) -> None:
+        """Receive SIGHUP and process it."""
+        module_logger.warning("Received SIGHUP")
+        self._need_hup = True
+
+    def _check_hup_file(self) -> bool:
+        """Check a file's timestamp, and if it's newer than last time, treat it
+        the same as receiving SIGHUP so that a reload is triggered. This allows
+        config reloading on platforms which don't support the signal (i.e.
+        Windows)"""
+        if self._hup_file is None:
+            return False
+        try:
+            statinfo = os.stat(self._hup_file)
+        except IOError:
+            module_logger.debug(
+                "Could not call stat() on path %s for file-based HUP", self._hup_file
+            )
+            return False
+        modification_time = statinfo.st_mtime
+        if self._hup_timestamp is None:
+            self._hup_timestamp = modification_time
+            return True
+        if modification_time > self._hup_timestamp:
+            self._hup_timestamp = modification_time
+            return True
+        return False
 
     def add_monitor(self, name: str, monitor: Monitor) -> None:
         """Add a monitor."""
@@ -64,7 +373,7 @@ class SimpleMonitor:
         for key in list(self.monitors.keys()):
             self.monitors[key].reset_dependencies()
 
-    def verify_dependencies(self) -> bool:
+    def _verify_dependencies(self) -> bool:
         """Check if all monitors have valid dependencies."""
         ok = True
         monitors = self.monitors.keys()
@@ -291,7 +600,7 @@ class SimpleMonitor:
                 delete_list.append(monitor)
         for monitor in delete_list:
             del self.monitors[monitor]
-        if not self.verify_dependencies():
+        if not self._verify_dependencies():
             module_logger.critical(
                 "Broken dependencies after pruning monitors, aborting!"
             )
@@ -355,9 +664,9 @@ class SimpleMonitor:
             module_logger.info("updating remote monitor %s", name)
             if isinstance(state, dict):
                 try:
-                    remote_monitor = get_class(state["cls_type"]).from_python_dict(
-                        state["data"]
-                    )
+                    remote_monitor = get_monitor_class(
+                        state["cls_type"]
+                    ).from_python_dict(state["data"])
                     self.remote_monitors[hostname][name] = remote_monitor
                     seen_monitors.append(name)
                 except KeyError:
@@ -366,7 +675,7 @@ class SimpleMonitor:
                         "possibly a monitor type we don't know?",
                         hostname,
                     )
-            elif self.allow_pickle:
+            elif self._allow_pickle:
                 # Fallback for old remote monitors
                 try:
                     remote_monitor = pickle.loads(state)  # nosec
@@ -410,3 +719,71 @@ class SimpleMonitor:
         module_logger.debug("Running logs")
         self.do_logs()
         module_logger.debug("Loop complete")
+
+    def run(self) -> None:
+        module_logger.info(
+            "=== Starting... (loop runs every %ds) Hit ^C to stop", self.interval
+        )
+        loop = True
+        loops = self._max_loops
+        heartbeat = True
+        while loop:
+            try:
+                if loops > 0:
+                    loops -= 1
+                    if loops == 0:
+                        module_logger.warning(
+                            "Ran out of loop counter, will stop after this one"
+                        )
+                        loop = False
+                if self._need_hup or self._check_hup_file():
+                    try:
+                        module_logger.warning("Reloading configuration")
+                        self._load_config()
+                        self.hup_loggers()
+                        self._need_hup = False
+                    except Exception:
+                        module_logger.exception("Error while reloading configuration")
+                        sys.exit(1)
+                self.run_loop()
+
+                if (
+                    module_logger.level in ["error", "critical", "warn"]
+                    and self.heartbeat
+                ):
+                    heartbeat = not heartbeat
+                    if heartbeat:
+                        sys.stdout.write(".")
+                        sys.stdout.flush()
+            except KeyboardInterrupt:
+                module_logger.info("Received ^C")
+                loop = False
+            except Exception:
+                module_logger.exception("Caught unhandled exception during main loop")
+            if loop and self._network:
+                if (
+                    self._remote_listening_thread
+                    and not self._remote_listening_thread.is_alive()
+                ):
+                    module_logger.error("Listener thread died :(")
+                    self._start_network_thread()
+            if self.one_shot:
+                break
+
+            try:
+                if loop:
+                    time.sleep(self.interval)
+            except Exception:
+                module_logger.info("Quitting")
+                loop = False
+
+        if self._network and self._remote_listening_thread:
+            self._remote_listening_thread.running = False
+            module_logger.info("Waiting for listener thread to exit")
+            self._remote_listening_thread.join(0)
+
+        if self.pidfile:
+            try:
+                os.unlink(self.pidfile)
+            except Exception:
+                module_logger.error("Couldn't remove pidfile!")
