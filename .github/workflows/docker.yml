@@ -3,12 +3,21 @@ name: Docker
 on: [push, pull_request]
 
 jobs:
-  build:
-
+  docker:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Prepare ini files
+        run: cp tests/monitor-docker.ini monitor.ini; cp tests/monitors-docker.ini monitors.ini
       - name: Build standalone container
-        run: docker build -f docker/monitor.Dockerfile .
+        run: docker build -f docker/monitor.Dockerfile -t simplemonitor:latest .
+      - name: Test Docker container
+        run: docker run simplemonitor simplemonitor --one-shot -v
+  docker-compose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Prepare ini files
+        run: cp tests/monitor-docker.ini monitor.ini; cp tests/monitors-docker.ini monitors.ini
       - name: Build docker-compose environment
         run: docker-compose build

@@ -29,8 +29,7 @@ ENV     DOCKER_ROOT=/code \
         DOCKER_ENTRYPOINT_ORIGIN=/code/docker/monitor.entrypoint.sh
 
 # >> env :: source/host paths
-ENV     SOURCE_ROOT=./ \
-        SOURCE_HTML_ROOT=./html/
+ENV     SOURCE_ROOT=./
 
 # >> env :: volumes
 ENV     VOLUME_UNIVERSAL_HTML=$DOCKER_HTML_ROOT \
@@ -50,13 +49,8 @@ WORKDIR $DOCKER_ROOT
 # >> install :: py-requirements
 RUN     pip install --no-cache-dir "$DOCKER_ROOT"
 
-# >> setup :: html-backup
-# __ this is a workaround for well known problems with docker-volumes.
-# __ Initial volume instanciation, finished in [monitor.entrypoint.sh].
-COPY    $SOURCE_HTML_ROOT $DOCKER_HTML_BACKUP
-
 # >> prepare :: volumes
-RUN     mkdir -p $VOLUME_MONITOR_EXPORT
+RUN     mkdir -p $VOLUME_MONITOR_EXPORT $DOCKER_HTML_ROOT
 
 # >> setup :: volumes
 VOLUME  $VOLUME_UNIVERSAL_HTML \
