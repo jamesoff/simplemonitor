@@ -22,10 +22,6 @@
 # ENV     VOLUME_UNIVERSAL_HTML=/code/html
 
 if [ ! -f /code/init.flag ]; then
-    # copy :: html (workaround for docker-volumes)
-    # == == == == == == == == == == == == == == ==
-    cp -r "$DOCKER_HTML_BACKUP"/* $DOCKER_HTML_ROOT
-
     # fix docker issue with right-levels on volumes
     # == == == == == == == == == == == == == == ==
     chown -R $MAIN_USER:$MAIN_GROUP $VOLUME_UNIVERSAL_HTML
@@ -45,7 +41,6 @@ echo "DOCKER_ROOT               "$DOCKER_ROOT
 echo "DOCKER_HTML_ROOT          "$DOCKER_HTML_ROOT
 echo "DOCKER_HTML_BACKUP        "$DOCKER_HTML_BACKUP
 echo "SOURCE_ROOT               "$SOURCE_ROOT
-echo "SOURCE_HTML_ROOT          "$SOURCE_HTML_ROOT
 echo "DOCKER_ENTRYPOINT_BINARY  "$DOCKER_ENTRYPOINT_BINARY
 echo "DOCKER_ENTRYPOINT_ORIGIN  "$DOCKER_ENTRYPOINT_ORIGIN
 echo "MAIN_USER                 "$MAIN_USER
@@ -57,7 +52,8 @@ echo "VOLUME_MONITOR_EXPORT     "$VOLUME_MONITOR_EXPORT
 
 # exec entrypoint.py
 # == == == == == == == == == == == == == == ==
-python /code/monitor.py
+cd /code
+simplemonitor
 
 # exec some other commands
 # == == == == == == == == == == == == == == ==

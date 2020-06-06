@@ -52,3 +52,9 @@ bandit-strict:
 	pipenv run bandit -r -l *.py simplemonitor/
 
 linting: black flake8 mypy bandit
+
+docker-build:
+	docker build -f docker/monitor.Dockerfile .
+
+docker-compose-build:
+	docker-compose build
