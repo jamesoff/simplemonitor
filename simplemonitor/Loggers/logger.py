@@ -42,6 +42,14 @@ class Logger:
         if self._global_info is None:
             self._global_info = {}
 
+    def __enter__(self) -> None:
+        """Context manager entry."""
+        self.start_batch()
+
+    def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any) -> None:
+        """Context manager exit."""
+        self.end_batch()
+
     def set_global_info(self, info: dict) -> None:
         """Receive global info about the SimpleMonitor state.
 
