@@ -44,6 +44,20 @@ class TestMonitor(unittest.TestCase):
         os.unlink(temp_file_name)
 
 
+class TestPidFile(unittest.TestCase):
+    def test_pidfile(self):
+        s = simplemonitor.SimpleMonitor("tests/monitor-empty.ini")
+        s.pidfile = "__pid_test"
+        try:
+            os.unlink(s.pidfile)
+        except IOError:
+            pass
+        s._create_pid_file()
+        self.assertTrue(os.path.exists(s.pidfile))
+        s._remove_pid_file()
+        self.assertFalse(os.path.exists(s.pidfile))
+
+
 class TestSanity(unittest.TestCase):
     def test_config_has_alerting(self):
         m = simplemonitor.SimpleMonitor("tests/monitor-empty.ini")
