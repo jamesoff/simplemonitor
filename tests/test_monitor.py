@@ -4,10 +4,10 @@ import os
 import platform
 import time
 import unittest
+from pathlib import Path
 
 import arrow
 
-from simplemonitor import monitor
 from simplemonitor.Monitors.compound import CompoundMonitor
 from simplemonitor.Monitors.monitor import Monitor, MonitorFail, MonitorNull
 from simplemonitor.simplemonitor import SimpleMonitor
@@ -206,14 +206,12 @@ class TestMonitor(unittest.TestCase):
         self.assertEqual(m.get_downtime(), UpDownTime(1, 0, 0, 0))
 
     def test_sighup(self):
-        monitor.setup_signals()
+        m = SimpleMonitor("tests/monitor-empty.ini")
+        m._load_monitors(Path("tests/monitors-prehup.ini"))
+        self.assertEqual(m._need_hup, False, "need_hup did not start False")
+        m._handle_sighup(None, None)
+        self.assertEqual(m._need_hup, True, "need_hup did not get set to True")
 
-        self.assertEqual(monitor.need_hup, False, "need_hup did not start False")
-        monitor.handle_sighup(None, None)
-        self.assertEqual(monitor.need_hup, True, "need_hup did not get set to True")
-
-        m = SimpleMonitor()
-        m = monitor.load_monitors(m, "tests/monitors-prehup.ini")
         self.assertEqual(
             m.monitors["monitor1"].monitor_type,
             "null",
@@ -228,7 +226,7 @@ class TestMonitor(unittest.TestCase):
             m.monitors["monitor2"].host, "127.0.0.1", "monitor2 did not load correctly"
         )
 
-        m = monitor.load_monitors(m, "tests/monitors-posthup.ini")
+        m._load_monitors(Path("tests/monitors-posthup.ini"))
         self.assertEqual(
             m.monitors["monitor1"].monitor_type, "null", "monitor1 changed type"
         )

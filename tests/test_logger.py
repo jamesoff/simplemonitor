@@ -4,6 +4,7 @@ import socket
 import tempfile
 import time
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 from freezegun import freeze_time
@@ -53,14 +54,14 @@ class TestLogger(unittest.TestCase):
     def test_groups(self):
         with patch.object(logger.Logger, "save_result2") as mock_method:
             this_logger = logger.Logger({"groups": "nondefault"})
-            s = SimpleMonitor()
+            s = SimpleMonitor(Path("tests/monitor-empty.ini"))
             s.add_monitor("test", MonitorNull())
             s.log_result(this_logger)
         mock_method.assert_not_called()
 
         with patch.object(logger.Logger, "save_result2") as mock_method:
             this_logger = logger.Logger({"groups": "nondefault"})
-            s = SimpleMonitor()
+            s = SimpleMonitor(Path("tests/monitor-empty.ini"))
             s.add_monitor("test", MonitorNull("unnamed", {"group": "nondefault"}))
             s.log_result(this_logger)
         mock_method.assert_called_once()

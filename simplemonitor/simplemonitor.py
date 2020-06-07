@@ -10,7 +10,7 @@ import sys
 import time
 from pathlib import Path
 from socket import gethostname
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from .Alerters.alerter import Alerter
 from .Alerters.alerter import all_types as all_alerter_types
@@ -33,7 +33,7 @@ class SimpleMonitor:
 
     def __init__(
         self,
-        config_file: Path,
+        config_file: Union[str, Path],
         *,
         hup_file: Optional[Path] = None,
         no_network: bool = False,
@@ -42,7 +42,12 @@ class SimpleMonitor:
         one_shot: bool = False
     ) -> None:
         """Main class turn on."""
-        self._config_file = config_file
+        if isinstance(config_file, str):
+            self._config_file = Path(config_file)
+        elif isinstance(config_file, Path):
+            self._config_file = config_file
+        else:
+            raise ValueError("config_file must be str or Path")
 
         self.monitors = {}  # type: Dict[str, Monitor]
         self.failed = []  # type: List[str]
@@ -70,7 +75,7 @@ class SimpleMonitor:
         """Load config, monitors, alerters and loggers."""
 
         config = EnvironmentAwareConfigParser()
-        if not os.path.exists(self._config_file):
+        if not self._config_file.exists():
             raise RuntimeError(
                 "Configuration file {} does not exist".format(self._config_file)
             )
@@ -88,9 +93,6 @@ class SimpleMonitor:
             )
             self._check_hup_file()
 
-        else:
-            self._hup_file = None
-
         if (
             not self._no_network
             and config.get("monitor", "remote", fallback="0") == "1"
@@ -102,12 +104,11 @@ class SimpleMonitor:
         else:
             self._network = False
 
-        monitors_file = config.get("monitor", "monitors", fallback="monitors.ini")
+        monitors_file = Path(config.get("monitor", "monitors", fallback="monitors.ini"))
         self._load_monitors(monitors_file)
         count = self.count_monitors()
         if count == 0:
             module_logger.critical("No monitors loaded :(")
-            raise RuntimeError
         self._load_loggers(config)
         self._load_alerters(config)
         if not self._verify_dependencies():
@@ -140,8 +141,16 @@ class SimpleMonitor:
             if self._remote_listening_thread:
                 self._remote_listening_thread.running = False
 
-    def _load_monitors(self, filename: str) -> None:
+    def _load_monitors(self, filename: Union[Path, str]) -> None:
         """Load all the monitors from the config file."""
+        if isinstance(filename, str):
+            filename = Path(filename)
+        elif not isinstance(filename, Path):
+            raise ValueError("filename must be str or Path")
+        if not filename.exists():
+            raise RuntimeError(
+                "Monitors config file {} does not exist".format(filename)
+            )
         module_logger.info("Loading monitor config from %s", filename)
         config = EnvironmentAwareConfigParser()
         config.read(filename)
