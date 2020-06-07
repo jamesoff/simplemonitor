@@ -67,6 +67,7 @@ class SimpleMonitor:
         self._max_loops = max_loops
         self.heartbeat = heartbeat
         self.one_shot = one_shot
+        self.pidfile = None  # type: Optional[str]
 
         self._setup_signals()
         self._load_config()
@@ -140,6 +141,12 @@ class SimpleMonitor:
         else:
             if self._remote_listening_thread:
                 self._remote_listening_thread.running = False
+
+    def _stop_network_thread(self) -> None:
+        if self._network and self._remote_listening_thread:
+            self._remote_listening_thread.running = False
+            module_logger.info("Waiting for listener thread to exit")
+            self._remote_listening_thread.join(0)
 
     def _load_monitors(self, filename: Union[Path, str]) -> None:
         """Load all the monitors from the config file."""
@@ -348,6 +355,23 @@ class SimpleMonitor:
             self._hup_timestamp = modification_time
             return True
         return False
+
+    def _create_pid_file(self) -> None:
+        if self.pidfile:
+            my_pid = os.getpid()
+            try:
+                with open(self.pidfile, "w") as file_handle:
+                    file_handle.write("%d\n" % my_pid)
+            except IOError:
+                module_logger.error("Couldn't write to pidfile!")
+                self.pidfile = None
+
+    def _remove_pid_file(self) -> None:
+        if self.pidfile:
+            try:
+                os.unlink(self.pidfile)
+            except OSError:
+                module_logger.error("Couldn't remove pidfile!")
 
     def add_monitor(self, name: str, monitor: Monitor) -> None:
         """Add a monitor."""
@@ -730,6 +754,7 @@ class SimpleMonitor:
         module_logger.debug("Loop complete")
 
     def run(self) -> None:
+        self._create_pid_file()
         module_logger.info(
             "=== Starting... (loop runs every %ds) Hit ^C to stop", self.interval
         )
@@ -786,13 +811,5 @@ class SimpleMonitor:
                 module_logger.info("Quitting")
                 loop = False
 
-        if self._network and self._remote_listening_thread:
-            self._remote_listening_thread.running = False
-            module_logger.info("Waiting for listener thread to exit")
-            self._remote_listening_thread.join(0)
-
-        if self.pidfile:
-            try:
-                os.unlink(self.pidfile)
-            except Exception:
-                module_logger.error("Couldn't remove pidfile!")
+        self._stop_network_thread()
+        self._remove_pid_file()

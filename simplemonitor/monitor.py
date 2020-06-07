@@ -195,14 +195,6 @@ def main() -> None:
         main_logger.info("=== SimpleMonitor v%s", VERSION)
         main_logger.info("Loading main config from %s", options.config)
 
-    # if pidfile:
-    #     my_pid = os.getpid()
-    #     try:
-    #         with open(pidfile, "w") as file_handle:
-    #             file_handle.write("%d\n" % my_pid)
-    #     except IOError:
-    #         main_logger.error("Couldn't write to pidfile!")
-    #         pidfile = None
     m = SimpleMonitor(
         config_file=options.config,
         no_network=options.no_network,
