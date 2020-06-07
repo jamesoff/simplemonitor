@@ -30,7 +30,7 @@ setuptools.setup(
         "Topic :: System :: Monitoring",
         "Typing :: Typed",
     ],
-    python_requires=">=3.5",
+    python_requires=">=3.6.2",
     entry_points={
         "console_scripts": [
             "simplemonitor=simplemonitor.monitor:main",
