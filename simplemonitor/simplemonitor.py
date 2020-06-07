@@ -573,8 +573,8 @@ class SimpleMonitor:
                         module_logger.debug("notifying alerter %s", alerter.name)
                         alerter.send_alert(key, self.monitors[key])
                     else:
-                        module_logger.info(
-                            "skipping alerters for disabled monitor %s", key
+                        module_logger.warning(
+                            "monitor %s has notifications disabled", key
                         )
                 else:
                     module_logger.info(
