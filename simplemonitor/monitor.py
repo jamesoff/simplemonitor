@@ -6,10 +6,6 @@ import argparse
 import logging
 import sys
 
-import simplemonitor.Alerters.alerter as alerter
-import simplemonitor.Loggers.logger as logger
-import simplemonitor.Monitors.monitor as monitor
-
 from .simplemonitor import SimpleMonitor
 from .version import VERSION
 
@@ -20,7 +16,6 @@ except ImportError:
 
 
 main_logger = logging.getLogger("simplemonitor")
-need_hup = False
 
 
 def main() -> None:
@@ -143,6 +138,9 @@ def main() -> None:
 
     if options.dump_resources:
         import pprint
+        import simplemonitor.Alerters.alerter as alerter
+        import simplemonitor.Loggers.logger as logger
+        import simplemonitor.Monitors.monitor as monitor
 
         print("Monitors:")
         pprint.pprint(sorted(monitor.all_types()), compact=True)
