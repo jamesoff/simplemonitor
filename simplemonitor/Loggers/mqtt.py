@@ -75,21 +75,11 @@ class MQTTLogger(Logger):
         )
         # username for authentication
         self.username = cast(
-            str,
-            self.get_config_option(
-                "username",
-                required=False,
-                allow_empty=True,
-            ),
+            str, self.get_config_option("username", required=False, allow_empty=True,),
         )
         # password for authentication
         self.password = cast(
-            str,
-            self.get_config_option(
-                "password",
-                required=False,
-                allow_empty=True,
-            ),
+            str, self.get_config_option("password", required=False, allow_empty=True,),
         )
 
         if self.username and self.password:
