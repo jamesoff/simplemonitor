@@ -81,6 +81,8 @@ This logger is used to send status reports of all monitors to a remote instance.
 | host | The host to connect to | yes | |
 | port | The port to connect on | no | 1883 |
 | hass | Specific configuration for Home Assistant MQTT discovery | no | false |
-| topic | The topic to post to | false | `simplemonitor` (`homeassistant/binary_sensor` if hass is set) |
+| topic | The topic to post to | no | `simplemonitor` (`homeassistant/binary_sensor` if hass is set) |
+| username | The username to use | no | |
+| password | The password to use | no | |
 
 See <https://www.home-assistant.io/docs/mqtt/discovery/> for more information on HASS/
