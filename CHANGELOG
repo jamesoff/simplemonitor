@@ -1,3 +1,25 @@
+1.10:
+	* REQUIRE PYTHON >= 3.6.2
+	* New style HTML page for HTML logger
+	* Track availability percentage, and include in HTML
+	* Add Arlo battery monitor
+	* Add Amazon SNS alerter
+	* Add only_failures option to alerters
+	* Add failure_doc property to monitors, to allow linking to e.g. runbooks
+	* Use psutil library to monitor Windows Services; fixes issue where non-English localisations broke
+	* Add memory and swap monitors
+	* Add group support to loggers
+	* Add unix_service monitor, for generic cross-flavour service checking (if "service X status" works, you can use this)
+	* Add process monitor, to check a process(es) are running
+	* Add option to bind network listener to a specific IP
+	* Add new ping monitor, which uses a Python library to ping hosts. Fixes issues from trying to parse ping(8) output (e.g. localisations), but requires root to work
+	* Add username/password options for MQTT logger
+	* Improve timezone handling; everything is done in UTC internally and you can specify the timezone to use for alerters and loggers
+	* Improve handling of exceptions thrown but not handled by monitors
+	* Improve handling of monitors which went away (or were renamed) on remote hosts
+	* Improve reporting of SSL errors in HTTP monitor
+	* Unified alert message generator across all Alerters
+	* Many code improvements and refactoring to support new features in the future
 1.9:
 	* REQUIRE PYTHON >= 3.5
 	* Switch to distribution as a pip package! You can now "pip install simplemonitor"
