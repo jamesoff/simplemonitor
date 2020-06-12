@@ -13,6 +13,7 @@ from simplemonitor.Loggers import logger
 from simplemonitor.Loggers.file import FileLogger, HTMLLogger
 from simplemonitor.Monitors.monitor import MonitorFail, MonitorNull
 from simplemonitor.simplemonitor import SimpleMonitor
+from simplemonitor.version import VERSION
 
 
 class TestLogger(unittest.TestCase):
@@ -213,7 +214,9 @@ class TestHTMLLogger(unittest.TestCase):
         test_fh = open(test_file, "r")
         golden_fh = open(golden_file, "r")
         self.maxDiff = 6000
-        self.assertMultiLineEqual(test_fh.read(), golden_fh.read())
+        golden_data = golden_fh.read()
+        golden_data = golden_data.replace("__VERSION__", VERSION)
+        self.assertMultiLineEqual(test_fh.read(), golden_data)
         test_fh.close()
         golden_fh.close()
 
