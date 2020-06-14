@@ -42,5 +42,4 @@ run_test() {
 }
 
 run_test monitor.ini monitor.ini
-run_test monitor-no-pickle.ini monitor.ini
 run_test monitor.ini monitor-ipv6.ini

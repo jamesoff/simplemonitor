@@ -4,7 +4,6 @@
 import copy
 import logging
 import os
-import pickle  # nosec
 import signal
 import sys
 import time
@@ -82,7 +81,6 @@ class SimpleMonitor:
             )
         config.read(self._config_file)
 
-        self._allow_pickle = config.getboolean("monitor", "allow_pickle", fallback=True)
         self.interval = config.getint("monitor", "interval")
         self.pidfile = config.get("monitor", "pidfile", fallback=None)
         hup_file = config.get("monitor", "hup_file", fallback=None)
@@ -121,19 +119,11 @@ class SimpleMonitor:
 
     def _start_network_thread(self) -> None:
         if self._network:
-            if not self._allow_pickle:
-                allowing_pickle = "not "
-            else:
-                allowing_pickle = ""
-            module_logger.info(
-                "Starting remote listener thread (%sallowing pickle data)",
-                allowing_pickle,
-            )
+            module_logger.info("Starting remote listener thread")
             self._remote_listening_thread = Listener(
                 self,
                 self._remote_port,
                 self._network_key,
-                allow_pickle=self._allow_pickle,
                 bind_host=self._network_bind_host,
             )
             self._remote_listening_thread.daemon = True
@@ -708,21 +698,11 @@ class SimpleMonitor:
                         "possibly a monitor type we don't know?",
                         hostname,
                     )
-            elif self._allow_pickle:
-                # Fallback for old remote monitors
-                try:
-                    remote_monitor = pickle.loads(state)  # nosec
-                except pickle.UnpicklingError:
-                    module_logger.critical("Could not unpickle monitor %s", name)
-                else:
-                    self.remote_monitors[hostname][name] = remote_monitor
-                    seen_monitors.append(name)
             else:
                 module_logger.critical(
                     "Could not deserialize state of monitor %s. "
                     "If the remote host uses an old version of "
-                    "simplemonitor, you need to set allow_pickle = true "
-                    "in the [monitor] section.",
+                    "simplemonitor, you need to upgrade.",
                     name,
                 )
         self._trim_remote_monitors(hostname, seen_monitors)
