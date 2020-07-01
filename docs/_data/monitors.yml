@@ -81,6 +81,9 @@
         desc: The timeout for the HTTP request to complete
         required: 'no'
         default: '5'
+      - name: headers
+        desc: JSON map of HTTP header names and values to add to the request
+        required: 'no'
 - name: dns
   oneline: Attempts to resolve a DNS record, and optionally checks the result. Requires the DNS utility `dig` to be in the `$PATH`.
   params:
