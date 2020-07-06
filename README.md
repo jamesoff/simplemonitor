@@ -9,4 +9,4 @@ SimpleMonitor is a Python script which monitors hosts and network connectivity. 
 Requires Python >= 3.6.2.
 
 Documentation is here:
-http://jamesoff.github.io/simplemonitor/
+https://jamesoff.github.io/simplemonitor/
