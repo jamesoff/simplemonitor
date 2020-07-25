@@ -120,6 +120,8 @@ class SimpleMonitor:
             self._start_network_thread()
 
     def _start_network_thread(self) -> None:
+        if self._remote_listening_thread:
+            return
         if self._network:
             if not self._allow_pickle:
                 allowing_pickle = "not "
