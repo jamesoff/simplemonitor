@@ -50,6 +50,7 @@ All alerters accept time period configuration. By default, an alerter is active 
 | day | Which days an alerter can operate on. This is a comma-separated list of integers. 0 is Monday and 6 is Sunday. | no | (all days)|
 | times_type | Set to one of always, only, or not. “Only” means that the limits define the period that an alerter can operate. “Not” means that the limits define the period during which it will not operate. | no | always |
 | time_lower and time_upper| If *times_type* is only or not, these two settings define the time limits. time_lower must always be the lower time. The time format is hh:mm using 24-hour clock. Both are required if times_type is anything other than always. | when *times_type* is not `always` | |
+| times_tz | the timezone you want time_lower and time_upper interpreted as | no | local |
 | delay | If any kind of time/day restriction applies, the alerter will notify you of any monitors that failed while they were unable to alert you and are still failed. If a monitor fails and recovers during the restricted period, no catch-up alert is generated. Set to 1 to enable. | no | 0 |
 
 Here’s a quick example of setting time periods (some other configuration values omitted):

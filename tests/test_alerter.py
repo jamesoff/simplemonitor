@@ -152,9 +152,23 @@ class TestAlerter(unittest.TestCase):
         a = alerter.Alerter({"days": "0,2,3,4,5,6"})
         self.assertFalse(a._allowed_today())
 
+    @freeze_time(
+        "2020-03-09 22:00:00+00:00"
+    )  # a Monday, but the TZ will push to Tuesday
+    def test_not_allowed_today_tz(self):
+        a = alerter.Alerter({"days": "0,2,3,4,5,6", "times_tz": "+05:00"})
+        self.assertFalse(a._allowed_today())
+
     @freeze_time("2020-03-10")
     def test_allowed_today(self):
         a = alerter.Alerter({"days": "1"})
+        self.assertTrue(a._allowed_today())
+
+    @freeze_time(
+        "2020-03-09 22:00:00+00:00"
+    )  # a Monday, but the TZ will push to Tuesday
+    def test_allowed_today_tz(self):
+        a = alerter.Alerter({"days": "1", "times_tz": "+05:00"})
         self.assertTrue(a._allowed_today())
 
     @freeze_time("2020-03-10")
@@ -178,9 +192,41 @@ class TestAlerter(unittest.TestCase):
         with freeze_time("12:00", tz_offset=-self.utcoffset):
             self.assertFalse(a._allowed_time())
 
+    def test_allowed_only_tz(self):
+        a = alerter.Alerter(
+            {
+                "times_type": "only",
+                "time_lower": "14:00",
+                "time_upper": "15:00",
+                "times_tz": "+05:00",
+            }
+        )
+        with freeze_time("09:00", tz_offset=-self.utcoffset):
+            self.assertFalse(a._allowed_time())
+        with freeze_time("10:30", tz_offset=-self.utcoffset):
+            self.assertTrue(a._allowed_time())
+        with freeze_time("12:00", tz_offset=-self.utcoffset):
+            self.assertFalse(a._allowed_time())
+
     def test_allowed_not(self):
         a = alerter.Alerter(
             {"times_type": "not", "time_lower": "10:00", "time_upper": "11:00"}
+        )
+        with freeze_time("09:00", tz_offset=-self.utcoffset):
+            self.assertTrue(a._allowed_time())
+        with freeze_time("10:30", tz_offset=-self.utcoffset):
+            self.assertFalse(a._allowed_time())
+        with freeze_time("12:00", tz_offset=-self.utcoffset):
+            self.assertTrue(a._allowed_time())
+
+    def test_allowed_not_tz(self):
+        a = alerter.Alerter(
+            {
+                "times_type": "not",
+                "time_lower": "14:00",
+                "time_upper": "15:00",
+                "times_tz": "+05:00",
+            }
         )
         with freeze_time("09:00", tz_offset=-self.utcoffset):
             self.assertTrue(a._allowed_time())
