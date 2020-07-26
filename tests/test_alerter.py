@@ -196,16 +196,16 @@ class TestAlerter(unittest.TestCase):
         a = alerter.Alerter(
             {
                 "times_type": "only",
-                "time_lower": "14:00",
-                "time_upper": "15:00",
+                "time_lower": "15:00",
+                "time_upper": "16:00",
                 "times_tz": "+05:00",
             }
         )
-        with freeze_time("09:00", tz_offset=-self.utcoffset):
+        with freeze_time("09:00"):
             self.assertFalse(a._allowed_time())
-        with freeze_time("10:30", tz_offset=-self.utcoffset):
+        with freeze_time("10:30"):
             self.assertTrue(a._allowed_time())
-        with freeze_time("12:00", tz_offset=-self.utcoffset):
+        with freeze_time("12:00"):
             self.assertFalse(a._allowed_time())
 
     def test_allowed_not(self):
@@ -223,16 +223,16 @@ class TestAlerter(unittest.TestCase):
         a = alerter.Alerter(
             {
                 "times_type": "not",
-                "time_lower": "14:00",
-                "time_upper": "15:00",
+                "time_lower": "15:00",
+                "time_upper": "16:00",
                 "times_tz": "+05:00",
             }
         )
-        with freeze_time("09:00", tz_offset=-self.utcoffset):
+        with freeze_time("09:00"):
             self.assertTrue(a._allowed_time())
-        with freeze_time("10:30", tz_offset=-self.utcoffset):
+        with freeze_time("10:30"):
             self.assertFalse(a._allowed_time())
-        with freeze_time("12:00", tz_offset=-self.utcoffset):
+        with freeze_time("12:00"):
             self.assertTrue(a._allowed_time())
 
     def test_should_not_alert_ooh(self):
