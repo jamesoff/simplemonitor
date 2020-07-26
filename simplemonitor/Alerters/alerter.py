@@ -52,7 +52,7 @@ class Alerter:
     """BaseClass for Alerters"""
 
     alerter_type = "unknown"
-    _dependencies = None  # type: List[str]
+    _dependencies = None  # type: Optional[List[str]]
     hostname = gethostname()
     available = False
 
@@ -159,6 +159,7 @@ class Alerter:
             "only_failures", required_type=bool, default=False
         )
         self._tz = cast(str, self.get_config_option("tz", default="UTC"))
+        self._times_tz = cast(str, self.get_config_option("times_tz", default="local"))
 
         if self._ooh_failures is None:
             self._ooh_failures = []
@@ -175,7 +176,9 @@ class Alerter:
 
         If a monitor we depend on fails, it means we can't reach the database,
         so we shouldn't bother trying to write to it."""
-        return self._dependencies
+        if self._dependencies is not None:
+            return self._dependencies
+        return []
 
     @dependencies.setter
     def dependencies(self, dependency_list: List[str]) -> None:
@@ -197,6 +200,8 @@ class Alerter:
 
     def check_dependencies(self, failed_list: List[str]) -> bool:
         """Check if anything we depend on has failed."""
+        if self._dependencies is None or len(self._dependencies) == 0:
+            return True
         for dependency in failed_list:
             if dependency in self._dependencies:
                 self.available = False
@@ -275,7 +280,7 @@ class Alerter:
 
     def _allowed_today(self) -> bool:
         """Check if today is an allowed day for an alert."""
-        if arrow.now().weekday() not in self._days:
+        if arrow.now(self._times_tz).weekday() not in self._days:
             self.alerter_logger.debug("not allowed to alert today")
             return False
         return True
@@ -285,12 +290,12 @@ class Alerter:
         if self._times_type == AlertTimeFilter.ALWAYS:
             return True
         if self._time_info[0] is not None and self._time_info[1] is not None:
-            now = arrow.now().time()
-            in_time_range = (now > self._time_info[0]) and (now < self._time_info[1])
+            now = arrow.now(self._times_tz).time()
+            in_time_range = self._time_info[0] <= now < self._time_info[1]
             if self._times_type == AlertTimeFilter.ONLY:
                 self.alerter_logger.debug("in_time_range: %s", in_time_range)
                 return in_time_range
-            elif self._times_type == AlertTimeFilter.NOT:
+            if self._times_type == AlertTimeFilter.NOT:
                 self.alerter_logger.debug(
                     "in_time_range: %s (inverting due to AlertTimeFilter.NOT)",
                     in_time_range,
@@ -305,12 +310,11 @@ class Alerter:
     def _get_verb(alert_type: AlertType) -> str:
         if alert_type == AlertType.CATCHUP:
             return "failed earlier"
-        elif alert_type == AlertType.FAILURE:
+        if alert_type == AlertType.FAILURE:
             return "failed"
-        elif alert_type == AlertType.SUCCESS:
+        if alert_type == AlertType.SUCCESS:
             return "succeeded"
-        else:
-            return "unknowned"
+        return "unknowned"
 
     def build_message(
         self, length: AlertLength, alert_type: AlertType, monitor: Monitor
