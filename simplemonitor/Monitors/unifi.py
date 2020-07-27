@@ -44,6 +44,7 @@ class MonitorUnifiFailover(Monitor):
         try:
             with SSHClient() as client:
                 client.set_missing_host_key_policy(RejectPolicy)
+                client.load_system_host_keys()
                 client.connect(
                     hostname=self._router_address,
                     username=self._username,
