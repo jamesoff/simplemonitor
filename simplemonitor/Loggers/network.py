@@ -6,10 +6,8 @@ Network logging support for SimpleMonitor
 
 import hmac
 import logging
-import pickle  # nosec
 import socket
 import struct
-from json import JSONDecodeError
 from threading import Thread
 from typing import Any, cast
 
@@ -109,12 +107,7 @@ class Listener(Thread):
     Here seemed a reasonable place to put it."""
 
     def __init__(
-        self,
-        simplemonitor: Any,
-        port: int,
-        key: str = None,
-        allow_pickle: bool = True,
-        bind_host: str = "",
+        self, simplemonitor: Any, port: int, key: str = None, bind_host: str = "",
     ) -> None:
         """Set up the thread.
 
@@ -123,7 +116,6 @@ class Listener(Thread):
         if key is None or key == "":
             raise LoggerConfigurationError("Network logger key is missing")
         Thread.__init__(self)
-        self.allow_pickle = allow_pickle
         # try IPv6 and fallback to IPv4
         try:
             self.sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
@@ -186,10 +178,7 @@ class Listener(Thread):
                         "Mismatched MAC for network logging data from %s\n"
                         "Mismatched key? Old version of SimpleMonitor?\n" % addr[0]
                     )
-                try:
-                    result = json_loads(serialized)
-                except JSONDecodeError:
-                    result = pickle.loads(serialized)  # nosec
+                result = json_loads(serialized)
                 self.simplemonitor.update_remote_monitor(result, addr[0])
             except socket.error as exception:
                 if exception.errno == 4:
