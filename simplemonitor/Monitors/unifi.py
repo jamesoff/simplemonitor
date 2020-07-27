@@ -18,6 +18,8 @@ class MonitorUnifiFailover(Monitor):
     monitor_type = "unifi_failover"
 
     def __init__(self, name: str, config_options: dict) -> None:
+        if "gap" not in config_options:
+            config_options["gap"] = 300  # 5 mins
         super().__init__(name, config_options)
         self._router_address = cast(
             str, self.get_config_option("router_address", required=True)
