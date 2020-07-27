@@ -25,13 +25,9 @@ class MonitorUnifiFailover(Monitor):
         self._username = cast(
             str, self.get_config_option("router_username", required=True)
         )
-        self._password = cast(
-            str, self.get_config_option("router_password", required=False, default="")
-        )
-        self._ssh_key = cast(
-            str, self.get_config_option("ssh_key", required=False, default="")
-        )
-        if self._ssh_key != "" and self._password != "":
+        self._password = self.get_config_option("router_password", required=False)
+        self._ssh_key = self.get_config_option("ssh_key", required=False)
+        if self._ssh_key is None and self._password is None:
             raise ValueError("must specify only one of router_password or ssh_key")
         self._check_interface = cast(
             str, self.get_config_option("check_interface", default="eth2")
