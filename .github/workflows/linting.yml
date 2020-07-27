@@ -33,3 +33,4 @@ jobs:
         if: ${{ matrix.python-version == '3.8' }}
       - name: bandit
         run: make bandit
+        if: ${{ matrix.python-version == '3.8' }}
