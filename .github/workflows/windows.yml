@@ -26,6 +26,8 @@ jobs:
         run: pip install pipenv
       - name: pipenv install
         run: pipenv --bare install --dev
+      - name: Install simplemonitor package to get win32 deps
+        run: pipenv install -e .
       - name: create HTML output folder
         run: mkdir html
       - name: Integration tests
