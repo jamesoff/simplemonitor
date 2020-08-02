@@ -30,4 +30,4 @@ from .service import (
     MonitorUnixService,
     MonitorWindowsDHCPScope,
 )
-from .unifi import MonitorUnifiFailover
+from .unifi import MonitorUnifiFailover, MonitorUnifiFailoverWatchdog
