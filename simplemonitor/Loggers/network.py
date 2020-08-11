@@ -107,8 +107,7 @@ class Listener(Thread):
     Here seemed a reasonable place to put it."""
 
     def __init__(
-        self, simplemonitor: Any, port: int, key: str = None, bind_host: str = "",
-    ) -> None:
+            self, simplemonitor: Any, port: int, key: str = None, bind_host: str = "", ipv4_only: bool = False) -> None:
         """Set up the thread.
 
         simplemonitor is a SimpleMonitor object which we will put our results into.
@@ -116,12 +115,15 @@ class Listener(Thread):
         if key is None or key == "":
             raise LoggerConfigurationError("Network logger key is missing")
         Thread.__init__(self)
-        # try IPv6 and fallback to IPv4
-        try:
-            self.sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
-            self.sock.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, False)
-        except OSError:
+        if ipv4_only:
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        else:
+            # try IPv6 and fallback to IPv4
+            try:
+                self.sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+                self.sock.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, False)
+            except OSError:
+                self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.bind((bind_host, port))
         self.simplemonitor = simplemonitor
         self.key = bytearray(key, "utf-8")
@@ -152,9 +154,9 @@ class Listener(Thread):
                     # first byte is the size of the MAC
                     mac_size = serialized[0]
                     # then the MAC
-                    their_digest = serialized[1 : mac_size + 1]
+                    their_digest = serialized[1: mac_size + 1]
                     # then the rest is the serialized data
-                    serialized = serialized[mac_size + 1 :]
+                    serialized = serialized[mac_size + 1:]
                     mac = hmac.new(self.key, serialized, _DIGEST_NAME)
                     my_digest = mac.digest()
                 except IndexError:  # pragma: no cover

@@ -100,6 +100,7 @@ class SimpleMonitor:
             self._remote_port = int(config.get("monitor", "remote_port"))
             self._network_key = config.get("monitor", "key", fallback=None)
             self._network_bind_host = config.get("monitor", "bind_host", fallback="")
+            self._ipv4_only = config.get("monitor", "ipv4_only", fallback=False)
         else:
             self._network = False
 
@@ -127,6 +128,7 @@ class SimpleMonitor:
                 self._remote_port,
                 self._network_key,
                 bind_host=self._network_bind_host,
+                ipv4_only=self._ipv4_only,
             )
             self._remote_listening_thread.daemon = True
             self._remote_listening_thread.start()
