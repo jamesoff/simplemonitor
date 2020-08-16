@@ -284,3 +284,45 @@
       desc: The timeout for the ping in seconds
       required: 'no'
       default: 5
+- name: unifi_failover
+  oneline: Checks a Unifi Security Gateway for failover WAN status. (The USG must be in your known_hosts file.)
+  params:
+    - name: router_address
+      desc: The address of the USG
+      required: 'yes'
+    - name: router_username
+      desc: The username to log in as
+      required: 'yes'
+    - name: router_password
+      desc: The password to log in with (if not using ssh key)
+      required: 'no'
+    - name: ssh_key
+      desc: The SSH private key to log in with (if not using password)
+      required: 'no'
+    - name: check_interface
+      desc: The name of the failover interface to check
+      required: 'no'
+      default: eth2
+- name: unifi_watchdog
+  oneline: Checks a Unifi Security Gateway to make sure the WAN failover is healthy (The USG must be in your known_host file.)
+  params:
+    - name: router_address
+      desc: The address of the USG
+      required: 'yes'
+    - name: router_username
+      desc: The username to log in as
+      required: 'yes'
+    - name: router_password
+      desc: The password to log in with (if not using ssh key)
+      required: 'no'
+    - name: ssh_key
+      desc: The SSH private key to log in with (if not using password)
+      required: 'no'
+    - name: primary_interface
+      desc: The name of the primary interface
+      required: 'no'
+      default: pppoe0
+    - name: secondary_interface
+      desc: The name of the secondary interface
+      required: 'no'
+      default: eth2
