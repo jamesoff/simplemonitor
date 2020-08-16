@@ -49,7 +49,7 @@ class MonitorUnifiFailover(Monitor):
                     password=self._password,
                     key_filename=self._ssh_key,
                 )
-                _, stdout, _ = client.exec_command(
+                _, stdout, _ = client.exec_command(  # nosec
                     "sudo /usr/sbin/ubnt-hal wlbGetStatus"
                 )
                 data = {}  # type: Dict[str, Dict[str, str]]
@@ -149,7 +149,9 @@ class MonitorUnifiFailoverWatchdog(Monitor):
                     password=self._password,
                     key_filename=self._ssh_key,
                 )
-                _, stdout, _ = client.exec_command("/usr/sbin/ubnt-hal wlbGetWdStatus")
+                _, stdout, _ = client.exec_command(  # nosec
+                    "/usr/sbin/ubnt-hal wlbGetWdStatus"
+                )
                 data = {}  # type: Dict[str, Dict[str, str]]
                 data_block = {}  # type: Dict[str, str]
                 interface = ""
