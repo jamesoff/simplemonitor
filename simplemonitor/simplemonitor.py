@@ -9,7 +9,7 @@ import sys
 import time
 from pathlib import Path
 from socket import gethostname
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union, cast
 
 from .Alerters.alerter import Alerter
 from .Alerters.alerter import all_types as all_alerter_types
@@ -100,7 +100,9 @@ class SimpleMonitor:
             self._remote_port = int(config.get("monitor", "remote_port"))
             self._network_key = config.get("monitor", "key", fallback=None)
             self._network_bind_host = config.get("monitor", "bind_host", fallback="")
-            self._ipv4_only = config.get("monitor", "ipv4_only", fallback=False)
+            self._ipv4_only = cast(
+                bool, config.get("monitor", "ipv4_only", fallback=False)
+            )
         else:
             self._network = False
 
