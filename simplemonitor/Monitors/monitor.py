@@ -91,6 +91,9 @@ class Monitor:
         self.failure_doc = cast(
             Optional[str], self.get_config_option("failure_doc", default=None)
         )
+        self.enabled = cast(
+            bool, self.get_config_option("enabled", required_type="bool", default=True)
+        )
 
         self.running_on = short_hostname()
         self._state = MonitorState.UNKNOWN
@@ -338,6 +341,8 @@ class Monitor:
         We always run if the minimum gap is 0, or if we're currently failing.
         Otherwise, we run if the last time we ran was more than minimum_gap seconds ago.
         """
+        if not self.enabled:
+            return False
         now = int(time.time())
         if self._force_run:
             self._force_run = False

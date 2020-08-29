@@ -174,7 +174,9 @@ class HTMLLogger(Logger):
         row = ""
         row_class = ""
         cell_class = ""
-        if entry["age"] > entry["gap"] + 60:
+        if not entry["enabled"]:
+            status = "DISABLED"
+        elif entry["age"] > entry["gap"] + 60:
             status = "OLD"
             cell_class = "table-warning"
         elif entry["status"]:
@@ -236,10 +238,7 @@ class HTMLLogger(Logger):
             return
         if self.batch_data is None:
             self.batch_data = {}
-        if monitor.virtual_fail_count() == 0:
-            status = True
-        else:
-            status = False
+        status = bool(monitor.virtual_fail_count() == 0)
         if not status:
             fail_time = format_datetime(monitor.first_failure_time(), self.tz)
             fail_count = monitor.virtual_fail_count()
@@ -282,6 +281,7 @@ class HTMLLogger(Logger):
             "availability": monitor.availability,
             "description": monitor.describe(),
             "link": monitor.failure_doc,
+            "enabled": monitor.enabled,
         }
         self.batch_data[monitor.name] = data_line
 
@@ -291,6 +291,7 @@ class HTMLLogger(Logger):
         fail_count = 0
         old_count = 0
         remote_count = 0
+        disabled_count = 0
 
         try:
             temp_file = tempfile.mkstemp()
@@ -312,7 +313,9 @@ class HTMLLogger(Logger):
         for entry in keys:
             this_entry = self.batch_data[entry]
             output = output_ok
-            if this_entry["age"] > this_entry["gap"] + 60:
+            if not this_entry["enabled"]:
+                disabled_count += 1
+            elif this_entry["age"] > this_entry["gap"] + 60:
                 old_count += 1
             elif this_entry["status"]:
                 ok_count += 1
@@ -339,6 +342,9 @@ class HTMLLogger(Logger):
                 else "",
                 f'<span class="badge badge-danger">{fail_count} FAIL</span> '
                 if fail_count
+                else "",
+                f'<span class="badge badge-secondary">{disabled_count} DISABLED</span> '
+                if disabled_count
                 else "",
                 f'<span class="badge badge-warning">{old_count} OLD</span> '
                 if old_count

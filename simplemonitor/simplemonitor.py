@@ -445,7 +445,7 @@ class SimpleMonitor:
         """Run the tests for all the monitors."""
         self.reset_monitors()
 
-        joblist = list(self.monitors.keys())
+        joblist = [k for (k, v) in self.monitors.items() if v.enabled]
         joblist = self.sort_joblist(joblist)
         failed = []  # type: List[str]
 
@@ -458,10 +458,6 @@ class SimpleMonitor:
                 module_logger.debug("Trying monitor: %s", monitor)
                 if self.monitors[monitor].remaining_dependencies:
                     # this monitor has outstanding deps, put it on the new joblist for next loop
-                    new_joblist.append(monitor)
-                    module_logger.debug(
-                        "Added %s to new joblist, is now %s", monitor, new_joblist
-                    )
                     for dep in self.monitors[monitor].remaining_dependencies:
                         module_logger.debug(
                             "considering %s's dependency %s (failed monitors: %s)",
@@ -473,22 +469,26 @@ class SimpleMonitor:
                             # oh wait, actually one of its deps failed, so
                             # we'll never be able to run it
                             module_logger.info(
-                                "Doesn't look like %s worked, skipping %s", dep, monitor
+                                "Monitor %s depends on failed monitor %s, skipping",
+                                monitor,
+                                dep,
                             )
                             failed.append(monitor)
                             self.monitors[monitor].record_skip(dep)
-                            try:
-                                new_joblist.remove(monitor)
-                            except ValueError:
-                                module_logger.exception(
-                                    "Exception caught while trying to remove monitor %s "
-                                    "with failed deps from new joblist.",
-                                    monitor,
-                                )
-                                module_logger.debug(
-                                    "new_joblist is currently: %s", new_joblist
-                                )
                             break
+                        if not self.monitors[dep].enabled:
+                            module_logger.warning(
+                                "Monitor %s depends on disabled monitor %s, skipping",
+                                monitor,
+                                dep,
+                            )
+                            self.monitors[monitor].record_skip(dep)
+                            break
+                    else:
+                        new_joblist.append(monitor)
+                        module_logger.debug(
+                            "Added %s to new joblist, is now %s", monitor, new_joblist
+                        )
                     continue
                 try:
                     if self.monitors[monitor].should_run():
