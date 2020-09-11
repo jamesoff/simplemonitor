@@ -216,6 +216,9 @@ class Alerter:
         if not self.available:
             return AlertType.NONE
 
+        if monitor.group not in self.groups:
+            return AlertType.NONE
+
         if not self._allowed_today():
             out_of_hours = True
 
