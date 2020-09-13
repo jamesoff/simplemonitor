@@ -36,10 +36,14 @@ class TestMonitor(unittest.TestCase):
         time.sleep(2)
         Path(temp_file_name).touch()
         self.assertEqual(
-            s._check_hup_file(), True, "check_hup_file did not trigger",
+            s._check_hup_file(),
+            True,
+            "check_hup_file did not trigger",
         )
         self.assertEqual(
-            s._check_hup_file(), False, "check_hup_file should not have triggered",
+            s._check_hup_file(),
+            False,
+            "check_hup_file should not have triggered",
         )
         os.unlink(temp_file_name)
 

@@ -128,7 +128,8 @@ class TestFileLogger(unittest.TestCase):
                 "2020-04-18 12:00:00+00:00 simplemonitor starting",
             )
             self.assertEqual(
-                fh.readline().strip(), "2020-04-18 12:00:00+00:00 null: ok (0.000s)",
+                fh.readline().strip(),
+                "2020-04-18 12:00:00+00:00 null: ok (0.000s)",
             )
         try:
             os.unlink(temp_logfile)
@@ -152,7 +153,8 @@ class TestFileLogger(unittest.TestCase):
                 "2020-04-18 11:00:00+00:00 simplemonitor starting",
             )
             self.assertEqual(
-                fh.readline().strip(), "2020-04-18 11:00:00+00:00 null: ok (0.000s)",
+                fh.readline().strip(),
+                "2020-04-18 11:00:00+00:00 null: ok (0.000s)",
             )
         try:
             os.unlink(temp_logfile)
@@ -181,7 +183,8 @@ class TestFileLogger(unittest.TestCase):
                 "2020-04-18 13:00:00+02:00 simplemonitor starting",
             )
             self.assertEqual(
-                fh.readline().strip(), "2020-04-18 13:00:00+02:00 null: ok (0.000s)",
+                fh.readline().strip(),
+                "2020-04-18 13:00:00+02:00 null: ok (0.000s)",
             )
         try:
             os.unlink(temp_logfile)
