@@ -546,8 +546,16 @@ class SimpleMonitor:
                     )
             try:
                 for host_monitors in self.remote_monitors.values():
-                    for (name, monitor) in host_monitors.items():
-                        logger.save_result2(name, monitor)
+                    for name, monitor in host_monitors.items():
+                        if monitor.group in logger.groups:
+                            logger.save_result2(name, monitor)
+                        else:
+                            module_logger.debug(
+                                "not logging for %s due to group mismatch (monitor in group %s, logger has groups %s",
+                                name,
+                                monitor.group,
+                                logger.groups,
+                            )
             except Exception:  # pragma: no cover
                 module_logger.exception("exception while logging remote monitors")
 
