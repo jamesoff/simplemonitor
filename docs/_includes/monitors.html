@@ -19,7 +19,7 @@ All monitor types share the following configuration options:
 | remote_alert| This monitor wants a remote host to handle alerting instead of the local host. Set to 1 to enable. This is a good candidate for putting in defaults if you want to use remote alerting for all your monitors. | no | 0 |
 | recover_command| A command to execute once when this monitor fails. It could, for example, restart a service if an HTTP check fails. | no | |
 | recovered_command| A command to execute once when this monitor succeeds the first time after being failed. | no | |
-| group | The group the monitor belongs to. Alerters will only fire for monitors which appear in their groups. | no | `default` |
+| group | The group the monitor belongs to. Alerters and Loggers will only fire for monitors which appear in their groups. | no | `default` |
 | notify | If the monitor should alert at all | no | 1 |
 | failure_doc | Information to include in alerts on failure (e.g. a URL to a runbook) | no | |
 {% for monitor in m %}
