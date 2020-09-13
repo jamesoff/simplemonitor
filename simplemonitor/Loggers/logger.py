@@ -22,9 +22,9 @@ class Logger:
     doing_batch = False
     batch_data = None  # type: Optional[Dict[str, Any]]
     connected = True
-    _global_info = None  # type: Optional[dict]
+    _global_info = None  # type: Optional[Dict[str, Any]]
 
-    def __init__(self, config_options: dict) -> None:
+    def __init__(self, config_options: Dict[str, Any]) -> None:
         self._config_options = config_options
         self.name = self.get_config_option("_name", default="unnamed")
         self.logger_logger = logging.getLogger("simplemonitor.logger-" + self.name)
