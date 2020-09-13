@@ -15,6 +15,7 @@ black = "*"
 mypy = "*"
 bandit = "*"
 freezegun = "*"
+pytest = "*"
 
 [pipenv]
 allow_prereleases = true

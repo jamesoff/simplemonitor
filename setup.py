@@ -1,13 +1,10 @@
 import setuptools
 
-from simplemonitor.version import VERSION
-
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
     name="simplemonitor",
-    version=VERSION,
     author="James Seward",
     author_email="james@jamesoff.net",
     description="A simple network and host monitor",

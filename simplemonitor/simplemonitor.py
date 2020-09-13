@@ -21,7 +21,7 @@ from .Loggers.network import Listener
 from .Monitors.monitor import Monitor
 from .Monitors.monitor import all_types as all_monitor_types
 from .Monitors.monitor import get_class as get_monitor_class
-from .util import get_config_dict
+from .util import check_group_match, get_config_dict
 from .util.envconfig import EnvironmentAwareConfigParser
 
 module_logger = logging.getLogger("simplemonitor")
@@ -534,7 +534,7 @@ class SimpleMonitor:
         logger.check_dependencies(self.failed + self.still_failing + self.skipped)
         with logger:
             for key, monitor in self.monitors.items():
-                if monitor.group in logger.groups:
+                if check_group_match(monitor.group, logger.groups):
                     logger.save_result2(key, monitor)
                 else:
                     module_logger.debug(
@@ -546,41 +546,37 @@ class SimpleMonitor:
                     )
             try:
                 for host_monitors in self.remote_monitors.values():
-                    for (name, monitor) in host_monitors.items():
-                        logger.save_result2(name, monitor)
+                    for name, monitor in host_monitors.items():
+                        if check_group_match(monitor.group, logger.groups):
+                            logger.save_result2(name, monitor)
+                        else:
+                            module_logger.debug(
+                                "not logging for %s due to group mismatch (monitor in group %s, "
+                                "logger has groups %s",
+                                name,
+                                monitor.group,
+                                logger.groups,
+                            )
             except Exception:  # pragma: no cover
                 module_logger.exception("exception while logging remote monitors")
 
     def do_alert(self, alerter: Alerter) -> None:
         """Use the given alerter object to send an alert, if needed."""
         alerter.check_dependencies(self.failed + self.still_failing + self.skipped)
-        for key in list(self.monitors.keys()):
-            this_monitor = self.monitors[key]  # type: Monitor
+        for (name, this_monitor) in list(self.monitors.items()):
             # Don't generate alerts for monitors which want it done remotely
             if this_monitor.remote_alerting:
                 module_logger.debug(
-                    "skipping alert for monitor %s as it wants remote alerting", key
+                    "skipping alert for monitor %s as it wants remote alerting", name
                 )
                 continue
             try:
-                if this_monitor.group in alerter.groups:
-                    # Only notifications for services that have it enabled
-                    if this_monitor.notify:
-                        module_logger.debug("notifying alerter %s", alerter.name)
-                        alerter.send_alert(key, self.monitors[key])
-                    else:
-                        module_logger.warning(
-                            "monitor %s has notifications disabled", key
-                        )
+                if this_monitor.notify:
+                    alerter.send_alert(name, this_monitor)
                 else:
-                    module_logger.info(
-                        "skipping alerter %s as monitor %s is not in group %s",
-                        alerter.name,
-                        this_monitor.name,
-                        alerter.groups,
-                    )
+                    module_logger.warning("monitor %s has notifications disabled", name)
             except Exception:  # pragma: no cover
-                module_logger.exception("exception caught while alerting for %s", key)
+                module_logger.exception("exception caught while alerting for %s", name)
         for host_monitors in self.remote_monitors.values():
             for (name, monitor) in host_monitors.items():
                 try:

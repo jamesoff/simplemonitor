@@ -14,6 +14,7 @@ from ..Monitors.monitor import Monitor
 from ..util import (
     AlerterConfigurationError,
     MonitorState,
+    check_group_match,
     format_datetime,
     get_config_option,
     subclass_dict_handler,
@@ -214,6 +215,9 @@ class Alerter:
         out_of_hours = False
 
         if not self.available:
+            return AlertType.NONE
+
+        if not check_group_match(monitor.group, self.groups):
             return AlertType.NONE
 
         if not self._allowed_today():

@@ -28,6 +28,7 @@ jobs:
         run: pipenv --bare install --dev
       - name: check code style with black
         run: make black
+        if: ${{ matrix.python-version == '3.8' }}  # broken in 3.6 currently
       - name: flake8 tests
         run: make flake8
         if: ${{ matrix.python-version == '3.8' }}

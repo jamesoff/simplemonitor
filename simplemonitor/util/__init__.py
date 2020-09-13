@@ -222,3 +222,16 @@ def subclass_dict_handler(
         return list(_subclasses)
 
     return (register, get_class, all_types)
+
+
+def check_group_match(group: str, group_list: List[str]) -> bool:
+    """
+    Check if a group is contained in the group list.
+
+    If the group list is a single element, "_all", then it matches.
+    """
+    if group_list[0] == "_all":
+        return True
+    if group in group_list:
+        return True
+    return False

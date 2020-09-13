@@ -67,6 +67,46 @@ class TestLogger(unittest.TestCase):
             s.log_result(this_logger)
         mock_method.assert_called_once()
 
+    def test_skip_group_logger(self):
+        with patch.object(logger.Logger, "save_result2") as mock_method:
+            this_logger = logger.Logger({"groups": "test"})
+            s = SimpleMonitor(Path("tests/monitor-empty.ini"))
+            s.add_monitor("test", MonitorNull("unnamed", {}))
+            s.log_result(this_logger)
+        mock_method.assert_not_called()
+
+    def test_skip_group_monitor(self):
+        with patch.object(logger.Logger, "save_result2") as mock_method:
+            this_logger = logger.Logger({})
+            s = SimpleMonitor(Path("tests/monitor-empty.ini"))
+            s.add_monitor("test", MonitorNull("unnamed", {"group": "test"}))
+            s.log_result(this_logger)
+        mock_method.assert_not_called()
+
+    def test_groups_match(self):
+        with patch.object(logger.Logger, "save_result2") as mock_method:
+            this_logger = logger.Logger({"groups": "test"})
+            s = SimpleMonitor(Path("tests/monitor-empty.ini"))
+            s.add_monitor("test", MonitorNull("unnamed", {"group": "test"}))
+            s.log_result(this_logger)
+        mock_method.assert_called_once()
+
+    def test_groups_multi_match(self):
+        with patch.object(logger.Logger, "save_result2") as mock_method:
+            this_logger = logger.Logger({"groups": "test1, test2"})
+            s = SimpleMonitor(Path("tests/monitor-empty.ini"))
+            s.add_monitor("test", MonitorNull("unnamed", {"group": "test1"}))
+            s.log_result(this_logger)
+        mock_method.assert_called_once()
+
+    def test_groups_all_match(self):
+        with patch.object(logger.Logger, "save_result2") as mock_method:
+            this_logger = logger.Logger({"groups": "_all"})
+            s = SimpleMonitor(Path("tests/monitor-empty.ini"))
+            s.add_monitor("test", MonitorNull("unnamed", {"group": "test1"}))
+            s.log_result(this_logger)
+        mock_method.assert_called_once()
+
 
 class TestFileLogger(unittest.TestCase):
     @freeze_time("2020-04-18 12:00+00:00")
@@ -128,7 +168,8 @@ class TestFileLogger(unittest.TestCase):
                 "2020-04-18 12:00:00+00:00 simplemonitor starting",
             )
             self.assertEqual(
-                fh.readline().strip(), "2020-04-18 12:00:00+00:00 null: ok (0.000s)",
+                fh.readline().strip(),
+                "2020-04-18 12:00:00+00:00 null: ok (0.000s)",
             )
         try:
             os.unlink(temp_logfile)
@@ -152,7 +193,8 @@ class TestFileLogger(unittest.TestCase):
                 "2020-04-18 11:00:00+00:00 simplemonitor starting",
             )
             self.assertEqual(
-                fh.readline().strip(), "2020-04-18 11:00:00+00:00 null: ok (0.000s)",
+                fh.readline().strip(),
+                "2020-04-18 11:00:00+00:00 null: ok (0.000s)",
             )
         try:
             os.unlink(temp_logfile)
@@ -181,7 +223,8 @@ class TestFileLogger(unittest.TestCase):
                 "2020-04-18 13:00:00+02:00 simplemonitor starting",
             )
             self.assertEqual(
-                fh.readline().strip(), "2020-04-18 13:00:00+02:00 null: ok (0.000s)",
+                fh.readline().strip(),
+                "2020-04-18 13:00:00+02:00 null: ok (0.000s)",
             )
         try:
             os.unlink(temp_logfile)
