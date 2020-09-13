@@ -165,3 +165,17 @@ class TestUpDownTime(unittest.TestCase):
 
         u2 = util.UpDownTime(2, 2, 3, 4)
         self.assertNotEqual(u1, u2)
+
+
+class TestGroupMatch(unittest.TestCase):
+    def test_simple(self):
+        self.assertTrue(util.check_group_match("default", ["default"]))
+
+    def test_list(self):
+        self.assertTrue(util.check_group_match("test", ["test", "test2"]))
+
+    def test_not_list(self):
+        self.assertFalse(util.check_group_match("default", ["test1", "test2"]))
+
+    def test_all(self):
+        self.assertTrue(util.check_group_match("test", ["_all"]))

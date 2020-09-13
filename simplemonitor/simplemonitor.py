@@ -21,7 +21,7 @@ from .Loggers.network import Listener
 from .Monitors.monitor import Monitor
 from .Monitors.monitor import all_types as all_monitor_types
 from .Monitors.monitor import get_class as get_monitor_class
-from .util import get_config_dict
+from .util import check_group_match, get_config_dict
 from .util.envconfig import EnvironmentAwareConfigParser
 
 module_logger = logging.getLogger("simplemonitor")
@@ -534,7 +534,7 @@ class SimpleMonitor:
         logger.check_dependencies(self.failed + self.still_failing + self.skipped)
         with logger:
             for key, monitor in self.monitors.items():
-                if monitor.group in logger.groups:
+                if check_group_match(monitor.group, logger.groups):
                     logger.save_result2(key, monitor)
                 else:
                     module_logger.debug(
@@ -547,11 +547,12 @@ class SimpleMonitor:
             try:
                 for host_monitors in self.remote_monitors.values():
                     for name, monitor in host_monitors.items():
-                        if monitor.group in logger.groups:
+                        if check_group_match(monitor.group, logger.groups):
                             logger.save_result2(name, monitor)
                         else:
                             module_logger.debug(
-                                "not logging for %s due to group mismatch (monitor in group %s, logger has groups %s",
+                                "not logging for %s due to group mismatch (monitor in group %s, "
+                                "logger has groups %s",
                                 name,
                                 monitor.group,
                                 logger.groups,

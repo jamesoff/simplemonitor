@@ -99,6 +99,14 @@ class TestLogger(unittest.TestCase):
             s.log_result(this_logger)
         mock_method.assert_called_once()
 
+    def test_groups_all_match(self):
+        with patch.object(logger.Logger, "save_result2") as mock_method:
+            this_logger = logger.Logger({"groups": "_all"})
+            s = SimpleMonitor(Path("tests/monitor-empty.ini"))
+            s.add_monitor("test", MonitorNull("unnamed", {"group": "test1"}))
+            s.log_result(this_logger)
+        mock_method.assert_called_once()
+
 
 class TestFileLogger(unittest.TestCase):
     @freeze_time("2020-04-18 12:00+00:00")

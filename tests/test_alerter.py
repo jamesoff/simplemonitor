@@ -365,6 +365,12 @@ class TestAlerter(unittest.TestCase):
         m.run_test()
         self.assertEqual(a.should_alert(m), alerter.AlertType.FAILURE)
 
+    def test_groups_all_match(self):
+        a = alerter.Alerter({"groups": "_all"})
+        m = monitor.MonitorFail("fail", {"group": "test1"})
+        m.run_test()
+        self.assertEqual(a.should_alert(m), alerter.AlertType.FAILURE)
+
 
 class TestMessageBuilding(unittest.TestCase):
     def setUp(self):
