@@ -341,6 +341,30 @@ class TestAlerter(unittest.TestCase):
             self.assertEqual(a.should_alert(m), alerter.AlertType.FAILURE)
             self.assertEqual(a._ooh_failures, [])
 
+    def test_skip_group_alerter(self):
+        a = alerter.Alerter({"groups": "test"})
+        m = monitor.MonitorFail("fail", {})
+        m.run_test()
+        self.assertEqual(a.should_alert(m), alerter.AlertType.NONE)
+
+    def test_skip_group_monitor(self):
+        a = alerter.Alerter()
+        m = monitor.MonitorFail("fail", {"group": "test"})
+        m.run_test()
+        self.assertEqual(a.should_alert(m), alerter.AlertType.NONE)
+
+    def test_groups_match(self):
+        a = alerter.Alerter({"groups": "test"})
+        m = monitor.MonitorFail("fail", {"group": "test"})
+        m.run_test()
+        self.assertEqual(a.should_alert(m), alerter.AlertType.FAILURE)
+
+    def test_groups_multi_match(self):
+        a = alerter.Alerter({"groups": "test1, test2"})
+        m = monitor.MonitorFail("fail", {"group": "test1"})
+        m.run_test()
+        self.assertEqual(a.should_alert(m), alerter.AlertType.FAILURE)
+
 
 class TestMessageBuilding(unittest.TestCase):
     def setUp(self):

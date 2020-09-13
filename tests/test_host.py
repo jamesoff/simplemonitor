@@ -98,7 +98,7 @@ class TestHostMonitors(unittest.TestCase):
         m = host.MonitorDiskSpace("test", config_options)
         m.run_test()
         self.assertFalse(m.test_success(), "Monitor did not fail")
-        self.assertRegexpMatches(
+        self.assertRegex(
             m.last_result,
             "Couldn't get free disk space",
             "Monitor did not report error correctly",
