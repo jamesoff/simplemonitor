@@ -371,6 +371,12 @@ class TestAlerter(unittest.TestCase):
         m.run_test()
         self.assertEqual(a.should_alert(m), alerter.AlertType.FAILURE)
 
+    def test_disabled_monitor_no_alert(self):
+        a = alerter.Alerter()
+        m = monitor.MonitorFail("fail", {"enabled": 0})
+        m.run_test()
+        self.assertEqual(a.should_alert(m), alerter.AlertType.NONE)
+
 
 class TestMessageBuilding(unittest.TestCase):
     def setUp(self):
