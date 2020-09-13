@@ -21,7 +21,7 @@ env-test:
 	env TEST_VALUE=myenv pipenv run coverage run --append monitor.py -t -f tests/monitor-env.ini
 
 unit-test:
-	pipenv run coverage run --append -m unittest discover -s tests
+	pipenv run coverage run --append pytest tests
 
 network-test:
 	pipenv run tests/test-network.sh
