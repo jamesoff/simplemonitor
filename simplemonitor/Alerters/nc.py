@@ -24,14 +24,12 @@ class NotificationCenterAlerter(Alerter):
                 "Pync package is not available, which is necessary to use NotificationCenterAlerter."
             )
             self.alerter_logger.critical("Try: pip install -r requirements.txt")
-            self.available = False
             return
 
         if platform.system() != "Darwin":
             self.alerter_logger.critical(
                 "This alerter (currently) only works on Mac OS X!"
             )
-            self.available = False
             return
 
     def send_alert(self, name: str, monitor: Monitor) -> None:

@@ -74,7 +74,6 @@ class EMailAlerter(Alerter):
                 server.quit()
             except Exception:
                 self.alerter_logger.exception("couldn't send mail")
-                self.available = False
         else:
             self.alerter_logger.info(
                 "dry_run: would send email: %s", message.as_string()

@@ -53,6 +53,5 @@ class PushoverAlerter(Alerter):
                 self.send_pushover_notification(subject, body)
             except Exception:
                 self.alerter_logger.exception("Couldn't send push notification")
-                self.available = False
         else:
             self.alerter_logger.info("dry_run: would send push notification: %s", body)

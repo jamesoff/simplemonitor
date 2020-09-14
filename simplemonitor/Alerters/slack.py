@@ -114,7 +114,6 @@ class SlackAlerter(Alerter):
                     self.alerter_logger.error("POST to slack webhook failed: %s", r)
             except Exception:
                 self.alerter_logger.exception("Failed to post to slack webhook")
-                self.available = False
         else:
             self.alerter_logger.info(
                 "dry_run: would send slack: %s", message_json.__repr__()

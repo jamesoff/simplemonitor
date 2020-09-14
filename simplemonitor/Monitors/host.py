@@ -501,7 +501,6 @@ class MonitorCommand(Monitor):
 
     result_regexp = None
     monitor_type = "command"
-    available = True
 
     def __init__(self, name: str, config_options: dict) -> None:
         super().__init__(name, config_options)
@@ -520,8 +519,6 @@ class MonitorCommand(Monitor):
         self.command = shlex.split(command)
 
     def run_test(self) -> bool:
-        if not self.available:
-            return self.record_skip(None)
         try:
             _out = subprocess.check_output(self.command)  # nosec
             if self.result_regexp is not None:

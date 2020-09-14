@@ -103,16 +103,6 @@ class TestAlerter(unittest.TestCase):
         a = alerter.Alerter(config_options)
         self.assertEqual(a._repeat, 5)
 
-    def test_should_alert_unavailable(self):
-        a = alerter.Alerter(None)
-        a.available = False
-        m = monitor.MonitorNull()
-        self.assertEqual(
-            a.should_alert(m),
-            alerter.AlertType.NONE,
-            "Alerter did not handle being unavailable",
-        )
-
     def test_should_alert_basic_failure(self):
         # no special alert config
         a = alerter.Alerter(None)

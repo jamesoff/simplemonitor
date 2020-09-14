@@ -25,7 +25,6 @@ class SESAlerter(Alerter):
             self.alerter_logger.critical(
                 "boto3 package is not available, cannot use SESAlerter."
             )
-            self.available = False
             return
 
         self.from_addr = cast(str, self.get_config_option("from", allow_empty=False))
@@ -74,7 +73,6 @@ class SESAlerter(Alerter):
                 client.send_email(**mail)
             except Exception:
                 self.alerter_logger.exception("couldn't send mail")
-                self.available = False
         else:
             self.alerter_logger.info("dry_run: would send email:")
             self.alerter_logger.info("    Subject: %s", message["Subject"]["Data"])

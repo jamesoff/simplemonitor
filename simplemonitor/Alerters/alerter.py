@@ -55,7 +55,6 @@ class Alerter:
     alerter_type = "unknown"
     _dependencies = None  # type: Optional[List[str]]
     hostname = gethostname()
-    available = False
 
     name = None  # type: Optional[str]
 
@@ -70,7 +69,6 @@ class Alerter:
         self.alerter_logger = logging.getLogger(
             "simplemonitor.alerter-" + self.alerter_type
         )
-        self.available = True
         self.name = cast(str, self.get_config_option("name", default="unamed"))
         self.dependencies = cast(
             List[str],
@@ -205,17 +203,12 @@ class Alerter:
             return True
         for dependency in failed_list:
             if dependency in self._dependencies:
-                self.available = False
                 return False
-        self.available = True
         return True
 
     def should_alert(self, monitor: Monitor) -> AlertType:
         """Check if we should bother alerting, and what type."""
         out_of_hours = False
-
-        if not self.available:
-            return AlertType.NONE
 
         if not check_group_match(monitor.group, self.groups):
             return AlertType.NONE
