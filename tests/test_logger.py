@@ -245,11 +245,13 @@ class TestHTMLLogger(unittest.TestCase):
             html_logger = HTMLLogger(logger_options)
             monitor1 = MonitorNull()
             monitor2 = MonitorFail("fail", {})
+            monitor3 = MonitorFail("disabled", {"enabled": 0})
             monitor1.run_test()
             monitor2.run_test()
             html_logger.start_batch()
             html_logger.save_result2("null", monitor1)
             html_logger.save_result2("fail", monitor2)
+            html_logger.save_result2("disabled", monitor3)
             html_logger.end_batch()
         return temp_htmlfile
 
@@ -259,7 +261,7 @@ class TestHTMLLogger(unittest.TestCase):
         self.maxDiff = 6000
         golden_data = golden_fh.read()
         golden_data = golden_data.replace("__VERSION__", VERSION)
-        self.assertMultiLineEqual(test_fh.read(), golden_data)
+        self.assertMultiLineEqual(golden_data, test_fh.read())
         test_fh.close()
         golden_fh.close()
 

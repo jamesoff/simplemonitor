@@ -213,6 +213,10 @@ class Alerter:
         if not check_group_match(monitor.group, self.groups):
             return AlertType.NONE
 
+        # Sanity check
+        if not monitor.enabled:
+            return AlertType.NONE
+
         if not self._allowed_today():
             out_of_hours = True
 

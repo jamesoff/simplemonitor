@@ -9,7 +9,7 @@ import sys
 import tempfile
 import time
 from io import StringIO
-from typing import Any, List, Optional, TextIO, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, TextIO, cast
 
 import arrow
 
@@ -17,6 +17,9 @@ from ..Monitors.monitor import Monitor
 from ..util import format_datetime, short_hostname
 from ..version import VERSION
 from .logger import Logger, register
+
+if TYPE_CHECKING:
+    import datetime
 
 
 @register
@@ -29,7 +32,7 @@ class FileLogger(Logger):
     buffered = True
     dateformat = None
 
-    def __init__(self, config_options: dict = None) -> None:
+    def __init__(self, config_options: Optional[Dict[str, Any]] = None) -> None:
         if config_options is None:
             config_options = {}
         super().__init__(config_options)
@@ -170,11 +173,13 @@ class HTMLLogger(Logger):
         self.status = ""
         self.header_class = ""
 
-    def _make_html_row(self, name: str, entry: dict) -> str:
+    def _make_html_row(self, name: str, entry: Dict[str, Any]) -> str:
         row = ""
         row_class = ""
         cell_class = ""
-        if entry["age"] > entry["gap"] + 60:
+        if not entry["enabled"]:
+            status = "DISABLED"
+        elif entry["age"] > entry["gap"] + 60:
             status = "OLD"
             cell_class = "table-warning"
         elif entry["status"]:
@@ -192,8 +197,8 @@ class HTMLLogger(Logger):
         else:
             row = "<tr>"
         row = (
-            row
-            + f'<td><span data-toggle="tooltip" data-placement="right" title="{entry["description"]}">{monitor_name}</span></td>'
+            row + '<td><span data-toggle="tooltip" data-placement="right" '
+            f'title="{entry["description"]}">{monitor_name}</span></td>'
         )
 
         if cell_class:
@@ -209,7 +214,9 @@ class HTMLLogger(Logger):
             row = row + f'<td>{entry["fail_count"]}</td>'
         row = row + (
             f'<td>{entry["downtime"]} '
-            f'(<span data-toggle="tooltip" data-placement="right" title="{entry["availability"] * 100:0.5f}%">{entry["availability"] * 100:0.2f}%</span>)'
+            '(<span data-toggle="tooltip" data-placement="right" '
+            f'title="{entry["availability"] * 100:0.5f}%">{entry["availability"] * 100:0.2f}%'
+            "</span>)"
             "</td>"
         )
         row = row + f'<td>{entry["fail_data"]}</td>'
@@ -236,10 +243,7 @@ class HTMLLogger(Logger):
             return
         if self.batch_data is None:
             self.batch_data = {}
-        if monitor.virtual_fail_count() == 0:
-            status = True
-        else:
-            status = False
+        status = bool(monitor.virtual_fail_count() == 0)
         if not status:
             fail_time = format_datetime(monitor.first_failure_time(), self.tz)
             fail_count = monitor.virtual_fail_count()
@@ -254,11 +258,13 @@ class HTMLLogger(Logger):
         last_failure = monitor.last_failure
         gap = monitor.minimum_gap
         if gap == 0:
-            gap = 60  # TODO: figure out a good way to know the interval value for both local and remote monitors
+            # TODO: figure out a good way to know the interval value for both local and
+            # remote monitors
+            gap = 60
 
         try:
             if monitor.last_update is not None:
-                age = arrow.utcnow() - monitor.last_update
+                age = arrow.utcnow() - monitor.last_update  # type: datetime.timedelta
                 age_seconds = age.days * 3600 + age.seconds
                 update = str(monitor.last_update)
             else:
@@ -282,7 +288,8 @@ class HTMLLogger(Logger):
             "availability": monitor.availability,
             "description": monitor.describe(),
             "link": monitor.failure_doc,
-        }
+            "enabled": monitor.enabled,
+        }  # type: Dict[str, Any]
         self.batch_data[monitor.name] = data_line
 
     def process_batch(self) -> None:
@@ -291,6 +298,7 @@ class HTMLLogger(Logger):
         fail_count = 0
         old_count = 0
         remote_count = 0
+        disabled_count = 0
 
         try:
             temp_file = tempfile.mkstemp()
@@ -312,7 +320,9 @@ class HTMLLogger(Logger):
         for entry in keys:
             this_entry = self.batch_data[entry]
             output = output_ok
-            if this_entry["age"] > this_entry["gap"] + 60:
+            if not this_entry["enabled"]:
+                disabled_count += 1
+            elif this_entry["age"] > this_entry["gap"] + 60:
                 old_count += 1
             elif this_entry["status"]:
                 ok_count += 1
@@ -339,6 +349,9 @@ class HTMLLogger(Logger):
                 else "",
                 f'<span class="badge badge-danger">{fail_count} FAIL</span> '
                 if fail_count
+                else "",
+                f'<span class="badge badge-secondary">{disabled_count} DISABLED</span> '
+                if disabled_count
                 else "",
                 f'<span class="badge badge-warning">{old_count} OLD</span> '
                 if old_count

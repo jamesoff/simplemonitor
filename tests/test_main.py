@@ -47,6 +47,22 @@ class TestMonitor(unittest.TestCase):
         )
         os.unlink(temp_file_name)
 
+    def test_disabled_monitor_not_run(self):
+        s = simplemonitor.SimpleMonitor(Path("tests/monitor-empty.ini"))
+        m = MonitorNull("unnamed", {"enabled": 0})
+        with patch.object(m, "run_test") as mock_method:
+            s.add_monitor("test", m)
+            s.run_tests()
+        mock_method.assert_not_called()
+
+    def test_enabled_monitor_run(self):
+        s = simplemonitor.SimpleMonitor(Path("tests/monitor-empty.ini"))
+        m = MonitorNull("unnamed", {"enabled": 1})
+        with patch.object(m, "run_test") as mock_method:
+            s.add_monitor("test", m)
+            s.run_tests()
+        mock_method.assert_called_once()
+
 
 class TestPidFile(unittest.TestCase):
     def test_pidfile(self):
