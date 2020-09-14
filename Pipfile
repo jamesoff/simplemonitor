@@ -4,7 +4,6 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-pync = {version = ">=2.0.3",sys_platform = "== 'darwin'"}
 simplemonitor = {extras = ["ring", "arlo"], editable = true, path = "."}
 
 [dev-packages]
