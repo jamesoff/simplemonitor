@@ -539,8 +539,11 @@ class SimpleMonitor:
                         logger.groups,
                     )
             try:
-                for host_monitors in self.remote_monitors.values():
-                    for name, monitor in host_monitors.items():
+                # need to work on a copy here to prevent the dicts changing under us
+                # during the loop, as remote instances can connect and update our data
+                # unpredictably
+                for host_monitors in self.remote_monitors.copy().values():
+                    for name, monitor in host_monitors.copy().items():
                         if check_group_match(monitor.group, logger.groups):
                             logger.save_result2(name, monitor)
                         else:
@@ -571,8 +574,8 @@ class SimpleMonitor:
                     module_logger.warning("monitor %s has notifications disabled", name)
             except Exception:  # pragma: no cover
                 module_logger.exception("exception caught while alerting for %s", name)
-        for host_monitors in self.remote_monitors.values():
-            for (name, monitor) in host_monitors.items():
+        for host_monitors in self.remote_monitors.copy().values():
+            for (name, monitor) in host_monitors.copy().items():
                 try:
                     if monitor.remote_alerting:
                         alerter.send_alert(name, monitor)
