@@ -120,7 +120,7 @@ class Listener(Thread):
         """
         if key is None or key == "":
             raise LoggerConfigurationError("Network logger key is missing")
-        Thread.__init__(self)
+        Thread.__init__(self, daemon=True)
         if ipv4_only:
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         else:
@@ -134,7 +134,7 @@ class Listener(Thread):
         self.simplemonitor = simplemonitor
         self.key = bytearray(key, "utf-8")
         self.logger = logging.getLogger("simplemonitor.logger.networklistener")
-        self.running = False
+        self.running = False  # type: bool
 
     def run(self) -> None:
         """The main body of our thread.

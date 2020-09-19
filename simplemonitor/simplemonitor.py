@@ -122,6 +122,10 @@ class SimpleMonitor:
 
     def _start_network_thread(self) -> None:
         if self._remote_listening_thread:
+            # if the thread is running, check if it should be
+            if not self._network:
+                module_logger.info("Stopping remote listener thread")
+                self._remote_listening_thread.running = False
             return
         if self._network:
             module_logger.info("Starting remote listener thread")
@@ -132,17 +136,7 @@ class SimpleMonitor:
                 bind_host=self._network_bind_host,
                 ipv4_only=self._ipv4_only,
             )
-            self._remote_listening_thread.daemon = True
             self._remote_listening_thread.start()
-        else:
-            if self._remote_listening_thread:
-                self._remote_listening_thread.running = False
-
-    def _stop_network_thread(self) -> None:
-        if self._network and self._remote_listening_thread:
-            self._remote_listening_thread.running = False
-            module_logger.info("Waiting for listener thread to exit")
-            self._remote_listening_thread.join(0)
 
     def _load_monitors(self, filename: Union[Path, str]) -> None:
         """Load all the monitors from the config file."""
@@ -793,5 +787,4 @@ class SimpleMonitor:
                 module_logger.info("Quitting")
                 loop = False
 
-        self._stop_network_thread()
         self._remove_pid_file()
