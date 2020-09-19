@@ -186,7 +186,7 @@ class Listener(Thread):
                         "Mismatched MAC for network logging data from %s\n"
                         "Mismatched key? Old version of SimpleMonitor?\n" % addr[0]
                     )
-                result = json_loads(serialized)
+                result = json_loads(bytes(serialized))
                 self.simplemonitor.update_remote_monitor(result, addr[0])
             except socket.error as exception:
                 if exception.errno == 4:
