@@ -105,9 +105,11 @@ class MQTTLogger(Logger):
         self.registered = []  # type: List[str]
 
     def save_result2(self, name: str, monitor: Monitor) -> None:
-        # check if monitor registred with HA
         if self.hass:
             if monitor.name not in self.registered:
+                self.logger_logger.info(
+                    "attempting to register MQTT config topic for monitor %s", name
+                )
                 try:
                     paho.mqtt.publish.single(
                         "{root}/simplemonitor_{monitor}/config".format(
@@ -116,20 +118,17 @@ class MQTTLogger(Logger):
                         payload=json.dumps({"name": monitor.name}),
                         retain=True,
                         hostname=self.host,
+                        port=self.port,
                         auth=self.auth,
                         client_id="simplemonitor_{monitor}".format(
                             monitor=monitor.name
                         ),
                     )
-                except Exception as e:
-                    self.logger_logger.error(
-                        "cannot send %s to MQTT: %s", monitor.name, e
-                    )
+                except Exception:
+                    self.logger_logger.exception("cannot send %s to MQTT", monitor.name)
                 else:
                     self.registered.append(monitor.name)
-                    self.logger_logger.debug(
-                        "registered %s in MQTT", device=monitor.name
-                    )
+                    self.logger_logger.debug("registered %s in MQTT", monitor.name)
 
         if self.only_failures and monitor.virtual_fail_count() == 0:
             return
@@ -154,6 +153,7 @@ class MQTTLogger(Logger):
                 payload=payload,
                 retain=True,
                 hostname=self.host,
+                port=self.port,
                 auth=self.auth,
                 client_id="simplemonitor_{monitor}".format(monitor=monitor.name),
             )
