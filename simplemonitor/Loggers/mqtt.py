@@ -115,7 +115,14 @@ class MQTTLogger(Logger):
                         "{root}/simplemonitor_{monitor}/config".format(
                             root=self.topic, monitor=monitor.name
                         ),
-                        payload=json.dumps({"name": monitor.name}),
+                        payload=json.dumps(
+                            {
+                                "name": monitor.name,
+                                "state_topic": "{root}/simplemonitor_{monitor}/state".format(
+                                    root=self.topic, monitor=monitor.name
+                                ),
+                            }
+                        ),
                         retain=True,
                         hostname=self.host,
                         port=self.port,
