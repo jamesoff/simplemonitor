@@ -122,7 +122,7 @@ class MQTTLogger(Logger):
                     "attempting to register MQTT config topic for monitor %s", name
                 )
                 config_payload = {
-                    "name": safe_name,
+                    "name": monitor.name,
                     "state_topic": "{root}/simplemonitor_{monitor}/state".format(
                         root=self.topic, monitor=safe_name
                     ),
