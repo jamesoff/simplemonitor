@@ -109,15 +109,22 @@ class MQTTLogger(Logger):
         self.registered = []  # type: List[str]
 
     def save_result2(self, name: str, monitor: Monitor) -> None:
+        safe_name = monitor.name
         if self.hass:
             if monitor.name not in self.registered:
+                if " " in safe_name:
+                    self.logger_logger.warning(
+                        "replacing spaces with underscores for monitor %s as spaces are not supported for MQTT/HASS names",
+                        monitor.name,
+                    )
+                    safe_name = monitor.name.replace(" ", "_")
                 self.logger_logger.info(
                     "attempting to register MQTT config topic for monitor %s", name
                 )
                 config_payload = {
-                    "name": monitor.name,
+                    "name": safe_name,
                     "state_topic": "{root}/simplemonitor_{monitor}/state".format(
-                        root=self.topic, monitor=monitor.name
+                        root=self.topic, monitor=safe_name
                     ),
                 }
                 if self.device_class:
@@ -125,7 +132,8 @@ class MQTTLogger(Logger):
                 try:
                     paho.mqtt.publish.single(
                         "{root}/simplemonitor_{monitor}/config".format(
-                            root=self.topic, monitor=monitor.name
+                            root=self.topic,
+                            monitor=safe_name,
                         ),
                         payload=json.dumps(config_payload),
                         retain=True,
@@ -133,24 +141,24 @@ class MQTTLogger(Logger):
                         port=self.port,
                         auth=self.auth,
                         client_id="simplemonitor_{monitor}".format(
-                            monitor=monitor.name
+                            monitor=safe_name,
                         ),
                     )
                 except Exception:
                     self.logger_logger.exception("cannot send %s to MQTT", monitor.name)
                 else:
                     self.registered.append(monitor.name)
-                    self.logger_logger.debug("registered %s in MQTT", monitor.name)
+                    self.logger_logger.debug("registered %s in MQTT", safe_name)
 
         if self.only_failures and monitor.virtual_fail_count() == 0:
             return
 
         if self.hass:
             topic = "{root}/simplemonitor_{monitor}/state".format(
-                root=self.topic, monitor=monitor.name
+                root=self.topic, monitor=safe_name
             )
         else:
-            topic = "{root}/{monitor}".format(root=self.topic, monitor=monitor.name)
+            topic = "{root}/{monitor}".format(root=self.topic, monitor=safe_name)
         self.logger_logger.debug(
             "%s failed %d times", monitor.name, monitor.virtual_fail_count()
         )
@@ -167,7 +175,7 @@ class MQTTLogger(Logger):
                 hostname=self.host,
                 port=self.port,
                 auth=self.auth,
-                client_id="simplemonitor_{monitor}".format(monitor=monitor.name),
+                client_id="simplemonitor_{monitor}".format(monitor=safe_name),
             )
         except Exception:
             self.logger_logger.exception("cannot send state %s to %s", payload, topic)
