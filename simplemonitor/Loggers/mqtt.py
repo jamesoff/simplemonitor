@@ -111,13 +111,13 @@ class MQTTLogger(Logger):
     def save_result2(self, name: str, monitor: Monitor) -> None:
         safe_name = monitor.name
         if self.hass:
+            if " " in safe_name:
+                self.logger_logger.warning(
+                    "replacing spaces with underscores for monitor %s as spaces are not supported for MQTT/HASS names",
+                    monitor.name,
+                )
+                safe_name = monitor.name.replace(" ", "_")
             if monitor.name not in self.registered:
-                if " " in safe_name:
-                    self.logger_logger.warning(
-                        "replacing spaces with underscores for monitor %s as spaces are not supported for MQTT/HASS names",
-                        monitor.name,
-                    )
-                    safe_name = monitor.name.replace(" ", "_")
                 self.logger_logger.info(
                     "attempting to register MQTT config topic for monitor %s", name
                 )
