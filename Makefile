@@ -24,6 +24,8 @@ unit-test:
 	pipenv run coverage run --append -m unittest discover -s tests
 
 network-test:
+	rm -f master.log
+	rm -f client.log
 	pipenv run tests/test-network.sh
 
 dist:
