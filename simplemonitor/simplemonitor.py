@@ -680,7 +680,7 @@ class SimpleMonitor:
         for logger in self.loggers.values():
             self.log_result(logger)
 
-    def update_remote_monitor(self, data: Any, hostname: str) -> None:
+    def update_remote_monitor(self, data: Dict[str, Monitor], hostname: str) -> None:
         """Process a list of monitors received from a remote host."""
         seen_monitors = []  # type: List[str]
         if hostname not in self.remote_monitors:

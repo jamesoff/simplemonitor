@@ -9,7 +9,7 @@ import logging
 import socket
 import struct
 from threading import Thread
-from typing import Any, cast
+from typing import Any, Dict, Union, cast
 
 from ..Monitors.monitor import Monitor
 from ..util import LoggerConfigurationError
@@ -165,10 +165,10 @@ class Listener(Thread):
                     serialized = serialized[mac_size + 1 :]
                     mac = hmac.new(self.key, serialized, _DIGEST_NAME)
                     my_digest = mac.digest()
-                except IndexError:  # pragma: no cover
+                except IndexError as error:  # pragma: no cover
                     raise ValueError(
                         "Did not receive any or enough data from {}".format(addr[0])
-                    )
+                    ) from error
                 if isinstance(my_digest, str):
                     self.logger.debug(
                         "Computed my digest to be %s; remote is %s",
@@ -186,8 +186,20 @@ class Listener(Thread):
                         "Mismatched MAC for network logging data from %s\n"
                         "Mismatched key? Old version of SimpleMonitor?\n" % addr[0]
                     )
-                result = json_loads(bytes(serialized))
-                self.simplemonitor.update_remote_monitor(result, addr[0])
+                result = json_loads(bytes(serialized))  # type: dict
+                version = result.get("version", 1)
+                if version == 1:
+                    self.logger.debug("Received version 1 data from %s", addr[0])
+                    self.simplemonitor.update_remote_monitor(result, addr[0])
+                elif version == 2:
+                    self.logger.debug("Received version 2 data from %s", addr[0])
+                    self._handle_data_v2(result, addr[0])
+                else:
+                    self.logger.critical(
+                        "Received unknown version %s data from %s cannot process",
+                        version,
+                        addr[0],
+                    )
             except socket.error as exception:
                 if exception.errno == 4:
                     # Interrupted system call
@@ -200,3 +212,32 @@ class Listener(Thread):
                     self.logger.exception("Socket error caught in thread")
             except Exception:  # pylint: disable=broad-except
                 self.logger.exception("Listener thread caught exception")
+
+    def _handle_data_v2(
+        self, data: Dict[str, Union[str, int, Dict[str, Monitor]]], source: str
+    ) -> None:
+        """Handle data in v2 format
+
+        {
+            "version": 2,
+            "name": "remote_instance_name",
+            "interval": 10,
+            "monitors": [ monitor data, ... ]
+        }
+        """
+        remote_instance_name = str(data.get("name", source))
+        remote_monitors = data.get("monitors", None)
+        if remote_monitors is None:
+            self.logger.error(
+                "Received empty monitors list from remote instance %s",
+                remote_instance_name,
+            )
+        elif isinstance(remote_monitors, dict):
+            self.simplemonitor.update_remote_monitor(
+                remote_monitors, remote_instance_name
+            )
+        else:
+            self.logger.error(
+                "Bad data type for monitors from remote instance %s",
+                remote_instance_name,
+            )
