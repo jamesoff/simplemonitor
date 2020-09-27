@@ -40,7 +40,7 @@ class NetworkLogger(Logger):
         self.port = cast(
             int, self.get_config_option("port", required_type="int", required=True)
         )
-        self.hostname = socket.gethostname()
+        self.hostname = cast(str, self.get_config_option("client_name"))
         self.key = bytearray(
             self.get_config_option("key", required=True, allow_empty=False), "utf-8"
         )
@@ -73,13 +73,19 @@ class NetworkLogger(Logger):
                 if self.batch_data is not None:
                     self.batch_data[monitor.name] = data
                 else:
-                    self.batch_data = {monitor.name: data}
+                    self.batch_data = {monitor.name: data}  # type: Dict[str, dict]
         except Exception:  # pylint: disable=broad-except
             self.logger_logger.exception("Failed to serialize monitor %s", name)
 
     def process_batch(self) -> None:
         try:
-            payload = json_dumps(self.batch_data)
+            payload = json_dumps(
+                {
+                    "version": 2,
+                    "name": self.hostname,
+                    "monitors": self.batch_data,
+                }
+            )
             mac = hmac.new(self.key, payload, _DIGEST_NAME)
             send_bytes = struct.pack("B", mac.digest_size) + mac.digest() + payload
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -214,18 +220,19 @@ class Listener(Thread):
                 self.logger.exception("Listener thread caught exception")
 
     def _handle_data_v2(
-        self, data: Dict[str, Union[str, int, Dict[str, Monitor]]], source: str
+        self, data: Dict[str, Union[str, int, Dict[str, dict]]], source: str
     ) -> None:
         """Handle data in v2 format
 
         {
             "version": 2,
             "name": "remote_instance_name",
-            "interval": 10,
             "monitors": [ monitor data, ... ]
         }
         """
         remote_instance_name = str(data.get("name", source))
+        if remote_instance_name == "":
+            remote_instance_name = source
         remote_monitors = data.get("monitors", None)
         if remote_monitors is None:
             self.logger.error(

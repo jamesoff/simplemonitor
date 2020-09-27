@@ -680,13 +680,15 @@ class SimpleMonitor:
         for logger in self.loggers.values():
             self.log_result(logger)
 
-    def update_remote_monitor(self, data: Dict[str, Monitor], hostname: str) -> None:
+    def update_remote_monitor(self, data: Dict[str, dict], hostname: str) -> None:
         """Process a list of monitors received from a remote host."""
         seen_monitors = []  # type: List[str]
         if hostname not in self.remote_monitors:
             self.remote_monitors[hostname] = {}
         for (name, state) in data.items():
-            module_logger.info("updating remote monitor %s", name)
+            module_logger.info(
+                "updating remote monitor %s from host %s", name, hostname
+            )
             if isinstance(state, dict):
                 try:
                     remote_monitor = get_monitor_class(
