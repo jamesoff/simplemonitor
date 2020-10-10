@@ -24,10 +24,10 @@ jobs:
         run: pip --version
       - name: Update pip
         run: pip install --upgrade pip
-      - name: Install pipenv
-        run: pip install pipenv
-      - name: pipenv install
-        run: pipenv --bare install --dev
+      - name: Install poetry
+        run: pip install poetry
+      - name: poetry install
+        run: poetry install
       - name: Integration tests
         run: make integration-tests
       - name: Config environment variables tests
@@ -36,6 +36,4 @@ jobs:
         run: make unit-test
       - name: Network logger tests
         run: make network-test
-      - name: Upload to codecov
-        run: pipenv run codecov --token="${{ secrets.CODECOV_TOKEN }}"
       - uses: codecov/codecov-action@v1
