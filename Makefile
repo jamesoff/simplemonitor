@@ -1,11 +1,9 @@
 .PHONY: flake8 dist twine twine-test integration-tests env-test network-test black mypy linting mypy-strict bandit bandit-strict
 
 ifeq ($(OS),Windows_NT)
-ENVPATH := $(shell python -c "import os.path; import sys; print(os.path.join(sys.exec_prefix, 'Scripts'))")\\
 MOCKSPATH := tests\mocks;
 INTEGRATION_CONFIG := tests/monitor-windows.ini
 else
-ENVPATH := $(shell pipenv --venv)/bin/
 MOCKSPATH := $(PWD)/tests/mocks:
 INTEGRATION_CONFIG := tests/monitor.ini
 endif
