@@ -9,7 +9,7 @@ import logging
 import socket
 import struct
 from threading import Thread
-from typing import Any, cast
+from typing import Any, Dict, Union, cast
 
 from ..Monitors.monitor import Monitor
 from ..util import LoggerConfigurationError
@@ -40,7 +40,7 @@ class NetworkLogger(Logger):
         self.port = cast(
             int, self.get_config_option("port", required_type="int", required=True)
         )
-        self.hostname = socket.gethostname()
+        self.hostname = cast(str, self.get_config_option("client_name"))
         self.key = bytearray(
             self.get_config_option("key", required=True, allow_empty=False), "utf-8"
         )
@@ -73,13 +73,19 @@ class NetworkLogger(Logger):
                 if self.batch_data is not None:
                     self.batch_data[monitor.name] = data
                 else:
-                    self.batch_data = {monitor.name: data}
+                    self.batch_data = {monitor.name: data}  # type: Dict[str, dict]
         except Exception:  # pylint: disable=broad-except
             self.logger_logger.exception("Failed to serialize monitor %s", name)
 
     def process_batch(self) -> None:
         try:
-            payload = json_dumps(self.batch_data)
+            payload = json_dumps(
+                {
+                    "version": 2,
+                    "name": self.hostname,
+                    "monitors": self.batch_data,
+                }
+            )
             mac = hmac.new(self.key, payload, _DIGEST_NAME)
             send_bytes = struct.pack("B", mac.digest_size) + mac.digest() + payload
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -165,10 +171,10 @@ class Listener(Thread):
                     serialized = serialized[mac_size + 1 :]
                     mac = hmac.new(self.key, serialized, _DIGEST_NAME)
                     my_digest = mac.digest()
-                except IndexError:  # pragma: no cover
+                except IndexError as error:  # pragma: no cover
                     raise ValueError(
                         "Did not receive any or enough data from {}".format(addr[0])
-                    )
+                    ) from error
                 if isinstance(my_digest, str):
                     self.logger.debug(
                         "Computed my digest to be %s; remote is %s",
@@ -186,8 +192,20 @@ class Listener(Thread):
                         "Mismatched MAC for network logging data from %s\n"
                         "Mismatched key? Old version of SimpleMonitor?\n" % addr[0]
                     )
-                result = json_loads(serialized)
-                self.simplemonitor.update_remote_monitor(result, addr[0])
+                result = json_loads(bytes(serialized))  # type: dict
+                version = result.get("version", 1)
+                if version == 1:
+                    self.logger.debug("Received version 1 data from %s", addr[0])
+                    self.simplemonitor.update_remote_monitor(result, addr[0])
+                elif version == 2:
+                    self.logger.debug("Received version 2 data from %s", addr[0])
+                    self._handle_data_v2(result, addr[0])
+                else:
+                    self.logger.critical(
+                        "Received unknown version %s data from %s cannot process",
+                        version,
+                        addr[0],
+                    )
             except socket.error as exception:
                 if exception.errno == 4:
                     # Interrupted system call
@@ -200,3 +218,33 @@ class Listener(Thread):
                     self.logger.exception("Socket error caught in thread")
             except Exception:  # pylint: disable=broad-except
                 self.logger.exception("Listener thread caught exception")
+
+    def _handle_data_v2(
+        self, data: Dict[str, Union[str, int, Dict[str, dict]]], source: str
+    ) -> None:
+        """Handle data in v2 format
+
+        {
+            "version": 2,
+            "name": "remote_instance_name",
+            "monitors": [ monitor data, ... ]
+        }
+        """
+        remote_instance_name = str(data.get("name", source))
+        if remote_instance_name == "":
+            remote_instance_name = source
+        remote_monitors = data.get("monitors", None)
+        if remote_monitors is None:
+            self.logger.error(
+                "Received empty monitors list from remote instance %s",
+                remote_instance_name,
+            )
+        elif isinstance(remote_monitors, dict):
+            self.simplemonitor.update_remote_monitor(
+                remote_monitors, remote_instance_name
+            )
+        else:
+            self.logger.error(
+                "Bad data type for monitors from remote instance %s",
+                remote_instance_name,
+            )

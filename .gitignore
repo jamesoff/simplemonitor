@@ -35,3 +35,5 @@ network.log
 .coverage.*
 .ring_token.cache
 simplemonitor.code-workspace
+client.log
+master.log

@@ -22,6 +22,8 @@ unit-test:
 	poetry run coverage run --append -m unittest discover -s tests
 
 network-test:
+	rm -f master.log
+	rm -f client.log
 	poetry run tests/test-network.sh
 
 dist:

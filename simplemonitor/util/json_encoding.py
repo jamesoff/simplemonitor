@@ -67,5 +67,5 @@ def json_dumps(data: Any) -> bytes:
     return JSONEncoder().encode(data).encode("ascii")
 
 
-def json_loads(string: bytes) -> str:
+def json_loads(string: bytes) -> Any:
     return JSONDecoder().decode(string.decode("ascii"))
