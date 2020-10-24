@@ -36,4 +36,6 @@ jobs:
         run: make unit-test
       - name: Network logger tests
         run: make network-test
+      - name: Where is coverage?
+        run: ls -la; find . -name .coverage
       - uses: codecov/codecov-action@v1
