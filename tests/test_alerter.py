@@ -452,8 +452,12 @@ class TestMessageBuilding(unittest.TestCase):
                 self.test_alerter.build_message(
                     alerter.AlertLength.SMS, alerter.AlertType.SUCCESS, m
                 ),
-                "success: winning succeeded on {hostname} at (0+00:00:00): a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a...".format(
-                    hostname=util.short_hostname()
+                textwrap.shorten(
+                    "success: winning succeeded on {hostname} at (0+00:00:00): {a}".format(
+                        hostname=util.short_hostname(), a=m.last_result
+                    ),
+                    width=160,
+                    placeholder="...",
                 ),
             )
 
