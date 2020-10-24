@@ -117,8 +117,6 @@ class SimpleMonitor:
             raise RuntimeError("Broken dependency configuration")
         if not self.verify_alerting():
             module_logger.critical("No alerters defined and no remote logger found")
-        if self._network:
-            self._start_network_thread()
 
     def _start_network_thread(self) -> None:
         if self._remote_listening_thread:
@@ -736,6 +734,7 @@ class SimpleMonitor:
 
     def run(self) -> None:
         self._create_pid_file()
+        self._start_network_thread()
         module_logger.info(
             "=== Starting... (loop runs every %ds) Hit ^C to stop", self.interval
         )
@@ -755,6 +754,7 @@ class SimpleMonitor:
                     try:
                         module_logger.warning("Reloading configuration")
                         self._load_config()
+                        self._start_network_thread()
                         self.hup_loggers()
                         self._need_hup = False
                     except Exception:
