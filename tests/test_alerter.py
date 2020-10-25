@@ -547,14 +547,14 @@ class TestSNSAlerter(unittest.TestCase):
 class TestDescription(unittest.TestCase):
     def test_times_always(self):
         a = alerter.Alerter({"times_type": "always"})
-        self.assertEqual(a._describe_times(), "always")
+        self.assertEqual(a._describe_times(), "(always)")
 
     def test_times_only_times(self):
         a = alerter.Alerter(
             {"times_type": "only", "time_lower": "09:00", "time_upper": "10:00"}
         )
         self.assertEqual(
-            a._describe_times(), "only between 09:00:00 and 10:00:00 (local) on any day"
+            a._describe_times(), "only between 09:00 and 10:00 (local) on any day"
         )
 
     def test_times_only_days(self):
@@ -568,7 +568,7 @@ class TestDescription(unittest.TestCase):
         )
         self.assertEqual(
             a._describe_times(),
-            "only between 09:00:00 and 10:00:00 (local) on Mon, Tue, Wed",
+            "only between 09:00 and 10:00 (local) on Mon, Tue, Wed",
         )
 
     def test_times_not_time(self):
@@ -577,7 +577,7 @@ class TestDescription(unittest.TestCase):
         )
         self.assertEqual(
             a._describe_times(),
-            "any time except between 09:00:00 and 10:00:00 (local) on any day",
+            "any time except between 09:00 and 10:00 (local) on any day",
         )
 
     def test_times_not_days(self):
@@ -591,5 +591,5 @@ class TestDescription(unittest.TestCase):
         )
         self.assertEqual(
             a._describe_times(),
-            "any time except between 09:00:00 and 10:00:00 (local) on Thu, Fri, Sat, Sun",
+            "any time except between 09:00 and 10:00 (local) on Thu, Fri, Sat, Sun",
         )

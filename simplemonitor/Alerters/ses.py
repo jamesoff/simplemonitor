@@ -77,3 +77,6 @@ class SESAlerter(Alerter):
             self.alerter_logger.info("dry_run: would send email:")
             self.alerter_logger.info("    Subject: %s", message["Subject"]["Data"])
             self.alerter_logger.info("    Body: %s", message["Body"]["Text"]["Data"])
+
+    def _describe_action(self) -> str:
+        return "emailing {target} via SES".format(target=self.to_addr)

@@ -20,3 +20,6 @@ class SyslogAlerter(Alerter):
                 "Monitor %s failed %d times with message: %s"
                 % (name, monitor.virtual_fail_count(), monitor.get_result()),
             )
+
+    def _describe_action(self) -> str:
+        return "writing messages to syslog"

@@ -118,3 +118,13 @@ class SlackAlerter(Alerter):
             self.alerter_logger.info(
                 "dry_run: would send slack: %s", message_json.__repr__()
             )
+
+    def _describe_action(self) -> str:
+        target = ""
+        if self.channel:
+            target = self.channel
+        elif self.username:
+            target = self.username
+        if target:
+            return "posting to {target} on Slack".format(target=target)
+        return "posting to Slack"

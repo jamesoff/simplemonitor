@@ -81,3 +81,6 @@ class FortySixElksAlerter(Alerter):
                 self.alerter_logger.exception("SMS sending failed")
         else:
             self.alerter_logger.info("dry_run: would send SMS: %s", url)
+
+    def _describe_action(self) -> str:
+        return "SMSing {target} via 46elks".format(target=self.target)

@@ -407,15 +407,18 @@ class Alerter:
     def _describe_times(self) -> str:
         """Return a string describing the times we're active."""
         if self._times_type == AlertTimeFilter.ALWAYS:
-            return "always"
+            return "(always)"
         days_list = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
         if self._days != list(range(0, 7)):
             allowed_days = ", ".join([days_list[day] for day in sorted(self._days)])
         else:
             allowed_days = "any day"
+        start, end = self._time_info
+        if start is None or end is None:
+            return "(misconfigured times)"
         message = "between {start} and {end} ({tz}) on {days}".format(
-            start=self._time_info[0],
-            end=self._time_info[1],
+            start=start.strftime("%H:%M"),
+            end=end.strftime("%H:%M"),
             days=allowed_days,
             tz=self._times_tz,
         )

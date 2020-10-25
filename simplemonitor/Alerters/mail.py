@@ -78,3 +78,6 @@ class EMailAlerter(Alerter):
             self.alerter_logger.info(
                 "dry_run: would send email: %s", message.as_string()
             )
+
+    def _describe_action(self) -> str:
+        return "sending mail to {target}".format(target=self.to_addr)
