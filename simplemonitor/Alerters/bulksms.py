@@ -73,3 +73,6 @@ class BulkSMSAlerter(Alerter):
             self.alerter_logger.info(
                 "dry_run: would send SMS: {} with message {}".format(url, message)
             )
+
+    def _describe_action(self) -> str:
+        return "SMSing {target} via BulkSMS".format(target=self.target)

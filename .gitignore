@@ -37,3 +37,4 @@ network.log
 simplemonitor.code-workspace
 client.log
 master.log
+coverage.xml

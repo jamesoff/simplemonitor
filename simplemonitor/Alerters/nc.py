@@ -46,3 +46,6 @@ class NotificationCenterAlerter(Alerter):
             pync.notify(message=message, title="SimpleMonitor")
         else:
             self.alerter_logger.info("dry_run: would send message: %s", message)
+
+    def _describe_action(self) -> str:
+        return "sending notifications via Notification Center"

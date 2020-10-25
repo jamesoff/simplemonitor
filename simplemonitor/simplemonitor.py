@@ -295,8 +295,13 @@ class SimpleMonitor:
                     ", ".join(all_alerter_types()),
                 )
                 continue
-            new_alerter = alerter_cls(config_options)
-            module_logger.info("Adding %s alerter %s", alerter_type, this_alerter)
+            new_alerter = alerter_cls(config_options)  # type: Alerter
+            module_logger.info(
+                "Adding %s alerter %s: %s",
+                alerter_type,
+                this_alerter,
+                new_alerter.describe(),
+            )
             new_alerter.name = this_alerter
             self.add_alerter(this_alerter, new_alerter)
             del new_alerter

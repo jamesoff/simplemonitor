@@ -91,3 +91,10 @@ class SNSAlerter(Alerter):
             if subject is not None:
                 self.alerter_logger.info("    Subject: %s", subject)
             self.alerter_logger.info("    Message: %s", message)
+
+    def _describe_action(self) -> str:
+        if self.topic:
+            return "posting to SNS topic {topic}".format(topic=self.topic)
+        elif self.number:
+            return "SMSing {target} via SNS".format(target=self.number)
+        return "not sending anything via SNS"

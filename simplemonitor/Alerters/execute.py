@@ -83,3 +83,13 @@ class ExecuteAlerter(Alerter):
                 )
         else:
             self.alerter_logger.info("Would run command: %s", command)
+
+    def _describe_action(self) -> str:
+        when = []
+        if self.success_command:
+            when.append("success")
+        if self.fail_command:
+            when.append("failure")
+        if self.catchup_command:
+            when.append("catchup")
+        return "running command(s) on {when}".format(when=", ".join(when))

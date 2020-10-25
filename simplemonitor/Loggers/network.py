@@ -231,7 +231,7 @@ class Listener(Thread):
         }
         """
         remote_instance_name = str(data.get("name", source))
-        if remote_instance_name == "":
+        if not remote_instance_name or remote_instance_name == "None":
             remote_instance_name = source
         remote_monitors = data.get("monitors", None)
         if remote_monitors is None:

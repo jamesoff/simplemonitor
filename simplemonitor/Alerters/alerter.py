@@ -404,6 +404,40 @@ class Alerter:
             message = textwrap.shorten(message, width=max_length, placeholder="...")
         return message
 
+    def _describe_times(self) -> str:
+        """Return a string describing the times we're active."""
+        if self._times_type == AlertTimeFilter.ALWAYS:
+            return "(always)"
+        days_list = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+        if self._days != list(range(0, 7)):
+            allowed_days = ", ".join([days_list[day] for day in sorted(self._days)])
+        else:
+            allowed_days = "any day"
+        start, end = self._time_info
+        if start is None or end is None:
+            return "(misconfigured times)"
+        message = "between {start} and {end} ({tz}) on {days}".format(
+            start=start.strftime("%H:%M"),
+            end=end.strftime("%H:%M"),
+            days=allowed_days,
+            tz=self._times_tz,
+        )
+        if self._times_type == AlertTimeFilter.ONLY:
+            return "only {}".format(message)
+        return "any time except {}".format(message)
+
+    def _describe_action(self) -> str:
+        """Return a string explaining what we do.
+
+        Should not include any time info"""
+        raise NotImplementedError
+
+    def describe(self) -> str:
+        """Return a string explaining what we do."""
+        return "{desc} {when}".format(
+            desc=self._describe_action(), when=self._describe_times()
+        )
+
 
 (register, get_class, all_types) = subclass_dict_handler(
     "simplemonitor.Alerters.alerter", Alerter, "alerter_type"
