@@ -542,3 +542,54 @@ class TestSNSAlerter(unittest.TestCase):
             sns.SNSAlerter({})
         with self.assertRaises(util.AlerterConfigurationError):
             sns.SNSAlerter({"topic": "a", "number": "b"})
+
+
+class TestDescription(unittest.TestCase):
+    def test_times_always(self):
+        a = alerter.Alerter({"times_type": "always"})
+        self.assertEqual(a._describe_times(), "always")
+
+    def test_times_only_times(self):
+        a = alerter.Alerter(
+            {"times_type": "only", "time_lower": "09:00", "time_upper": "10:00"}
+        )
+        self.assertEqual(
+            a._describe_times(), "only between 09:00:00 and 10:00:00 (local) on any day"
+        )
+
+    def test_times_only_days(self):
+        a = alerter.Alerter(
+            {
+                "times_type": "only",
+                "time_lower": "09:00",
+                "time_upper": "10:00",
+                "days": "0,1,2",
+            }
+        )
+        self.assertEqual(
+            a._describe_times(),
+            "only between 09:00:00 and 10:00:00 (local) on Mon, Tue, Wed",
+        )
+
+    def test_times_not_time(self):
+        a = alerter.Alerter(
+            {"times_type": "not", "time_lower": "09:00", "time_upper": "10:00"}
+        )
+        self.assertEqual(
+            a._describe_times(),
+            "any time except between 09:00:00 and 10:00:00 (local) on any day",
+        )
+
+    def test_times_not_days(self):
+        a = alerter.Alerter(
+            {
+                "times_type": "not",
+                "time_lower": "09:00",
+                "time_upper": "10:00",
+                "days": "3,4,5,6",
+            }
+        )
+        self.assertEqual(
+            a._describe_times(),
+            "any time except between 09:00:00 and 10:00:00 (local) on Thu, Fri, Sat, Sun",
+        )
