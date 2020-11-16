@@ -34,7 +34,7 @@ psutil = "^5.7.2"
 pyOpenSSL = "^19.1.0"
 requests = "^2.24.0"
 pync = {version = "^2.0.3", platform = "darwin"}
-pywin32 = {version = "^228", platform = "win32"}
+pywin32 = {version = ">=228,<301", platform = "win32"}
 
 [tool.poetry.dev-dependencies]
 "flake8" = "*"
