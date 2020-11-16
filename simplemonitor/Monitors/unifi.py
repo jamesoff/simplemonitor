@@ -73,6 +73,9 @@ class MonitorUnifiFailover(Monitor):
                     if matches:
                         data_block["status"] = matches.group(1)
                         continue
+                    matches = re.match(r"gateway +: (\w+)", line)
+                    if matches:
+                        data_block["gateway"] = matches.group(1)
                 if interface != "" and len(data_block) > 0:
                     data[interface] = data_block
         except SSHException as error:
@@ -93,6 +96,12 @@ class MonitorUnifiFailover(Monitor):
             return self.record_fail(
                 "Interface {} is in status {} (wanted 'failover')".format(
                     self._check_interface, data[self._check_interface]["status"]
+                )
+            )
+        if data[self._check_interface]["gateway"] == "unknown":
+            return self.record_fail(
+                "Interface {} has gateway {}".format(
+                    self._check_interface, data[self._check_interface]["gateway"]
                 )
             )
         return self.record_success(
