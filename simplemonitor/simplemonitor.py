@@ -18,7 +18,7 @@ from .Loggers.logger import Logger
 from .Loggers.logger import all_types as all_logger_types
 from .Loggers.logger import get_class as get_logger_class
 from .Loggers.network import Listener
-from .Monitors.monitor import Monitor
+from .Monitors.monitor import Monitor, MonitorState
 from .Monitors.monitor import all_types as all_monitor_types
 from .Monitors.monitor import get_class as get_monitor_class
 from .util import check_group_match, get_config_dict
@@ -438,6 +438,17 @@ class SimpleMonitor:
         new_list.extend(late_list)
         return new_list
 
+    def _failed_monitors(self) -> List[str]:
+        """Return a list of the currently-failed monitors.
+
+        Includes monitors which are disabled."""
+        failed = [
+            key
+            for key, monitor in self.monitors.items()
+            if monitor.state() == MonitorState.FAILED or not monitor.enabled
+        ]
+        return failed
+
     def run_tests(self) -> None:
         """Run the tests for all the monitors."""
         self.reset_monitors()
@@ -450,37 +461,22 @@ class SimpleMonitor:
 
         while joblist:
             new_joblist = []  # type: List[str]
+            failed = self._failed_monitors()
             module_logger.debug("Starting loop with joblist %s", joblist)
             for monitor in joblist:
                 module_logger.debug("Trying monitor: %s", monitor)
                 if self.monitors[monitor].remaining_dependencies:
                     # this monitor has outstanding deps, put it on the new joblist for next loop
-                    for dep in self.monitors[monitor].remaining_dependencies:
-                        module_logger.debug(
-                            "considering %s's dependency %s (failed monitors: %s)",
+                    failed_deps = set(
+                        self.monitors[monitor].remaining_dependencies
+                    ).intersection(failed)
+                    if len(failed_deps) > 0:
+                        module_logger.warning(
+                            "Monitor %s has failed dependencies %s, skipping",
                             monitor,
-                            dep,
-                            failed,
+                            failed_deps,
                         )
-                        if dep in failed:
-                            # oh wait, actually one of its deps failed, so
-                            # we'll never be able to run it
-                            module_logger.info(
-                                "Monitor %s depends on failed monitor %s, skipping",
-                                monitor,
-                                dep,
-                            )
-                            failed.append(monitor)
-                            self.monitors[monitor].record_skip(dep)
-                            break
-                        if not self.monitors[dep].enabled:
-                            module_logger.warning(
-                                "Monitor %s depends on disabled monitor %s, skipping",
-                                monitor,
-                                dep,
-                            )
-                            self.monitors[monitor].record_skip(dep)
-                            break
+                        self.monitors[monitor].record_skip(", ".join(failed_deps))
                     else:
                         new_joblist.append(monitor)
                         module_logger.debug(
@@ -518,7 +514,6 @@ class SimpleMonitor:
                             monitor,
                             self.monitors[monitor].last_result,
                         )
-                    failed.append(monitor)
                 else:
                     if not not_run:
                         module_logger.info("monitor passed: %s", monitor)
