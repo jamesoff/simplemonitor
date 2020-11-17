@@ -472,18 +472,20 @@ class SimpleMonitor:
         if monitor.error_count > 0:
             if monitor.virtual_fail_count() == 0:
                 module_logger.warning(
-                    "monitor failed but within tolerance: %s", monitor.name
+                    "monitor failed but within tolerance: %s (%s)",
+                    monitor.name,
+                    monitor.last_result,
                 )
             else:
                 module_logger.error(
                     "monitor failed: %s (%s)",
-                    monitor,
+                    monitor.name,
                     monitor.last_result,
                 )
             return False
         if not did_run:
             return False
-        module_logger.info("monitor passed: %s", monitor)
+        module_logger.info("monitor passed: %s", monitor.name)
         return True
 
     def run_tests(self) -> None:
@@ -522,7 +524,11 @@ class SimpleMonitor:
                         skiplist.append(monitor)
                     else:
                         new_joblist.append(monitor)
-                        module_logger.debug("Added %s to new joblist", monitor)
+                        module_logger.debug(
+                            "Added %s to new joblist due to outstanding deps %s",
+                            monitor,
+                            ", ".join(self.monitors[monitor].remaining_dependencies),
+                        )
                     continue
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 future_to_monitor = {}
