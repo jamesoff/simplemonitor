@@ -464,6 +464,11 @@ class SimpleMonitor:
             failed = self._failed_monitors()
             module_logger.debug("Starting loop with joblist %s", joblist)
             for monitor in joblist:
+                if monitor in failed:
+                    module_logger.error(
+                        "Received a failed logger in the joblist: %s", monitor
+                    )
+                    continue
                 module_logger.debug("Trying monitor: %s", monitor)
                 if self.monitors[monitor].remaining_dependencies:
                     # this monitor has outstanding deps, put it on the new joblist for next loop
