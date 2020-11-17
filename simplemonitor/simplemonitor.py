@@ -1,6 +1,7 @@
 # coding=utf-8
 """Execution logic for SimpleMonitor."""
 
+import concurrent.futures
 import copy
 import logging
 import os
@@ -451,6 +452,7 @@ class SimpleMonitor:
 
     @staticmethod
     def _run_monitor(monitor: Monitor) -> bool:
+        """Run a single monitor."""
         did_run = False
         try:
             if monitor.should_run():
@@ -522,17 +524,32 @@ class SimpleMonitor:
                         new_joblist.append(monitor)
                         module_logger.debug("Added %s to new joblist", monitor)
                     continue
-            for monitor in joblist:
-                if monitor in new_joblist or monitor in skiplist:
-                    module_logger.debug(
-                        "Skipping monitor %s because it's in the new job list or the skiplist",
-                        monitor,
-                    )
-                    continue
-                module_logger.debug("Trying monitor: %s", monitor)
-                if self._run_monitor(self.monitors[monitor]):
-                    for monitor2 in joblist:
-                        self.monitors[monitor2].dependency_succeeded(monitor)
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                future_to_monitor = {}
+                for monitor in joblist:
+                    if monitor in new_joblist or monitor in skiplist:
+                        module_logger.debug(
+                            "Skipping monitor %s because it's in the new job list or the skiplist",
+                            monitor,
+                        )
+                        continue
+                    module_logger.debug("Trying monitor: %s", monitor)
+                    future_to_monitor[
+                        executor.submit(self._run_monitor, self.monitors[monitor])
+                    ] = monitor
+                if len(future_to_monitor) == 0:
+                    module_logger.error("No more monitors are runnable!")
+                    return
+                for future in concurrent.futures.as_completed(future_to_monitor):
+                    monitor = future_to_monitor[future]
+                    try:
+                        if future.result():
+                            for monitor2 in joblist:
+                                self.monitors[monitor2].dependency_succeeded(monitor)
+                    except Exception:
+                        module_logger.exception(
+                            "Exception for monitor %s during thread execution", monitor
+                        )
             joblist = copy.copy(new_joblist)
 
     def log_result(self, logger: Logger) -> None:
