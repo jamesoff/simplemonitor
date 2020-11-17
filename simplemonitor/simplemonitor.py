@@ -449,27 +449,62 @@ class SimpleMonitor:
         ]
         return failed
 
+    @staticmethod
+    def _run_monitor(monitor: Monitor) -> bool:
+        did_run = False
+        try:
+            if monitor.should_run():
+                did_run = True
+                start_time = time.time()
+                monitor.run_test()
+                end_time = time.time()
+                monitor.last_run_duration = int(end_time - start_time)
+            else:
+                monitor.record_skip(None)
+                module_logger.info("Not run: %s", monitor.name)
+        except Exception as exception:
+            module_logger.exception(
+                "Monitor %s threw exception during run_test()", monitor.name
+            )
+            monitor.record_fail("Unhandled exception: {}".format(exception))
+        if monitor.error_count > 0:
+            if monitor.virtual_fail_count() == 0:
+                module_logger.warning(
+                    "monitor failed but within tolerance: %s", monitor.name
+                )
+            else:
+                module_logger.error(
+                    "monitor failed: %s (%s)",
+                    monitor,
+                    monitor.last_result,
+                )
+            return False
+        if not did_run:
+            return False
+        module_logger.info("monitor passed: %s", monitor)
+        return True
+
     def run_tests(self) -> None:
         """Run the tests for all the monitors."""
         self.reset_monitors()
 
         joblist = [k for (k, v) in self.monitors.items() if v.enabled]
         joblist = self.sort_joblist(joblist)
-        failed = []  # type: List[str]
-
-        not_run = False
-
         while joblist:
             new_joblist = []  # type: List[str]
+            skiplist = []  # type: List[str]
             failed = self._failed_monitors()
-            module_logger.debug("Starting loop with joblist %s", joblist)
+            module_logger.debug(
+                "Starting loop with joblist %s and failed list %s",
+                ", ".join(joblist),
+                ", ".join(failed),
+            )
             for monitor in joblist:
                 if monitor in failed:
                     module_logger.error(
                         "Received a failed logger in the joblist: %s", monitor
                     )
                     continue
-                module_logger.debug("Trying monitor: %s", monitor)
                 if self.monitors[monitor].remaining_dependencies:
                     # this monitor has outstanding deps, put it on the new joblist for next loop
                     failed_deps = set(
@@ -479,49 +514,23 @@ class SimpleMonitor:
                         module_logger.warning(
                             "Monitor %s has failed dependencies %s, skipping",
                             monitor,
-                            failed_deps,
+                            ", ".join(failed_deps),
                         )
                         self.monitors[monitor].record_skip(", ".join(failed_deps))
+                        skiplist.append(monitor)
                     else:
                         new_joblist.append(monitor)
-                        module_logger.debug(
-                            "Added %s to new joblist, is now %s", monitor, new_joblist
-                        )
+                        module_logger.debug("Added %s to new joblist", monitor)
                     continue
-                try:
-                    if self.monitors[monitor].should_run():
-                        not_run = False
-                        start_time = time.time()
-                        self.monitors[monitor].run_test()
-                        end_time = time.time()
-                        self.monitors[monitor].last_run_duration = int(
-                            end_time - start_time
-                        )
-                    else:
-                        not_run = True
-                        self.monitors[monitor].record_skip(None)
-                        module_logger.info("Not run: %s", monitor)
-                except Exception as exception:
-                    module_logger.exception(
-                        "Monitor %s threw exception during run_test()", monitor
+            for monitor in joblist:
+                if monitor in new_joblist or monitor in skiplist:
+                    module_logger.debug(
+                        "Skipping monitor %s because it's in the new job list or the skiplist",
+                        monitor,
                     )
-                    self.monitors[monitor].record_fail(
-                        "Unhandled exception: {}".format(exception)
-                    )
-                if self.monitors[monitor].error_count > 0:
-                    if self.monitors[monitor].virtual_fail_count() == 0:
-                        module_logger.warning(
-                            "monitor failed but within tolerance: %s", monitor
-                        )
-                    else:
-                        module_logger.error(
-                            "monitor failed: %s (%s)",
-                            monitor,
-                            self.monitors[monitor].last_result,
-                        )
-                else:
-                    if not not_run:
-                        module_logger.info("monitor passed: %s", monitor)
+                    continue
+                module_logger.debug("Trying monitor: %s", monitor)
+                if self._run_monitor(self.monitors[monitor]):
                     for monitor2 in joblist:
                         self.monitors[monitor2].dependency_succeeded(monitor)
             joblist = copy.copy(new_joblist)
