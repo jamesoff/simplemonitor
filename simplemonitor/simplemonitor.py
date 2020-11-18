@@ -493,7 +493,6 @@ class SimpleMonitor:
         self.reset_monitors()
 
         joblist = [k for (k, v) in self.monitors.items() if v.enabled]
-        joblist = self.sort_joblist(joblist)
         while joblist:
             new_joblist = []  # type: List[str]
             skiplist = []  # type: List[str]
@@ -530,6 +529,7 @@ class SimpleMonitor:
                             ", ".join(self.monitors[monitor].remaining_dependencies),
                         )
                     continue
+            joblist = self.sort_joblist(joblist)
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 future_to_monitor = {}
                 for monitor in joblist:
