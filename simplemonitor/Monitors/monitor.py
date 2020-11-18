@@ -64,8 +64,9 @@ class Monitor:
         self.name = name
         self._deps = []  # type: List[str]
         self.monitor_logger = logging.getLogger("simplemonitor.monitor-" + self.name)
-        self._dependencies = self.get_config_option(
-            "depend", required_type="[str]", default=list()
+        self._dependencies = cast(
+            List[str],
+            self.get_config_option("depend", required_type="[str]", default=list()),
         )
         self._urgent = self.get_config_option(
             "urgent", required_type="bool", default=True
