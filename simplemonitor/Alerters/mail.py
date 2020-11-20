@@ -62,12 +62,23 @@ class EMailAlerter(Alerter):
                     server = smtplib.SMTP(self.mail_host, self.mail_port)
                 elif self.ssl == "yes":
                     server = smtplib.SMTP_SSL(self.mail_host, self.mail_port)
+                else:
+                    self.alerter_logger.critical(
+                        "Cannot send mail, alerter's ssl configuration is broken"
+                    )
+                    return
 
                 if self.ssl == "starttls":
                     server.starttls()
 
                 if self.username is not None:
-                    server.login(self.username, self.password)
+                    try:
+                        server.login(self.username, self.password)
+                    except smtplib.SMTPNotSupportedError:
+                        self.alerter_logger.exception(
+                            "You may need to add ssl=starttls and/or port=587 to your alerter config"
+                        )
+                        return
                 server.sendmail(
                     self.from_addr, self.to_addr.split(";"), message.as_string()
                 )
