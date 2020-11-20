@@ -62,6 +62,11 @@ class EMailAlerter(Alerter):
                     server = smtplib.SMTP(self.mail_host, self.mail_port)
                 elif self.ssl == "yes":
                     server = smtplib.SMTP_SSL(self.mail_host, self.mail_port)
+                else:
+                    self.alerter_logger.critical(
+                        "Cannot send mail, alerter's ssl configuration is broken"
+                    )
+                    return
 
                 if self.ssl == "starttls":
                     server.starttls()
