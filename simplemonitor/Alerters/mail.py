@@ -72,7 +72,13 @@ class EMailAlerter(Alerter):
                     server.starttls()
 
                 if self.username is not None:
-                    server.login(self.username, self.password)
+                    try:
+                        server.login(self.username, self.password)
+                    except smtplib.SMTPNotSupportedError:
+                        self.alerter_logger.exception(
+                            "You may need to add ssl=starttls and/or port=587 to your alerter config"
+                        )
+                        return
                 server.sendmail(
                     self.from_addr, self.to_addr.split(";"), message.as_string()
                 )
