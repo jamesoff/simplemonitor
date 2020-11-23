@@ -100,6 +100,7 @@ You do not need to specify the `aws_*` settings if suitable values are available
 | port | the port the email server is listening to. | no | 25 |
 | from | the email address the email should come from. | yes | |
 | to | the email address to email should go to. You can set multiple addresses separated by ; | yes | |
+| cc | the email address to cc the mail to. You can set multiple addresses separated by ; | no | |
 | username | username to log into the SMTP server | no | |
 | password | password to log into the SMTP server | no | |
 | ssl | `starttls` to use StartTLS; `yes` to use SMTP_SSL (untested); otherwise no SSL is used at all | no | |

@@ -25,6 +25,7 @@ class EMailAlerter(Alerter):
         self.to_addr = cast(
             str, self.get_config_option("to", required=True, allow_empty=False)
         )
+        self.cc_addr = cast(Optional[str], self.get_config_option("cc", required=False))
         self.mail_port = cast(
             int, self.get_config_option("port", required_type="int", default=25)
         )
@@ -46,7 +47,11 @@ class EMailAlerter(Alerter):
 
         message = MIMEMultipart()
         message["From"] = self.from_addr
-        message["To"] = self.to_addr
+        message["To"] = self.to_addr.replace(";", ",")
+        envelope_to = self.to_addr.split(";")
+        if self.cc_addr:
+            message["CC"] = self.cc_addr.replace(";", ",")
+            envelope_to.extend(self.cc_addr.split(";"))
 
         if alert_type == AlertType.NONE:
             return
@@ -79,9 +84,7 @@ class EMailAlerter(Alerter):
                             "You may need to add ssl=starttls and/or port=587 to your alerter config"
                         )
                         return
-                server.sendmail(
-                    self.from_addr, self.to_addr.split(";"), message.as_string()
-                )
+                server.sendmail(self.from_addr, envelope_to, message.as_string())
                 server.quit()
             except Exception:
                 self.alerter_logger.exception("couldn't send mail")
