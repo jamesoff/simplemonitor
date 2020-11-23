@@ -56,6 +56,14 @@ These options are common to all logger types.
     * ``timestamp`` (UNIX timestamp)
     * ``iso8601`` (``YYYY-MM-DDTHH:MM:SS``)
 
+.. confval:: heartbeat
+
+    :type: bool
+    :required: false
+    :default: ``false``
+
+    if set, the logger only logs for monitors which executed on an iteration. Intended to be combined with the :ref:`gap<gap>` property of a Monitor.
+
 .. _loggers-list:
 
 Loggers
