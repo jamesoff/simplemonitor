@@ -19,6 +19,7 @@ from .Loggers.logger import Logger
 from .Loggers.logger import all_types as all_logger_types
 from .Loggers.logger import get_class as get_logger_class
 from .Loggers.network import Listener
+from .Monitors.compound import CompoundMonitor
 from .Monitors.monitor import Monitor, MonitorState
 from .Monitors.monitor import all_types as all_monitor_types
 from .Monitors.monitor import get_class as get_monitor_class
@@ -508,6 +509,19 @@ class SimpleMonitor:
                         "Received a failed logger in the joblist: %s", monitor
                     )
                     continue
+                if self.monitors[monitor].monitor_type == "compound":
+                    # special case handling for compound monitors
+                    compound_monitor = cast(CompoundMonitor, self.monitors[monitor])
+                    needed_monitors = set(compound_monitor.monitors)
+                    remaining_monitors = needed_monitors & set(joblist)
+                    if remaining_monitors:
+                        module_logger.debug(
+                            "Added compound monitor %s to new joblist due to outstanding deps %s",
+                            monitor,
+                            remaining_monitors,
+                        )
+                        new_joblist.append(monitor)
+                        continue
                 if self.monitors[monitor].remaining_dependencies:
                     # this monitor has outstanding deps, put it on the new joblist for next loop
                     failed_deps = set(
