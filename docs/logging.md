@@ -13,6 +13,7 @@ The types of loggers are:
 * [logfile](#logfile): Records a logfile of the result of every monitor, or only the monitors which failed. Each line is preceeded by the current UNIX timestamp.
 * [html](#html): Writes an HTML file showing the status of all monitors (including remote ones).
 * [network](#network): Sends status of all monitors to a remote host.
+* [seq](#seq): Sends status of all monitors to a seq log server
 * [json](#json): Writes a JSON file describing the state of all the monitors
 * [mqtt](#mqtt): Send monitor state via MQTT
 
@@ -57,6 +58,16 @@ The section name should be the name of your logger. This is the name you should 
 The supplied header file includes JavaScript to notify you if the page either doesn’t auto-refresh, or if SimpleMonitor has stopped updating it. This requires your machine running SimpleMonitor and the machine you are browsing from to agree on what the time is (timezone doesn’t matter)!
 
 You can use the `upload_command` setting to specify a command to push the generated files to another location (e.g. a web server, an S3 bucket etc). I'd suggest putting the commands in a script and just specifying that script as the value for this setting.
+
+### <a name="seq"></a>seq logger
+
+This logger is used to send status reports of all monitors to a seq log server. The logger must be configured with the seq *endpoint* parameter, for example http://10.0.0.100:5341/api/events/raw 
+
+| setting | description | required | default |
+|---|---|---|---|
+| endpoint | Full URI for the endoint on the seq server  (e.g. http://localhost:5341/api/events/seq) | yes | |
+
+From their website, 'Seq creates the visibility you need to quickly identify and diagnose problems in complex applications and microservices'. See https://datalust.co for more information on Seq
 
 ### <a name="network"></a>network logger
 
