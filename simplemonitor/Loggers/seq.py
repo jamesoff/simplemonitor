@@ -43,13 +43,29 @@ class SeqLogger(Logger):
         # Potentially, would need to add a header for ApiKey
 
         # Send message to indicate we have started logging
-        self.log_to_seq(self.endpoint, 'SeqLogger', 'simpleMonitor', '__init__', None, 'logging enabled for simpleMonitor', False)
+        self.log_to_seq(
+            self.endpoint,
+            "SeqLogger",
+            "simpleMonitor",
+            "__init__",
+            None,
+            "logging enabled for simpleMonitor",
+            False,
+        )
 
     def save_result2(self, name: str, monitor: Monitor) -> None:
         try:
             is_fail = monitor.test_success() is False
 
-            self.log_to_seq(self.endpoint, name, monitor.name, monitor.monitor_type, str(monitor.get_params()), monitor.describe(), is_fail)
+            self.log_to_seq(
+                self.endpoint,
+                name,
+                monitor.name,
+                monitor.monitor_type,
+                str(monitor.get_params()),
+                monitor.describe(),
+                is_fail,
+            )
         except Exception:
             self.logger_logger.exception("Error sending to seq in %s", monitor.name)
 
@@ -57,7 +73,9 @@ class SeqLogger(Logger):
         return "Sends simple log to seq using raw endpoint"
         # From https://raw.githubusercontent.com/eifinger/appdaemon-scripts/master/seqSink/seqSink.py
 
-    def log_to_seq(self, endpoint, name, app_name, monitor_type, params, description, is_fail):
+    def log_to_seq(
+        self, endpoint, name, app_name, monitor_type, params, description, is_fail
+    ):
         event_data = {
             "Timestamp": str(datetime.datetime.now()),
             "Level": "Error" if is_fail is True else "Information",
@@ -74,17 +92,16 @@ class SeqLogger(Logger):
             event_data["Properties"]["Params"] = params
 
         request_body = {"Events": [event_data]}
-     
+
         try:
             _ = json.dumps(request_body)  # This just checks it is valid...
         except TypeError:
-            self.alerter_logger.error("Could not serialise %s", request_body) 
+            self.alerter_logger.error("Could not serialise %s", request_body)
             return
-    
+
         try:
             r = requests.post(self.endpoint, json=request_body)
             if not r.status_code == 200 and not r.status_code == 201:
                 self.alerter_logger.error("POST to seq failed with status code: %s", r)
         except Exception:
             self.alerter_logger.exception("Failed to log to seq")
-
