@@ -75,19 +75,16 @@ class SeqLogger(Logger):
 
         request_body = {"Events": [event_data]}
      
-        print(is_fail)
-        print(request_body)
-
         try:
-            request_body_json = json.dumps(request_body)  # This just checks it is valid...
+            _ = json.dumps(request_body)  # This just checks it is valid...
         except TypeError:
-            self.log(f"Could not serialize {request_body}")
+            self.alerter_logger.error("Could not serialise %s", request_body) 
             return
     
         try:
             r = requests.post(self.endpoint, json=request_body)
             if not r.status_code == 200 and not r.status_code == 201:
-                self.alerter_logger.error("POST to slack webhook failed: %s", r)
+                self.alerter_logger.error("POST to seq failed with status code: %s", r)
         except Exception:
             self.alerter_logger.exception("Failed to log to seq")
 
