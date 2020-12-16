@@ -31,7 +31,7 @@ colorlog = "^4.4.0"
 paho-mqtt = "^1.5.1"
 ping3 = "^2.6.6"
 psutil = "^5.7.2"
-pyOpenSSL = "^19.1.0"
+pyOpenSSL = ">=19.1,<21.0"
 requests = "^2.24.0"
 pync = {version = "^2.0.3", platform = "darwin"}
 pywin32 = {version = ">=228,<301", platform = "win32"}
