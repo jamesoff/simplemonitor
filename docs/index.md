@@ -55,9 +55,15 @@ Again, adding more logging/alerting methods is simply a case of writing some Pyt
 
 ## Getting started
 
+SimpleMonitor requires Python >= 3.6.2 (check with `python -V`). You may need to install something like `python3-pip` with your package manager to get the right version installed. Make sure that the `pip` you use in the command below is the one for Python 3. (Again, check with `pip -V`). It might be called `pip3`.
+
 * `pip install simplemonitor` or `pip install --user simplemonitor`
 
 If you want to be able to query the Ring API for your doorbell battery level, use `simplemonitor[ring]`
+
+(Ubuntu 20.04 users may find [this page](https://linuxize.com/post/how-to-install-pip-on-ubuntu-20.04/) helpful for setting up Python 3.)
+
+I quite like [pyenv](https://github.com/pyenv/pyenv) for installing different versions of Python, instead of using the system package manager. You may also want to check out [pipx](https://pypi.org/project/pipx/) which lets you easily install tools in their own virtualenv.
 
 * Create `monitor.ini` and `monitors.ini`. See [Configuration](configuration.html).
 
