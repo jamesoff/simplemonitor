@@ -75,7 +75,10 @@ def main() -> None:
         "--config",
         dest="config",
         default="monitor.ini",
-        help="configuration file",
+        help=(
+            "configuration file (this is the main config; "
+            "you also need monitors.ini (default filename)"
+        ),
     )
     output_group.add_argument(
         "-H",

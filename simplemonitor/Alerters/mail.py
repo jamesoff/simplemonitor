@@ -35,8 +35,6 @@ class EMailAlerter(Alerter):
             Optional[str],
             self.get_config_option("ssl", allowed_values=["starttls", "yes", None]),
         )
-        if self.ssl == "yes":
-            self.alerter_logger.warning("ssl=yes for email alerter is untested")
 
         self.support_catchup = True
 
