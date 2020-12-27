@@ -11,7 +11,7 @@ from unittest.mock import patch
 
 from simplemonitor import Alerters, monitor, simplemonitor
 from simplemonitor.Loggers import network
-from simplemonitor.Monitors.monitor import MonitorNull
+from simplemonitor.Monitors.monitor import MonitorFail, MonitorNull
 
 
 class TestMonitor(unittest.TestCase):
@@ -121,3 +121,38 @@ class TestNetworkMonitors(unittest.TestCase):
         s.update_remote_monitor(data, "remote.host")
         self.assertIn("test1", s.remote_monitors["remote.host"])
         self.assertNotIn("test2", s.remote_monitors["remote.host"])
+
+
+class TestFailedLogic(unittest.TestCase):
+    def test_disabled(self):
+        s = simplemonitor.SimpleMonitor("tests/monitor-empty.ini")
+        m1 = MonitorFail("fail", config_options={})
+        m2 = MonitorNull("null", config_options={"enabled": "0"})
+        s.add_monitor("fail", m1)
+        s.add_monitor("null", m2)
+        m2.reset_dependencies()
+        m1.run_test()
+        failed = s._failed_monitors()
+        self.assertListEqual(["fail", "null"], failed)
+
+    def test_no_disabled(self):
+        s = simplemonitor.SimpleMonitor("tests/monitor-empty.ini")
+        m1 = MonitorFail("fail", config_options={})
+        m2 = MonitorNull("null", config_options={})
+        s.add_monitor("fail", m1)
+        s.add_monitor("null", m2)
+        m2.reset_dependencies()
+        m1.run_test()
+        failed = s._failed_monitors()
+        self.assertListEqual(["fail"], failed)
+
+    def test_no_failed(self):
+        s = simplemonitor.SimpleMonitor("tests/monitor-empty.ini")
+        m1 = MonitorNull("null1", config_options={})
+        m2 = MonitorNull("null2", config_options={})
+        s.add_monitor("null1", m1)
+        s.add_monitor("null2", m2)
+        m2.reset_dependencies()
+        m1.run_test()
+        failed = s._failed_monitors()
+        self.assertListEqual([], failed)

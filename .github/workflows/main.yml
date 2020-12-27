@@ -30,6 +30,8 @@ jobs:
         run: poetry install
       - name: Integration tests
         run: make integration-tests
+      - name: Integration tests (threaded)
+        run: make integration-tests-threaded
       - name: Config environment variables tests
         run: make env-test
       - name: Unit tests
