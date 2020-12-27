@@ -236,3 +236,39 @@ def check_group_match(group: str, group_list: List[str]) -> bool:
     if group in group_list:
         return True
     return False
+
+
+def size_string_to_bytes(s: str) -> Optional[int]:
+    if s is None:
+        return None
+    if s.endswith("G"):
+        gigs = int(s[:-1])
+        _bytes = gigs * (1024 ** 3)
+    elif s.endswith("M"):
+        megs = int(s[:-1])
+        _bytes = megs * (1024 ** 2)
+    elif s.endswith("K"):
+        kilos = int(s[:-1])
+        _bytes = kilos * 1024
+    else:
+        return int(s)
+    return _bytes
+
+
+def bytes_to_size_string(b: int) -> str:
+    """Convert a number in bytes to a sensible unit."""
+
+    kb = 1024
+    mb = kb * 1024
+    gb = mb * 1024
+    tb = gb * 1024
+
+    if b > tb:
+        return "%0.2fTiB" % (b / float(tb))
+    if b > gb:
+        return "%0.2fGiB" % (b / float(gb))
+    if b > mb:
+        return "%0.2fMiB" % (b / float(mb))
+    if b > kb:
+        return "%0.2fKiB" % (b / float(kb))
+    return str(b)
