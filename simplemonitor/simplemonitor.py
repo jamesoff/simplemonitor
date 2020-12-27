@@ -10,7 +10,7 @@ import sys
 import time
 from pathlib import Path
 from socket import gethostname
-from typing import Any, Dict, List, Optional, Union, cast
+from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 from .Alerters.alerter import Alerter
 from .Alerters.alerter import all_types as all_alerter_types
@@ -495,54 +495,7 @@ class SimpleMonitor:
 
         joblist = [k for (k, v) in self.monitors.items() if v.enabled]
         while joblist:
-            new_joblist = []  # type: List[str]
-            skiplist = []  # type: List[str]
-            failed = self._failed_monitors()
-            module_logger.debug(
-                "Starting loop with joblist %s and failed list %s",
-                ", ".join(joblist),
-                ", ".join(failed),
-            )
-            for monitor in joblist:
-                if monitor in failed:
-                    module_logger.error(
-                        "Received a failed logger in the joblist: %s", monitor
-                    )
-                    continue
-                if self.monitors[monitor].monitor_type == "compound":
-                    # special case handling for compound monitors
-                    compound_monitor = cast(CompoundMonitor, self.monitors[monitor])
-                    needed_monitors = set(compound_monitor.monitors)
-                    remaining_monitors = needed_monitors & set(joblist)
-                    if remaining_monitors:
-                        module_logger.debug(
-                            "Added compound monitor %s to new joblist due to outstanding deps %s",
-                            monitor,
-                            remaining_monitors,
-                        )
-                        new_joblist.append(monitor)
-                        continue
-                if self.monitors[monitor].remaining_dependencies:
-                    # this monitor has outstanding deps, put it on the new joblist for next loop
-                    failed_deps = set(
-                        self.monitors[monitor].remaining_dependencies
-                    ).intersection(failed)
-                    if len(failed_deps) > 0:
-                        module_logger.warning(
-                            "Monitor %s has failed dependencies %s, skipping",
-                            monitor,
-                            ", ".join(failed_deps),
-                        )
-                        self.monitors[monitor].record_skip(", ".join(failed_deps))
-                        skiplist.append(monitor)
-                    else:
-                        new_joblist.append(monitor)
-                        module_logger.debug(
-                            "Added %s to new joblist due to outstanding deps %s",
-                            monitor,
-                            ", ".join(self.monitors[monitor].remaining_dependencies),
-                        )
-                    continue
+            new_joblist, skiplist = self._prepare_lists(joblist)
             joblist = self.sort_joblist(joblist)
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 future_to_monitor = {}
@@ -571,6 +524,57 @@ class SimpleMonitor:
                             "Exception for monitor %s during thread execution", monitor
                         )
             joblist = copy.copy(new_joblist)
+
+    def _prepare_lists(self, joblist: List[str]) -> Tuple[List[str], List[str]]:
+        failed = self._failed_monitors()
+        module_logger.debug(
+            "Starting loop with joblist %s and failed list %s",
+            ", ".join(joblist),
+            ", ".join(failed),
+        )
+        new_joblist = []  # List[str]
+        skiplist = []  # List[str]
+        for monitor in joblist:
+            if monitor in failed:
+                module_logger.error(
+                    "Received a failed logger in the joblist: %s", monitor
+                )
+                continue
+            if self.monitors[monitor].monitor_type == "compound":
+                # special case handling for compound monitors
+                compound_monitor = cast(CompoundMonitor, self.monitors[monitor])
+                needed_monitors = set(compound_monitor.monitors)
+                remaining_monitors = needed_monitors & set(joblist)
+                if remaining_monitors:
+                    module_logger.debug(
+                        "Added compound monitor %s to new joblist due to outstanding deps %s",
+                        monitor,
+                        remaining_monitors,
+                    )
+                    new_joblist.append(monitor)
+                    continue
+            if self.monitors[monitor].remaining_dependencies:
+                # this monitor has outstanding deps, put it on the new joblist for next loop
+                failed_deps = set(
+                    self.monitors[monitor].remaining_dependencies
+                ).intersection(failed)
+                if len(failed_deps) > 0:
+                    module_logger.warning(
+                        "Monitor %s has failed dependencies %s, skipping",
+                        monitor,
+                        ", ".join(failed_deps),
+                    )
+                    self.monitors[monitor].record_skip(", ".join(failed_deps))
+                    skiplist.append(monitor)
+                else:
+                    new_joblist.append(monitor)
+                    module_logger.debug(
+                        "Added %s to new joblist due to outstanding deps %s",
+                        monitor,
+                        ", ".join(self.monitors[monitor].remaining_dependencies),
+                    )
+                continue
+        return (new_joblist, skiplist)
 
     def log_result(self, logger: Logger) -> None:
         """Use the given logger object to log our state."""
