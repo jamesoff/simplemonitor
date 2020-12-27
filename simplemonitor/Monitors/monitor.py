@@ -108,8 +108,32 @@ class Monitor:
         if self._first_load is None:
             self._first_load = arrow.utcnow()
 
-    def get_config_option(self, key: str, **kwargs: Any) -> Any:
-        return get_config_option(self._config_options, key, **kwargs)
+    def get_config_option(
+        self,
+        key: str,
+        *,
+        default: Any = None,
+        required: bool = False,
+        required_type: str = "str",
+        allowed_values: Any = None,
+        allow_empty: bool = True,
+        minimum: Optional[Union[int, float]] = None,
+        maximum: Optional[Union[int, float]] = None,
+    ) -> Any:
+        """Get a config value.
+
+        Throws the right flavour exception if something is wrong."""
+        return get_config_option(
+            self._config_options,
+            key,
+            default=default,
+            required=required,
+            required_type=required_type,
+            allowed_values=allowed_values,
+            allow_empty=allow_empty,
+            minimum=minimum,
+            maximum=maximum,
+        )
 
     @property
     def dependencies(self) -> List[str]:

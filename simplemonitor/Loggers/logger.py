@@ -7,7 +7,7 @@ Loggers process every monitor, every iteration, to record their state in some fa
 
 
 import logging
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, Dict, List, Optional, Union, cast
 
 from ..Monitors.monitor import Monitor
 from ..util import get_config_option, subclass_dict_handler
@@ -56,11 +56,32 @@ class Logger:
         Includes but not limited to refresh interval, known remote instances, etc"""
         self._global_info = info
 
-    def get_config_option(self, key: str, **kwargs: Any) -> Any:
+    def get_config_option(
+        self,
+        key: str,
+        *,
+        default: Any = None,
+        required: bool = False,
+        required_type: str = "str",
+        allowed_values: Any = None,
+        allow_empty: bool = True,
+        minimum: Optional[Union[int, float]] = None,
+        maximum: Optional[Union[int, float]] = None,
+    ) -> Any:
         """Get a config value.
 
         Throws the right flavour exception if something is wrong."""
-        return get_config_option(self._config_options, key, **kwargs)
+        return get_config_option(
+            self._config_options,
+            key,
+            default=default,
+            required=required,
+            required_type=required_type,
+            allowed_values=allowed_values,
+            allow_empty=allow_empty,
+            minimum=minimum,
+            maximum=maximum,
+        )
 
     def hup(self) -> None:
         """Close and reopen our log file, if supported.
