@@ -13,6 +13,9 @@ flake8:
 	poetry run flake8 *.py simplemonitor/
 
 integration-tests:
+	PATH="$(MOCKSPATH)$(PATH)" $(PIPENV) run coverage run monitor.py -1 -v -d -f $(INTEGRATION_CONFIG) -j 1
+
+integration-tests-threaded:
 	PATH="$(MOCKSPATH)$(PATH)" $(PIPENV) run coverage run monitor.py -1 -v -d -f $(INTEGRATION_CONFIG)
 
 env-test:

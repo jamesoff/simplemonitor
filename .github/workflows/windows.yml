@@ -30,6 +30,8 @@ jobs:
         run: mkdir html
       - name: Integration tests
         run: make integration-tests
+      - name: Integration tests (threaded)
+        run: make integration-tests-threaded
       - name: Unit tests
         run: make unit-test
       - uses: codecov/codecov-action@v1
