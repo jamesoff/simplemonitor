@@ -12,7 +12,6 @@ import arrow
 
 from ..Monitors.monitor import Monitor
 from ..util import (
-    AlerterConfigurationError,
     MonitorState,
     check_group_match,
     format_datetime,
@@ -166,7 +165,6 @@ class Alerter:
     def get_config_option(
         self, key: str, **kwargs: Any
     ) -> Union[None, str, int, float, bool, List[str], List[int]]:
-        kwargs["exception"] = AlerterConfigurationError
         return get_config_option(self._config_options, key, **kwargs)
 
     @property

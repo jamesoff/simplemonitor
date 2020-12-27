@@ -10,7 +10,7 @@ import logging
 from typing import Any, Dict, List, Optional, cast
 
 from ..Monitors.monitor import Monitor
-from ..util import LoggerConfigurationError, get_config_option, subclass_dict_handler
+from ..util import get_config_option, subclass_dict_handler
 
 
 class Logger:
@@ -26,7 +26,7 @@ class Logger:
 
     def __init__(self, config_options: Dict[str, Any]) -> None:
         self._config_options = config_options
-        self.name = self.get_config_option("_name", default="unnamed")
+        self.name = cast(str, self.get_config_option("_name", default="unnamed"))
         self.logger_logger = logging.getLogger("simplemonitor.logger-" + self.name)
         self._dependencies = cast(
             List[str],
@@ -60,7 +60,6 @@ class Logger:
         """Get a config value.
 
         Throws the right flavour exception if something is wrong."""
-        kwargs["exception"] = LoggerConfigurationError
         return get_config_option(self._config_options, key, **kwargs)
 
     def hup(self) -> None:

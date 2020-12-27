@@ -20,7 +20,6 @@ from typing import Any, List, NoReturn, Optional, Tuple, Union, cast
 import arrow
 
 from ..util import (
-    MonitorConfigurationError,
     MonitorState,
     UpDownTime,
     format_datetime,
@@ -110,7 +109,6 @@ class Monitor:
             self._first_load = arrow.utcnow()
 
     def get_config_option(self, key: str, **kwargs: Any) -> Any:
-        kwargs["exception"] = MonitorConfigurationError
         return get_config_option(self._config_options, key, **kwargs)
 
     @property

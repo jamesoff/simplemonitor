@@ -2,7 +2,6 @@
 import unittest
 
 from simplemonitor.Monitors import host
-from simplemonitor.Monitors.monitor import MonitorConfigurationError
 
 
 class TestHostMonitors(unittest.TestCase):
@@ -16,12 +15,12 @@ class TestHostMonitors(unittest.TestCase):
 
     def test_DiskSpace_brokenConfigOne(self):
         config_options = {}
-        with self.assertRaises(MonitorConfigurationError):
+        with self.assertRaises(ValueError):
             host.MonitorDiskSpace("test", config_options)
 
     def test_DiskSpace_brokenConfigTwo(self):
         config_options = {"partition": "/"}
-        with self.assertRaises(MonitorConfigurationError):
+        with self.assertRaises(ValueError):
             host.MonitorDiskSpace("test", config_options)
 
     def test_DiskSpace_brokenConfigThree(self):

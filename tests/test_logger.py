@@ -25,7 +25,7 @@ class TestLogger(unittest.TestCase):
         )
 
     def test_dependencies(self):
-        config_options = {"depend": ["a", "b"]}
+        config_options = {"depend": "a, b"}
         test_logger = logger.Logger(config_options)
         self.assertEqual(
             test_logger.dependencies,

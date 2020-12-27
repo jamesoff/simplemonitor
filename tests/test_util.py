@@ -46,7 +46,7 @@ class TestUtil(unittest.TestCase):
             util.get_config_option(config_options, "test_bool4", required_type="bool"),
             False,
         )
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             util.get_config_option(["not a dict"], "")
         with self.assertRaises(ValueError):
             util.get_config_option(config_options, "missing_value", required=True)
@@ -76,10 +76,6 @@ class TestUtil(unittest.TestCase):
                 config_options,
                 "test_string",
                 allowed_values=["other string", "other other string"],
-            )
-        with self.assertRaises(NotImplementedError):
-            util.get_config_option(
-                "not a dict", "doesn't matter", exception=NotImplementedError
             )
         with self.assertRaises(ValueError):
             util.get_config_option(

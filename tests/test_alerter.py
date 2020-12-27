@@ -55,7 +55,7 @@ class TestAlerter(unittest.TestCase):
             "time_lower": "10:00",
             "time_upper": "11:00",
         }
-        with self.assertRaises(util.AlerterConfigurationError):
+        with self.assertRaises(ValueError):
             alerter.Alerter(config_options)
 
     def test_days(self):
