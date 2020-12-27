@@ -40,7 +40,8 @@ class SimpleMonitor:
         no_network: bool = False,
         max_loops: int = -1,
         heartbeat: bool = True,
-        one_shot: bool = False
+        one_shot: bool = False,
+        max_workers: Optional[int] = None
     ) -> None:
         """Main class turn on."""
         if isinstance(config_file, str):
@@ -69,6 +70,7 @@ class SimpleMonitor:
         self.heartbeat = heartbeat
         self.one_shot = one_shot
         self.pidfile = None  # type: Optional[str]
+        self._max_workers = max_workers
 
         self._setup_signals()
         self._load_config()
@@ -497,7 +499,9 @@ class SimpleMonitor:
         while joblist:
             new_joblist, skiplist = self._prepare_lists(joblist)
             joblist = self.sort_joblist(joblist)
-            with concurrent.futures.ThreadPoolExecutor() as executor:
+            with concurrent.futures.ThreadPoolExecutor(
+                max_workers=self._max_workers
+            ) as executor:
                 future_to_monitor = {}
                 for monitor in joblist:
                     if monitor in new_joblist or monitor in skiplist:
