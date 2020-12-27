@@ -1,5 +1,7 @@
 # coding=utf-8
 import json
+import logging
+import logging.handlers
 import os
 import shutil
 import socket
@@ -14,7 +16,7 @@ import arrow
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from ..Monitors.monitor import Monitor
-from ..util import format_datetime, short_hostname
+from ..util import format_datetime, short_hostname, size_string_to_bytes
 from ..version import VERSION
 from .logger import Logger, register
 
@@ -114,6 +116,58 @@ class FileLogger(Logger):
 
     def describe(self) -> str:
         return "Writing log file to {0}".format(self.filename)
+
+
+@register
+class FileLoggerNG(Logger):
+    """
+    Log monitor status to a file, Next Generation
+
+    Uses the Python logging library to get features like rotation
+    """
+
+    logger_type = "logfileng"
+
+    def __init__(self, config_options: dict = None) -> None:
+        if config_options is None:
+            config_options = {}
+        super().__init__(config_options)
+        self._logger = logging.getLogger(f"logfileng-{self.name}")
+        rotation_type = self.get_config_option(
+            "rotation_type", allowed_values=["time", "size"]
+        )
+        self.filename = self.get_config_option("filename")
+        self.backup_count = cast(
+            int, self.get_config_option("backup_count", required_type="int", default=1)
+        )
+        if rotation_type == "time":
+            handler = logging.handlers.TimedRotatingFileHandler(
+                filename=self.filename,
+                when=self.get_config_option("when", default="h"),
+                interval=self.get_config_option(
+                    "interval", default=1, required_type="int"
+                ),
+                backupCount=self.backup_count,
+                utc=self.get_config_option("utc", required_type="bool", default=True),
+                encoding="utf-8",
+            )  # type: logging.handlers.BaseRotatingHandler
+        elif rotation_type == "size":
+            max_bytes = size_string_to_bytes(self.get_config_option("max_bytes"))
+            if max_bytes is None:
+                raise ValueError("Missing max_bytes")
+            handler = logging.handlers.RotatingFileHandler(
+                filename=self.filename,
+                maxBytes=max_bytes,
+                backupCount=self.backup_count,
+                encoding="utf-8",
+            )
+        else:
+            raise ValueError(f"Invalid rotation_type {rotation_type}")
+        self._logger.addHandler(handler)
+        # TODO: format
+
+    def save_result2(self, name: str, monitor: Monitor) -> None:
+        self._logger.error("monitor %s says hi", name)
 
 
 @register
