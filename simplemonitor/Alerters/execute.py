@@ -70,6 +70,7 @@ class ExecuteAlerter(Alerter):
             info=monitor.get_result(),
             description=monitor.describe(),
             last_virtual_fail_count=monitor.last_virtual_fail_count(),
+            failure_doc=monitor.failure_doc,
         )
 
         if not self._dry_run:
