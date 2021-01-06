@@ -53,6 +53,7 @@ class Monitor:
 
     _first_load = None  # type: Optional[arrow.Arrow]
     unavailable_seconds = 0  # type: int
+    
 
     def __init__(
         self, name: str = "unnamed", config_options: Optional[dict] = None

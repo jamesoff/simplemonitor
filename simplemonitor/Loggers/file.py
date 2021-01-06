@@ -421,6 +421,7 @@ class MonitorResult(object):
         self.last_run_duration = None  # type: Optional[int]
         self.status = "Fail"
         self.dependencies = []  # type: List[str]
+        self.availability = None # type: Optional[str]
 
     def json_representation(self) -> dict:
         return self.__dict__
@@ -466,6 +467,8 @@ class JsonLogger(Logger):
         result.virtual_fail_count = monitor.virtual_fail_count()
         result.last_run_duration = monitor.last_run_duration
         result.result = monitor.get_result()
+        result.availability = monitor.availability
+        result.first_run = monitor._force_run
         if hasattr(monitor, "was_skipped") and monitor.was_skipped:
             result.status = "Skipped"
         elif monitor.virtual_fail_count() <= 0:
