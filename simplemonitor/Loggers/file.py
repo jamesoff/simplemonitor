@@ -188,13 +188,19 @@ class HTMLLogger(Logger):
             gps = name.split("/")[0]
         except IndexError:
             monitor_name = name
+        
+        if entry["status"] == True:
+            row = (f'<script>L.marker([{gps}], {{icon: markerIcon1}}).addTo(mymap).bindPopup("{monitor_name}").openPopup()</script>\n')
+        else:
+            row = (f'<script>L.marker([{gps}], {{icon: markerIcon2}}).addTo(mymap).bindPopup("{monitor_name}").openPopup()</script>\n')
+        '''
         if row_class:
-            row = f'<tr class="{row_class}">'
+            row = (f'<tr class="{row_class}">')
         else:
             row = (f'<script>L.marker([{gps}]).addTo(mymap).bindPopup("{monitor_name}").openPopup()</script>;')
         row = (
             row
-            + f'<td><span data-toggle="tooltip" data-placement="right" title="{entry["description"]}">{monitor_name}</span></td>'
+            #+ f'<td><span data-toggle="tooltip" data-placement="right" title="{entry["description"]}">{monitor_name}</span></td>'
         )
         
         if cell_class:
@@ -228,6 +234,7 @@ class HTMLLogger(Logger):
         else:
             row = row + f'<td>{entry["age"]}</td>'
         row = row + "</tr>\n"
+        '''
         return row
 
     def save_result2(self, name: str, monitor: Monitor) -> None:
@@ -421,7 +428,6 @@ class MonitorResult(object):
         self.last_run_duration = None  # type: Optional[int]
         self.status = "Fail"
         self.dependencies = []  # type: List[str]
-        self.availability = None # type: Optional[str]
 
     def json_representation(self) -> dict:
         return self.__dict__
@@ -467,8 +473,6 @@ class JsonLogger(Logger):
         result.virtual_fail_count = monitor.virtual_fail_count()
         result.last_run_duration = monitor.last_run_duration
         result.result = monitor.get_result()
-        result.availability = monitor.availability
-        result.first_run = monitor._force_run
         if hasattr(monitor, "was_skipped") and monitor.was_skipped:
             result.status = "Skipped"
         elif monitor.virtual_fail_count() <= 0:

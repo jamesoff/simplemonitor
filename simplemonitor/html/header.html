@@ -43,7 +43,11 @@
 	<div id="mapid" style="fill: 1440px; height: 960px;"></div>
 	<script>
 
-		var mymap = L.map('mapid').setView([47.421583, -120.263214], 7.5);
+		var mymap = L.map('mapid', {
+					center : [47.421583, -125.263214], 
+					zoom : 7.6
+		});
+	
 	
 		L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoiZGFuaWVsZGgyMDYiLCJhIjoiY2szcmpnb2ExMDE2bDNkdDZyanYxcmF4bCJ9.qTBXFkdfzveo6kn3rsBmaQ', {
 			maxZoom: 18,
@@ -53,8 +57,15 @@
 			id: 'mapbox/streets-v11'
 		}).addTo(mymap);
 	
-		
-	
+		var markerIcon1 = L.icon({
+			iconUrl: 'marker-single-up.png',
+			popupAnchor:[11,2]
+		});
+
+		var markerIcon2 = L.icon({
+			iconUrl: 'marker-single-down.png',
+			popupAnchor:[11,2]
+		});
 	</script>
 	<table class="table table-borderless table-striped table-hover table-sm">
 		<tr>

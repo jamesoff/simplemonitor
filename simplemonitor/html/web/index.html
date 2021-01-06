@@ -4,11 +4,15 @@
         <meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-		<title>OK@MSI monitor</title>
+		<title>FAIL@MSI monitor</title>
+
+		<link rel="shortcut icon" type="image/x-icon" href="docs/images/favicon.ico" />
+		<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==" crossorigin=""/>
+		<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
 
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
 		<link rel="stylesheet" type="text/css" href="style.css" />
-		<meta http-equiv="refresh" content="30" />
+		<meta http-equiv="refresh" content="300" />
 		<script language="javascript" type="text/javascript">
 			function too_old() {
 				$("#refresh_badge").removeClass("d-none");
@@ -18,10 +22,10 @@
 			}
 
 			function check_age() {
-				var generated = 1608761012;
+				var generated = 1609962431;
 				var now = Date.parse(new Date()) / 1000;
 				var diff = now - generated;
-				if (diff > (30 * 2)) {
+				if (diff > (300 * 2)) {
 					too_old();
 				}
 			}
@@ -30,12 +34,39 @@
 	</head>
 
 	<body onload="check_age();">
-		<div class="navbar navbar-light bg-light border-bottom border-success" id="summary">
+		<div class="navbar navbar-light bg-light border-bottom border-danger" id="summary">
 			<div class="navbar-brand">SimpleMonitor</div>
-			<div class="navbar-text d-none d-lg-block" id="updated">Updated at 2020-12-23 14:03:32-08:00 by MSI (1.10.0)</div>
+			<div class="navbar-text d-none d-lg-block" id="updated">Updated at 2021-01-06 11:47:11-08:00 by MSI (1.11.0+dev)</div>
 			<div class="navbar-text" id="refresh_status"><span class="badge badge-warning d-none" id="refresh_badge">OUT OF DATE</span></div>
-			<div class="navbar-text"><span class="badge badge-success">1 OK</span>    </div>
+			<div class="navbar-text"><span class="badge badge-success">382 OK</span>  <span class="badge badge-danger">4 FAIL</span>   </div>
 		</div>
+	<div id="mapid" style="fill: 1440px; height: 960px;"></div>
+	<script>
+
+		var mymap = L.map('mapid', {
+					center : [47.421583, -125.263214], 
+					zoom : 7.6
+		});
+	
+	
+		L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoiZGFuaWVsZGgyMDYiLCJhIjoiY2szcmpnb2ExMDE2bDNkdDZyanYxcmF4bCJ9.qTBXFkdfzveo6kn3rsBmaQ', {
+			maxZoom: 18,
+			attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, ' +
+				'<a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+				'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+			id: 'mapbox/streets-v11'
+		}).addTo(mymap);
+	
+		var markerIcon1 = L.icon({
+			iconUrl: 'marker-single-up.png',
+			popupAnchor:[11,2]
+		});
+
+		var markerIcon2 = L.icon({
+			iconUrl: 'marker-single-down.png',
+			popupAnchor:[11,2]
+		});
+	</script>
 	<table class="table table-borderless table-striped table-hover table-sm">
 		<tr>
 			<th scope="col">Monitor</th>
@@ -49,11 +80,396 @@
 			<th scope="col">Last Failure</th>
 			<th scope="col">Age</th>
 			</tr>
-<tr><td><span data-toggle="tooltip" data-placement="right" title="checking host 127.0.0.1 is pingable">somePlace</span></td><td class="table-success">OK</td><td>MSI</td><td><td></td><td>0+00:02:00 (<span data-toggle="tooltip" data-placement="right" title="100.00000%">100.00%</span>)</td><td></td><td></td><td></td><td></td></tr>
+<script>L.marker([46.583,-120.528], {icon: markerIcon2}).addTo(mymap).bindPopup("wsu-icne-bacc").openPopup()</script>
+<script>L.marker([48.245.218,122.338.231], {icon: markerIcon2}).addTo(mymap).bindPopup("stanwood-k12").openPopup()</script>
+<script>L.marker([48.74,-117.419], {icon: markerIcon2}).addTo(mymap).bindPopup("spokane-ione-ctc").openPopup()</script>
+<script>L.marker([48.874,-118.602], {icon: markerIcon2}).addTo(mymap).bindPopup("curlew-k12").openPopup()</script>
+<script>L.marker([25.070.829,80.463.992], {icon: markerIcon1}).addTo(mymap).bindPopup("quileute-k12").openPopup()</script>
+<script>L.marker([45.564,-122.23], {icon: markerIcon1}).addTo(mymap).bindPopup("mountpleasant-k12").openPopup()</script>
+<script>L.marker([45.585,-122.328], {icon: markerIcon1}).addTo(mymap).bindPopup("washougal-k12").openPopup()</script>
+<script>L.marker([45.587,-122.402], {icon: markerIcon1}).addTo(mymap).bindPopup("camas-lib").openPopup()</script>
+<script>L.marker([45.591,-122.401], {icon: markerIcon1}).addTo(mymap).bindPopup("camas-k12").openPopup()</script>
+<script>L.marker([45.620.542,122.048.826], {icon: markerIcon1}).addTo(mymap).bindPopup("skamania-k12").openPopup()</script>
+<script>L.marker([45.625,-122.639], {icon: markerIcon1}).addTo(mymap).bindPopup("waschoolfordeaf-k12").openPopup()</script>
+<script>L.marker([45.63,-122.661], {icon: markerIcon1}).addTo(mymap).bindPopup("fortvancouver-lib").openPopup()</script>
+<script>L.marker([45.631,-122.648], {icon: markerIcon1}).addTo(mymap).bindPopup("waschoolforblind-k12").openPopup()</script>
+<script>L.marker([45.635,-122.653], {icon: markerIcon1}).addTo(mymap).bindPopup("clark-ctc").openPopup()</script>
+<script>L.marker([45.639,-122.606], {icon: markerIcon1}).addTo(mymap).bindPopup("esd112-k12").openPopup()</script>
+<script>L.marker([45.643,-122.626], {icon: markerIcon1}).addTo(mymap).bindPopup("vancouver-k12").openPopup()</script>
+<script>L.marker([45.644,-122.546], {icon: markerIcon1}).addTo(mymap).bindPopup("evergreen-van-k12").openPopup()</script>
+<script>L.marker([45.66,-120.963], {icon: markerIcon1}).addTo(mymap).bindPopup("wishram-k12").openPopup()</script>
+<script>L.marker([45.665.631,122.573.792], {icon: markerIcon1}).addTo(mymap).bindPopup("glenwood-k12").openPopup()</script>
+<script>L.marker([45.695,-121.283], {icon: markerIcon1}).addTo(mymap).bindPopup("lyle-k12").openPopup()</script>
+<script>L.marker([45.701,-121.889], {icon: markerIcon1}).addTo(mymap).bindPopup("stevensoncarson-k12").openPopup()</script>
+<script>L.marker([45.725,-122.633], {icon: markerIcon1}).addTo(mymap).bindPopup("wsu-vancouver-bacc").openPopup()</script>
+<script>L.marker([45.73,-121.488], {icon: markerIcon1}).addTo(mymap).bindPopup("whitesalmon-k12").openPopup()</script>
+<script>L.marker([45.738,-122.488], {icon: markerIcon1}).addTo(mymap).bindPopup("hockinson-k12").openPopup()</script>
+<script>L.marker([45.742,-120.218], {icon: markerIcon1}).addTo(mymap).bindPopup("roosevelt-k12").openPopup()</script>
+<script>L.marker([45.753,-120.9], {icon: markerIcon1}).addTo(mymap).bindPopup("centerville-k12").openPopup()</script>
+<script>L.marker([45.757,-121.65], {icon: markerIcon1}).addTo(mymap).bindPopup("milla-k12").openPopup()</script>
+<script>L.marker([45.784,-122.54], {icon: markerIcon1}).addTo(mymap).bindPopup("battleground-k12").openPopup()</script>
+<script>L.marker([45.797,-122.714], {icon: markerIcon1}).addTo(mymap).bindPopup("ridgefield-k12").openPopup()</script>
+<script>L.marker([45.815,-120.815], {icon: markerIcon1}).addTo(mymap).bindPopup("goldendale-k12").openPopup()</script>
+<script>L.marker([45.861,-122.664], {icon: markerIcon1}).addTo(mymap).bindPopup("lacenter-k12").openPopup()</script>
+<script>L.marker([45.862.121,120.805.837], {icon: markerIcon1}).addTo(mymap).bindPopup("klickitat-k12").openPopup()</script>
+<script>L.marker([45.904,-122.749], {icon: markerIcon1}).addTo(mymap).bindPopup("woodland-k12").openPopup()</script>
+<script>L.marker([45.939,-119.61], {icon: markerIcon1}).addTo(mymap).bindPopup("paterson-k12").openPopup()</script>
+<script>L.marker([45.948,-122.539], {icon: markerIcon1}).addTo(mymap).bindPopup("greenmountain-k12").openPopup()</script>
+<script>L.marker([45.989,-121.516], {icon: markerIcon1}).addTo(mymap).bindPopup("troutlake-k12").openPopup()</script>
+<script>L.marker([45.997854,-120.304794], {icon: markerIcon1}).addTo(mymap).bindPopup("bickleton-k12").openPopup()</script>
+<script>L.marker([46.009,-122.839], {icon: markerIcon1}).addTo(mymap).bindPopup("kalama-k12").openPopup()</script>
+<script>L.marker([46.031,-118.388], {icon: markerIcon1}).addTo(mymap).bindPopup("collegeplace-k12").openPopup()</script>
+<script>L.marker([46.043,-118.672], {icon: markerIcon1}).addTo(mymap).bindPopup("touchet-k12").openPopup()</script>
+<script>L.marker([46.063,-118.344], {icon: markerIcon1}).addTo(mymap).bindPopup("willow-k12").openPopup()</script>
+<script>L.marker([46.065,-118.33], {icon: markerIcon1}).addTo(mymap).bindPopup("wallawalla-k12").openPopup()</script>
+<script>L.marker([46.08,-118.273], {icon: markerIcon1}).addTo(mymap).bindPopup("wallawalla-ctc").openPopup()</script>
+<script>L.marker([46.141,-122.907], {icon: markerIcon1}).addTo(mymap).bindPopup("kelso-k12").openPopup()</script>
+<script>L.marker([46.141,-122.938], {icon: markerIcon1}).addTo(mymap).bindPopup("longview-lib").openPopup()</script>
+<script>L.marker([46.142,-118.15], {icon: markerIcon1}).addTo(mymap).bindPopup("dixie-k12").openPopup()</script>
+<script>L.marker([46.142,-122.956], {icon: markerIcon1}).addTo(mymap).bindPopup("longview-k12").openPopup()</script>
+<script>L.marker([46.144,-122.935], {icon: markerIcon1}).addTo(mymap).bindPopup("lowercolumbia-ctc").openPopup()</script>
+<script>L.marker([46.154,-119.029], {icon: markerIcon1}).addTo(mymap).bindPopup("finley-k12").openPopup()</script>
+<script>L.marker([46.2,-119.01], {icon: markerIcon1}).addTo(mymap).bindPopup("columbiawallawalla-k12").openPopup()</script>
+<script>L.marker([46.201,-123.378], {icon: markerIcon1}).addTo(mymap).bindPopup("wahkiakum-k12").openPopup()</script>
+<script>L.marker([46.241,-119.143], {icon: markerIcon1}).addTo(mymap).bindPopup("esd123-k12").openPopup()</script>
+<script>L.marker([46.252,-119.124], {icon: markerIcon1}).addTo(mymap).bindPopup("columbiabasin-ctc").openPopup()</script>
+<script>L.marker([46.252,-119.738], {icon: markerIcon1}).addTo(mymap).bindPopup("wsu-prosser-bacc").openPopup()</script>
+<script>L.marker([46.267,-118.154], {icon: markerIcon1}).addTo(mymap).bindPopup("waitsburg-k12").openPopup()</script>
+<script>L.marker([46.271,-122.905], {icon: markerIcon1}).addTo(mymap).bindPopup("castlerock-k12").openPopup()</script>
+<script>L.marker([46.274,-119.294], {icon: markerIcon1}).addTo(mymap).bindPopup("richland-k12").openPopup()</script>
+<script>L.marker([46.28,-119.279], {icon: markerIcon1}).addTo(mymap).bindPopup("richland-lib").openPopup()</script>
+<script>L.marker([46.298,-118.32], {icon: markerIcon1}).addTo(mymap).bindPopup("prescott-k12").openPopup()</script>
+<script>L.marker([46.307,-124.038], {icon: markerIcon1}).addTo(mymap).bindPopup("graysharbor-ilwaco-ctc ").openPopup()</script>
+<script>L.marker([46.309,-124.039], {icon: markerIcon1}).addTo(mymap).bindPopup("oceanbeach-k12").openPopup()</script>
+<script>L.marker([46.316,-117.975], {icon: markerIcon1}).addTo(mymap).bindPopup("dayton-k12").openPopup()</script>
+<script>L.marker([46.324,-122.741], {icon: markerIcon1}).addTo(mymap).bindPopup("toutlelake-k12").openPopup()</script>
+<script>L.marker([46.33,-119.263], {icon: markerIcon1}).addTo(mymap).bindPopup("wsu-tricities-bacc").openPopup()</script>
+<script>L.marker([46.339,-120.188], {icon: markerIcon1}).addTo(mymap).bindPopup("granger-k12").openPopup()</script>
+<script>L.marker([46.34,-117.053], {icon: markerIcon1}).addTo(mymap).bindPopup("asotinanatone-k12").openPopup()</script>
+<script>L.marker([46.376,-120.396], {icon: markerIcon1}).addTo(mymap).bindPopup("heritage-pbacc").openPopup()</script>
+<script>L.marker([46.378,-120.732], {icon: markerIcon1}).addTo(mymap).bindPopup("mountadams-k12").openPopup()</script>
+<script>L.marker([46.378,-123.802], {icon: markerIcon1}).addTo(mymap).bindPopup("nasellegraysriver-k12").openPopup()</script>
+<script>L.marker([46.412,-117.044], {icon: markerIcon1}).addTo(mymap).bindPopup("asotincounty-lib").openPopup()</script>
+<script>L.marker([46.413,-117.044], {icon: markerIcon1}).addTo(mymap).bindPopup("clarkston-k12").openPopup()</script>
+<script>L.marker([46.421,-117.068], {icon: markerIcon1}).addTo(mymap).bindPopup("wallawalla-clarkston-ctc").openPopup()</script>
+<script>L.marker([46.437,-120.421], {icon: markerIcon1}).addTo(mymap).bindPopup("wapato-k12").openPopup()</script>
+<script>L.marker([46.442,-118.718], {icon: markerIcon1}).addTo(mymap).bindPopup("star-k12").openPopup()</script>
+<script>L.marker([46.444.144,108.544.659], {icon: markerIcon1}).addTo(mymap).bindPopup("rainier-k12").openPopup()</script>
+<script>L.marker([46.471,-117.6], {icon: markerIcon1}).addTo(mymap).bindPopup("dennyashby-lib").openPopup()</script>
+<script>L.marker([46.473,-117.597], {icon: markerIcon1}).addTo(mymap).bindPopup("pomeroy-k12").openPopup()</script>
+<script>L.marker([46.494.123,122.938.824], {icon: markerIcon1}).addTo(mymap).bindPopup("evaline-k12").openPopup()</script>
+<script>L.marker([46.517.867,11.812.364], {icon: markerIcon1}).addTo(mymap).bindPopup("starbuck-k12").openPopup()</script>
+<script>L.marker([46.533,-122.486], {icon: markerIcon1}).addTo(mymap).bindPopup("mossyrock-k12").openPopup()</script>
+<script>L.marker([46.536,-121.93], {icon: markerIcon1}).addTo(mymap).bindPopup("whitepass-k12").openPopup()</script>
+<script>L.marker([46.550166,-123.132762], {icon: markerIcon1}).addTo(mymap).bindPopup("boistfort-k12").openPopup()</script>
+<script>L.marker([46.553.364,122.282.008], {icon: markerIcon1}).addTo(mymap).bindPopup("morton-k12").openPopup()</script>
+<script>L.marker([46.566,-117.131], {icon: markerIcon1}).addTo(mymap).bindPopup("colton-k12").openPopup()</script>
+<script>L.marker([46.576,-123.299], {icon: markerIcon1}).addTo(mymap).bindPopup("peell-k12").openPopup()</script>
+<script>L.marker([46.582,-122.718], {icon: markerIcon1}).addTo(mymap).bindPopup("onalaska-k12").openPopup()</script>
+<script>L.marker([46.585,-120.53], {icon: markerIcon1}).addTo(mymap).bindPopup("cwu-yakima-bacc").openPopup()</script>
+<script>L.marker([46.585,-120.53], {icon: markerIcon1}).addTo(mymap).bindPopup("yakimavalley-ctc").openPopup()</script>
+<script>L.marker([46.6,-120.51], {icon: markerIcon1}).addTo(mymap).bindPopup("esd105-k12").openPopup()</script>
+<script>L.marker([46.624.826,123.653.091], {icon: markerIcon1}).addTo(mymap).bindPopup("willapavalley-k12").openPopup()</script>
+<script>L.marker([46.631243,-123.056327], {icon: markerIcon1}).addTo(mymap).bindPopup("adna-k12").openPopup()</script>
+<script>L.marker([46.643.937,118.552.545], {icon: markerIcon1}).addTo(mymap).bindPopup("kahlotus-k12").openPopup()</script>
+<script>L.marker([46.65,-122.949], {icon: markerIcon1}).addTo(mymap).bindPopup("chehalis-k12").openPopup()</script>
+<script>L.marker([46.662,-123.792], {icon: markerIcon1}).addTo(mymap).bindPopup("southbend-k12").openPopup()</script>
+<script>L.marker([46.675,-120.713], {icon: markerIcon1}).addTo(mymap).bindPopup("highland-k12").openPopup()</script>
+<script>L.marker([46.678,-123.741], {icon: markerIcon1}).addTo(mymap).bindPopup("graysharbor-raymond-ctc").openPopup()</script>
+<script>L.marker([46.686,-123.726], {icon: markerIcon1}).addTo(mymap).bindPopup("raymond-k12").openPopup()</script>
+<script>L.marker([46.714,-122.946], {icon: markerIcon1}).addTo(mymap).bindPopup("centralia-ctc").openPopup()</script>
+<script>L.marker([46.726,-122.983], {icon: markerIcon1}).addTo(mymap).bindPopup("centralia-k12").openPopup()</script>
+<script>L.marker([46.727,-117.189], {icon: markerIcon1}).addTo(mymap).bindPopup("pullman-k12").openPopup()</script>
+<script>L.marker([46.728,-120.695], {icon: markerIcon1}).addTo(mymap).bindPopup("nachesvalley-k12").openPopup()</script>
+<script>L.marker([46.729,-117.154], {icon: markerIcon1}).addTo(mymap).bindPopup("wsu-puyallup-bacc").openPopup()</script>
+<script>L.marker([46.73,-117.167], {icon: markerIcon1}).addTo(mymap).bindPopup("spokane-pullman-ctc").openPopup()</script>
+<script>L.marker([46.742,-119.893], {icon: markerIcon1}).addTo(mymap).bindPopup("wahluke-k12").openPopup()</script>
+<script>L.marker([46.753,-118.31], {icon: markerIcon1}).addTo(mymap).bindPopup("washtucna-k12").openPopup()</script>
+<script>L.marker([46.801,-123.045], {icon: markerIcon1}).addTo(mymap).bindPopup("rochester-k12").openPopup()</script>
+<script>L.marker([46.814,-117.882], {icon: markerIcon1}).addTo(mymap).bindPopup("lacrosse-k12").openPopup()</script>
+<script>L.marker([46.841,-123.241], {icon: markerIcon1}).addTo(mymap).bindPopup("oakville-k12").openPopup()</script>
+<script>L.marker([46.859.079,12.284.935], {icon: markerIcon1}).addTo(mymap).bindPopup("tenino-k12").openPopup()</script>
+<script>L.marker([46.861,-124.1], {icon: markerIcon1}).addTo(mymap).bindPopup("ocosta-k12").openPopup()</script>
+<script>L.marker([46.87069,-122.26844], {icon: markerIcon1}).addTo(mymap).bindPopup("eatonville-k12").openPopup()</script>
+<script>L.marker([46.892,-117.361], {icon: markerIcon1}).addTo(mymap).bindPopup("colfax-k12 ").openPopup()</script>
+<script>L.marker([46.911,-119.627], {icon: markerIcon1}).addTo(mymap).bindPopup("royal-k12").openPopup()</script>
+<script>L.marker([46.913,-117.071], {icon: markerIcon1}).addTo(mymap).bindPopup("palouse-k12").openPopup()</script>
+<script>L.marker([46.914807,-118.0492], {icon: markerIcon1}).addTo(mymap).bindPopup("benge-k12").openPopup()</script>
+<script>L.marker([46.949,-122.612], {icon: markerIcon1}).addTo(mymap).bindPopup("yelmcommunity-k12").openPopup()</script>
+<script>L.marker([46.955.372,123.772.414], {icon: markerIcon1}).addTo(mymap).bindPopup("northriver-k12").openPopup()</script>
+<script>L.marker([46.956,-123.804], {icon: markerIcon1}).addTo(mymap).bindPopup("graysharbor-ctc").openPopup()</script>
+<script>L.marker([46.974,-118.617], {icon: markerIcon1}).addTo(mymap).bindPopup("lind-k12").openPopup()</script>
+<script>L.marker([46.978,-123.816], {icon: markerIcon1}).addTo(mymap).bindPopup("aberdeen-k12").openPopup()</script>
+<script>L.marker([46.983,-123.912], {icon: markerIcon1}).addTo(mymap).bindPopup("hoquiam-k12").openPopup()</script>
+<script>L.marker([46.984,-123.598], {icon: markerIcon1}).addTo(mymap).bindPopup("montesano-k12").openPopup()</script>
+<script>L.marker([46.986,-122.907], {icon: markerIcon1}).addTo(mymap).bindPopup("washington-lib").openPopup()</script>
+<script>L.marker([46.993,-120.524], {icon: markerIcon1}).addTo(mymap).bindPopup("ellensburg-k12 ").openPopup()</script>
+<script>L.marker([46.995,-122.917], {icon: markerIcon1}).addTo(mymap).bindPopup("esd113-k12").openPopup()</script>
+<script>L.marker([47.0,-120.542], {icon: markerIcon1}).addTo(mymap).bindPopup("cwu-bacc").openPopup()</script>
+<script>L.marker([47.002,-122.674], {icon: markerIcon1}).addTo(mymap).bindPopup("nisqually-nwic").openPopup()</script>
+<script>L.marker([47.003,-123.48], {icon: markerIcon1}).addTo(mymap).bindPopup("satsop-k12").openPopup()</script>
+<script>L.marker([47.005.417,123.406.528], {icon: markerIcon1}).addTo(mymap).bindPopup("elma-k12").openPopup()</script>
+<script>L.marker([47.005.417,123.406.528], {icon: markerIcon1}).addTo(mymap).bindPopup("marymknight-k12").openPopup()</script>
+<script>L.marker([47.006,-117.351], {icon: markerIcon1}).addTo(mymap).bindPopup("steptoe-k12").openPopup()</script>
+<script>L.marker([47.007,-122.91], {icon: markerIcon1}).addTo(mymap).bindPopup("tumwater-k12").openPopup()</script>
+<script>L.marker([47.014,-117.14], {icon: markerIcon1}).addTo(mymap).bindPopup("garfield-k12").openPopup()</script>
+<script>L.marker([47.022,-124.159], {icon: markerIcon1}).addTo(mymap).bindPopup("northbeach-k12").openPopup()</script>
+<script>L.marker([47.024,-122.93], {icon: markerIcon1}).addTo(mymap).bindPopup("southpugetsound-ctc").openPopup()</script>
+<script>L.marker([47.035,-122.895], {icon: markerIcon1}).addTo(mymap).bindPopup("ospi-k12").openPopup()</script>
+<script>L.marker([47.037,-122.888], {icon: markerIcon1}).addTo(mymap).bindPopup("sbctc-olympia-ctc").openPopup()</script>
+<script>L.marker([47.037,-122.888], {icon: markerIcon1}).addTo(mymap).bindPopup("sbctc-sdc-1-ctc").openPopup()</script>
+<script>L.marker([47.037,-122.888], {icon: markerIcon1}).addTo(mymap).bindPopup("sbctc-sdc-2-ctc").openPopup()</script>
+<script>L.marker([47.038,-122.817], {icon: markerIcon1}).addTo(mymap).bindPopup("stmartins-pbacc").openPopup()</script>
+<script>L.marker([47.038,-122.897], {icon: markerIcon1}).addTo(mymap).bindPopup("councilofpresidents-bacc").openPopup()</script>
+<script>L.marker([47.038,-122.897], {icon: markerIcon1}).addTo(mymap).bindPopup("k20programoffice-other").openPopup()</script>
+<script>L.marker([47.038,-122.897], {icon: markerIcon1}).addTo(mymap).bindPopup("wsu-gov-bacc").openPopup()</script>
+<script>L.marker([47.039,-122.9], {icon: markerIcon1}).addTo(mymap).bindPopup("tvw-other").openPopup()</script>
+<script>L.marker([47.041,-122.893], {icon: markerIcon1}).addTo(mymap).bindPopup("wsu-energy-bacc").openPopup()</script>
+<script>L.marker([47.044,-122.83], {icon: markerIcon1}).addTo(mymap).bindPopup("southpugetsound-lacey-ctc").openPopup()</script>
+<script>L.marker([47.046,-122.885], {icon: markerIcon1}).addTo(mymap).bindPopup("olympia-k12").openPopup()</script>
+<script>L.marker([47.048,-123.265], {icon: markerIcon1}).addTo(mymap).bindPopup("mccleary-k12").openPopup()</script>
+<script>L.marker([47.051,-122.824], {icon: markerIcon1}).addTo(mymap).bindPopup("norththurston-k12").openPopup()</script>
+<script>L.marker([47.067,-120.67], {icon: markerIcon1}).addTo(mymap).bindPopup("thorp-k12").openPopup()</script>
+<script>L.marker([47.068,-122.703], {icon: markerIcon1}).addTo(mymap).bindPopup("wahelut-k12").openPopup()</script>
+<script>L.marker([47.074,-122.974], {icon: markerIcon1}).addTo(mymap).bindPopup("tesc-bacc").openPopup()</script>
+<script>L.marker([47.081,-123.019], {icon: markerIcon1}).addTo(mymap).bindPopup("griffin-k12 ").openPopup()</script>
+<script>L.marker([47.081.355,122.054.271], {icon: markerIcon1}).addTo(mymap).bindPopup("carbonado-k12").openPopup()</script>
+<script>L.marker([47.089.059,117.582.133], {icon: markerIcon1}).addTo(mymap).bindPopup("stjohn-k12").openPopup()</script>
+<script>L.marker([47.092.992,122.205.457], {icon: markerIcon1}).addTo(mymap).bindPopup("orting-k12").openPopup()</script>
+<script>L.marker([47.097,-122.425], {icon: markerIcon1}).addTo(mymap).bindPopup("bethel-k12").openPopup()</script>
+<script>L.marker([47.117,-123.77], {icon: markerIcon1}).addTo(mymap).bindPopup("wishkahvalley-k12").openPopup()</script>
+<script>L.marker([47.126,-117.241], {icon: markerIcon1}).addTo(mymap).bindPopup("oakesdale-k12").openPopup()</script>
+<script>L.marker([47.126,-118.371], {icon: markerIcon1}).addTo(mymap).bindPopup("ritzville-k12").openPopup()</script>
+<script>L.marker([47.145,-122.444], {icon: markerIcon1}).addTo(mymap).bindPopup("plu-pbacc").openPopup()</script>
+<script>L.marker([47.158.989,122.519.555], {icon: markerIcon1}).addTo(mymap).bindPopup("cloverpark-k12").openPopup()</script>
+<script>L.marker([47.165.263,122.025.522], {icon: markerIcon1}).addTo(mymap).bindPopup("whiteriver-k12").openPopup()</script>
+<script>L.marker([47.171,-122.571], {icon: markerIcon1}).addTo(mymap).bindPopup("cwu-steilacoom-bacc ").openPopup()</script>
+<script>L.marker([47.171,-122.571], {icon: markerIcon1}).addTo(mymap).bindPopup("pierce-fortsteilacoom-ctc").openPopup()</script>
+<script>L.marker([47.171,-122.571], {icon: markerIcon1}).addTo(mymap).bindPopup("pierce-puyallup-ctc").openPopup()</script>
+<script>L.marker([47.175,-122.5], {icon: markerIcon1}).addTo(mymap).bindPopup("cloverpark-ctc").openPopup()</script>
+<script>L.marker([47.18,-122.578], {icon: markerIcon1}).addTo(mymap).bindPopup("steilacoomhistorical-k12").openPopup()</script>
+<script>L.marker([47.185,-119.328], {icon: markerIcon1}).addTo(mymap).bindPopup("bigbend-ctc").openPopup()</script>
+<script>L.marker([47.185,-119.328], {icon: markerIcon1}).addTo(mymap).bindPopup("cwu-moseslake-bacc").openPopup()</script>
+<script>L.marker([47.186,-122.291], {icon: markerIcon1}).addTo(mymap).bindPopup("puyallup-k12").openPopup()</script>
+<script>L.marker([47.199,-123.056], {icon: markerIcon1}).addTo(mymap).bindPopup("southside-k12").openPopup()</script>
+<script>L.marker([47.201,-117.907], {icon: markerIcon1}).addTo(mymap).bindPopup("lamont-k12").openPopup()</script>
+<script>L.marker([47.208,-123.101], {icon: markerIcon1}).addTo(mymap).bindPopup("shelton-k12 ").openPopup()</script>
+<script>L.marker([47.209.691,122.217.072], {icon: markerIcon1}).addTo(mymap).bindPopup("chiefleschi-k12").openPopup()</script>
+<script>L.marker([47.219.499,122.236.127], {icon: markerIcon1}).addTo(mymap).bindPopup("sumner-k12").openPopup()</script>
+<script>L.marker([47.222,-122.552], {icon: markerIcon1}).addTo(mymap).bindPopup("universityplace-k12").openPopup()</script>
+<script>L.marker([47.224,-117.067], {icon: markerIcon1}).addTo(mymap).bindPopup("tekoa-k12").openPopup()</script>
+<script>L.marker([47.23,-119.848], {icon: markerIcon1}).addTo(mymap).bindPopup("quincy-k12").openPopup()</script>
+<script>L.marker([47.231,-117.369], {icon: markerIcon1}).addTo(mymap).bindPopup("rosalia-k12").openPopup()</script>
+<script>L.marker([47.237,-121.177], {icon: markerIcon1}).addTo(mymap).bindPopup("easton-k12").openPopup()</script>
+<script>L.marker([47.245,-122.117], {icon: markerIcon1}).addTo(mymap).bindPopup("muckleshoot-nwic").openPopup()</script>
+<script>L.marker([47.245,-122.436], {icon: markerIcon1}).addTo(mymap).bindPopup("wshm-other").openPopup()</script>
+<script>L.marker([47.246,-122.525], {icon: markerIcon1}).addTo(mymap).bindPopup("tacoma-ctc").openPopup()</script>
+<script>L.marker([47.246.453,122.263.803], {icon: markerIcon1}).addTo(mymap).bindPopup("dieringer-k12").openPopup()</script>
+<script>L.marker([47.248,-122.308], {icon: markerIcon1}).addTo(mymap).bindPopup("fife-k12").openPopup()</script>
+<script>L.marker([47.252418,-122.444926], {icon: markerIcon1}).addTo(mymap).bindPopup("bates-ctc").openPopup()</script>
+<script>L.marker([47.256.375,12.244.582], {icon: markerIcon1}).addTo(mymap).bindPopup("tacoma-k12").openPopup()</script>
+<script>L.marker([47.257,-122.446], {icon: markerIcon1}).addTo(mymap).bindPopup("tacoma-k12").openPopup()</script>
+<script>L.marker([47.264,-122.481], {icon: markerIcon1}).addTo(mymap).bindPopup("ups-pbacc").openPopup()</script>
+<script>L.marker([47.297,-117.98], {icon: markerIcon1}).addTo(mymap).bindPopup("sprague-k12").openPopup()</script>
+<script>L.marker([47.312,-122.217], {icon: markerIcon1}).addTo(mymap).bindPopup("auburn-k12").openPopup()</script>
+<script>L.marker([47.313,-122.18], {icon: markerIcon1}).addTo(mymap).bindPopup("greenriver-ctc").openPopup()</script>
+<script>L.marker([47.317.254,122.228.761], {icon: markerIcon1}).addTo(mymap).bindPopup("muckleshoot-k12").openPopup()</script>
+<script>L.marker([47.320.271,122.311.147], {icon: markerIcon1}).addTo(mymap).bindPopup("federalway-k12").openPopup()</script>
+<script>L.marker([47.326,-119.55], {icon: markerIcon1}).addTo(mymap).bindPopup("ephrata-k12").openPopup()</script>
+<script>L.marker([47.33,-118.688], {icon: markerIcon1}).addTo(mymap).bindPopup("odessa-k12").openPopup()</script>
+<script>L.marker([47.344.433,124.288.384], {icon: markerIcon1}).addTo(mymap).bindPopup("taholah-k12").openPopup()</script>
+<script>L.marker([47.349,-122.324], {icon: markerIcon1}).addTo(mymap).bindPopup("highline-mast-ctc").openPopup()</script>
+<script>L.marker([47.371.473,122.181.367], {icon: markerIcon1}).addTo(mymap).bindPopup("kent-k12").openPopup()</script>
+<script>L.marker([47.382,-117.319], {icon: markerIcon1}).addTo(mymap).bindPopup("liberty-k12").openPopup()</script>
+<script>L.marker([47.387,-119.497], {icon: markerIcon1}).addTo(mymap).bindPopup("soaplake").openPopup()</script>
+<script>L.marker([47.387,-122.62], {icon: markerIcon1}).addTo(mymap).bindPopup("peninsula-k12").openPopup()</script>
+<script>L.marker([47.388.803,122.099.999], {icon: markerIcon1}).addTo(mymap).bindPopup("tahoma-k12").openPopup()</script>
+<script>L.marker([47.39,-122.3], {icon: markerIcon1}).addTo(mymap).bindPopup("cwu-desmoines-bacc").openPopup()</script>
+<script>L.marker([47.39,-122.3], {icon: markerIcon1}).addTo(mymap).bindPopup("highline-ctc").openPopup()</script>
+<script>L.marker([47.395,-120.326], {icon: markerIcon1}).addTo(mymap).bindPopup("wenatchee-k12").openPopup()</script>
+<script>L.marker([47.415,-122.844], {icon: markerIcon1}).addTo(mymap).bindPopup("northmason-k12").openPopup()</script>
+<script>L.marker([47.416.407,119.916.071], {icon: markerIcon1}).addTo(mymap).bindPopup("palisades-k12").openPopup()</script>
+<script>L.marker([47.426,-119.122], {icon: markerIcon1}).addTo(mymap).bindPopup("wilsoncreek-k12").openPopup()</script>
+<script>L.marker([47.427581,122.452432], {icon: markerIcon1}).addTo(mymap).bindPopup("vashonisland-k12").openPopup()</script>
+<script>L.marker([47.431,-120.334], {icon: markerIcon1}).addTo(mymap).bindPopup("cwu-wenatchee-bacc").openPopup()</script>
+<script>L.marker([47.431,-120.334], {icon: markerIcon1}).addTo(mymap).bindPopup("wenatcheevalley-ctc").openPopup()</script>
+<script>L.marker([47.441,-120.353], {icon: markerIcon1}).addTo(mymap).bindPopup("wsu-wenatchee-bacc").openPopup()</script>
+<script>L.marker([47.46,-123.896], {icon: markerIcon1}).addTo(mymap).bindPopup("lakequinault-k12").openPopup()</script>
+<script>L.marker([47.462.276,122.337.957], {icon: markerIcon1}).addTo(mymap).bindPopup("highline-k12").openPopup()</script>
+<script>L.marker([47.463,-120.328], {icon: markerIcon1}).addTo(mymap).bindPopup("esd171-k12").openPopup()</script>
+<script>L.marker([47.473,-122.235], {icon: markerIcon1}).addTo(mymap).bindPopup("esd121-k12").openPopup()</script>
+<script>L.marker([47.474,-122.221], {icon: markerIcon1}).addTo(mymap).bindPopup("renton-k12").openPopup()</script>
+<script>L.marker([47.475,-122.28], {icon: markerIcon1}).addTo(mymap).bindPopup("tukwila-k12").openPopup()</script>
+<script>L.marker([47.476,-118.251], {icon: markerIcon1}).addTo(mymap).bindPopup("harrington-k12").openPopup()</script>
+<script>L.marker([47.479,-118.251], {icon: markerIcon1}).addTo(mymap).bindPopup("enumclaw-k12").openPopup()</script>
+<script>L.marker([47.489,-122.176], {icon: markerIcon1}).addTo(mymap).bindPopup("renton-ctc").openPopup()</script>
+<script>L.marker([47.49,-117.578], {icon: markerIcon1}).addTo(mymap).bindPopup("cheney-k12").openPopup()</script>
+<script>L.marker([47.491,-117.578], {icon: markerIcon1}).addTo(mymap).bindPopup("ewu-bacc").openPopup()</script>
+<script>L.marker([47.516,-120.477], {icon: markerIcon1}).addTo(mymap).bindPopup("cashmere-k12").openPopup()</script>
+<script>L.marker([47.526,-122.627], {icon: markerIcon1}).addTo(mymap).bindPopup("southkitsap-k12").openPopup()</script>
+<script>L.marker([47.528.629,121.828.463], {icon: markerIcon1}).addTo(mymap).bindPopup("snoqualmievalley-k12").openPopup()</script>
+<script>L.marker([47.536.868,122.042.401], {icon: markerIcon1}).addTo(mymap).bindPopup("issaquah-k12").openPopup()</script>
+<script>L.marker([47.553,-124.355], {icon: markerIcon1}).addTo(mymap).bindPopup("queetsclearwater-k12").openPopup()</script>
+<script>L.marker([47.553,-124.355], {icon: markerIcon1}).addTo(mymap).bindPopup("quillayutevalley-k12").openPopup()</script>
+<script>L.marker([47.566,-122.669], {icon: markerIcon1}).addTo(mymap).bindPopup("esd114-k12").openPopup()</script>
+<script>L.marker([47.571,-122.223], {icon: markerIcon1}).addTo(mymap).bindPopup("mercerisland-k12").openPopup()</script>
+<script>L.marker([47.573,-122.639], {icon: markerIcon1}).addTo(mymap).bindPopup("bremerton-k12").openPopup()</script>
+<script>L.marker([47.575,-122.635], {icon: markerIcon1}).addTo(mymap).bindPopup("olympic-ctc").openPopup()</script>
+<script>L.marker([47.576,-117.683], {icon: markerIcon1}).addTo(mymap).bindPopup("medicallake-k12").openPopup()</script>
+<script>L.marker([47.584,-122.148], {icon: markerIcon1}).addTo(mymap).bindPopup("bellevue-ctc").openPopup()</script>
+<script>L.marker([47.602,-120.654], {icon: markerIcon1}).addTo(mymap).bindPopup("cascade-k12").openPopup()</script>
+<script>L.marker([47.606,-122.332], {icon: markerIcon1}).addTo(mymap).bindPopup("wsu-west-bacc").openPopup()</script>
+<script>L.marker([47.609,-122.176], {icon: markerIcon1}).addTo(mymap).bindPopup("bellevue-k12").openPopup()</script>
+<script>L.marker([47.610.361,122.033.738], {icon: markerIcon1}).addTo(mymap).bindPopup("cwu-sammamish-bacc").openPopup()</script>
+<script>L.marker([47.615,-117.369], {icon: markerIcon1}).addTo(mymap).bindPopup("esd101-k12").openPopup()</script>
+<script>L.marker([47.619,-117.368], {icon: markerIcon1}).addTo(mymap).bindPopup("ksps-other").openPopup()</script>
+<script>L.marker([47.622,-122.256], {icon: markerIcon1}).addTo(mymap).bindPopup("lakewashington-ctc").openPopup()</script>
+<script>L.marker([47.624,-122.348], {icon: markerIcon1}).addTo(mymap).bindPopup("kcts-other").openPopup()</script>
+<script>L.marker([47.637,-122.525], {icon: markerIcon1}).addTo(mymap).bindPopup("bainbridgeisland-k12").openPopup()</script>
+<script>L.marker([47.641,-120.218], {icon: markerIcon1}).addTo(mymap).bindPopup("orondo-k12").openPopup()</script>
+<script>L.marker([47.645,-120.07], {icon: markerIcon1}).addTo(mymap).bindPopup("waterville-k12").openPopup()</script>
+<script>L.marker([47.649,-118.151], {icon: markerIcon1}).addTo(mymap).bindPopup("davenport-k12").openPopup()</script>
+<script>L.marker([47.649,-122.362], {icon: markerIcon1}).addTo(mymap).bindPopup("spu-pbacc").openPopup()</script>
+<script>L.marker([47.652,-122.699], {icon: markerIcon1}).addTo(mymap).bindPopup("centralkitsap-k12").openPopup()</script>
+<script>L.marker([47.659,-117.416], {icon: markerIcon1}).addTo(mymap).bindPopup("spokane-k12").openPopup()</script>
+<script>L.marker([47.661,-117.404], {icon: markerIcon1}).addTo(mymap).bindPopup("wsu-riverpoint-bacc").openPopup()</script>
+<script>L.marker([47.664,-120.226], {icon: markerIcon1}).addTo(mymap).bindPopup("entiat-k12").openPopup()</script>
+<script>L.marker([47.664.507,120.225.976], {icon: markerIcon1}).addTo(mymap).bindPopup("entiat-k12").openPopup()</script>
+<script>L.marker([47.667,-117.876], {icon: markerIcon1}).addTo(mymap).bindPopup("reardanedwall-k12").openPopup()</script>
+<script>L.marker([47.670.996,122.123.489], {icon: markerIcon1}).addTo(mymap).bindPopup("lakewashington-k12").openPopup()</script>
+<script>L.marker([47.674,-117.308], {icon: markerIcon1}).addTo(mymap).bindPopup("westvalley-spk-k12").openPopup()</script>
+<script>L.marker([47.674,-117.308], {icon: markerIcon1}).addTo(mymap).bindPopup("westvalley-yak-k12").openPopup()</script>
+<script>L.marker([47.675,-117.364], {icon: markerIcon1}).addTo(mymap).bindPopup("spokane-ctc").openPopup()</script>
+<script>L.marker([47.676,-117.465], {icon: markerIcon1}).addTo(mymap).bindPopup("spokanefalls-ctc").openPopup()</script>
+<script>L.marker([47.685,-117.239], {icon: markerIcon1}).addTo(mymap).bindPopup("eastvalley-spk-k12").openPopup()</script>
+<script>L.marker([47.686,-117.52], {icon: markerIcon1}).addTo(mymap).bindPopup("greatnorthern-k12").openPopup()</script>
+<script>L.marker([47.687,-119.108], {icon: markerIcon1}).addTo(mymap).bindPopup("couleehartline-k12").openPopup()</script>
+<script>L.marker([47.697,-122.904], {icon: markerIcon1}).addTo(mymap).bindPopup("brinnon-k12").openPopup()</script>
+<script>L.marker([47.707,-122.582], {icon: markerIcon1}).addTo(mymap).bindPopup("chiefkitsap-k12").openPopup()</script>
+<script>L.marker([47.708,-118.941], {icon: markerIcon1}).addTo(mymap).bindPopup("almira-k12").openPopup()</script>
+<script>L.marker([47.710.507,121.359.074], {icon: markerIcon1}).addTo(mymap).bindPopup("skykomish-k12").openPopup()</script>
+<script>L.marker([47.728,-117.314], {icon: markerIcon1}).addTo(mymap).bindPopup("orchardprairie-k12").openPopup()</script>
+<script>L.marker([47.729,-122.627], {icon: markerIcon1}).addTo(mymap).bindPopup("northkitsap-k12").openPopup()</script>
+<script>L.marker([47.735.639,121.952.554], {icon: markerIcon1}).addTo(mymap).bindPopup("riverview-k12").openPopup()</script>
+<script>L.marker([47.749,-122.359], {icon: markerIcon1}).addTo(mymap).bindPopup("shoreline-ctc").openPopup()</script>
+<script>L.marker([47.753,-118.705], {icon: markerIcon1}).addTo(mymap).bindPopup("wilbur-k12").openPopup()</script>
+<script>L.marker([47.755,-118.52], {icon: markerIcon1}).addTo(mymap).bindPopup("creston-k12").openPopup()</script>
+<script>L.marker([47.761,-122.191], {icon: markerIcon1}).addTo(mymap).bindPopup("cascadia-ctc").openPopup()</script>
+<script>L.marker([47.764.104,122.328.885], {icon: markerIcon1}).addTo(mymap).bindPopup("shoreline-k12").openPopup()</script>
+<script>L.marker([47.773,-117.376], {icon: markerIcon1}).addTo(mymap).bindPopup("mead-k12").openPopup()</script>
+<script>L.marker([47.777,-122.19], {icon: markerIcon1}).addTo(mymap).bindPopup("northshore-k12").openPopup()</script>
+<script>L.marker([47.812,-119.637], {icon: markerIcon1}).addTo(mymap).bindPopup("mansfield-k12").openPopup()</script>
+<script>L.marker([47.813.593,122.326.291], {icon: markerIcon1}).addTo(mymap).bindPopup("edmonds-k12").openPopup()</script>
+<script>L.marker([47.817,-122.327], {icon: markerIcon1}).addTo(mymap).bindPopup("edmonds-ctc").openPopup()</script>
+<script>L.marker([47.821,-121.555], {icon: markerIcon1}).addTo(mymap).bindPopup("index-k12").openPopup()</script>
+<script>L.marker([47.823,-122.874], {icon: markerIcon1}).addTo(mymap).bindPopup("quilcene-k12").openPopup()</script>
+<script>L.marker([47.829,-117.601], {icon: markerIcon1}).addTo(mymap).bindPopup("ninemilefalls-k12").openPopup()</script>
+<script>L.marker([47.835,-120.02], {icon: markerIcon1}).addTo(mymap).bindPopup("lakechelan-k12").openPopup()</script>
+<script>L.marker([47.85,-121.989], {icon: markerIcon1}).addTo(mymap).bindPopup("monroe-k12").openPopup()</script>
+<script>L.marker([47.853,-122.569], {icon: markerIcon1}).addTo(mymap).bindPopup("portgamble-nwic").openPopup()</script>
+<script>L.marker([47.866.348,121.815.116], {icon: markerIcon1}).addTo(mymap).bindPopup("sultan-k12").openPopup()</script>
+<script>L.marker([47.878,-122.224], {icon: markerIcon1}).addTo(mymap).bindPopup("wsu-snohomish-bacc").openPopup()</script>
+<script>L.marker([47.891,-120.153], {icon: markerIcon1}).addTo(mymap).bindPopup("manson-k12").openPopup()</script>
+<script>L.marker([47.898.735,117.964.874], {icon: markerIcon1}).addTo(mymap).bindPopup("wellpinit-k12").openPopup()</script>
+<script>L.marker([47.922,-122.263], {icon: markerIcon1}).addTo(mymap).bindPopup("wsipc-k12").openPopup()</script>
+<script>L.marker([47.928.314,122.312.824], {icon: markerIcon1}).addTo(mymap).bindPopup("mukilteo-k12").openPopup()</script>
+<script>L.marker([47.941.407,122.204.162], {icon: markerIcon1}).addTo(mymap).bindPopup("everett-k12").openPopup()</script>
+<script>L.marker([47.954,-117.463], {icon: markerIcon1}).addTo(mymap).bindPopup("deerpark-k12").openPopup()</script>
+<script>L.marker([47.962,-118.986], {icon: markerIcon1}).addTo(mymap).bindPopup("grandcouleedam-k12").openPopup()</script>
+<script>L.marker([47.969,-117.35], {icon: markerIcon1}).addTo(mymap).bindPopup("riverside-k12").openPopup()</script>
+<script>L.marker([48.005,-122.197], {icon: markerIcon1}).addTo(mymap).bindPopup("wsu-everett-bacc").openPopup()</script>
+<script>L.marker([48.005,-122.41], {icon: markerIcon1}).addTo(mymap).bindPopup("southwhidbey-k12").openPopup()</script>
+<script>L.marker([48.007,-119.675], {icon: markerIcon1}).addTo(mymap).bindPopup("bridgeport-k12").openPopup()</script>
+<script>L.marker([48.007,-122.205], {icon: markerIcon1}).addTo(mymap).bindPopup("everett-ctc").openPopup()</script>
+<script>L.marker([48.007,-122.205], {icon: markerIcon1}).addTo(mymap).bindPopup("wwu-bacc").openPopup()</script>
+<script>L.marker([48.012,-122.777], {icon: markerIcon1}).addTo(mymap).bindPopup("chimacum-k12").openPopup()</script>
+<script>L.marker([48.017.556,122.064.259], {icon: markerIcon1}).addTo(mymap).bindPopup("lakestevens-k12").openPopup()</script>
+<script>L.marker([48.033,-122.773], {icon: markerIcon1}).addTo(mymap).bindPopup("jeffersoncounty-lib").openPopup()</script>
+<script>L.marker([48.052,-119.907], {icon: markerIcon1}).addTo(mymap).bindPopup("pateros-k12").openPopup()</script>
+<script>L.marker([48.06,-117.746], {icon: markerIcon1}).addTo(mymap).bindPopup("marywalker-k12").openPopup()</script>
+<script>L.marker([48.061,-117.631], {icon: markerIcon1}).addTo(mymap).bindPopup("loonlake-k12").openPopup()</script>
+<script>L.marker([48.063,-117.633], {icon: markerIcon1}).addTo(mymap).bindPopup("onioncreek-k12").openPopup()</script>
+<script>L.marker([48.064,-122.187], {icon: markerIcon1}).addTo(mymap).bindPopup("snoisle-lib").openPopup()</script>
+<script>L.marker([48.066,-122.281], {icon: markerIcon1}).addTo(mymap).bindPopup("tulalip-nwic").openPopup()</script>
+<script>L.marker([48.068,-122.173], {icon: markerIcon1}).addTo(mymap).bindPopup("marysville-k12").openPopup()</script>
+<script>L.marker([48.078,-118.687], {icon: markerIcon1}).addTo(mymap).bindPopup("keller-k12").openPopup()</script>
+<script>L.marker([48.086,-121.964], {icon: markerIcon1}).addTo(mymap).bindPopup("granitefalls-k12").openPopup()</script>
+<script>L.marker([48.094,-119.787], {icon: markerIcon1}).addTo(mymap).bindPopup("brewster-k12").openPopup()</script>
+<script>L.marker([48.102,-123.431], {icon: markerIcon1}).addTo(mymap).bindPopup("portangeles-k12").openPopup()</script>
+<script>L.marker([48.106,-123.439], {icon: markerIcon1}).addTo(mymap).bindPopup("northolympic-lib").openPopup()</script>
+<script>L.marker([48.115.371,123.414.659], {icon: markerIcon1}).addTo(mymap).bindPopup("uw-telemed-olympic-bacc").openPopup()</script>
+<script>L.marker([48.117,-122.769], {icon: markerIcon1}).addTo(mymap).bindPopup("porttownsend-k12").openPopup()</script>
+<script>L.marker([48.134,-122.765], {icon: markerIcon1}).addTo(mymap).bindPopup("peninsula-ctc").openPopup()</script>
+<script>L.marker([48.134,-122.765], {icon: markerIcon1}).addTo(mymap).bindPopup("peninsula-porttownsend-ctc").openPopup()</script>
+<script>L.marker([48.136,-123.746], {icon: markerIcon1}).addTo(mymap).bindPopup("crescent-k12").openPopup()</script>
+<script>L.marker([48.149.256,122.207.884], {icon: markerIcon1}).addTo(mymap).bindPopup("lakewood-k12").openPopup()</script>
+<script>L.marker([48.167,-118.975], {icon: markerIcon1}).addTo(mymap).bindPopup("nespelem-k12").openPopup()</script>
+<script>L.marker([48.177,-117.042], {icon: markerIcon1}).addTo(mymap).bindPopup("newport-k12").openPopup()</script>
+<script>L.marker([48.177,-117.042], {icon: markerIcon1}).addTo(mymap).bindPopup("spokane-newport-ctc").openPopup()</script>
+<script>L.marker([48.195.301,122.548.945], {icon: markerIcon1}).addTo(mymap).bindPopup("lopezisland-lib").openPopup()</script>
+<script>L.marker([48.196,-122.122], {icon: markerIcon1}).addTo(mymap).bindPopup("arlington-k12").openPopup()</script>
+<script>L.marker([48.216.316,122.679.436], {icon: markerIcon1}).addTo(mymap).bindPopup("coupeville-k12").openPopup()</script>
+<script>L.marker([48.247.709,121.601.233], {icon: markerIcon1}).addTo(mymap).bindPopup("darrington-k12").openPopup()</script>
+<script>L.marker([48.253.248,124.256.933], {icon: markerIcon1}).addTo(mymap).bindPopup("capeflattery-k12").openPopup()</script>
+<script>L.marker([48.278,-117.699], {icon: markerIcon1}).addTo(mymap).bindPopup("chewelah-lib").openPopup()</script>
+<script>L.marker([48.28,-117.708], {icon: markerIcon1}).addTo(mymap).bindPopup("chewelah-k12").openPopup()</script>
+<script>L.marker([48.289,-122.634], {icon: markerIcon1}).addTo(mymap).bindPopup("skagitvalley-oakharbor-ctc").openPopup()</script>
+<script>L.marker([48.297.164,122.641.866], {icon: markerIcon1}).addTo(mymap).bindPopup("oakharbor-k12").openPopup()</script>
+<script>L.marker([48.301,-118.203], {icon: markerIcon1}).addTo(mymap).bindPopup("spokane-inchelium-ctc").openPopup()</script>
+<script>L.marker([48.304.301,118.040.678], {icon: markerIcon1}).addTo(mymap).bindPopup("evergreen-stevensco-k12").openPopup()</script>
+<script>L.marker([48.337,-117.297], {icon: markerIcon1}).addTo(mymap).bindPopup("cusick-k12").openPopup()</script>
+<script>L.marker([48.340.148,118.231.894], {icon: markerIcon1}).addTo(mymap).bindPopup("inchelium-k12").openPopup()</script>
+<script>L.marker([48.365,-119.585], {icon: markerIcon1}).addTo(mymap).bindPopup("okanogan-k12").openPopup()</script>
+<script>L.marker([48.392,-122.489], {icon: markerIcon1}).addTo(mymap).bindPopup("laconner-lib").openPopup()</script>
+<script>L.marker([48.394,-122.49], {icon: markerIcon1}).addTo(mymap).bindPopup("laconner-k12").openPopup()</script>
+<script>L.marker([48.397,-122.506], {icon: markerIcon1}).addTo(mymap).bindPopup("swinomish-nwic").openPopup()</script>
+<script>L.marker([48.411,-119.534], {icon: markerIcon1}).addTo(mymap).bindPopup("omak-k12").openPopup()</script>
+<script>L.marker([48.427.235,12.231.133], {icon: markerIcon1}).addTo(mymap).bindPopup("conway-k12").openPopup()</script>
+<script>L.marker([48.436,-122.311], {icon: markerIcon1}).addTo(mymap).bindPopup("skagitvalley-ctc").openPopup()</script>
+<script>L.marker([48.439,-122.387], {icon: markerIcon1}).addTo(mymap).bindPopup("wsu-mountvernon-bacc").openPopup()</script>
+<script>L.marker([48.441,-120.187], {icon: markerIcon1}).addTo(mymap).bindPopup("methowvalley-k12").openPopup()</script>
+<script>L.marker([48.478401,-122.336662], {icon: markerIcon1}).addTo(mymap).bindPopup("burlingtonedison-k12").openPopup()</script>
+<script>L.marker([48.503,-122.228], {icon: markerIcon1}).addTo(mymap).bindPopup("sedrowoolley-k12").openPopup()</script>
+<script>L.marker([48.504,-122.618], {icon: markerIcon1}).addTo(mymap).bindPopup("anacortes-k12").openPopup()</script>
+<script>L.marker([48.509,-122.607], {icon: markerIcon1}).addTo(mymap).bindPopup("esd189-k12").openPopup()</script>
+<script>L.marker([48.522,-122.909], {icon: markerIcon1}).addTo(mymap).bindPopup("lopezisland-lib ").openPopup()</script>
+<script>L.marker([48.534,-123.02], {icon: markerIcon1}).addTo(mymap).bindPopup("sanjuanisland-k12").openPopup()</script>
+<script>L.marker([48.535,-117.902], {icon: markerIcon1}).addTo(mymap).bindPopup("spokane-colville-ctc").openPopup()</script>
+<script>L.marker([48.539,-121.746], {icon: markerIcon1}).addTo(mymap).bindPopup("upperskagit-lib").openPopup()</script>
+<script>L.marker([48.543,-117.897], {icon: markerIcon1}).addTo(mymap).bindPopup("colville-k12").openPopup()</script>
+<script>L.marker([48.544,-117.904], {icon: markerIcon1}).addTo(mymap).bindPopup("stevenscounty-lib").openPopup()</script>
+<script>L.marker([48.546,-123.011], {icon: markerIcon1}).addTo(mymap).bindPopup("uw-fhl-bacc").openPopup()</script>
+<script>L.marker([48.572,-122.961], {icon: markerIcon1}).addTo(mymap).bindPopup("shawisland-k12").openPopup()</script>
+<script>L.marker([48.603,-118.056], {icon: markerIcon1}).addTo(mymap).bindPopup("kettlefalls-k12").openPopup()</script>
+<script>L.marker([48.608,-118.056], {icon: markerIcon1}).addTo(mymap).bindPopup("kettlefalls-lib").openPopup()</script>
+<script>L.marker([48.642,-118.727], {icon: markerIcon1}).addTo(mymap).bindPopup("republic-k12").openPopup()</script>
+<script>L.marker([48.648,-118.737], {icon: markerIcon1}).addTo(mymap).bindPopup("spokane-republic-ctc").openPopup()</script>
+<script>L.marker([48.696,-122.905], {icon: markerIcon1}).addTo(mymap).bindPopup("orcasisland-lib ").openPopup()</script>
+<script>L.marker([48.703,-119.441], {icon: markerIcon1}).addTo(mymap).bindPopup("tonasket-k12").openPopup()</script>
+<script>L.marker([48.739.138,117.422.605], {icon: markerIcon1}).addTo(mymap).bindPopup("selkirk-k12").openPopup()</script>
+<script>L.marker([48.76,-122.487], {icon: markerIcon1}).addTo(mymap).bindPopup("bellingham-k12").openPopup()</script>
+<script>L.marker([48.764.218,122.468.178], {icon: markerIcon1}).addTo(mymap).bindPopup("meridian-k12").openPopup()</script>
+<script>L.marker([48.766,-122.512], {icon: markerIcon1}).addTo(mymap).bindPopup("bellingham-ctc").openPopup()</script>
+<script>L.marker([48.781.684,122.327.696], {icon: markerIcon1}).addTo(mymap).bindPopup("cwu-lynnwood-bacc").openPopup()</script>
+<script>L.marker([48.792.435,122.094.207], {icon: markerIcon1}).addTo(mymap).bindPopup("snohomish-k12").openPopup()</script>
+<script>L.marker([48.795,-122.493], {icon: markerIcon1}).addTo(mymap).bindPopup("whatcom-ctc").openPopup()</script>
+<script>L.marker([48.795,-122.614], {icon: markerIcon1}).addTo(mymap).bindPopup("lummi-nwic").openPopup()</script>
+<script>L.marker([48.807.584,123.108.212], {icon: markerIcon1}).addTo(mymap).bindPopup("sequim-k12").openPopup()</script>
+<script>L.marker([48.825.696,122.220.796], {icon: markerIcon1}).addTo(mymap).bindPopup("mountbaker-k12").openPopup()</script>
+<script>L.marker([48.835.579,117.836.486], {icon: markerIcon1}).addTo(mymap).bindPopup("summitvalley-k12").openPopup()</script>
+<script>L.marker([48.841.063,122.339.034], {icon: markerIcon1}).addTo(mymap).bindPopup("mountvernon-k12").openPopup()</script>
+<script>L.marker([48.852,-122.593], {icon: markerIcon1}).addTo(mymap).bindPopup("ferndale-k12").openPopup()</script>
+<script>L.marker([48.853.166,121.757.264], {icon: markerIcon1}).addTo(mymap).bindPopup("concrete-k12").openPopup()</script>
+<script>L.marker([48.867.375,11.820.117], {icon: markerIcon1}).addTo(mymap).bindPopup("orient-k12").openPopup()</script>
+<script>L.marker([48.912,-117.789], {icon: markerIcon1}).addTo(mymap).bindPopup("northport-k12").openPopup()</script>
+<script>L.marker([48.934,-119.438], {icon: markerIcon1}).addTo(mymap).bindPopup("oroville-k12").openPopup()</script>
+<script>L.marker([48.953,-122.423], {icon: markerIcon1}).addTo(mymap).bindPopup("lynden-k12").openPopup()</script>
+<script>L.marker([48.964,-122.308], {icon: markerIcon1}).addTo(mymap).bindPopup("nooksackvalley-k12").openPopup()</script>
+<script>L.marker([48.993371,-122.742043], {icon: markerIcon1}).addTo(mymap).bindPopup("blaine-k12").openPopup()</script>
 </table>
-<div class="navbar-text d-block d-lg-none" id="updated">Updated at 2020-12-23 14:03:32-08:00<br />by MSI (1.10.0)</div>
+<div class="navbar-text d-block d-lg-none" id="updated">Updated at 2021-01-06 11:47:11-08:00<br />by MSI (1.11.0+dev)</div>
 
-<div class="text-right text-muted">SimpleMonitor 1.10.0 <a href="https://jamesoff.github.io/simplemonitor" target="_blank">&raquo; Documentation</a> | <a href="https://github.com/jamesoff/simplemonitor" target="_blank">&raquo; Code</a></div>
+<div class="text-right text-muted">SimpleMonitor 1.11.0+dev <a href="https://jamesoff.github.io/simplemonitor" target="_blank">&raquo; Documentation</a> | <a href="https://github.com/jamesoff/simplemonitor" target="_blank">&raquo; Code</a></div>
 
 <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
@@ -62,7 +478,7 @@
 $(function () {
     $('[data-toggle="tooltip"]').tooltip();
     check_age();
-    setTimeout(too_old, (30 * 2000));
+    setTimeout(too_old, (300 * 2000));
 })
 </script>
 </body>
