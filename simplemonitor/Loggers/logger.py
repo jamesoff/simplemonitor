@@ -7,10 +7,13 @@ Loggers process every monitor, every iteration, to record their state in some fa
 
 
 import logging
+import time
 from typing import Any, Dict, List, Optional, Union, cast
 
+import arrow
+
 from ..Monitors.monitor import Monitor
-from ..util import get_config_option, subclass_dict_handler
+from ..util import format_datetime, get_config_option, subclass_dict_handler
 
 
 class Logger:
@@ -39,6 +42,16 @@ class Logger:
         if self.batch_data is None:
             self.batch_data = {}
         self.tz = cast(Optional[str], self.get_config_option("tz", default="UTC"))
+        self.dateformat = cast(
+            Optional[str],
+            self.get_config_option(
+                "dateformat",
+                required_type="str",
+                allowed_values=["timestamp", "iso8601"],
+                default="timestamp",
+            ),
+        )
+
         if self._global_info is None:
             self._global_info = {}
 
@@ -94,6 +107,12 @@ class Logger:
 
         Subclasses must override this with their implementation."""
         raise NotImplementedError
+
+    def _get_datestring(self) -> str:
+        """Format the current datetime according to the dateformat setting and timezone."""
+        if self.dateformat == "iso8601":
+            return format_datetime(arrow.now(), self.tz)
+        return str(int(time.time()))
 
     @property
     def dependencies(self) -> list:

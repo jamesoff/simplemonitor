@@ -9,7 +9,6 @@ import stat
 import subprocess  # nosec
 import sys
 import tempfile
-import time
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, cast
 
 import arrow
@@ -51,16 +50,6 @@ class FileLogger(Logger):
             "buffered", required_type="bool", default=True
         )
 
-        self.dateformat = cast(
-            str,
-            self.get_config_option(
-                "dateformat",
-                required_type="str",
-                allowed_values=["timestamp", "iso8601"],
-                default="timestamp",
-            ),
-        )
-
         self.file_handle.write(
             "{} simplemonitor starting\n".format(self._get_datestring())
         )
@@ -69,11 +58,6 @@ class FileLogger(Logger):
 
     def __del__(self) -> None:
         self.file_handle.close()
-
-    def _get_datestring(self) -> str:
-        if self.dateformat == "iso8601":
-            return format_datetime(arrow.now(), self.tz)
-        return str(int(time.time()))
 
     def save_result2(self, name: str, monitor: Monitor) -> None:
         if self.only_failures and monitor.virtual_fail_count() == 0:
@@ -127,12 +111,20 @@ class FileLoggerNG(Logger):
     """
 
     logger_type = "logfileng"
+    only_failures = False
 
     def __init__(self, config_options: dict = None) -> None:
         if config_options is None:
             config_options = {}
         super().__init__(config_options)
+        self.only_failures = self.get_config_option(
+            "only_failures", required_type="bool", default=False
+        )
         self._logger = logging.getLogger(f"logfileng-{self.name}")
+        if self.only_failures:
+            self._logger.setLevel(logging.WARNING)
+        else:
+            self._logger.setLevel(logging.INFO)
         rotation_type = self.get_config_option(
             "rotation_type", allowed_values=["time", "size"]
         )
@@ -164,10 +156,26 @@ class FileLoggerNG(Logger):
         else:
             raise ValueError(f"Invalid rotation_type {rotation_type}")
         self._logger.addHandler(handler)
-        # TODO: format
 
     def save_result2(self, name: str, monitor: Monitor) -> None:
-        self._logger.error("monitor %s says hi", name)
+        if monitor.virtual_fail_count() == 0:
+            self._logger.info(
+                "%s %s: ok (%0.3fs) (%s)",
+                self._get_datestring(),
+                name,
+                monitor.last_run_duration,
+                monitor.get_result(),
+            )
+        else:
+            self._logger.warning(
+                "%s %s: failed since %s; VFC=%d (%s) (%0.3fs)",
+                self._get_datestring(),
+                name,
+                format_datetime(monitor.first_failure_time(), self.tz),
+                monitor.virtual_fail_count(),
+                monitor.get_result(),
+                monitor.last_run_duration,
+            )
 
 
 @register
