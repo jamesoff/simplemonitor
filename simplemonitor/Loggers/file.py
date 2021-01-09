@@ -12,6 +12,7 @@ from io import StringIO
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, TextIO, cast
 
 import arrow
+from jinja2 import Environment, PackageLoader
 
 from ..Monitors.monitor import Monitor
 from ..util import format_datetime, short_hostname
@@ -172,6 +173,9 @@ class HTMLLogger(Logger):
         self._my_host = short_hostname()
         self.status = ""
         self.header_class = ""
+        self._env = Environment(
+            loader=PackageLoader("simplemonitor", "html"),
+        )
 
     def _make_html_row(self, name: str, entry: Dict[str, Any]) -> str:
         row = ""
@@ -362,14 +366,25 @@ class HTMLLogger(Logger):
             ]
         )
 
-        with open(os.path.join(self.source_folder, self.header), "r") as file_input:
-            file_handle.writelines(self.parse_file(file_input))
-
-        file_handle.write(output_fail.getvalue())
-        file_handle.write(output_ok.getvalue())
-
-        with open(os.path.join(self.source_folder, self.footer), "r") as file_input:
-            file_handle.writelines(self.parse_file(file_input))
+        template = self._env.get_template("status-template.html")
+        if self._global_info:
+            interval = max(30, self._global_info["interval"])
+        else:
+            interval = 30
+        file_handle.write(
+            template.render(
+                status=self.status,
+                status_border=self.header_class,
+                host=socket.gethostname(),
+                interval=interval,
+                timestamp=str(arrow.now().timestamp),
+                now=format_datetime(arrow.now(), self.tz),
+                version=VERSION,
+                counts=self.count_data,
+                output_fail=output_fail.getvalue(),
+                output_ok=output_ok.getvalue(),
+            )
+        )
 
         try:
             file_handle.flush()
@@ -400,6 +415,7 @@ class HTMLLogger(Logger):
 
     def parse_file(self, file_handle: TextIO) -> List[str]:
         """Process a file an substitute in template values."""
+        raise NotImplementedError
         lines = []  # type: List[str]
         for line in file_handle:
             line = line.replace("_NOW_", format_datetime(arrow.now(), self.tz))
