@@ -8,7 +8,6 @@ import subprocess  # nosec
 import sys
 import tempfile
 import time
-from io import StringIO
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, TextIO, cast
 
 import arrow
@@ -259,7 +258,7 @@ class HTMLLogger(Logger):
             fail_data = monitor.get_result()
             downtime = monitor.get_uptime()  # yes, I know
         failures = monitor.failures
-        last_failure = monitor.last_failure
+        last_failure = format_datetime(monitor.last_failure, self.tz)
         gap = monitor.minimum_gap
         if gap == 0:
             # TODO: figure out a good way to know the interval value for both local and
@@ -276,9 +275,26 @@ class HTMLLogger(Logger):
         except ValueError:
             age_seconds = 0
             update = ""
+        row_class = ""
+        cell_class = ""
+        if not monitor.enabled:
+            status_text = "DISABLED"
+        elif age_seconds > gap + 60:
+            status_text = "OLD"
+            cell_class = "table-warning"
+        elif status:
+            status_text = "OK"
+            cell_class = "table-success"
+        else:
+            status_text = "FAIL"
+            row_class = "table-danger"
 
         data_line = {
+            "monitor_name": monitor.name,
             "status": status,
+            "status_text": status_text,
+            "row_class": row_class,
+            "cell_class": cell_class,
             "fail_time": fail_time,
             "fail_count": fail_count,
             "fail_data": fail_data,
@@ -293,6 +309,7 @@ class HTMLLogger(Logger):
             "description": monitor.describe(),
             "link": monitor.failure_doc,
             "enabled": monitor.enabled,
+            "my_host": True if monitor.running_on == self._my_host else False,
         }  # type: Dict[str, Any]
         self.batch_data[monitor.name] = data_line
 
@@ -314,8 +331,8 @@ class HTMLLogger(Logger):
             )
             return
 
-        output_ok = StringIO()
-        output_fail = StringIO()
+        fail_entries = []  # type: List[Dict[str, Any]]
+        ok_entries = []  # type: List[Dict[str, Any]]
 
         if self.batch_data is None:
             return
@@ -323,7 +340,7 @@ class HTMLLogger(Logger):
         keys.sort()
         for entry in keys:
             this_entry = self.batch_data[entry]
-            output = output_ok
+            this_list = ok_entries
             if not this_entry["enabled"]:
                 disabled_count += 1
             elif this_entry["age"] > this_entry["gap"] + 60:
@@ -332,10 +349,11 @@ class HTMLLogger(Logger):
                 ok_count += 1
             else:
                 fail_count += 1
-                output = output_fail
+                this_list = fail_entries
             if this_entry["host"] != self._my_host:
                 remote_count += 1
-            output.write(self._make_html_row(entry, this_entry))
+            # output.write(self._make_html_row(entry, this_entry))
+            this_list.append(this_entry)
         if old_count > 0:
             self.header_class = "border-warning"
             self.status = "OLD"
@@ -360,13 +378,13 @@ class HTMLLogger(Logger):
                 timestamp=str(arrow.now().int_timestamp),
                 now=format_datetime(arrow.now(), self.tz),
                 version=VERSION,
-                output_fail=output_fail.getvalue(),
-                output_ok=output_ok.getvalue(),
                 ok_count=ok_count,
                 fail_count=fail_count,
                 disabled_count=disabled_count,
                 old_count=old_count,
                 remote_count=remote_count,
+                fail_entries=fail_entries,
+                ok_entries=ok_entries,
             )
         )
 
