@@ -346,26 +346,6 @@ class HTMLLogger(Logger):
             self.header_class = "border-success"
             self.status = "OK"
 
-        self.count_data = " ".join(
-            [
-                f'<span class="badge badge-success">{ok_count} OK</span> '
-                if ok_count
-                else "",
-                f'<span class="badge badge-danger">{fail_count} FAIL</span> '
-                if fail_count
-                else "",
-                f'<span class="badge badge-secondary">{disabled_count} DISABLED</span> '
-                if disabled_count
-                else "",
-                f'<span class="badge badge-warning">{old_count} OLD</span> '
-                if old_count
-                else "",
-                f'<span class="badge badge-info">{remote_count} remote</span> '
-                if remote_count
-                else "",
-            ]
-        )
-
         template = self._env.get_template("status-template.html")
         if self._global_info:
             interval = max(30, self._global_info["interval"])
@@ -380,9 +360,13 @@ class HTMLLogger(Logger):
                 timestamp=str(arrow.now().int_timestamp),
                 now=format_datetime(arrow.now(), self.tz),
                 version=VERSION,
-                counts=self.count_data,
                 output_fail=output_fail.getvalue(),
                 output_ok=output_ok.getvalue(),
+                ok_count=ok_count,
+                fail_count=fail_count,
+                disabled_count=disabled_count,
+                old_count=old_count,
+                remote_count=remote_count,
             )
         )
 

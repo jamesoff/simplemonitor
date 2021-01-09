@@ -38,7 +38,13 @@
 			<div class="navbar-brand">SimpleMonitor</div>
 			<div class="navbar-text d-none d-lg-block" id="updated">Updated at {{now}} by {{host}} ({{version}})</div>
 			<div class="navbar-text" id="refresh_status"><span class="badge badge-warning d-none" id="refresh_badge">OUT OF DATE</span></div>
-			<div class="navbar-text">{{counts}}</div>
+			<div class="navbar-text">
+                {%- if ok_count %}<span class="badge badge-success">{{ok_count}} OK</span>{% endif -%}
+                {%- if fail_count %}<span class="badge badge-danger">{{fail_count}} FAIL</span>{% endif -%}
+                {%- if disabled_count %}<span class="badge badge-secondary">{{disabled_count}} DISABLED</span>{% endif -%}
+				{%- if old_count %}<span class="badge badge-warning">{{old_count}} OLD</span>{% endif -%}
+				{%- if remote_count %}<span class="badge badge-info">{{remote_count}} remote</span>{% endif -%}
+            </div>
 		</div>
 	<table class="table table-borderless table-striped table-hover table-sm">
 		<tr>
