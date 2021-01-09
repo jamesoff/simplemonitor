@@ -377,7 +377,7 @@ class HTMLLogger(Logger):
                 status_border=self.header_class,
                 host=socket.gethostname(),
                 interval=interval,
-                timestamp=str(arrow.now().timestamp),
+                timestamp=str(arrow.now().int_timestamp),
                 now=format_datetime(arrow.now(), self.tz),
                 version=VERSION,
                 counts=self.count_data,
@@ -421,7 +421,7 @@ class HTMLLogger(Logger):
             line = line.replace("_NOW_", format_datetime(arrow.now(), self.tz))
             line = line.replace("_HOST_", socket.gethostname())
             line = line.replace("_COUNTS_", self.count_data)
-            line = line.replace("_TIMESTAMP_", str(arrow.now().timestamp))
+            line = line.replace("_TIMESTAMP_", str(arrow.now().int_timestamp))
             line = line.replace("_STATUS_BORDER_", self.header_class)
             line = line.replace("_STATUS_", self.status)
             line = line.replace("_VERSION_", VERSION)
