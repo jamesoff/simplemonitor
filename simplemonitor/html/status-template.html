@@ -39,11 +39,11 @@
 			<div class="navbar-text d-none d-lg-block" id="updated">Updated at {{now}} by {{host}} ({{version}})</div>
 			<div class="navbar-text" id="refresh_status"><span class="badge badge-warning d-none" id="refresh_badge">OUT OF DATE</span></div>
 			<div class="navbar-text">
-                {%- if ok_count %}<span class="badge badge-success">{{ok_count}} OK</span>{% endif -%}
-                {%- if fail_count %}<span class="badge badge-danger">{{fail_count}} FAIL</span>{% endif -%}
-                {%- if disabled_count %}<span class="badge badge-secondary">{{disabled_count}} DISABLED</span>{% endif -%}
-				{%- if old_count %}<span class="badge badge-warning">{{old_count}} OLD</span>{% endif -%}
-				{%- if remote_count %}<span class="badge badge-info">{{remote_count}} remote</span>{% endif -%}
+                {%- if ok_count %}<span class="badge badge-success">{{ok_count}} OK</span>  {% endif %}
+                {%- if fail_count %}<span class="badge badge-danger">{{fail_count}} FAIL</span>  {% endif %}
+                {%- if disabled_count %}<span class="badge badge-secondary">{{disabled_count}} DISABLED</span>  {% endif %}
+				{%- if old_count %}<span class="badge badge-warning">{{old_count}} OLD</span>  {% endif %}
+				{%- if remote_count %}<span class="badge badge-info">{{remote_count}} remote</span>  {% endif %}
             </div>
 		</div>
 	<table class="table table-borderless table-striped table-hover table-sm">
@@ -59,8 +59,15 @@
 			<th scope="col">Last Failure</th>
 			<th scope="col">Age</th>
 			</tr>
-{{output_fail}}
-{{output_ok}}
+{% macro table_row(entry) -%}
+		<tr{% if entry.row_class %} class="{{entry.row_class}}"{% endif %}><td><span data-toggle="tooltip" data-placement="right" title="{{entry.description}}">{{entry.monitor_name}}</span></td><td{% if entry.cell_class %} class="{{entry.cell_class}}"{% endif %}>{{entry.status_text}}</td><td>{{entry.host}}</td><td>{{entry.fail_time}}<td>{% if entry.fail_count %}{{entry.fail_count}}{% endif %}</td><td>{{entry.downtime}} (<span data-toggle="tooltip" data-placement="right" title="{{"%.5f" | format(entry.availability * 100)}}%">{{"%.2f" | format(entry.availability * 100)}}%</span>)</td><td>{{entry.fail_data}}</td>{% if entry.failures == 0 %}<td></td><td></td>{% else %}<td>{{entry.failures}}</td><td>{{entry.last_failure}}</td>{% endif %}<td>{% if not entry.my_host %}{{entry.age}}{% endif %}</td></tr>
+{%- endmacro -%}
+{% for entry in fail_entries -%}
+{{table_row(entry)}}
+{% endfor -%}
+{% for entry in ok_entries -%}
+{{table_row(entry)}}
+{% endfor %}
 </table>
 <div class="navbar-text d-block d-lg-none" id="updated">Updated at {{now}}<br />by {{host}} ({{version}})</div>
 
