@@ -8,7 +8,7 @@
 
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
 		<link rel="stylesheet" type="text/css" href="style.css" />
-{% if map -%}
+{%- if map -%}
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==" crossorigin=""/>
         <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
 {%- endif %}
@@ -39,12 +39,7 @@
 			<div class="navbar-text d-none d-lg-block" id="updated">Updated at {{now}} by {{host}} ({{version}})</div>
 			<div class="navbar-text" id="refresh_status"><span class="badge badge-warning d-none" id="refresh_badge">OUT OF DATE</span></div>
 			<div class="navbar-text">
-                {%- if ok_count %}<span class="badge badge-success">{{ok_count}} OK</span>  {% endif %}
-                {%- if fail_count %}<span class="badge badge-danger">{{fail_count}} FAIL</span>  {% endif %}
-                {%- if disabled_count %}<span class="badge badge-secondary">{{disabled_count}} DISABLED</span>  {% endif %}
-				{%- if old_count %}<span class="badge badge-warning">{{old_count}} OLD</span>  {% endif %}
-				{%- if remote_count %}<span class="badge badge-info">{{remote_count}} remote</span>  {% endif %}
-            </div>
+                {%- if ok_count %}<span class="badge badge-success">{{ok_count}} OK</span>  {% endif %}{%- if fail_count %}<span class="badge badge-danger">{{fail_count}} FAIL</span>  {% endif %}{%- if disabled_count %}<span class="badge badge-secondary">{{disabled_count}} DISABLED</span>  {% endif %}{%- if old_count %}<span class="badge badge-warning">{{old_count}} OLD</span>  {% endif %}{%- if remote_count %}<span class="badge badge-info">{{remote_count}} remote</span>  {% endif %} </div>
 		</div>
 	<table class="table table-borderless table-striped table-hover table-sm">
 		<tr>
@@ -67,7 +62,7 @@
 {% endfor -%}
 {% for entry in ok_entries -%}
 {{table_row(entry)}}
-{% endfor %}
+{% endfor -%}
 </table>
 <div class="navbar-text d-block d-lg-none" id="updated">Updated at {{now}}<br />by {{host}} ({{version}})</div>
 

@@ -173,7 +173,7 @@ class HTMLLogger(Logger):
         self.status = ""
         self.header_class = ""
         self._env = Environment(
-            loader=PackageLoader("simplemonitor", "html"),
+            loader=PackageLoader("simplemonitor", "html"), keep_trailing_newline=True
         )
 
     def _make_html_row(self, name: str, entry: Dict[str, Any]) -> str:
