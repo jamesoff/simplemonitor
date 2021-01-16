@@ -1,5 +1,6 @@
 # coding=utf-8
 import smtplib
+import email.utils
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import Optional, cast
@@ -46,6 +47,7 @@ class EMailAlerter(Alerter):
         message = MIMEMultipart()
         message["From"] = self.from_addr
         message["To"] = self.to_addr.replace(";", ",")
+        message["Date"] = email.utils.formatdate()
         envelope_to = self.to_addr.split(";")
         if self.cc_addr:
             message["CC"] = self.cc_addr.replace(";", ",")
