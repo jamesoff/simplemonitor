@@ -11,7 +11,7 @@ import time
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, TextIO, cast
 
 import arrow
-from jinja2 import Environment, PackageLoader
+from jinja2 import Environment, PackageLoader, select_autoescape
 
 from ..Monitors.monitor import Monitor
 from ..util import format_datetime, short_hostname
@@ -173,7 +173,9 @@ class HTMLLogger(Logger):
         self.status = ""
         self.header_class = ""
         self._env = Environment(
-            loader=PackageLoader("simplemonitor", "html"), keep_trailing_newline=True
+            loader=PackageLoader("simplemonitor", "html"),
+            keep_trailing_newline=True,
+            autoescape=select_autoescape("html"),
         )
 
     def _make_html_row(self, name: str, entry: Dict[str, Any]) -> str:
