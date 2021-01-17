@@ -168,6 +168,9 @@ class HTMLLogger(Logger):
             str,
             self.get_config_option("upload_command", required=False, allow_empty=False),
         )
+        self.map = cast(
+            bool, self.get_config_option("map", required_type="bool", default=False)
+        )
         self._resource_files = ["style.css"]  # type: List[str]
         self._my_host = short_hostname()
         self.status = ""
