@@ -8,7 +8,7 @@ import subprocess  # nosec
 import sys
 import tempfile
 import time
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, TextIO, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, cast
 
 import arrow
 from jinja2 import Environment, PackageLoader, select_autoescape
@@ -177,68 +177,6 @@ class HTMLLogger(Logger):
             keep_trailing_newline=True,
             autoescape=select_autoescape("html"),
         )
-
-    def _make_html_row(self, name: str, entry: Dict[str, Any]) -> str:
-        row = ""
-        row_class = ""
-        cell_class = ""
-        if not entry["enabled"]:
-            status = "DISABLED"
-        elif entry["age"] > entry["gap"] + 60:
-            status = "OLD"
-            cell_class = "table-warning"
-        elif entry["status"]:
-            status = "OK"
-            cell_class = "table-success"
-        else:
-            status = "FAIL"
-            row_class = "table-danger"
-        try:
-            monitor_name = name.split("/")[1]
-        except IndexError:
-            monitor_name = name
-        if row_class:
-            row = f'<tr class="{row_class}">'
-        else:
-            row = "<tr>"
-        row = (
-            row + '<td><span data-toggle="tooltip" data-placement="right" '
-            f'title="{entry["description"]}">{monitor_name}</span></td>'
-        )
-
-        if cell_class:
-            row = row + f'<td class="{cell_class}">'
-        else:
-            row = row + "<td>"
-        row = row + status + "</td>"
-
-        row = row + f'<td>{entry["host"]}</td><td>{entry["fail_time"]}'
-        if not entry["fail_count"]:
-            row = row + "<td></td>"
-        else:
-            row = row + f'<td>{entry["fail_count"]}</td>'
-        row = row + (
-            f'<td>{entry["downtime"]} '
-            '(<span data-toggle="tooltip" data-placement="right" '
-            f'title="{entry["availability"] * 100:0.5f}%">{entry["availability"] * 100:0.2f}%'
-            "</span>)"
-            "</td>"
-        )
-        row = row + f'<td>{entry["fail_data"]}</td>'
-
-        if entry["failures"] == 0:
-            row = row + "<td></td><td></td>"
-        else:
-            row = row + (
-                f'<td>{entry["failures"]}</td>'
-                f'<td>{format_datetime(entry["last_failure"], self.tz)}</td>'
-            )
-        if entry["host"] == self._my_host:
-            row = row + "<td></td>"
-        else:
-            row = row + f'<td>{entry["age"]}</td>'
-        row = row + "</tr>\n"
-        return row
 
     def save_result2(self, name: str, monitor: Monitor) -> None:
         if not self.doing_batch:
@@ -416,27 +354,6 @@ class HTMLLogger(Logger):
                 self.logger_logger.exception(
                     "Failed to run upload command for HTML files"
                 )
-
-    def parse_file(self, file_handle: TextIO) -> List[str]:
-        """Process a file an substitute in template values."""
-        raise NotImplementedError
-        lines = []  # type: List[str]
-        for line in file_handle:
-            line = line.replace("_NOW_", format_datetime(arrow.now(), self.tz))
-            line = line.replace("_HOST_", socket.gethostname())
-            line = line.replace("_COUNTS_", self.count_data)
-            line = line.replace("_TIMESTAMP_", str(arrow.now().int_timestamp))
-            line = line.replace("_STATUS_BORDER_", self.header_class)
-            line = line.replace("_STATUS_", self.status)
-            line = line.replace("_VERSION_", VERSION)
-            if self._global_info:
-                line = line.replace(
-                    "_INTERVAL_", str(max(30, self._global_info["interval"]))
-                )
-            else:
-                line = line.replace("_INTERVAL_", "30")
-            lines.append(line)
-        return lines
 
     def describe(self) -> str:
         return "Writing HTML page to {0}".format(self.filename)
