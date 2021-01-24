@@ -11,7 +11,7 @@ import time
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, cast
 
 import arrow
-from jinja2 import Environment, PackageLoader, select_autoescape
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from ..Monitors.monitor import Monitor
 from ..util import format_datetime, short_hostname
@@ -135,18 +135,6 @@ class HTMLLogger(Logger):
         self.filename = cast(
             str, self.get_config_option("filename", required=True, allow_empty=False)
         )
-        self.header = cast(
-            str,
-            self.get_config_option(
-                "header", required=False, allow_empty=False, default="header.html"
-            ),
-        )
-        self.footer = cast(
-            str,
-            self.get_config_option(
-                "footer", required=False, allow_empty=False, default="footer.html"
-            ),
-        )
         self.source_folder = cast(
             str,
             self.get_config_option(
@@ -176,7 +164,7 @@ class HTMLLogger(Logger):
         self.status = ""
         self.header_class = ""
         self._env = Environment(
-            loader=PackageLoader("simplemonitor", "html"),
+            loader=FileSystemLoader(self.source_folder),
             keep_trailing_newline=True,
             autoescape=select_autoescape("html"),
         )
