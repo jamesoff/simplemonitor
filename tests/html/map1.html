@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+        <meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+		<title>FAIL@fake_hostname.local monitor</title>
+
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+		<link rel="stylesheet" type="text/css" href="style.css" /><link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==" crossorigin=""/>
+        <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
+		<meta http-equiv="refresh" content="30" />
+		<script language="javascript" type="text/javascript">
+			function too_old() {
+				$("#refresh_badge").removeClass("d-none");
+				$("#refresh_status").addClass("d-inline");
+				$("#summary").removeClass("border-success border-danger");
+				$("#summary").addClass("border-warning");
+			}
+
+			function check_age() {
+				var generated = 1587211200;
+				var now = Date.parse(new Date()) / 1000;
+				var diff = now - generated;
+				if (diff > (30 * 2)) {
+					too_old();
+				}
+			}
+
+		</script>
+	</head>
+
+	<body onload="check_age();">
+		<div class="navbar navbar-light bg-light border-bottom border-danger" id="summary">
+			<div class="navbar-brand">SimpleMonitor</div>
+			<div class="navbar-text d-none d-lg-block" id="updated">Updated at 2020-04-18 12:00:00+00:00 by fake_hostname.local (__VERSION__)</div>
+			<div class="navbar-text" id="refresh_status"><span class="badge badge-warning d-none" id="refresh_badge">OUT OF DATE</span></div>
+			<div class="navbar-text"><span class="badge badge-success">1 OK</span>  <span class="badge badge-danger">1 FAIL</span>  <span class="badge badge-secondary">1 DISABLED</span>   </div>
+		</div><div id="mapid" style="fill: 1440px; height: 960px;"></div>
+	<script>
+		var mymap = L.map('mapid', {
+			center: [52, 1],
+			zoom: 12
+		});
+		L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=secret_token', {
+			maxZoom: 18,
+			attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, ' +
+				'<a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+				'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+			id: 'mapbox/streets-v11'
+		}).addTo(mymap);
+
+		var markerIcon1 = L.icon({
+			iconUrl: 'marker-single-up.png',
+			popupAnchor: [11,2]
+		});
+
+		var markerIcon2 = L.icon({
+			iconUrl: 'marker-single-down.png',
+			popupAnchor: [11,2]
+		});
+
+L.marker([52.02,1.02], {
+icon: markerIcon2,title: 'fail',
+		}).addTo(mymap).bindPopup("fail (FAIL) This monitor always fails.");
+
+L.marker([52.03,1.03], {
+
+			icon: markerIcon1,title: 'disabled',
+		}).addTo(mymap).bindPopup("disabled (DISABLED) ");
+
+L.marker([52.01,1.01], {
+
+			icon: markerIcon1,title: 'unnamed',
+		}).addTo(mymap).bindPopup("unnamed (OK) ");
+</script>
+<div class="navbar-text d-block d-lg-none" id="updated">Updated at 2020-04-18 12:00:00+00:00<br />by fake_hostname.local (__VERSION__)</div>
+
+<div class="text-right text-muted">SimpleMonitor __VERSION__ <a href="https://jamesoff.github.io/simplemonitor" target="_blank">&raquo; Documentation</a> | <a href="https://github.com/jamesoff/simplemonitor" target="_blank">&raquo; Code</a></div>
+
+<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+<script language="javascript" type="text/javascript">
+$(function () {
+    $('[data-toggle="tooltip"]').tooltip();
+    check_age();
+    setTimeout(too_old, (30 * 2000));
+})
+</script>
+</body>
+</html>

@@ -41,7 +41,7 @@
 			<div class="navbar-text">
                 {%- if ok_count %}<span class="badge badge-success">{{ok_count}} OK</span>  {% endif %}{%- if fail_count %}<span class="badge badge-danger">{{fail_count}} FAIL</span>  {% endif %}{%- if disabled_count %}<span class="badge badge-secondary">{{disabled_count}} DISABLED</span>  {% endif %}{%- if old_count %}<span class="badge badge-warning">{{old_count}} OLD</span>  {% endif %}{%- if remote_count %}<span class="badge badge-info">{{remote_count}} remote</span>  {% endif %} </div>
 		</div>
-{%-if map -%}
+{%- if map -%}
 <div id="mapid" style="fill: 1440px; height: 960px;"></div>
 	<script>
 		var mymap = L.map('mapid', {
@@ -82,7 +82,7 @@
 {{map_pin(entry)}}
 {% endfor -%}
 	</script>
-{%- else -%}
+{%- else %}
 	<table class="table table-borderless table-striped table-hover table-sm">
 		<tr>
 			<th scope="col">Monitor</th>
@@ -106,7 +106,7 @@
 {{table_row(entry)}}
 {% endfor -%}
 </table>
-{%- endif -%}
+{%- endif %}
 <div class="navbar-text d-block d-lg-none" id="updated">Updated at {{now}}<br />by {{host}} ({{version}})</div>
 
 <div class="text-right text-muted">SimpleMonitor {{version}} <a href="https://jamesoff.github.io/simplemonitor" target="_blank">&raquo; Documentation</a> | <a href="https://github.com/jamesoff/simplemonitor" target="_blank">&raquo; Code</a></div>
