@@ -159,6 +159,19 @@ class HTMLLogger(Logger):
         self.map = cast(
             bool, self.get_config_option("map", required_type="bool", default=False)
         )
+        _map_start = cast(
+            Optional[List[str]],
+            self.get_config_option("map_start", required_type="[str]", default=None),
+        )
+        if _map_start and len(_map_start) == 3:
+            self.map_start = {
+                "latitude": _map_start[0],
+                "longitude": _map_start[1],
+                "zoom": _map_start[2],
+            }  # type: Optional[Dict[str, str]]
+        else:
+            self.map_start = None
+        self.map_token = cast(str, self.get_config_option("map_token"))
         self._resource_files = ["style.css"]  # type: List[str]
         self._my_host = short_hostname()
         self.status = ""
@@ -317,6 +330,9 @@ class HTMLLogger(Logger):
                 remote_count=remote_count,
                 fail_entries=fail_entries,
                 ok_entries=ok_entries,
+                map=self.map,
+                map_start=self.map_start,
+                map_token=self.map_token,
             )
         )
 
