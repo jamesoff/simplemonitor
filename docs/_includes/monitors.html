@@ -22,6 +22,7 @@ All monitor types share the following configuration options:
 | group | The group the monitor belongs to. Alerters and Loggers will only fire for monitors which appear in their groups. | no | `default` |
 | notify | If the monitor should alert at all | no | 1 |
 | failure_doc | Information to include in alerts on failure (e.g. a URL to a runbook) | no | |
+| gps | comma-separated latitude, longitude of this morning, for the HTML logger's map | no | |
 {% for monitor in m %}
 <a name="{{monitor.name}}"></a>
 
