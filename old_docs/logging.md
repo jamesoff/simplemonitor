@@ -61,7 +61,7 @@ You can use the `upload_command` setting to specify a command to push the genera
 
 ### <a name="seq"></a>seq logger
 
-This logger is used to send status reports of all monitors to a seq log server. The logger must be configured with the seq *endpoint* parameter, for example http://10.0.0.100:5341/api/events/raw 
+This logger is used to send status reports of all monitors to a seq log server. The logger must be configured with the seq *endpoint* parameter, for example http://10.0.0.100:5341/api/events/raw
 
 | setting | description | required | default |
 |---|---|---|---|
