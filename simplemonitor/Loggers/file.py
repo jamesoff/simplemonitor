@@ -241,6 +241,7 @@ class HTMLLogger(Logger):
             "link": monitor.failure_doc,
             "enabled": monitor.enabled,
             "my_host": True if monitor.running_on == self._my_host else False,
+            "gps": monitor.gps,
         }  # type: Dict[str, Any]
         self.batch_data[monitor.name] = data_line
 

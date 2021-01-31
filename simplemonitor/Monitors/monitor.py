@@ -95,7 +95,13 @@ class Monitor:
         self.enabled = cast(
             bool, self.get_config_option("enabled", required_type="bool", default=True)
         )
-        self.gps = cast(Optional[str], self.get_config_option("gps"))
+        _gps = cast(Optional[str], self.get_config_option("gps"))
+        if _gps:
+            self.gps = [
+                float(x) for x in _gps.split(",")
+            ]  # type: Optional[List[float]]
+        else:
+            self.gps = None
 
         self.running_on = short_hostname()
         self._state = MonitorState.UNKNOWN
