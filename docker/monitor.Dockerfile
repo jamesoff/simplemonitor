@@ -20,7 +20,8 @@ RUN     apk --no-cache add --update \
             bind-tools \
             openssl-dev \
             libffi-dev \
-            rust
+            rust \
+            cargo
 
 # >> env :: web/docker paths
 ENV     DOCKER_ROOT=/code \
@@ -46,6 +47,8 @@ ENV     MAIN_USER=simplemonitor \
 RUN     mkdir -p $DOCKER_ROOT
 COPY    $SOURCE_ROOT $DOCKER_ROOT
 WORKDIR $DOCKER_ROOT
+
+RUN     pip install --upgrade pip
 
 # >> install :: py-requirements
 RUN     pip install --no-cache-dir "$DOCKER_ROOT"
