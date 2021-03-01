@@ -19,7 +19,8 @@ RUN     apk --no-cache add --update \
             su-exec \
             bind-tools \
             openssl-dev \
-            libffi-dev
+            libffi-dev \
+            rust
 
 # >> env :: web/docker paths
 ENV     DOCKER_ROOT=/code \
