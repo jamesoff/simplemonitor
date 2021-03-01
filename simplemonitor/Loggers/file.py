@@ -405,7 +405,7 @@ class HTMLLogger(Logger):
             line = line.replace("_NOW_", format_datetime(arrow.now(), self.tz))
             line = line.replace("_HOST_", socket.gethostname())
             line = line.replace("_COUNTS_", self.count_data)
-            line = line.replace("_TIMESTAMP_", str(arrow.now().timestamp))
+            line = line.replace("_TIMESTAMP_", str(int(arrow.now().timestamp())))
             line = line.replace("_STATUS_BORDER_", self.header_class)
             line = line.replace("_STATUS_", self.status)
             line = line.replace("_VERSION_", VERSION)
