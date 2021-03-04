@@ -25,7 +25,7 @@ winmonitor = "simplemonitor.winmonitor:main"
 
 [tool.poetry.dependencies]
 python = "^3.6.2"
-arrow = "^0.17.0"
+arrow = ">=0.17,<1.1"
 boto3 = "^1.15.16"
 colorlog = "^4.4.0"
 paho-mqtt = "^1.5.1"
@@ -46,7 +46,7 @@ mypy = "*"
 bandit = "*"
 freezegun = "*"
 pytest = "*"
-pylint = "^2.6.0"
+pylint = "^2.7.2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
