@@ -277,10 +277,12 @@ Attempts to resolve the DNS record, and optionally checks the result. Requires `
 
     the server to send the request to. If not given, uses the system default.
 
+.. _fail:
+
 fail - alawys fails
 ^^^^^^^^^^^^^^^^^^^
 
-This monitor fails 5 times in a row, then succeeds once. Use for testing. See the :ref:`pass - always succeds` monitor for the inverse.
+This monitor fails 5 times in a row, then succeeds once. Use for testing. See the :ref:`null<null>` monitor for the inverse.
 
 filestat - file size and age
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -339,7 +341,7 @@ host - ping a host
 
 Check a host is pingable.
 
-.. tip:: This monitor relies on executing the ``ping`` command provided by your OS. It has known issues on non-English locales on Windows. You should use the :ref:`ping<monitor-ping>` monitor instead. The only reason to use this one is that it does not require SimpleMonitor to run as root.
+.. tip:: This monitor relies on executing the ``ping`` command provided by your OS. It has known issues on non-English locales on Windows. You should use the :ref:`ping<ping>` monitor instead. The only reason to use this one is that it does not require SimpleMonitor to run as root.
 
 .. confval:: host
 
@@ -449,12 +451,16 @@ Check free memory percentage.
 
     the minimum percent of available (as per psutils’ definition) memory
 
+.. _null:
+
 null - always passes
 ^^^^^^^^^^^^^^^^^^^^
 
-Monitor which always passes. Use for testing.
+Monitor which always passes. Use for testing. See the :ref:`fail<fail>` monitor for the inverse.
 
 This monitor has no additional parameters.
+
+.. _ping:
 
 ping - ping a host
 ^^^^^^^^^^^^^^^^^^
@@ -475,3 +481,341 @@ Pings a host to make sure it’s up. Uses a Python ping module instead of callin
     :default: ``5``
 
     the timeout for the ping in seconds
+
+pkgaudit - FreeBSD pkg audit
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Fails if ``pkg audit`` reports any vulnerable packages installed.
+
+.. confval:: path
+
+    :type: string
+    :required: false
+    :default: :file:`/usr/local/sbin/pkg`
+
+    the path to the ``pkg`` binary
+
+portaudit - FreeBSD port audit
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Fails if ``portaudit`` reports any vulnerable ports installed.
+
+.. confval:: path
+
+    :type: string
+    :required: false
+    :default: :file:`/usr/local/sbin/portaudit`
+
+    the path to the ``portaudit`` binary
+
+process - running process
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Check for a running process.
+
+.. confval:: process_name
+
+    :type: string
+    :required: true
+
+    the process name to check for
+
+.. confval:: min_count
+
+    :type: integer
+    :required: false
+    :default: ``1``
+
+    the minimum number of matching processes
+
+.. confval:: max_count
+
+    :type: integer
+    :required: false
+    :default: infinity
+
+    the maximum number of matching processes
+
+.. confval:: username
+
+    :type: string
+    :required: false
+    :default: any user
+
+    limit matches to processes owned by this user.
+
+rc - FreeBSD rc service
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Checks a FreeBSD-style service is running, by running its rc script (in /usr/local/etc/rc.d) with the status command.
+
+.. tip:: You may want the :ref:`unix_service<unix_service>` monitor for a more generic check.
+
+.. confval:: service
+
+    :type: string
+    :required: true
+
+    the name of the service to check. Should be the name of the rc.d script in :file:`/usr/local/etc/rc.d`. Any trailing ``.sh`` is optional and added if needed.
+
+.. confval:: path
+
+    :type: string
+    :required: false
+    :default: :file:`/usr/local/etc/rc.d`
+
+    the path of the folder containing the rc script.
+
+.. confval:: return_code
+
+    :type: integer
+    :required: false
+    :default: ``0``
+
+    the required return code from the script
+
+ring - Ring doorbell battery
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Check the battery level of a Ring doorbell.
+
+.. confval:: device_name
+
+    :type: string
+    :required: true
+
+    the name of the Ring Doorbell to monitor.
+
+.. confval:: minimum_battery
+
+    :type: integer
+    :required: false
+    :default: ``25``
+
+    the minimum battery percent allowed.
+
+.. confval:: username
+
+    :type: string
+    :required: true
+
+    your Ring username (e.g. email address). Accounts using MFA are not supported. You can create a separate user for API access.
+
+.. confval:: password
+
+    :type: string
+    :required: true
+
+    your Ring password.
+
+.. warning:: Do not commit credentials to source control!
+
+service - Windows Service
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Checks a Windows service to make sure it's in the correct state.
+
+.. confval:: service
+
+    :type: string
+    :required: true
+
+    the short name of the service to monitor (this is the "Service Name" on the General tab of the service Properties in the Services MMC snap-in).
+
+.. confval:: want_state
+
+    :type: string
+    :required: false
+    :default: ``RUNNING``
+
+    the required status for the service. One of:
+
+    * ``RUNNING``
+    * ``STOPPED``
+    * ``PAUSED``
+    * ``START_PENDING``
+    * ``PAUSE_PENDING``
+    * ``CONTINUE_PENDING``
+    * ``STOP_PENDING``
+
+.. tip:: version 1.9 and earlier had a **host** parameter, which is no longer used.
+
+svc - daemontools service
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Checks a daemontools ``supervise``-managed service is running.
+
+.. confval:: path
+
+    :type: string
+    :required: true
+
+    the path to the service's directory (e.g. :file:`/var/service/something`)
+
+systemd-unit - systemd unit check
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Monitors a systemd unit status, via dbus. You may want the :ref:`unix_service<unix_service>` monitor instead if you just want to ensure a service is running.
+
+.. confval:: name
+
+    :type: string
+    :required: true
+
+    the name of the unit to monitor
+
+.. confval:: load_states
+
+    :type: comma-separated list of string
+    :required: false
+    :default: ``loaded``
+
+    desired load states for the unit
+
+.. confval:: active_states
+
+    :type: comma-separated list of string
+    :required: false
+    :default: ``active,reloading``
+
+    desired active states for the unit
+
+.. confval:: sub_states
+
+    :type: comma-separated list of string
+    :required: false
+    :default: none
+
+    desired sub states for the service
+
+tcp - open TCP port
+^^^^^^^^^^^^^^^^^^^
+
+Checks a TCP port is connectible. Doesn't care what happens after the connection is opened.
+
+.. confval:: host
+
+    :type: string
+    :required: true
+
+    the name/IP of the host to connect to
+
+.. confval:: port
+
+    :type: integer
+    :required: true
+
+    the port number to connect to.
+
+unifi_failover - USG failover WAN status
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Checks a Unifi Security Gateway for failover WAN status. Connects via SSH; the USG must be in your :file:`known_hosts` file. Requires the specified interface to have the carrier up, a gateway, and not be in the ``failover`` state.
+
+.. confval:: router_address
+
+    :type: string
+    :required: true
+
+    the address of the USG
+
+.. confval:: router_username
+
+    :type: string
+    :required: true
+
+    the username to log in as
+
+.. confval:: router_password
+
+    :type: string
+    :required: conditional
+
+    the password to log in with. Required if not using ``ssh_key``.
+
+.. confval:: ssh_key
+
+    :type: string
+    :required: conditional
+
+    path to the SSH private key to log in with. Required if not using ``router_password``.
+
+.. confval:: check_interface
+
+    :type: string
+    :required: false
+    :default: ``eth2``
+
+    the interface which should be ready for failover.
+
+unifi_watchdog - USG failover watchdog
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Checks a Unifi Security Gateway to make sure the failover WAN is healthy. Connects via SSH; the USG must be in your :file:`known_hosts` file. Requires the specified interface to have status ``Running`` and the ping target to be ``REACHABLE``.
+
+
+.. confval:: router_address
+
+    :type: string
+    :required: true
+
+    the address of the USG
+
+.. confval:: router_username
+
+    :type: string
+    :required: true
+
+    the username to log in as
+
+.. confval:: router_password
+
+    :type: string
+    :required: conditional
+
+    the password to log in with. Required if not using ``ssh_key``.
+
+.. confval:: ssh_key
+
+    :type: string
+    :required: conditional
+
+    path to the SSH private key to log in with. Required if not using ``router_password``.
+
+.. confval:: primary_interface
+
+    :type: string
+    :required: false
+    :default: ``pppoe0``
+
+    the primary WAN interface
+
+.. confval:: secondary_interface
+
+    :type: string
+    :required: false
+    :default: ``eth2``
+
+    the secondary (failover) WAN interface
+
+.. _unix_service:
+
+unix_service - generic UNIX service
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Generic UNIX service check, by running ``service ... status``.
+
+.. confval:: service
+
+    :type: string
+    :required: true
+
+    the name of the service to check
+
+.. confval:: state
+
+    :type: string
+    :required: false
+    :default: ``running``
+
+    the state of the service; either ``running`` (status command exits 0) or ``stopped`` (status command exits 1).
