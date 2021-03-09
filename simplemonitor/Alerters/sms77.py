@@ -42,12 +42,17 @@ class SMS77Alerter(Alerter):
 
         message = self.build_message(AlertLength.SMS, alert_type, monitor)
 
-        url = "https://gateway.sms77.io/api"
-        params = {"text": message, "to": self.target, "from": self.sender}
+        url = "https://gateway.sms77.io/api/sms"
+        params = {
+            "text": message,
+            "to": self.target,
+            "from": self.sender,
+            "p": self.api_key,
+        }
 
         if not self._dry_run:
             try:
-                r = requests.get(url, params=params, auth=("basic", self.api_key))
+                r = requests.get(url, params=params)
                 s = r.text
                 if not s.startswith("100"):
                     self.alerter_logger.error("Unable to send SMS: status code %s", s)
