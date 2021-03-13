@@ -18,7 +18,14 @@ from .host import (
     MonitorSwap,
     MonitorZap,
 )
-from .network import MonitorDNS, MonitorHost, MonitorHTTP, MonitorTCP
+from .network import (
+    MonitorDNS,
+    MonitorHost,
+    MonitorHTTP,
+    MonitorPing,
+    MonitorTCP,
+    MonitorTLSCert,
+)
 from .ring import MonitorRingDoorbell
 from .service import (
     MonitorEximQueue,
