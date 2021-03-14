@@ -42,3 +42,4 @@ coverage.xml
 _build
 old_docs
 docs/_build
+*.log
