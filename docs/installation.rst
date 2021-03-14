@@ -5,8 +5,8 @@ SimpleMonitor is available via `PyPi <https://pypi.org/project/simplemonitor>`_:
 
    pip install simplemonitor
 
-.. tip:: You may want to install it in a virtualenv, or you can use pipx which
-   automatically manages virtualenvs for command-line tools.
+.. tip:: You may want to install it in a virtualenv, or you can use `pipx <https://pipxproject.github.io/pipx/>`_
+   which automatically manages virtualenvs for command-line tools.
 
 TODO: install ring etc?
 
@@ -62,7 +62,7 @@ Command Line Options Reference
   -v, --verbose         Alias for ``--log-level=info``
   -q, --quiet           Alias for ``--log-level=critical``
   -d, --debug           Alias for ``--log-level=debug``
-  -H, --no-heartbeat    Omit printing the '.' character when running checks
+  -H, --no-heartbeat    Omit printing the ``.`` character when running checks
   -l LOGLEVEL, --log-level LOGLEVEL
                         Log level: critical, error, warn, info, debug
   -C, --no-colour, --no-color
@@ -71,6 +71,9 @@ Command Line Options Reference
 
 **Testing options**
   -t, --test            Test config and exit
+
+These options are really for testing SimpleMonitor itself, and you probably don't need them.
+
   -1, --one-shot        Run the monitors once only, without alerting. Require monitors without "fail" in the name to succeed. Exit zero
                         or non-zero accordingly.
   --loops LOOPS         Number of iterations to run before exiting

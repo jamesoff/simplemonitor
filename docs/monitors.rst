@@ -54,6 +54,8 @@ These options are common to all monitor types.
 
     if this monitor is "urgent" or not. Non-urgent monitors do not trigger urgent alerters (e.g. BulkSMS)
 
+.. _gap:
+
 .. confval:: gap
 
     :type: integer
@@ -61,6 +63,8 @@ These options are common to all monitor types.
     :default: 0
 
     the number of seconds this monitor should allow to pass before polling. Use it to make a monitor poll only once an hour (``3600``), for example. Setting this value lower than the ``interval`` will have no effect, and the monitor will run every loop like normal.
+
+    Some monitors default to a higher value when it doesn't make sense to run their check too frequently because the underlying data will not change that often or quickly, such as :ref:`pkgaudit<pkgaudit>`. You can override their default to a lower value as required.
 
     .. hint:: Monitors which are in the failed state will poll every loop, regardless of this setting, in order to detect recovery as quickly as possible
 
@@ -482,6 +486,8 @@ Pings a host to make sure it’s up. Uses a Python ping module instead of callin
 
     the timeout for the ping in seconds
 
+.. _pkgaudit:
+
 pkgaudit - FreeBSD pkg audit
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -711,6 +717,8 @@ tls_expiry - TLS cert expiration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Checks an SSL/TLS certificate is not due to expire/has expired. No support for SNI, and does not verify the certificate has the right hostname, chain, etc.
+
+.. note:: This monitor's :ref:`gap<gap>` defaults to 12 hours.
 
 .. warning:: Due to a limitation of the underlying Python modules in use, this does not currently support TLS 1.3.
 
