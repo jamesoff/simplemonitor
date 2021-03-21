@@ -1,5 +1,5 @@
-ring - Ring doorbell battery
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ring_doorbell - Ring doorbell battery
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Check the battery level of a Ring doorbell.
 

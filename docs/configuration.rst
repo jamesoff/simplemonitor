@@ -105,7 +105,7 @@ This file must contain a ``[monitor]`` section, which must contain at least the 
     :required: false
     :default: none
 
-    a file to watch the modification time on. If the modification time increases, SimpleMonitor reloads its configuration.
+    a file to watch the modification time on. If the modification time increases, SimpleMonitor :ref:`reloads its configuration<Reloading>`.
 
     .. tip:: SimpleMonitor will reload if it receives SIGHUP; this option is useful for platforms which don't have that.
 
@@ -207,6 +207,7 @@ This is an example pair of configuration files to show what goes where. For more
    partition=/
    limit=1G
 
+.. _Reloading:
 
 Reloading
 ---------

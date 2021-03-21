@@ -101,6 +101,8 @@ These options are common to all monitor types.
 
     if this monitor should alert at all.
 
+.. _monitor-group:
+
 .. confval:: group
 
     :type: string
