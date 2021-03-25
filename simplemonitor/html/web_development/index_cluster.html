@@ -2,15 +2,15 @@
 <!DOCTYPE html>
 <head>
 
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="Enter key" crossorigin=""/>
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="Enter Key" crossorigin=""></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <link rel="stylesheet" href="style.css" />
 	<link rel="stylesheet" href="MarkerCluster.css" />
 	<link rel="stylesheet" href="MarkerCluster.Default.css" />
     <script src="markercluster-src.js"></script>
-    <script src="sites.js"></script>
+    <script src="test_sites.js"></script>
 
 
 </head>
@@ -44,10 +44,16 @@
 		
 		for (var i = 0; i < addressPoints.length; i++) {
 			var a = addressPoints[i];
-			var title = a[2];
-			var marker = L.marker(new L.LatLng(a[0], a[1]),{icon: markerIcon1}, { title: title });
-			marker.bindPopup(title);
-			markers.addLayer(marker);
+			var title = a[3];
+			if (a[2] == "up") {
+				var marker = L.marker(new L.LatLng(a[0], a[1]),{icon: markerIcon1}, { title: title });
+				marker.bindPopup(title);
+				markers.addLayer(marker);
+			} else {
+				var marker = L.marker(new L.LatLng(a[0], a[1]),{icon: markerIcon2}, { title: title });
+				marker.bindPopup(title);
+				markers.addLayer(marker);
+			}
 		}
 
 		map.addLayer(markers);
