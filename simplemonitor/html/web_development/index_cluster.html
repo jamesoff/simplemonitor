@@ -1,0 +1,57 @@
+
+<!DOCTYPE html>
+<head>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="style.css" />
+	<link rel="stylesheet" href="MarkerCluster.css" />
+	<link rel="stylesheet" href="MarkerCluster.Default.css" />
+    <script src="markercluster-src.js"></script>
+    <script src="sites.js"></script>
+
+
+</head>
+    
+</head>
+<body>
+
+	<div id="map"></div>
+	<span>Mouse over a cluster to see the bounds of its children and click a cluster to zoom to those bounds</span>
+	<script type="text/javascript">
+
+		var tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+				maxZoom: 18,
+				attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Points &copy 2012 LINZ'
+			}),
+			latlng = L.latLng(47.37158, -120.65896);
+
+		var map = L.map('map', {center: latlng, zoom: 7, layers: [tiles]});
+
+		var markerIcon1 = L.icon({
+			iconUrl: 'marker-single-up.png',
+			popupAnchor:[11,2]
+		});
+
+		var markerIcon2 = L.icon({
+			iconUrl: 'marker-single-down.png',
+			popupAnchor:[11,2]
+		});
+
+		var markers = L.markerClusterGroup();
+		
+		for (var i = 0; i < addressPoints.length; i++) {
+			var a = addressPoints[i];
+			var title = a[2];
+			var marker = L.marker(new L.LatLng(a[0], a[1]),{icon: markerIcon1}, { title: title });
+			marker.bindPopup(title);
+			markers.addLayer(marker);
+		}
+
+		map.addLayer(markers);
+
+	</script>
+</body>
+</html>
