@@ -23,7 +23,7 @@ jobs:
       - name: Update pip
         run: pip install --user --upgrade pip
       - name: Install poetry
-        run: pip install poetry
+        run: pip install poetry==1.1.4
       - name: poetry install
         run: poetry install
       - name: create HTML output folder
