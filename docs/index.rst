@@ -48,7 +48,7 @@ Features
 Things SimpleMonitor can monitor
 --------------------------------
 
-For the complete list, see :ref:`Monitors`.
+For the complete list, see :ref:`Monitors<monitors-list>`.
 
 * Host ping
 * Host open ports (TCP)
@@ -74,7 +74,7 @@ To SimpleMonitor, a Logger is something which reports the status of every
 monitor, each time it's checked. An Alerter sends a message about a monitor
 changing state.
 
-Some of the options include (for the complete list, see :ref:`Loggers` and :ref:`Alerters`):
+Some of the options include (for the complete list, see :ref:`Loggers<loggers-list>` and :ref:`Alerters<alerters-list>`):
 
 * Writing the state of each monitor at each iteration to a SQLite database
 * Sending an email alert when a monitor fails, and when it recovers, directly over SMTP or via Amazon SES
@@ -125,5 +125,4 @@ Indices and tables
 ==================
 
 * :ref:`genindex`
-* :ref:`modindex`
 * :ref:`search`

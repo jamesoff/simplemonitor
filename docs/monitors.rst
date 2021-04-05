@@ -133,6 +133,8 @@ These options are common to all monitor types.
     comma-separated latitude and longitude of this monitor
 
 
+.. _monitors-list:
+
 Monitors
 --------
 

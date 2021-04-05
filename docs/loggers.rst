@@ -45,6 +45,8 @@ These options are common to all logger types.
 
     the timezone to convert date/times to
 
+.. _loggers-list:
+
 Loggers
 -------
 

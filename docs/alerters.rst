@@ -177,6 +177,8 @@ Don't send at antisocial times, but let me know later if something broke and has
    time_upper=22:00
    delay=1
 
+.. _alerters-list:
+
 Alerters
 --------
 
