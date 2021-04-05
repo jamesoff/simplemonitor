@@ -32,6 +32,7 @@ Welcome to SimpleMonitor
    creating-monitors
    creating-alerters
    creating-loggers
+   get-config-values
 
 
 SimpleMonitor is a Python script which monitors hosts and network
@@ -105,7 +106,7 @@ Contributing
 * Clone the GitHub repo
 * ``poetry install``
 
-You can use ``pre-commit`` to ensure your code is up to my exacting standards ;)
+You can use `pre-commit <https://pre-commit.com/>`_ to ensure your code is up to my exacting standards ;)
 
 You can run tests with ``make unit-test``. See the Makefile for other useful targets.
 
