@@ -36,13 +36,15 @@ These options are common to all alerter types.
 
     a list of monitors this alerter depends on. If any of them fail, no attempt will be made to send the alert.
 
+.. _alerter-limit:
+
 .. confval:: limit
 
     :type: integer
     :required: false
     :default: ``1``
 
-    the number of times a monitor must have failed before this alerter fires for it. You can use this to escalate an alert to another email address or text messaging, for example.
+    the (virtual) number of times a monitor must have failed before this alerter fires for it. You can use this to escalate an alert to another email address or text messaging, for example. See the :ref:`tolerance<monitor-tolerance>` Monitor configuration option.
 
 .. confval:: dry_run
 

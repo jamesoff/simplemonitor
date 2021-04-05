@@ -68,6 +68,8 @@ This file must contain a ``[monitor]`` section, which must contain at least the 
 
     the path to write a pidfile to.
 
+.. _config-remote:
+
 .. confval:: remote
 
     :type: bool

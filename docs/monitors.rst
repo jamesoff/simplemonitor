@@ -39,13 +39,15 @@ These options are common to all monitor types.
 
    the monitors on which this one depends. This monitor will run after those, unless one of them fails or is skipped, in which case this one will also skip. A skip does not trigger an alerter.
 
+.. _monitor-tolerance:
+
 .. confval:: tolerance
 
     :type: integer
     :required: false
     :default: 1
 
-    the number of times a monitor can fail before it enters the failed state. Handy for things which intermittently fail, such as unreliable links. See also the :ref:`limit-option` on Alerters.
+    the number of times a monitor can fail before it enters the failed state. Handy for things which intermittently fail, such as unreliable links. The number of times the monitor has actually failed, minus this number, is its "Virtual Failure Count". See also the :ref:`limit<alerter-limit>` option on Alerters.
 
 .. confval:: urgent
 
@@ -68,6 +70,8 @@ These options are common to all monitor types.
     Some monitors default to a higher value when it doesn't make sense to run their check too frequently because the underlying data will not change that often or quickly, such as :ref:`pkgaudit<pkgaudit>`. You can override their default to a lower value as required.
 
     .. hint:: Monitors which are in the failed state will poll every loop, regardless of this setting, in order to detect recovery as quickly as possible
+
+.. _monitor-remote-alert:
 
 .. confval:: remote_alert
 
@@ -118,6 +122,15 @@ These options are common to all monitor types.
     :default: none
 
     information to include in alerts on failure (e.g. a URL to a runbook)
+
+.. _monitor-gps:
+
+.. confval:: gps
+
+    :type: string
+    :required: no, unless you want to use the :ref:`html logger<logger-html>`'s map
+
+    comma-separated latitude and longitude of this monitor
 
 
 Monitors
