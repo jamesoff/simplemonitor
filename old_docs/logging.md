@@ -50,12 +50,13 @@ The section name should be the name of your logger. This is the name you should 
 | source_folder | the folder in which all the needed files live. You only need this if you're customising the files | no | "html" in the distribution |
 | folder | the folder in which to write the file(s). Must already exist. | yes | |
 | filename | the filename to write out. The file will be updated once per interval (as defined in the main configuration). Relative to the *folder*. | yes | |
-| header | the header include file which is sucked in when writing the output file. Relative to folder. | no | footer.html |
-| footer | the footer include file. Relative to folder. | no | header.html |
 | upload_command | a command to run to e.g. upload the generated files to another location | no | |
 | copy_resources | set to 0 if simplemonitor should not copy needed supporting files (e.g. CSS) to the output folder | no | 1 |
+| map | set to 1 to replace the table with a map. Set the "gps" property on your monitors. | no | 0 |
+| map_start | comma-separated latitude, longitude, zoom level for the initial map view. Try something like 10-15 for the map view to start | yes | |
+| map_token | an API token for mapbox.com in order to make the map work. Don't commit it to a public repo | yes | |
 
-The supplied header file includes JavaScript to notify you if the page either doesn’t auto-refresh, or if SimpleMonitor has stopped updating it. This requires your machine running SimpleMonitor and the machine you are browsing from to agree on what the time is (timezone doesn’t matter)!
+The supplied template includes JavaScript to notify you if the page either doesn’t auto-refresh, or if SimpleMonitor has stopped updating it. This requires your machine running SimpleMonitor and the machine you are browsing from to agree on what the time is (timezone doesn’t matter)! The template is written using Jinja2.
 
 You can use the `upload_command` setting to specify a command to push the generated files to another location (e.g. a web server, an S3 bucket etc). I'd suggest putting the commands in a script and just specifying that script as the value for this setting.
 

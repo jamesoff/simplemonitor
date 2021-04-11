@@ -1,14 +1,16 @@
 # coding=utf-8
 """Network-related monitors for SimpleMonitor."""
 
+import datetime
 import json
 import re
 import socket
 import subprocess
 import sys
-from typing import List, Pattern, Tuple, Union, cast
+from typing import TYPE_CHECKING, List, Optional, Pattern, Tuple, Union, cast
 
 import arrow
+import OpenSSL.SSL
 import requests
 from requests.auth import HTTPBasicAuth
 
@@ -20,6 +22,9 @@ try:
     ping3.EXCEPTIONS = True
 except ImportError:
     pass
+
+if TYPE_CHECKING:
+    from OpenSSL.crypto import X509
 
 
 @register
@@ -380,3 +385,93 @@ class MonitorPing(Monitor):
 
     def describe(self) -> str:
         return "Checking {} pings within {} seconds".format(self.host, self.timeout)
+
+
+@register
+class MonitorTLSCert(Monitor):
+    """Check the cert on a TLS connection is not due to expire."""
+
+    monitor_type = "tls_expiry"
+
+    def __init__(self, name: str, config_options: Optional[dict]) -> None:
+        if config_options is None:
+            config_options = {}
+        self.minimum_gap = 43200  # 12 hours
+        super().__init__(name=name, config_options=config_options)
+        self.host = cast(str, self.get_config_option("host", required=True))
+        self.port = cast(
+            int, self.get_config_option("port", required_type="int", default=443)
+        )
+        self.min_days = cast(
+            int, self.get_config_option("min_days", required_type="int", default=7)
+        )
+        if self.min_days < 0:
+            raise ValueError("min_days must be 0 or greater")
+
+    def run_test(self) -> bool:
+        # Note: at time of writing, pyOpenSSL does not support TLS1.3
+        ssl_context = OpenSSL.SSL.Context(OpenSSL.SSL.TLSv1_2_METHOD)
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            try:
+                sock.connect((self.host, self.port))
+            except socket.gaierror as error:
+                self.monitor_logger.exception("Failed to connect socket")
+                return self.record_fail("Failed to connect: {}".format(error))
+            ssl_connection = OpenSSL.SSL.Connection(ssl_context, sock)
+            ssl_connection.set_connect_state()
+            try:
+                ssl_connection.do_handshake()
+                cert = ssl_connection.get_peer_certificate()  # type: Optional[X509]
+            except OpenSSL.SSL.Error:
+                self.monitor_logger.exception(
+                    "Failed SSL handshake. Unsupported SSL/TLS version (1.3)?"
+                )
+                return self.record_fail(
+                    "Failed SSL handshake. Unsupported SSL/TLS version?"
+                )
+            except Exception as error:
+                self.monitor_logger.exception(
+                    "Failed to perform handshake or get certificate"
+                )
+                return self.record_fail("Failed to connect with SSL: {}".format(error))
+            if cert is None:
+                return self.record_fail(
+                    "Did not receive a certificate from {}:{}".format(
+                        self.host, self.port
+                    )
+                )
+        expiry_date = cast(Optional[bytes], cert.get_notAfter())
+        if expiry_date is None:
+            return self.record_fail("Did not get an expiry date for certificate")
+        try:
+            expiry = datetime.datetime.strptime(expiry_date.decode(), "%Y%m%d%H%M%SZ")
+        except ValueError:
+            self.monitor_logger.exception("Failed to parse cert date format")
+            return self.record_fail("Unable to parse certificate expiry date")
+        delta = expiry - datetime.datetime.utcnow()
+        days_left = delta.days
+        if days_left < self.min_days:
+            if days_left < 0:
+                return self.record_fail(
+                    "Certificate at {}:{} expired {} days ago".format(
+                        self.host, self.port, abs(days_left)
+                    )
+                )
+            return self.record_fail(
+                "Certificate at {}:{} expires in {} days".format(
+                    self.host, self.port, days_left
+                )
+            )
+        return self.record_success(
+            "Certificate at {}:{} has {} days left to expiry".format(
+                self.host, self.port, days_left
+            )
+        )
+
+    def get_params(self) -> Tuple:
+        return (self.host, self.port, self.min_days)
+
+    def describe(self) -> str:
+        return "Checking TLS cert at {}:{} has at least {} days until expiry".format(
+            self.host, self.port, self.min_days
+        )

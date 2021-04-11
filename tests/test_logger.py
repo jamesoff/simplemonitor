@@ -243,9 +243,9 @@ class TestHTMLLogger(unittest.TestCase):
             temp_htmlfile = tempfile.mkstemp()[1]
             logger_options.update({"filename": temp_htmlfile})
             html_logger = HTMLLogger(logger_options)
-            monitor1 = MonitorNull()
-            monitor2 = MonitorFail("fail", {})
-            monitor3 = MonitorFail("disabled", {"enabled": 0})
+            monitor1 = MonitorNull(config_options={"gps": "52.01,1.01"})
+            monitor2 = MonitorFail("fail", {"gps": "52.02,1.02"})
+            monitor3 = MonitorFail("disabled", {"enabled": 0, "gps": "52.03,1.03"})
             monitor1.run_test()
             monitor2.run_test()
             html_logger.start_batch()
@@ -258,7 +258,7 @@ class TestHTMLLogger(unittest.TestCase):
     def _compare_files(self, test_file, golden_file):
         test_fh = open(test_file, "r")
         golden_fh = open(golden_file, "r")
-        self.maxDiff = 6000
+        self.maxDiff = 6200
         golden_data = golden_fh.read()
         golden_data = golden_data.replace("__VERSION__", VERSION)
         self.assertMultiLineEqual(golden_data, test_fh.read())
@@ -273,4 +273,11 @@ class TestHTMLLogger(unittest.TestCase):
     def test_html_tz(self):
         test_file = self._write_html({"tz": "Europe/Warsaw"})
         golden_file = "tests/html/test2.html"
+        self._compare_files(test_file, golden_file)
+
+    def test_html_map(self):
+        test_file = self._write_html(
+            {"map_start": [52, 1, 12], "map": 1, "map_token": "secret_token"}
+        )
+        golden_file = "tests/html/map1.html"
         self._compare_files(test_file, golden_file)

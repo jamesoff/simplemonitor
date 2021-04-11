@@ -13,7 +13,12 @@ setuptools.setup(
     url="https://github.com/jamesoff/simplemonitor",
     packages=setuptools.find_packages(exclude="tests"),
     package_data={
-        "simplemonitor": ["html/header.html", "html/footer.html", "html/style.css"]
+        "simplemonitor": [
+            "html/header.html",
+            "html/footer.html",
+            "html/style.css",
+            "html/status-template.html",
+        ]
     },
     classifiers=[
         "Development Status :: 5 - Production/Stable",
