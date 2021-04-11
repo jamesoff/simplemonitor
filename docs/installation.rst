@@ -1,3 +1,5 @@
+.. _Installation:
+
 Installation
 ============
 
@@ -7,8 +9,6 @@ SimpleMonitor is available via `PyPi <https://pypi.org/project/simplemonitor>`_:
 
 .. tip:: You may want to install it in a virtualenv, or you can use `pipx <https://pipxproject.github.io/pipx/>`_
    which automatically manages virtualenvs for command-line tools.
-
-TODO: install ring etc?
 
 Create the configuration files: ``monitor.ini`` and ``monitors.ini``. See
 Configuration.

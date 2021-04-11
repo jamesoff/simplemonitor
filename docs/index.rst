@@ -36,12 +36,14 @@ Welcome to SimpleMonitor
 
 
 SimpleMonitor is a Python script which monitors hosts and network
-connectivity. It is designed to be quick and easy to set up and lacks complex
-features that can make things like Nagios, OpenNMS and Zenoss overkill for a
-small business or home network. Remote monitor instances can send their
-results back to a central location.
+connectivity and status. It is designed to be quick and easy to set up and
+lacks complex features that can make things like Nagios, OpenNMS and Zenoss
+overkill for a small business or home network. Remote monitor instances can
+send their results back to a central location.
 
 SimpleMonitor supports Python 3.6.2 and higher on Windows, Linux and FreeBSD.
+
+To get started, see :ref:`Installation`.
 
 Features
 ========
