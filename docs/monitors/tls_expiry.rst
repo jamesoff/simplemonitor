@@ -1,7 +1,7 @@
 tls_expiry - TLS cert expiration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Checks an SSL/TLS certificate is not due to expire/has expired. No support for SNI, and does not verify the certificate has the right hostname, chain, etc.
+Checks an SSL/TLS certificate is not due to expire/has expired.
 
 .. note:: This monitor's :ref:`gap<gap>` defaults to 12 hours.
 
@@ -29,3 +29,10 @@ Checks an SSL/TLS certificate is not due to expire/has expired. No support for S
     :default: ``7``
 
     the minimum allowable number of days until expiry
+
+.. confval:: sni
+
+    :type: string
+    :required: false
+
+    the hostname to send during TLS handshake for SNI. Use if you are serving multiple certificates from the same host/port. If empty, will just get the default certificate from the server
