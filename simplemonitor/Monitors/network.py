@@ -407,6 +407,7 @@ class MonitorTLSCert(Monitor):
         )
         if self.min_days < 0:
             raise ValueError("min_days must be 0 or greater")
+        self.sni = cast(Optional[str], self.get_config_option("sni", required=False))
 
     def run_test(self) -> bool:
         # Note: at time of writing, pyOpenSSL does not support TLS1.3
@@ -418,6 +419,8 @@ class MonitorTLSCert(Monitor):
                 self.monitor_logger.exception("Failed to connect socket")
                 return self.record_fail("Failed to connect: {}".format(error))
             ssl_connection = OpenSSL.SSL.Connection(ssl_context, sock)
+            if self.sni:
+                ssl_connection.set_tlsext_host_name(self.sni.encode("utf-8"))
             ssl_connection.set_connect_state()
             try:
                 ssl_connection.do_handshake()
@@ -472,6 +475,9 @@ class MonitorTLSCert(Monitor):
         return (self.host, self.port, self.min_days)
 
     def describe(self) -> str:
-        return "Checking TLS cert at {}:{} has at least {} days until expiry".format(
-            self.host, self.port, self.min_days
+        return "Checking TLS cert at {}:{} {}has at least {} days until expiry".format(
+            self.host,
+            self.port,
+            "(sni: " + self.sni + ") " if self.sni else "",
+            self.min_days,
         )
