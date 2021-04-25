@@ -38,7 +38,6 @@ simplemonitor.code-workspace
 client.log
 master.log
 coverage.xml
-<<<<<<< Updated upstream
 _build
 old_docs
 docs/_build
