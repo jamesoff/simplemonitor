@@ -10,7 +10,7 @@ from unittest.mock import patch
 from freezegun import freeze_time
 
 from simplemonitor.Loggers import logger
-from simplemonitor.Loggers.file import FileLogger, HTMLLogger
+from simplemonitor.Loggers.file import FileLogger, FileLoggerNG, HTMLLogger
 from simplemonitor.Monitors.monitor import MonitorFail, MonitorNull
 from simplemonitor.simplemonitor import SimpleMonitor
 from simplemonitor.version import VERSION
@@ -231,6 +231,93 @@ class TestFileLogger(unittest.TestCase):
         except PermissionError:
             # Windows won't remove a file which is in use
             pass
+
+
+class TestLogFileNG(unittest.TestCase):
+    @freeze_time("2020-04-18 12:00+00:00")
+    def test_file_time(self):
+        temp_logfile = tempfile.mkstemp()[1]
+        file_logger = FileLoggerNG({"filename": temp_logfile, "rotation_type": "time"})
+        monitor = MonitorNull()
+        monitor.run_test()
+        file_logger.save_result2("null", monitor)
+        self.assertTrue(os.path.exists(temp_logfile))
+        ts = str(int(time.time()))
+        with open(temp_logfile, "r") as fh:
+            self.assertEqual(
+                fh.readline().strip(), "{} null: ok (0.000s) ()".format(ts)
+            )
+        try:
+            os.unlink(temp_logfile)
+        except PermissionError:
+            # Windows won't remove a file which is in use
+            pass
+
+    @freeze_time("2020-04-18 12:00+00:00")
+    def test_file_size(self):
+        temp_logfile = tempfile.mkstemp()[1]
+        file_logger = FileLoggerNG(
+            {"filename": temp_logfile, "rotation_type": "size", "max_bytes": "1K"}
+        )
+        monitor = MonitorNull()
+        monitor.run_test()
+        file_logger.save_result2("null", monitor)
+        self.assertTrue(os.path.exists(temp_logfile))
+        ts = str(int(time.time()))
+        with open(temp_logfile, "r") as fh:
+            self.assertEqual(
+                fh.readline().strip(), "{} null: ok (0.000s) ()".format(ts)
+            )
+        try:
+            os.unlink(temp_logfile)
+        except PermissionError:
+            # Windows won't remove a file which is in use
+            pass
+
+    @freeze_time("2020-04-18 12:00+00:00")
+    def test_file_only_failures(self):
+        temp_logfile = tempfile.mkstemp()[1]
+        file_logger = FileLoggerNG(
+            {
+                "filename": temp_logfile,
+                "rotation_type": "size",
+                "max_bytes": "1K",
+                "only_failures": "1",
+                "dateformat": "iso8601",
+            }
+        )
+        monitor = MonitorNull()
+        monitor.run_test()
+        monitor2 = MonitorFail("fail", {})
+        monitor2.run_test()
+        file_logger.save_result2("null", monitor)
+        file_logger.save_result2("fail", monitor2)
+        self.assertTrue(os.path.exists(temp_logfile))
+        ts = "2020-04-18 12:00:00+00:00"
+        with open(temp_logfile, "r") as fh:
+            self.assertEqual(
+                fh.readline().strip(),
+                "{} fail: failed since {}; VFC=1 ({}) (0.000s)".format(
+                    ts, ts, monitor2.last_result
+                ),
+            )
+        try:
+            os.unlink(temp_logfile)
+        except PermissionError:
+            # Windows won't remove a file which is in use
+            pass
+
+    def test_file_missing_rotation(self):
+        with self.assertRaises(ValueError):
+            _ = FileLoggerNG({"filename": "something.log"})
+
+    def test_file_missing_bytes(self):
+        with self.assertRaises(ValueError):
+            _ = FileLoggerNG({"filename": "something.log", "rotation_type": "size"})
+
+    def test_file_bad_rotation(self):
+        with self.assertRaises(ValueError):
+            _ = FileLoggerNG({"filename": "something.log", "rotation_type": "magic"})
 
 
 class TestHTMLLogger(unittest.TestCase):
