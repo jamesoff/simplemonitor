@@ -1,3 +1,5 @@
+.. _logger-logfileng:
+
 logfileng - write a logfile with rotation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

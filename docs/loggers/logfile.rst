@@ -33,7 +33,7 @@ execution-time
     :type: string
     :required: true
 
-    the filename to write to. Rotating this file underneath SimpleMonitor will likely result to breakage. See https://github.com/jamesoff/simplemonitor/issues/620.
+    the filename to write to. Rotating this file underneath SimpleMonitor will likely result to breakage. If you would like the logfile to rotate automatically based on size or age, see the :ref:`logfileng<logger-logfileng>` logger.
 
 .. confval:: buffered
 
