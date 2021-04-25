@@ -50,14 +50,3 @@ execution-time
     :default: false
 
     set to have only monitor failures written to the log file (almost, but not quite, turning it into an alerter)
-
-.. confval:: dateformat
-
-    :type: string
-    :required: false
-    :default: ``timestamp``
-
-    the date format to write for log lines. (Note that the timezone is controlled by the :ref:`tz<logger-tz>` configuration value.) Accepted values are:
-
-    * ``timestamp`` (UNIX timestamp)
-    * ``iso8601`` (``YYYY-MM-DDTHH:MM:SS``)
