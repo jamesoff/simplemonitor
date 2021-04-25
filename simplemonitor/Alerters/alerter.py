@@ -12,7 +12,6 @@ import arrow
 
 from ..Monitors.monitor import Monitor
 from ..util import (
-    AlerterConfigurationError,
     MonitorState,
     check_group_match,
     format_datetime,
@@ -147,7 +146,7 @@ class Alerter:
             "ooh_recovery", required_type="bool", default=False
         )
 
-        if self.get_config_option("debug_times", required_type=bool, default=False):
+        if self.get_config_option("debug_times", required_type="bool", default=False):
             self._time_info = (
                 (datetime.datetime.utcnow() - datetime.timedelta(minutes=1)).time(),
                 (datetime.datetime.utcnow() + datetime.timedelta(minutes=1)).time(),
@@ -155,7 +154,7 @@ class Alerter:
             self.alerter_logger.debug("set times for alerter to %s", self._time_info)
 
         self._only_failures = self.get_config_option(
-            "only_failures", required_type=bool, default=False
+            "only_failures", required_type="bool", default=False
         )
         self._tz = cast(str, self.get_config_option("tz", default="UTC"))
         self._times_tz = cast(str, self.get_config_option("times_tz", default="local"))
@@ -164,10 +163,31 @@ class Alerter:
             self._ooh_failures = []
 
     def get_config_option(
-        self, key: str, **kwargs: Any
-    ) -> Union[None, str, int, float, bool, List[str], List[int]]:
-        kwargs["exception"] = AlerterConfigurationError
-        return get_config_option(self._config_options, key, **kwargs)
+        self,
+        key: str,
+        *,
+        default: Any = None,
+        required: bool = False,
+        required_type: str = "str",
+        allowed_values: Any = None,
+        allow_empty: bool = True,
+        minimum: Optional[Union[int, float]] = None,
+        maximum: Optional[Union[int, float]] = None,
+    ) -> Any:
+        """Get a config value.
+
+        Throws the right flavour exception if something is wrong."""
+        return get_config_option(
+            self._config_options,
+            key,
+            default=default,
+            required=required,
+            required_type=required_type,
+            allowed_values=allowed_values,
+            allow_empty=allow_empty,
+            minimum=minimum,
+            maximum=maximum,
+        )
 
     @property
     def dependencies(self) -> List[str]:

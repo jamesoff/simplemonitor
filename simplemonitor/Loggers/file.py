@@ -1,5 +1,7 @@
 # coding=utf-8
 import json
+import logging
+import logging.handlers
 import os
 import shutil
 import socket
@@ -7,14 +9,13 @@ import stat
 import subprocess  # nosec
 import sys
 import tempfile
-import time
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, cast
 
 import arrow
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from ..Monitors.monitor import Monitor
-from ..util import format_datetime, short_hostname
+from ..util import format_datetime, short_hostname, size_string_to_bytes
 from ..version import VERSION
 from .logger import Logger, register
 
@@ -49,16 +50,6 @@ class FileLogger(Logger):
             "buffered", required_type="bool", default=True
         )
 
-        self.dateformat = cast(
-            str,
-            self.get_config_option(
-                "dateformat",
-                required_type="str",
-                allowed_values=["timestamp", "iso8601"],
-                default="timestamp",
-            ),
-        )
-
         self.file_handle.write(
             "{} simplemonitor starting\n".format(self._get_datestring())
         )
@@ -67,11 +58,6 @@ class FileLogger(Logger):
 
     def __del__(self) -> None:
         self.file_handle.close()
-
-    def _get_datestring(self) -> str:
-        if self.dateformat == "iso8601":
-            return format_datetime(arrow.now(), self.tz)
-        return str(int(time.time()))
 
     def save_result2(self, name: str, monitor: Monitor) -> None:
         if self.only_failures and monitor.virtual_fail_count() == 0:
@@ -114,6 +100,82 @@ class FileLogger(Logger):
 
     def describe(self) -> str:
         return "Writing log file to {0}".format(self.filename)
+
+
+@register
+class FileLoggerNG(Logger):
+    """
+    Log monitor status to a file, Next Generation
+
+    Uses the Python logging library to get features like rotation
+    """
+
+    logger_type = "logfileng"
+    only_failures = False
+
+    def __init__(self, config_options: dict = None) -> None:
+        if config_options is None:
+            config_options = {}
+        super().__init__(config_options)
+        self.only_failures = self.get_config_option(
+            "only_failures", required_type="bool", default=False
+        )
+        self._logger = logging.getLogger(f"logfileng-{self.name}")
+        if self.only_failures:
+            self._logger.setLevel(logging.WARNING)
+        else:
+            self._logger.setLevel(logging.INFO)
+        rotation_type = self.get_config_option(
+            "rotation_type", allowed_values=["time", "size"]
+        )
+        self.filename = self.get_config_option("filename")
+        self.backup_count = cast(
+            int, self.get_config_option("backup_count", required_type="int", default=1)
+        )
+        if rotation_type == "time":
+            handler = logging.handlers.TimedRotatingFileHandler(
+                filename=self.filename,
+                when=self.get_config_option("when", default="h"),
+                interval=self.get_config_option(
+                    "interval", default=1, required_type="int"
+                ),
+                backupCount=self.backup_count,
+                utc=self.get_config_option("utc", required_type="bool", default=True),
+                encoding="utf-8",
+            )  # type: logging.handlers.BaseRotatingHandler
+        elif rotation_type == "size":
+            max_bytes = size_string_to_bytes(self.get_config_option("max_bytes"))
+            if max_bytes is None:
+                raise ValueError("Missing max_bytes")
+            handler = logging.handlers.RotatingFileHandler(
+                filename=self.filename,
+                maxBytes=max_bytes,
+                backupCount=self.backup_count,
+                encoding="utf-8",
+            )
+        else:
+            raise ValueError(f"Invalid rotation_type {rotation_type}")
+        self._logger.addHandler(handler)
+
+    def save_result2(self, name: str, monitor: Monitor) -> None:
+        if monitor.virtual_fail_count() == 0:
+            self._logger.info(
+                "%s %s: ok (%0.3fs) (%s)",
+                self._get_datestring(),
+                name,
+                monitor.last_run_duration,
+                monitor.get_result(),
+            )
+        else:
+            self._logger.warning(
+                "%s %s: failed since %s; VFC=%d (%s) (%0.3fs)",
+                self._get_datestring(),
+                name,
+                format_datetime(monitor.first_failure_time(), self.tz),
+                monitor.virtual_fail_count(),
+                monitor.get_result(),
+                monitor.last_run_duration,
+            )
 
 
 @register

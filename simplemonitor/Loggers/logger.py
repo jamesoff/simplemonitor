@@ -7,10 +7,13 @@ Loggers process every monitor, every iteration, to record their state in some fa
 
 
 import logging
-from typing import Any, Dict, List, Optional, cast
+import time
+from typing import Any, Dict, List, Optional, Union, cast
+
+import arrow
 
 from ..Monitors.monitor import Monitor
-from ..util import LoggerConfigurationError, get_config_option, subclass_dict_handler
+from ..util import format_datetime, get_config_option, subclass_dict_handler
 
 
 class Logger:
@@ -26,7 +29,7 @@ class Logger:
 
     def __init__(self, config_options: Dict[str, Any]) -> None:
         self._config_options = config_options
-        self.name = self.get_config_option("_name", default="unnamed")
+        self.name = cast(str, self.get_config_option("_name", default="unnamed"))
         self.logger_logger = logging.getLogger("simplemonitor.logger-" + self.name)
         self._dependencies = cast(
             List[str],
@@ -39,6 +42,16 @@ class Logger:
         if self.batch_data is None:
             self.batch_data = {}
         self.tz = cast(Optional[str], self.get_config_option("tz", default="UTC"))
+        self.dateformat = cast(
+            Optional[str],
+            self.get_config_option(
+                "dateformat",
+                required_type="str",
+                allowed_values=["timestamp", "iso8601"],
+                default="timestamp",
+            ),
+        )
+
         if self._global_info is None:
             self._global_info = {}
 
@@ -56,12 +69,32 @@ class Logger:
         Includes but not limited to refresh interval, known remote instances, etc"""
         self._global_info = info
 
-    def get_config_option(self, key: str, **kwargs: Any) -> Any:
+    def get_config_option(
+        self,
+        key: str,
+        *,
+        default: Any = None,
+        required: bool = False,
+        required_type: str = "str",
+        allowed_values: Any = None,
+        allow_empty: bool = True,
+        minimum: Optional[Union[int, float]] = None,
+        maximum: Optional[Union[int, float]] = None,
+    ) -> Any:
         """Get a config value.
 
         Throws the right flavour exception if something is wrong."""
-        kwargs["exception"] = LoggerConfigurationError
-        return get_config_option(self._config_options, key, **kwargs)
+        return get_config_option(
+            self._config_options,
+            key,
+            default=default,
+            required=required,
+            required_type=required_type,
+            allowed_values=allowed_values,
+            allow_empty=allow_empty,
+            minimum=minimum,
+            maximum=maximum,
+        )
 
     def hup(self) -> None:
         """Close and reopen our log file, if supported.
@@ -74,6 +107,12 @@ class Logger:
 
         Subclasses must override this with their implementation."""
         raise NotImplementedError
+
+    def _get_datestring(self) -> str:
+        """Format the current datetime according to the dateformat setting and timezone."""
+        if self.dateformat == "iso8601":
+            return format_datetime(arrow.now(), self.tz)
+        return str(int(time.time()))
 
     @property
     def dependencies(self) -> list:

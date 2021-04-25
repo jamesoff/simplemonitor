@@ -45,6 +45,17 @@ These options are common to all logger types.
 
     the timezone to convert date/times to
 
+.. confval:: dateformat
+
+    :type: string
+    :required: false
+    :default: ``timestamp``
+
+    the date format to write for log lines. (Note that the timezone is controlled by the :ref:`tz<logger-tz>` configuration value.) Accepted values are:
+
+    * ``timestamp`` (UNIX timestamp)
+    * ``iso8601`` (``YYYY-MM-DDTHH:MM:SS``)
+
 .. _loggers-list:
 
 Loggers
