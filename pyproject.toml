@@ -46,7 +46,7 @@ mypy = "*"
 bandit = "*"
 freezegun = "*"
 pytest = "*"
-pylint = "^2.7.2"
+pylint = "^2.8.1"
 Sphinx = "^3.4.3"
 sphinx-rtd-theme = "^0.5.1"
 
