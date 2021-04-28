@@ -25,7 +25,7 @@ winmonitor = "simplemonitor.winmonitor:main"
 
 [tool.poetry.dependencies]
 python = "^3.6.2"
-arrow = ">=0.17,<1.1"
+arrow = ">=0.17,<1.2"
 boto3 = "^1.15.16"
 colorlog = ">=4.4,<6.0"
 paho-mqtt = "^1.5.1"
