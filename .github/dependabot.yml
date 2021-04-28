@@ -1,0 +1,76 @@
+version: 2
+updates:
+- package-ecosystem: pip
+  directory: "/"
+  schedule:
+    interval: daily
+  open-pull-requests-limit: 10
+  target-branch: develop
+  ignore:
+  - dependency-name: boto3
+    versions:
+    - "> 1.10.45, < 1.11"
+  - dependency-name: boto3
+    versions:
+    - "> 1.9.151, < 1.10"
+  - dependency-name: boto3
+    versions:
+    - 1.17.23
+    - 1.17.24
+    - 1.17.25
+    - 1.17.26
+    - 1.17.27
+    - 1.17.28
+    - 1.17.29
+    - 1.17.30
+    - 1.17.32
+    - 1.17.33
+    - 1.17.34
+    - 1.17.35
+    - 1.17.36
+    - 1.17.37
+    - 1.17.39
+    - 1.17.40
+    - 1.17.41
+    - 1.17.43
+    - 1.17.44
+    - 1.17.45
+    - 1.17.46
+    - 1.17.47
+    - 1.17.48
+    - 1.17.50
+    - 1.17.51
+    - 1.17.52
+    - 1.17.53
+    - 1.17.54
+    - 1.17.55
+    - 1.17.56
+    - 1.17.58
+  - dependency-name: black
+    versions:
+    - 21.4b0
+  - dependency-name: pylint
+    versions:
+    - 2.7.0
+    - 2.7.1
+    - 2.7.3
+    - 2.7.4
+    - 2.8.1
+  - dependency-name: urllib3
+    versions:
+    - 1.26.4
+  - dependency-name: pytest
+    versions:
+    - 6.2.3
+  - dependency-name: colorlog
+    versions:
+    - 4.8.0
+  - dependency-name: flake8
+    versions:
+    - 3.9.0
+  - dependency-name: ping3
+    versions:
+    - 2.7.0
+  - dependency-name: arrow
+    versions:
+    - 1.0.3
