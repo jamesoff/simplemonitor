@@ -59,11 +59,11 @@ class CompoundMonitor(Monitor):
         return (self.monitors,)
 
     def set_mon_refs(self, mmm: Dict[str, Monitor]) -> None:
-        """ stash a ref to the global monitor list so we can examine later """
+        """stash a ref to the global monitor list so we can examine later"""
         self.all_monitors = WeakValueDictionary(mmm)
 
     def post_config_setup(self) -> None:
-        """ make a nice little dict of just the monitors we need """
+        """make a nice little dict of just the monitors we need"""
         if self.m is not None:
             return
         self.m = WeakValueDictionary()

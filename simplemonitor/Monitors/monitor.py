@@ -426,7 +426,7 @@ class Monitor:
                 self.recovered_info = "Unable to run command: %s" % e
 
     def post_config_setup(self) -> None:
-        """ any post config setup needed """
+        """any post config setup needed"""
         pass
 
     def __getstate__(self) -> dict:
