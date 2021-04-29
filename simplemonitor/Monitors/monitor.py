@@ -11,6 +11,7 @@ functions.
 """
 
 import copy
+import datetime
 import logging
 import platform
 import subprocess  # nosec
@@ -293,7 +294,7 @@ class Monitor:
         self._state = MonitorState.SKIPPED
         return True
 
-    def uptime(self) -> Optional[arrow.Arrow]:
+    def uptime(self) -> Optional[datetime.timedelta]:
         if self.uptime_start:
             return arrow.utcnow() - self.uptime_start
         return None
