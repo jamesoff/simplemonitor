@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 
 @register
 class MonitorHTTP(Monitor):
-    """Check an HTTP server is working right. """
+    """Check an HTTP server is working right."""
 
     url = ""
     regexp = None
