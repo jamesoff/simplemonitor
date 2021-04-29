@@ -85,14 +85,13 @@ class UpDownTime:
         """Generate an UpDownTime from a timedelta object"""
         if td is None:
             return UpDownTime()
-        else:
-            downtime_seconds = td.seconds
-            (hours, minutes) = (0, 0)
-            if downtime_seconds > 3600:
-                (hours, downtime_seconds) = divmod(downtime_seconds, 3600)
-            if downtime_seconds > 60:
-                (minutes, downtime_seconds) = divmod(downtime_seconds, 60)
-            return UpDownTime(td.days, hours, minutes, downtime_seconds)
+        downtime_seconds = td.seconds
+        (hours, minutes) = (0, 0)
+        if downtime_seconds > 3600:
+            (hours, downtime_seconds) = divmod(downtime_seconds, 3600)
+        if downtime_seconds > 60:
+            (minutes, downtime_seconds) = divmod(downtime_seconds, 60)
+        return UpDownTime(td.days, hours, minutes, downtime_seconds)
 
 
 def get_config_option(
