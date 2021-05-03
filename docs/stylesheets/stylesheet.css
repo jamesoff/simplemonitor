@@ -264,3 +264,12 @@ ul.menu li:before {
 ul.menu li {
 	display: inline;
 }
+
+.banner {
+	background-color: #fffacd;
+	color: black;
+	margin: 0;
+	padding: 5px 10px;
+	position: fixed;
+	width: 100%;
+}
