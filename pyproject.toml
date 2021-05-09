@@ -50,6 +50,8 @@ pylint = "^2.8.2"
 Sphinx = "^3.4.3"
 sphinx-rtd-theme = "^0.5.1"
 pytest-cov = "^2.11.1"
+tox = "^3.23.1"
+tox-poetry = "^0.3.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0", "setuptools"]
