@@ -2,7 +2,7 @@
 
 from typing import cast
 
-from twilio.base import TwilioRestException
+from twilio.base.exceptions import TwilioRestException
 from twilio.rest import Client
 
 from ..Monitors.monitor import Monitor
