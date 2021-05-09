@@ -565,6 +565,19 @@ optional = false
 python-versions = ">=3.5"
 
 [[package]]
+name = "pyjwt"
+version = "1.7.1"
+description = "JSON Web Token implementation in Python"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.extras]
+crypto = ["cryptography (>=1.4)"]
+flake8 = ["flake8", "flake8-import-order", "pep8-naming"]
+test = ["pytest (>=4.0.1,<5.0.0)", "pytest-cov (>=2.6.0,<3.0.0)", "pytest-runner (>=4.2,<5.0.0)"]
+
+[[package]]
 name = "pylint"
 version = "2.8.2"
 description = "python code static checker"
@@ -666,7 +679,7 @@ six = ">=1.5"
 name = "pytz"
 version = "2021.1"
 description = "World timezone definitions, modern and historical"
-category = "dev"
+category = "main"
 optional = false
 python-versions = "*"
 
@@ -927,6 +940,20 @@ tox = {version = ">=3.7.0", markers = "python_version >= \"3\""}
 test = ["coverage", "pytest", "pycodestyle", "pylint"]
 
 [[package]]
+name = "twilio"
+version = "6.58.0"
+description = "Twilio API client and TwiML generator"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+PyJWT = "1.7.1"
+pytz = "*"
+requests = {version = ">=2.0.0", markers = "python_version >= \"3.0\""}
+six = "*"
+
+[[package]]
 name = "typed-ast"
 version = "1.4.2"
 description = "a fork of Python 2 and 3 ast modules with type comment support"
@@ -998,7 +1025,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pyt
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6.2"
-content-hash = "6ae03ffbb9a0a5b5048813b2154d89a118a2fcc19e00fad6ad249152666120ab"
+content-hash = "214f3d6f6dc50ad123c820b5d02a5e113a87535c0a5a5c7ddc69d64e884bc7a8"
 
 [metadata.files]
 alabaster = [
@@ -1405,6 +1432,10 @@ pygments = [
     {file = "Pygments-2.8.1-py3-none-any.whl", hash = "sha256:534ef71d539ae97d4c3a4cf7d6f110f214b0e687e92f9cb9d2a3b0d3101289c8"},
     {file = "Pygments-2.8.1.tar.gz", hash = "sha256:2656e1a6edcdabf4275f9a3640db59fd5de107d88e8663c5d4e9a0fa62f77f94"},
 ]
+pyjwt = [
+    {file = "PyJWT-1.7.1-py2.py3-none-any.whl", hash = "sha256:5c6eca3c2940464d106b99ba83b00c6add741c9becaec087fb7ccdefea71350e"},
+    {file = "PyJWT-1.7.1.tar.gz", hash = "sha256:8d59a976fb773f3e6a39c85636357c4f0e242707394cadadd9814f5cbaa20e96"},
+]
 pylint = [
     {file = "pylint-2.8.2-py3-none-any.whl", hash = "sha256:f7e2072654a6b6afdf5e2fb38147d3e2d2d43c89f648637baab63e026481279b"},
     {file = "pylint-2.8.2.tar.gz", hash = "sha256:586d8fa9b1891f4b725f587ef267abe2a1bad89d6b184520c7f07a253dd6e217"},
@@ -1581,6 +1612,9 @@ tox = [
 tox-poetry = [
     {file = "tox-poetry-0.3.0.tar.gz", hash = "sha256:605f43c80f86cc9a5946370b0bc1a7b4049d2c29ed67baa71f979e7f6111c5b1"},
     {file = "tox_poetry-0.3.0-py2.py3-none-any.whl", hash = "sha256:d61dfe2e6b732dc9afceb0c2853d037850f96e28a875b39831f3e9337ece3740"},
+]
+twilio = [
+    {file = "twilio-6.58.0.tar.gz", hash = "sha256:9ef381a62b06e79dfd310712087293d51514b12966cfb67fbebf6c8244d6a8ef"},
 ]
 typed-ast = [
     {file = "typed_ast-1.4.2-cp35-cp35m-manylinux1_i686.whl", hash = "sha256:7703620125e4fb79b64aa52427ec192822e9f45d37d4b6625ab37ef403e1df70"},
