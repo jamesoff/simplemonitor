@@ -15,3 +15,4 @@ from .sms77 import SMS77Alerter
 from .sns import SNSAlerter
 from .syslogger import SyslogAlerter
 from .telegram import TelegramAlerter
+from .twilio import TwilioSMSAlerter
