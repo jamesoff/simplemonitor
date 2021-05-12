@@ -35,7 +35,7 @@ pyOpenSSL = ">=19.1,<21.0"
 requests = "^2.24.0"
 pync = {version = "^2.0.3", platform = "darwin"}
 pywin32 = {version = ">=228,<301", platform = "win32"}
-Jinja2 = "^2.11.2"
+Jinja2 = ">=2.11.2,<4.0.0"
 
 [tool.poetry.dev-dependencies]
 "flake8" = "*"
