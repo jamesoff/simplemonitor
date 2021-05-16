@@ -29,7 +29,7 @@ class TwilioSMSAlerter(Alerter):
         self.client = Client(account_sid, auth_token)
 
         self.sender = cast(str, self.get_config_option("sender", default="SmplMntr"))
-        if len(self.sender) > 11:
+        if not self.sender.startswith("+") and len(self.sender) > 11:
             self.alerter_logger.warning("truncating SMS sender name to 11 chars")
             self.sender = self.sender[:11]
 
