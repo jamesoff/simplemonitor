@@ -42,3 +42,5 @@ _build
 old_docs
 docs/_build
 *.log
+.tox
+pyrightconfig.json
