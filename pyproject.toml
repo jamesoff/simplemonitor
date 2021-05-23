@@ -39,6 +39,7 @@ Jinja2 = ">=2.11.2,<4.0.0"
 twilio = "^6.58.0"
 ring-doorbell = ">=0.6.0"
 pyarlo = "^0.2.4"
+paramiko = "^2.7.2"
 
 [tool.poetry.dev-dependencies]
 "flake8" = "*"
