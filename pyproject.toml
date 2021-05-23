@@ -2,9 +2,11 @@
 name = "simplemonitor"
 version = "1.11.0"
 description = "A simple network and host monitor"
+license = "BSD-3-Clause"
 authors = ["James Seward <james@jamesoff.net>"]
 readme = "README.md"
 homepage = "https://github.com/jamesoff/simplemonitor"
+repository = "https://github.com/jamesoff/simplemonitor"
 documentation = "http://jamesoff.github.io/simplemonitor/"
 classifiers = [
 	"Development Status :: 5 - Production/Stable",
