@@ -1,3 +1,29 @@
+1.11:
+	* Run monitors multithreaded
+	* Add TLS certificate expiry monitor
+	* Add unifi failover/watchdog monitors
+	* Add sms77 alerter
+	* Add twilio SMS alerter
+	* Add fileloggerng logger with rotation support
+	* Add seq logger
+	* Improve timezone support for alerters
+	* Add option to only listen on IPv4 for remote instances
+	* Make group filtering work on remote monitors
+	* Add "_all" group
+	* Add enabled option for monitors
+	* Improve HASS logger
+	* Add new remote logging protocol
+	* Remove pickle support for remote instances
+	* Add client_name option for remote logging
+	* Add descriptions to alerters and loggers
+	* Add support for cc field in SMTP logger
+	* Use jinja2 template for HTML logger rendering
+	* Add map output option for HTML logger
+	* Add gps property to monitors, currently only used for map output
+	* Rewrite documentation, now built with Sphinx and hosted at RTD
+	* Use poetry for project/dependency management
+	* Assorted code refactoring and bugfixes
+
 1.10:
 	* REQUIRE PYTHON >= 3.6.2
 	* New style HTML page for HTML logger
