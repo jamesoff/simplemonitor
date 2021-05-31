@@ -944,7 +944,7 @@ test = ["coverage", "pytest", "pycodestyle", "pylint"]
 
 [[package]]
 name = "twilio"
-version = "6.58.0"
+version = "6.59.0"
 description = "Twilio API client and TwiML generator"
 category = "main"
 optional = false
@@ -1638,7 +1638,7 @@ tox-poetry = [
     {file = "tox_poetry-0.4.0-py2.py3-none-any.whl", hash = "sha256:b529f3b534b351b7cf9506caa66e2f230dded38b2b74245559c3d662685f4494"},
 ]
 twilio = [
-    {file = "twilio-6.58.0.tar.gz", hash = "sha256:9ef381a62b06e79dfd310712087293d51514b12966cfb67fbebf6c8244d6a8ef"},
+    {file = "twilio-6.59.0.tar.gz", hash = "sha256:996946c6c6d156a2ca07a14d4aacfe300b67f881a44d651fba848f783edbe9fa"},
 ]
 typed-ast = [
     {file = "typed_ast-1.4.2-cp35-cp35m-manylinux1_i686.whl", hash = "sha256:7703620125e4fb79b64aa52427ec192822e9f45d37d4b6625ab37ef403e1df70"},
