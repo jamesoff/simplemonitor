@@ -928,7 +928,7 @@ testing = ["flaky (>=3.4.0)", "freezegun (>=0.3.11)", "psutil (>=5.6.1)", "pytes
 
 [[package]]
 name = "tox-poetry"
-version = "0.3.0"
+version = "0.4.0"
 description = "Tox poetry plugin"
 category = "dev"
 optional = false
@@ -1028,7 +1028,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pyt
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6.2"
-content-hash = "5ced304e47a15b2ea0955ee7d4099b62e3942ceb656030bd13c1ff5e773f1153"
+content-hash = "61f3f18afe7ba4a7c3f9efe9d3be8479f7c2bc868392618f43d7a6b2114e3f52"
 
 [metadata.files]
 alabaster = [
@@ -1634,8 +1634,8 @@ tox = [
     {file = "tox-3.23.1.tar.gz", hash = "sha256:307a81ddb82bd463971a273f33e9533a24ed22185f27db8ce3386bff27d324e3"},
 ]
 tox-poetry = [
-    {file = "tox-poetry-0.3.0.tar.gz", hash = "sha256:605f43c80f86cc9a5946370b0bc1a7b4049d2c29ed67baa71f979e7f6111c5b1"},
-    {file = "tox_poetry-0.3.0-py2.py3-none-any.whl", hash = "sha256:d61dfe2e6b732dc9afceb0c2853d037850f96e28a875b39831f3e9337ece3740"},
+    {file = "tox-poetry-0.4.0.tar.gz", hash = "sha256:b926723cb1dea87902299dd8cad458d0b80ab7345bbf7983e6dab1cbf951090d"},
+    {file = "tox_poetry-0.4.0-py2.py3-none-any.whl", hash = "sha256:b529f3b534b351b7cf9506caa66e2f230dded38b2b74245559c3d662685f4494"},
 ]
 twilio = [
     {file = "twilio-6.58.0.tar.gz", hash = "sha256:9ef381a62b06e79dfd310712087293d51514b12966cfb67fbebf6c8244d6a8ef"},
