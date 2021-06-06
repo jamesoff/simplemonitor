@@ -8,6 +8,12 @@ from simplemonitor import util
 
 
 class TestUtil(unittest.TestCase):
+
+    one_KB = 1024
+    one_MB = one_KB * 1024
+    one_GB = one_MB * 1024
+    one_TB = one_GB * 1024
+
     def test_Config(self):
         config_options = {
             "test_string": "a string",
@@ -46,7 +52,7 @@ class TestUtil(unittest.TestCase):
             util.get_config_option(config_options, "test_bool4", required_type="bool"),
             False,
         )
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             util.get_config_option(["not a dict"], "")
         with self.assertRaises(ValueError):
             util.get_config_option(config_options, "missing_value", required=True)
@@ -77,10 +83,6 @@ class TestUtil(unittest.TestCase):
                 "test_string",
                 allowed_values=["other string", "other other string"],
             )
-        with self.assertRaises(NotImplementedError):
-            util.get_config_option(
-                "not a dict", "doesn't matter", exception=NotImplementedError
-            )
         with self.assertRaises(ValueError):
             util.get_config_option(
                 {"empty_string": ""},
@@ -104,6 +106,40 @@ class TestUtil(unittest.TestCase):
             util.format_datetime(arrow.get("2020-04-11 13:37:00"), "Europe/London"),
             "2020-04-11 14:37:00+01:00",
         )
+
+    def test_bytes_to_size_string(self):
+        s = util.bytes_to_size_string(10 * self.one_TB)
+        self.assertEqual(s, "10.00TiB", "Failed to convert 10TiB to string")
+
+        s = util.bytes_to_size_string(10 * self.one_GB)
+        self.assertEqual(s, "10.00GiB", "Failed to convert 10GiB to string")
+
+        s = util.bytes_to_size_string(10 * self.one_MB)
+        self.assertEqual(s, "10.00MiB", "Failed to convert 10MiB to string")
+
+        s = util.bytes_to_size_string(10 * self.one_KB)
+        self.assertEqual(s, "10.00KiB", "Failed to convert 10KiB to string")
+
+        s = util.bytes_to_size_string(1)
+        self.assertEqual(s, "1", "Failed to convert 1B to string")
+
+    def test_size_to_bytes(self):
+        self.assertEqual(None, util.size_string_to_bytes(None))
+
+        size = util.size_string_to_bytes("10G")
+        self.assertEqual(size, 10737418240, "Failed to convert 10G to bytes")
+
+        size = util.size_string_to_bytes("10M")
+        self.assertEqual(size, 10485760, "Failed to convert 10M to bytes")
+
+        size = util.size_string_to_bytes("10K")
+        self.assertEqual(size, 10240, "Failed to convert 10K to bytes")
+
+        size = util.size_string_to_bytes("10")
+        self.assertEqual(size, 10, "Failed to convert 10 to bytes")
+
+        with self.assertRaises(ValueError):
+            util.size_string_to_bytes("a")
 
 
 class TestUpDownTime(unittest.TestCase):
@@ -165,3 +201,17 @@ class TestUpDownTime(unittest.TestCase):
 
         u2 = util.UpDownTime(2, 2, 3, 4)
         self.assertNotEqual(u1, u2)
+
+
+class TestGroupMatch(unittest.TestCase):
+    def test_simple(self):
+        self.assertTrue(util.check_group_match("default", ["default"]))
+
+    def test_list(self):
+        self.assertTrue(util.check_group_match("test", ["test", "test2"]))
+
+    def test_not_list(self):
+        self.assertFalse(util.check_group_match("default", ["test1", "test2"]))
+
+    def test_all(self):
+        self.assertTrue(util.check_group_match("test", ["_all"]))

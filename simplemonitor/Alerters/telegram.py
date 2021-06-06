@@ -50,6 +50,10 @@ class TelegramAlerter(Alerter):
                 self.send_telegram_notification(body)
             except Exception:
                 self.alerter_logger.exception("Couldn't send push notification")
-                self.available = False
         else:
             self.alerter_logger.info("dry_run: would send push notification: %s" % body)
+
+    def _describe_action(self) -> str:
+        return "posting messages to {chatid} on Telegram".format(
+            chatid=self.telegram_chatid
+        )

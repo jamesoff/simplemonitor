@@ -55,7 +55,7 @@ class TestAlerter(unittest.TestCase):
             "time_lower": "10:00",
             "time_upper": "11:00",
         }
-        with self.assertRaises(util.AlerterConfigurationError):
+        with self.assertRaises(ValueError):
             alerter.Alerter(config_options)
 
     def test_days(self):
@@ -103,16 +103,6 @@ class TestAlerter(unittest.TestCase):
         a = alerter.Alerter(config_options)
         self.assertEqual(a._repeat, 5)
 
-    def test_should_alert_unavailable(self):
-        a = alerter.Alerter(None)
-        a.available = False
-        m = monitor.MonitorNull()
-        self.assertEqual(
-            a.should_alert(m),
-            alerter.AlertType.NONE,
-            "Alerter did not handle being unavailable",
-        )
-
     def test_should_alert_basic_failure(self):
         # no special alert config
         a = alerter.Alerter(None)
@@ -152,9 +142,23 @@ class TestAlerter(unittest.TestCase):
         a = alerter.Alerter({"days": "0,2,3,4,5,6"})
         self.assertFalse(a._allowed_today())
 
+    @freeze_time(
+        "2020-03-09 22:00:00+00:00"
+    )  # a Monday, but the TZ will push to Tuesday
+    def test_not_allowed_today_tz(self):
+        a = alerter.Alerter({"days": "0,2,3,4,5,6", "times_tz": "+05:00"})
+        self.assertFalse(a._allowed_today())
+
     @freeze_time("2020-03-10")
     def test_allowed_today(self):
         a = alerter.Alerter({"days": "1"})
+        self.assertTrue(a._allowed_today())
+
+    @freeze_time(
+        "2020-03-09 22:00:00+00:00"
+    )  # a Monday, but the TZ will push to Tuesday
+    def test_allowed_today_tz(self):
+        a = alerter.Alerter({"days": "1", "times_tz": "+05:00"})
         self.assertTrue(a._allowed_today())
 
     @freeze_time("2020-03-10")
@@ -178,6 +182,22 @@ class TestAlerter(unittest.TestCase):
         with freeze_time("12:00", tz_offset=-self.utcoffset):
             self.assertFalse(a._allowed_time())
 
+    def test_allowed_only_tz(self):
+        a = alerter.Alerter(
+            {
+                "times_type": "only",
+                "time_lower": "15:00",
+                "time_upper": "16:00",
+                "times_tz": "+05:00",
+            }
+        )
+        with freeze_time("09:00"):
+            self.assertFalse(a._allowed_time())
+        with freeze_time("10:30"):
+            self.assertTrue(a._allowed_time())
+        with freeze_time("12:00"):
+            self.assertFalse(a._allowed_time())
+
     def test_allowed_not(self):
         a = alerter.Alerter(
             {"times_type": "not", "time_lower": "10:00", "time_upper": "11:00"}
@@ -187,6 +207,22 @@ class TestAlerter(unittest.TestCase):
         with freeze_time("10:30", tz_offset=-self.utcoffset):
             self.assertFalse(a._allowed_time())
         with freeze_time("12:00", tz_offset=-self.utcoffset):
+            self.assertTrue(a._allowed_time())
+
+    def test_allowed_not_tz(self):
+        a = alerter.Alerter(
+            {
+                "times_type": "not",
+                "time_lower": "15:00",
+                "time_upper": "16:00",
+                "times_tz": "+05:00",
+            }
+        )
+        with freeze_time("09:00"):
+            self.assertTrue(a._allowed_time())
+        with freeze_time("10:30"):
+            self.assertFalse(a._allowed_time())
+        with freeze_time("12:00"):
             self.assertTrue(a._allowed_time())
 
     def test_should_not_alert_ooh(self):
@@ -295,6 +331,42 @@ class TestAlerter(unittest.TestCase):
             self.assertEqual(a.should_alert(m), alerter.AlertType.FAILURE)
             self.assertEqual(a._ooh_failures, [])
 
+    def test_skip_group_alerter(self):
+        a = alerter.Alerter({"groups": "test"})
+        m = monitor.MonitorFail("fail", {})
+        m.run_test()
+        self.assertEqual(a.should_alert(m), alerter.AlertType.NONE)
+
+    def test_skip_group_monitor(self):
+        a = alerter.Alerter()
+        m = monitor.MonitorFail("fail", {"group": "test"})
+        m.run_test()
+        self.assertEqual(a.should_alert(m), alerter.AlertType.NONE)
+
+    def test_groups_match(self):
+        a = alerter.Alerter({"groups": "test"})
+        m = monitor.MonitorFail("fail", {"group": "test"})
+        m.run_test()
+        self.assertEqual(a.should_alert(m), alerter.AlertType.FAILURE)
+
+    def test_groups_multi_match(self):
+        a = alerter.Alerter({"groups": "test1, test2"})
+        m = monitor.MonitorFail("fail", {"group": "test1"})
+        m.run_test()
+        self.assertEqual(a.should_alert(m), alerter.AlertType.FAILURE)
+
+    def test_groups_all_match(self):
+        a = alerter.Alerter({"groups": "_all"})
+        m = monitor.MonitorFail("fail", {"group": "test1"})
+        m.run_test()
+        self.assertEqual(a.should_alert(m), alerter.AlertType.FAILURE)
+
+    def test_disabled_monitor_no_alert(self):
+        a = alerter.Alerter()
+        m = monitor.MonitorFail("fail", {"enabled": 0})
+        m.run_test()
+        self.assertEqual(a.should_alert(m), alerter.AlertType.NONE)
+
 
 class TestMessageBuilding(unittest.TestCase):
     def setUp(self):
@@ -380,8 +452,12 @@ class TestMessageBuilding(unittest.TestCase):
                 self.test_alerter.build_message(
                     alerter.AlertLength.SMS, alerter.AlertType.SUCCESS, m
                 ),
-                "success: winning succeeded on {hostname} at (0+00:00:00): a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a a...".format(
-                    hostname=util.short_hostname()
+                textwrap.shorten(
+                    "success: winning succeeded on {hostname} at (0+00:00:00): {a}".format(
+                        hostname=util.short_hostname(), a=m.last_result
+                    ),
+                    width=160,
+                    placeholder="...",
                 ),
             )
 
@@ -466,3 +542,54 @@ class TestSNSAlerter(unittest.TestCase):
             sns.SNSAlerter({})
         with self.assertRaises(util.AlerterConfigurationError):
             sns.SNSAlerter({"topic": "a", "number": "b"})
+
+
+class TestDescription(unittest.TestCase):
+    def test_times_always(self):
+        a = alerter.Alerter({"times_type": "always"})
+        self.assertEqual(a._describe_times(), "(always)")
+
+    def test_times_only_times(self):
+        a = alerter.Alerter(
+            {"times_type": "only", "time_lower": "09:00", "time_upper": "10:00"}
+        )
+        self.assertEqual(
+            a._describe_times(), "only between 09:00 and 10:00 (local) on any day"
+        )
+
+    def test_times_only_days(self):
+        a = alerter.Alerter(
+            {
+                "times_type": "only",
+                "time_lower": "09:00",
+                "time_upper": "10:00",
+                "days": "0,1,2",
+            }
+        )
+        self.assertEqual(
+            a._describe_times(),
+            "only between 09:00 and 10:00 (local) on Mon, Tue, Wed",
+        )
+
+    def test_times_not_time(self):
+        a = alerter.Alerter(
+            {"times_type": "not", "time_lower": "09:00", "time_upper": "10:00"}
+        )
+        self.assertEqual(
+            a._describe_times(),
+            "any time except between 09:00 and 10:00 (local) on any day",
+        )
+
+    def test_times_not_days(self):
+        a = alerter.Alerter(
+            {
+                "times_type": "not",
+                "time_lower": "09:00",
+                "time_upper": "10:00",
+                "days": "3,4,5,6",
+            }
+        )
+        self.assertEqual(
+            a._describe_times(),
+            "any time except between 09:00 and 10:00 (local) on Thu, Fri, Sat, Sun",
+        )

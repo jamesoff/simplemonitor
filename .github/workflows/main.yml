@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.6', '3.7', '3.8']
+        python-version: ['3.6', '3.7', '3.8', '3.9']
     name: Python ${{ matrix.python-version }}
 
     steps:
@@ -24,18 +24,20 @@ jobs:
         run: pip --version
       - name: Update pip
         run: pip install --upgrade pip
-      - name: Install pipenv
-        run: pip install pipenv
-      - name: pipenv install
-        run: pipenv --bare install --dev
+      - name: Install poetry
+        run: pip install poetry==1.1.4
+      - name: poetry install
+        run: poetry install
       - name: Integration tests
         run: make integration-tests
+      - name: Integration tests (threaded)
+        run: make integration-tests-threaded
       - name: Config environment variables tests
         run: make env-test
       - name: Unit tests
         run: make unit-test
       - name: Network logger tests
         run: make network-test
-      - name: Upload to codecov
-        run: pipenv run codecov --token="${{ secrets.CODECOV_TOKEN }}"
+      - name: Output coverage report
+        run: poetry run coverage xml -i
       - uses: codecov/codecov-action@v1

@@ -4,6 +4,7 @@
 
 import argparse
 import logging
+import os
 import sys
 
 from .simplemonitor import SimpleMonitor
@@ -75,7 +76,20 @@ def main() -> None:
         "--config",
         dest="config",
         default="monitor.ini",
-        help="configuration file",
+        help=(
+            "configuration file (this is the main config; "
+            "you also need monitors.ini (default filename)"
+        ),
+    )
+    parser.add_argument(
+        "-j",
+        "--threads",
+        dest="threads",
+        default=os.cpu_count(),  # default used by the library anyway
+        type=int,
+        help=(
+            f"number of threads to run for checking monitors (default (cpus): {os.cpu_count()})"
+        ),
     )
     output_group.add_argument(
         "-H",
@@ -201,6 +215,7 @@ def main() -> None:
         max_loops=options.loops,
         heartbeat=not options.no_heartbeat,
         one_shot=options.one_shot,
+        max_workers=options.threads,
     )
 
     if options.test:

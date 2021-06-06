@@ -35,3 +35,12 @@ network.log
 .coverage.*
 .ring_token.cache
 simplemonitor.code-workspace
+client.log
+master.log
+coverage.xml
+_build
+old_docs
+docs/_build
+*.log
+.tox
+pyrightconfig.json

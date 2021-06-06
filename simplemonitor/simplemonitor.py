@@ -1,16 +1,16 @@
 # coding=utf-8
 """Execution logic for SimpleMonitor."""
 
+import concurrent.futures
 import copy
 import logging
 import os
-import pickle  # nosec
 import signal
 import sys
 import time
 from pathlib import Path
 from socket import gethostname
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 from .Alerters.alerter import Alerter
 from .Alerters.alerter import all_types as all_alerter_types
@@ -19,10 +19,11 @@ from .Loggers.logger import Logger
 from .Loggers.logger import all_types as all_logger_types
 from .Loggers.logger import get_class as get_logger_class
 from .Loggers.network import Listener
-from .Monitors.monitor import Monitor
+from .Monitors.compound import CompoundMonitor
+from .Monitors.monitor import Monitor, MonitorState
 from .Monitors.monitor import all_types as all_monitor_types
 from .Monitors.monitor import get_class as get_monitor_class
-from .util import get_config_dict
+from .util import check_group_match, get_config_dict
 from .util.envconfig import EnvironmentAwareConfigParser
 
 module_logger = logging.getLogger("simplemonitor")
@@ -39,7 +40,8 @@ class SimpleMonitor:
         no_network: bool = False,
         max_loops: int = -1,
         heartbeat: bool = True,
-        one_shot: bool = False
+        one_shot: bool = False,
+        max_workers: Optional[int] = None
     ) -> None:
         """Main class turn on."""
         if isinstance(config_file, str):
@@ -68,6 +70,7 @@ class SimpleMonitor:
         self.heartbeat = heartbeat
         self.one_shot = one_shot
         self.pidfile = None  # type: Optional[str]
+        self._max_workers = max_workers
 
         self._setup_signals()
         self._load_config()
@@ -82,7 +85,6 @@ class SimpleMonitor:
             )
         config.read(self._config_file)
 
-        self._allow_pickle = config.getboolean("monitor", "allow_pickle", fallback=True)
         self.interval = config.getint("monitor", "interval")
         self.pidfile = config.get("monitor", "pidfile", fallback=None)
         hup_file = config.get("monitor", "hup_file", fallback=None)
@@ -102,6 +104,9 @@ class SimpleMonitor:
             self._remote_port = int(config.get("monitor", "remote_port"))
             self._network_key = config.get("monitor", "key", fallback=None)
             self._network_bind_host = config.get("monitor", "bind_host", fallback="")
+            self._ipv4_only = cast(
+                bool, config.get("monitor", "ipv4_only", fallback=False)
+            )
         else:
             self._network = False
 
@@ -116,37 +121,24 @@ class SimpleMonitor:
             raise RuntimeError("Broken dependency configuration")
         if not self.verify_alerting():
             module_logger.critical("No alerters defined and no remote logger found")
-        if self._network:
-            self._start_network_thread()
 
     def _start_network_thread(self) -> None:
+        if self._remote_listening_thread:
+            # if the thread is running, check if it should be
+            if not self._network:
+                module_logger.info("Stopping remote listener thread")
+                self._remote_listening_thread.running = False
+            return
         if self._network:
-            if not self._allow_pickle:
-                allowing_pickle = "not "
-            else:
-                allowing_pickle = ""
-            module_logger.info(
-                "Starting remote listener thread (%sallowing pickle data)",
-                allowing_pickle,
-            )
+            module_logger.info("Starting remote listener thread")
             self._remote_listening_thread = Listener(
                 self,
                 self._remote_port,
                 self._network_key,
-                allow_pickle=self._allow_pickle,
                 bind_host=self._network_bind_host,
+                ipv4_only=self._ipv4_only,
             )
-            self._remote_listening_thread.daemon = True
             self._remote_listening_thread.start()
-        else:
-            if self._remote_listening_thread:
-                self._remote_listening_thread.running = False
-
-    def _stop_network_thread(self) -> None:
-        if self._network and self._remote_listening_thread:
-            self._remote_listening_thread.running = False
-            module_logger.info("Waiting for listener thread to exit")
-            self._remote_listening_thread.join(0)
 
     def _load_monitors(self, filename: Union[Path, str]) -> None:
         """Load all the monitors from the config file."""
@@ -307,8 +299,13 @@ class SimpleMonitor:
                     ", ".join(all_alerter_types()),
                 )
                 continue
-            new_alerter = alerter_cls(config_options)
-            module_logger.info("Adding %s alerter %s", alerter_type, this_alerter)
+            new_alerter = alerter_cls(config_options)  # type: Alerter
+            module_logger.info(
+                "Adding %s alerter %s: %s",
+                alerter_type,
+                this_alerter,
+                new_alerter.describe(),
+            )
             new_alerter.name = this_alerter
             self.add_alerter(this_alerter, new_alerter)
             del new_alerter
@@ -445,100 +442,150 @@ class SimpleMonitor:
         new_list.extend(late_list)
         return new_list
 
+    def _failed_monitors(self) -> List[str]:
+        """Return a list of the currently-failed monitors.
+
+        Includes monitors which are disabled."""
+        failed = [
+            key
+            for key, monitor in self.monitors.items()
+            if monitor.state() == MonitorState.FAILED or not monitor.enabled
+        ]
+        return failed
+
+    @staticmethod
+    def _run_monitor(monitor: Monitor) -> bool:
+        """Run a single monitor."""
+        did_run = False
+        try:
+            if monitor.should_run():
+                did_run = True
+                start_time = time.time()
+                monitor.run_test()
+                end_time = time.time()
+                monitor.last_run_duration = int(end_time - start_time)
+            else:
+                monitor.record_skip(None)
+                module_logger.info("Not run: %s", monitor.name)
+        except Exception as exception:
+            module_logger.exception(
+                "Monitor %s threw exception during run_test()", monitor.name
+            )
+            monitor.record_fail("Unhandled exception: {}".format(exception))
+        if monitor.error_count > 0:
+            if monitor.virtual_fail_count() == 0:
+                module_logger.warning(
+                    "monitor failed but within tolerance: %s (%s)",
+                    monitor.name,
+                    monitor.last_result,
+                )
+            else:
+                module_logger.error(
+                    "monitor failed: %s (%s)",
+                    monitor.name,
+                    monitor.last_result,
+                )
+            return False
+        if not did_run:
+            return False
+        module_logger.info("monitor passed: %s", monitor.name)
+        return True
+
     def run_tests(self) -> None:
         """Run the tests for all the monitors."""
         self.reset_monitors()
 
-        joblist = list(self.monitors.keys())
-        joblist = self.sort_joblist(joblist)
-        failed = []  # type: List[str]
-
-        not_run = False
-
+        joblist = [k for (k, v) in self.monitors.items() if v.enabled]
         while joblist:
-            new_joblist = []  # type: List[str]
-            module_logger.debug("Starting loop with joblist %s", joblist)
-            for monitor in joblist:
-                module_logger.debug("Trying monitor: %s", monitor)
-                if self.monitors[monitor].remaining_dependencies:
-                    # this monitor has outstanding deps, put it on the new joblist for next loop
+            new_joblist, skiplist = self._prepare_lists(joblist)
+            joblist = self.sort_joblist(joblist)
+            with concurrent.futures.ThreadPoolExecutor(
+                max_workers=self._max_workers
+            ) as executor:
+                future_to_monitor = {}
+                for monitor in joblist:
+                    if monitor in new_joblist or monitor in skiplist:
+                        module_logger.debug(
+                            "Skipping monitor %s because it's in the new job list or the skiplist",
+                            monitor,
+                        )
+                        continue
+                    module_logger.debug("Trying monitor: %s", monitor)
+                    future_to_monitor[
+                        executor.submit(self._run_monitor, self.monitors[monitor])
+                    ] = monitor
+                if len(future_to_monitor) == 0:
+                    module_logger.error("No more monitors are runnable!")
+                    return
+                for future in concurrent.futures.as_completed(future_to_monitor):
+                    monitor = future_to_monitor[future]
+                    try:
+                        if future.result():
+                            for monitor2 in joblist:
+                                self.monitors[monitor2].dependency_succeeded(monitor)
+                    except Exception:
+                        module_logger.exception(
+                            "Exception for monitor %s during thread execution", monitor
+                        )
+            joblist = copy.copy(new_joblist)
+
+    def _prepare_lists(self, joblist: List[str]) -> Tuple[List[str], List[str]]:
+        failed = self._failed_monitors()
+        module_logger.debug(
+            "Starting loop with joblist %s and failed list %s",
+            ", ".join(joblist),
+            ", ".join(failed),
+        )
+        new_joblist = []  # List[str]
+        skiplist = []  # List[str]
+        for monitor in joblist:
+            if monitor in failed:
+                module_logger.error(
+                    "Received a failed logger in the joblist: %s", monitor
+                )
+                continue
+            if self.monitors[monitor].monitor_type == "compound":
+                # special case handling for compound monitors
+                compound_monitor = cast(CompoundMonitor, self.monitors[monitor])
+                needed_monitors = set(compound_monitor.monitors)
+                remaining_monitors = needed_monitors & set(joblist)
+                if remaining_monitors:
+                    module_logger.debug(
+                        "Added compound monitor %s to new joblist due to outstanding deps %s",
+                        monitor,
+                        remaining_monitors,
+                    )
+                    new_joblist.append(monitor)
+                    continue
+            if self.monitors[monitor].remaining_dependencies:
+                # this monitor has outstanding deps, put it on the new joblist for next loop
+                failed_deps = set(
+                    self.monitors[monitor].remaining_dependencies
+                ).intersection(failed)
+                if len(failed_deps) > 0:
+                    module_logger.warning(
+                        "Monitor %s has failed dependencies %s, skipping",
+                        monitor,
+                        ", ".join(failed_deps),
+                    )
+                    self.monitors[monitor].record_skip(", ".join(failed_deps))
+                    skiplist.append(monitor)
+                else:
                     new_joblist.append(monitor)
                     module_logger.debug(
-                        "Added %s to new joblist, is now %s", monitor, new_joblist
+                        "Added %s to new joblist due to outstanding deps %s",
+                        monitor,
+                        ", ".join(self.monitors[monitor].remaining_dependencies),
                     )
-                    for dep in self.monitors[monitor].remaining_dependencies:
-                        module_logger.debug(
-                            "considering %s's dependency %s (failed monitors: %s)",
-                            monitor,
-                            dep,
-                            failed,
-                        )
-                        if dep in failed:
-                            # oh wait, actually one of its deps failed, so
-                            # we'll never be able to run it
-                            module_logger.info(
-                                "Doesn't look like %s worked, skipping %s", dep, monitor
-                            )
-                            failed.append(monitor)
-                            self.monitors[monitor].record_skip(dep)
-                            try:
-                                new_joblist.remove(monitor)
-                            except ValueError:
-                                module_logger.exception(
-                                    "Exception caught while trying to remove monitor %s "
-                                    "with failed deps from new joblist.",
-                                    monitor,
-                                )
-                                module_logger.debug(
-                                    "new_joblist is currently: %s", new_joblist
-                                )
-                            break
-                    continue
-                try:
-                    if self.monitors[monitor].should_run():
-                        not_run = False
-                        start_time = time.time()
-                        self.monitors[monitor].run_test()
-                        end_time = time.time()
-                        self.monitors[monitor].last_run_duration = int(
-                            end_time - start_time
-                        )
-                    else:
-                        not_run = True
-                        self.monitors[monitor].record_skip(None)
-                        module_logger.info("Not run: %s", monitor)
-                except Exception as exception:
-                    module_logger.exception(
-                        "Monitor %s threw exception during run_test()", monitor
-                    )
-                    self.monitors[monitor].record_fail(
-                        "Unhandled exception: {}".format(exception)
-                    )
-                if self.monitors[monitor].error_count > 0:
-                    if self.monitors[monitor].virtual_fail_count() == 0:
-                        module_logger.warning(
-                            "monitor failed but within tolerance: %s", monitor
-                        )
-                    else:
-                        module_logger.error(
-                            "monitor failed: %s (%s)",
-                            monitor,
-                            self.monitors[monitor].last_result,
-                        )
-                    failed.append(monitor)
-                else:
-                    if not not_run:
-                        module_logger.info("monitor passed: %s", monitor)
-                    for monitor2 in joblist:
-                        self.monitors[monitor2].dependency_succeeded(monitor)
-            joblist = copy.copy(new_joblist)
+                continue
+        return (new_joblist, skiplist)
 
     def log_result(self, logger: Logger) -> None:
         """Use the given logger object to log our state."""
         logger.check_dependencies(self.failed + self.still_failing + self.skipped)
         with logger:
             for key, monitor in self.monitors.items():
-                if monitor.group in logger.groups:
+                if check_group_match(monitor.group, logger.groups):
                     logger.save_result2(key, monitor)
                 else:
                     module_logger.debug(
@@ -549,44 +596,43 @@ class SimpleMonitor:
                         logger.groups,
                     )
             try:
-                for host_monitors in self.remote_monitors.values():
-                    for (name, monitor) in host_monitors.items():
-                        logger.save_result2(name, monitor)
+                # need to work on a copy here to prevent the dicts changing under us
+                # during the loop, as remote instances can connect and update our data
+                # unpredictably
+                for host_monitors in self.remote_monitors.copy().values():
+                    for name, monitor in host_monitors.copy().items():
+                        if check_group_match(monitor.group, logger.groups):
+                            logger.save_result2(name, monitor)
+                        else:
+                            module_logger.debug(
+                                "not logging for %s due to group mismatch (monitor in group %s, "
+                                "logger has groups %s",
+                                name,
+                                monitor.group,
+                                logger.groups,
+                            )
             except Exception:  # pragma: no cover
                 module_logger.exception("exception while logging remote monitors")
 
     def do_alert(self, alerter: Alerter) -> None:
         """Use the given alerter object to send an alert, if needed."""
         alerter.check_dependencies(self.failed + self.still_failing + self.skipped)
-        for key in list(self.monitors.keys()):
-            this_monitor = self.monitors[key]  # type: Monitor
+        for (name, this_monitor) in list(self.monitors.items()):
             # Don't generate alerts for monitors which want it done remotely
             if this_monitor.remote_alerting:
                 module_logger.debug(
-                    "skipping alert for monitor %s as it wants remote alerting", key
+                    "skipping alert for monitor %s as it wants remote alerting", name
                 )
                 continue
             try:
-                if this_monitor.group in alerter.groups:
-                    # Only notifications for services that have it enabled
-                    if this_monitor.notify:
-                        module_logger.debug("notifying alerter %s", alerter.name)
-                        alerter.send_alert(key, self.monitors[key])
-                    else:
-                        module_logger.warning(
-                            "monitor %s has notifications disabled", key
-                        )
+                if this_monitor.notify:
+                    alerter.send_alert(name, this_monitor)
                 else:
-                    module_logger.info(
-                        "skipping alerter %s as monitor %s is not in group %s",
-                        alerter.name,
-                        this_monitor.name,
-                        alerter.groups,
-                    )
+                    module_logger.warning("monitor %s has notifications disabled", name)
             except Exception:  # pragma: no cover
-                module_logger.exception("exception caught while alerting for %s", key)
-        for host_monitors in self.remote_monitors.values():
-            for (name, monitor) in host_monitors.items():
+                module_logger.exception("exception caught while alerting for %s", name)
+        for host_monitors in self.remote_monitors.copy().values():
+            for (name, monitor) in host_monitors.copy().items():
                 try:
                     if monitor.remote_alerting:
                         alerter.send_alert(name, monitor)
@@ -688,13 +734,15 @@ class SimpleMonitor:
         for logger in self.loggers.values():
             self.log_result(logger)
 
-    def update_remote_monitor(self, data: Any, hostname: str) -> None:
+    def update_remote_monitor(self, data: Dict[str, dict], hostname: str) -> None:
         """Process a list of monitors received from a remote host."""
         seen_monitors = []  # type: List[str]
         if hostname not in self.remote_monitors:
             self.remote_monitors[hostname] = {}
         for (name, state) in data.items():
-            module_logger.info("updating remote monitor %s", name)
+            module_logger.info(
+                "updating remote monitor %s from host %s", name, hostname
+            )
             if isinstance(state, dict):
                 try:
                     remote_monitor = get_monitor_class(
@@ -708,21 +756,11 @@ class SimpleMonitor:
                         "possibly a monitor type we don't know?",
                         hostname,
                     )
-            elif self._allow_pickle:
-                # Fallback for old remote monitors
-                try:
-                    remote_monitor = pickle.loads(state)  # nosec
-                except pickle.UnpicklingError:
-                    module_logger.critical("Could not unpickle monitor %s", name)
-                else:
-                    self.remote_monitors[hostname][name] = remote_monitor
-                    seen_monitors.append(name)
             else:
                 module_logger.critical(
                     "Could not deserialize state of monitor %s. "
                     "If the remote host uses an old version of "
-                    "simplemonitor, you need to set allow_pickle = true "
-                    "in the [monitor] section.",
+                    "simplemonitor, you need to upgrade.",
                     name,
                 )
         self._trim_remote_monitors(hostname, seen_monitors)
@@ -755,6 +793,7 @@ class SimpleMonitor:
 
     def run(self) -> None:
         self._create_pid_file()
+        self._start_network_thread()
         module_logger.info(
             "=== Starting... (loop runs every %ds) Hit ^C to stop", self.interval
         )
@@ -774,6 +813,7 @@ class SimpleMonitor:
                     try:
                         module_logger.warning("Reloading configuration")
                         self._load_config()
+                        self._start_network_thread()
                         self.hup_loggers()
                         self._need_hup = False
                     except Exception:
@@ -811,5 +851,4 @@ class SimpleMonitor:
                 module_logger.info("Quitting")
                 loop = False
 
-        self._stop_network_thread()
         self._remove_pid_file()

@@ -77,9 +77,10 @@ class FortySixElksAlerter(Alerter):
                 s = response.json()
                 if s["status"] not in ("created", "delivered"):
                     self.alerter_logger.error("Unable to send SMS: %s", s)
-                    self.available = False
             except Exception:
                 self.alerter_logger.exception("SMS sending failed")
-                self.available = False
         else:
             self.alerter_logger.info("dry_run: would send SMS: %s", url)
+
+    def _describe_action(self) -> str:
+        return "SMSing {target} via 46elks".format(target=self.target)

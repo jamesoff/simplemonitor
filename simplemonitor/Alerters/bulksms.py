@@ -67,11 +67,12 @@ class BulkSMSAlerter(Alerter):
                     self.alerter_logger.error(
                         "Unable to send SMS: %s (%s)", s.split("|")[0], s.split("|")[1]
                     )
-                    self.available = False
             except Exception:
                 self.alerter_logger.exception("SMS sending failed")
-                self.available = False
         else:
             self.alerter_logger.info(
                 "dry_run: would send SMS: {} with message {}".format(url, message)
             )
+
+    def _describe_action(self) -> str:
+        return "SMSing {target} via BulkSMS".format(target=self.target)

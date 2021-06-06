@@ -8,7 +8,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        python-version: ['3.6', '3.7', '3.8']
+        python-version: ['3.6', '3.7', '3.8', '3.9']
     name: Python ${{ matrix.python-version }} (Windows)
 
     steps:
@@ -22,14 +22,16 @@ jobs:
         run: pip --version
       - name: Update pip
         run: pip install --user --upgrade pip
-      - name: Install pipenv
-        run: pip install pipenv
-      - name: pipenv install
-        run: pipenv --bare install --dev
+      - name: Install poetry
+        run: pip install poetry==1.1.4
+      - name: poetry install
+        run: poetry install
       - name: create HTML output folder
         run: mkdir html
       - name: Integration tests
         run: make integration-tests
+      - name: Integration tests (threaded)
+        run: make integration-tests-threaded
       - name: Unit tests
         run: make unit-test
       - uses: codecov/codecov-action@v1

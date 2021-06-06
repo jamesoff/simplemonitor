@@ -3,8 +3,9 @@ import re
 import shlex
 import subprocess  # nosec
 import time
-from typing import Optional, Tuple, cast
+from typing import Tuple, cast
 
+from ..util import bytes_to_size_string, size_string_to_bytes
 from .monitor import Monitor, register
 
 try:
@@ -19,42 +20,6 @@ try:
     win32_available = True
 except ImportError:
     win32_available = False
-
-
-def _size_string_to_bytes(s: str) -> Optional[int]:
-    if s is None:
-        return None
-    if s.endswith("G"):
-        gigs = int(s[:-1])
-        _bytes = gigs * (1024 ** 3)
-    elif s.endswith("M"):
-        megs = int(s[:-1])
-        _bytes = megs * (1024 ** 2)
-    elif s.endswith("K"):
-        kilos = int(s[:-1])
-        _bytes = kilos * 1024
-    else:
-        return int(s)
-    return _bytes
-
-
-def _bytes_to_size_string(b: int) -> str:
-    """Convert a number in bytes to a sensible unit."""
-
-    kb = 1024
-    mb = kb * 1024
-    gb = mb * 1024
-    tb = gb * 1024
-
-    if b > tb:
-        return "%0.2fTiB" % (b / float(tb))
-    if b > gb:
-        return "%0.2fGiB" % (b / float(gb))
-    if b > mb:
-        return "%0.2fMiB" % (b / float(mb))
-    if b > kb:
-        return "%0.2fKiB" % (b / float(kb))
-    return str(b)
 
 
 @register
@@ -74,7 +39,7 @@ class MonitorDiskSpace(Monitor):
         else:
             self.use_statvfs = True
         self.partition = self.get_config_option("partition", required=True)
-        self.limit = _size_string_to_bytes(
+        self.limit = size_string_to_bytes(
             self.get_config_option("limit", required=True)
         )
 
@@ -93,10 +58,10 @@ class MonitorDiskSpace(Monitor):
 
         if self.limit and space <= self.limit:
             return self.record_fail(
-                "%s free (%d%%)" % (_bytes_to_size_string(space), percent)
+                "%s free (%d%%)" % (bytes_to_size_string(space), percent)
             )
         return self.record_success(
-            "%s free (%d%%)" % (_bytes_to_size_string(space), percent)
+            "%s free (%d%%)" % (bytes_to_size_string(space), percent)
         )
 
     def describe(self) -> str:
@@ -104,7 +69,7 @@ class MonitorDiskSpace(Monitor):
         if self.limit is None:
             limit = "none"
         else:
-            limit = _bytes_to_size_string(self.limit)
+            limit = bytes_to_size_string(self.limit)
 
         return "Checking for at least %s free space on %s" % (limit, self.partition)
 
@@ -125,14 +90,14 @@ class MonitorFileStat(Monitor):
             "minsize", required_type="str", allow_empty=True
         )
         if _minsize:
-            self.minsize = _size_string_to_bytes(_minsize)
+            self.minsize = size_string_to_bytes(_minsize)
         else:
             self.minsize = None
         _maxsize = self.get_config_option(
             "maxsize", required_type="str", allow_empty=True, default=""
         )
         if _maxsize:
-            self.maxsize = _size_string_to_bytes(_maxsize)
+            self.maxsize = size_string_to_bytes(_maxsize)
         else:
             self.maxsize = None
         self.filename = self.get_config_option("filename", required=True)
@@ -501,7 +466,6 @@ class MonitorCommand(Monitor):
 
     result_regexp = None
     monitor_type = "command"
-    available = True
 
     def __init__(self, name: str, config_options: dict) -> None:
         super().__init__(name, config_options)
@@ -520,8 +484,6 @@ class MonitorCommand(Monitor):
         self.command = shlex.split(command)
 
     def run_test(self) -> bool:
-        if not self.available:
-            return self.record_skip(None)
         try:
             _out = subprocess.check_output(self.command)  # nosec
             if self.result_regexp is not None:

@@ -1,0 +1,69 @@
+[tool.poetry]
+name = "simplemonitor"
+version = "1.11.0"
+description = "A simple network and host monitor"
+license = "BSD-3-Clause"
+authors = ["James Seward <james@jamesoff.net>"]
+readme = "README.md"
+homepage = "https://github.com/jamesoff/simplemonitor"
+repository = "https://github.com/jamesoff/simplemonitor"
+documentation = "http://jamesoff.github.io/simplemonitor/"
+classifiers = [
+	"Development Status :: 5 - Production/Stable",
+	"Environment :: Console",
+	"Environment :: No Input/Output (Daemon)",
+	"Intended Audience :: System Administrators",
+	"License :: OSI Approved :: BSD License",
+	"Operating System :: OS Independent",
+	"Programming Language :: Python :: 3 :: Only",
+	"Programming Language :: Python :: 3",
+	"Topic :: System :: Monitoring",
+	"Typing :: Typed",
+]
+include = [
+	"simplemonitor/html/marker-*.png",
+	"simplemonitor/html/status-template.html",
+	"simplemonitor/html/style.css"
+]
+
+[tool.poetry.scripts]
+simplemonitor = "simplemonitor.monitor:main"
+winmonitor = "simplemonitor.winmonitor:main"
+
+[tool.poetry.dependencies]
+python = "^3.6.2"
+arrow = ">=0.17,<1.2"
+boto3 = "^1.15.16"
+colorlog = ">=4.4,<6.0"
+paho-mqtt = "^1.5.1"
+ping3 = "^2.6.6"
+psutil = "^5.7.2"
+pyOpenSSL = ">=19.1,<21.0"
+requests = "^2.24.0"
+pync = {version = "^2.0.3", platform = "darwin"}
+pywin32 = {version = ">=228,<302", platform = "win32"}
+Jinja2 = ">=2.11.2,<4.0.0"
+twilio = "^6.58.0"
+ring-doorbell = ">=0.6.0"
+pyarlo = "^0.2.4"
+paramiko = "^2.7.2"
+
+[tool.poetry.dev-dependencies]
+"flake8" = "*"
+codecov = "*"
+coverage = "*"
+black = "*"
+mypy = "*"
+bandit = "*"
+freezegun = "*"
+pytest = "*"
+pylint = "^2.8.3"
+Sphinx = "^4.0.2"
+sphinx-rtd-theme = "^0.5.1"
+pytest-cov = "^2.12.1"
+tox = "^3.23.1"
+tox-poetry = "^0.4.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0", "setuptools"]
+build-backend = "poetry.core.masonry.api"

@@ -1,5 +1,6 @@
 # coding=utf-8
 import smtplib
+import email.utils
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import Optional, cast
@@ -25,6 +26,7 @@ class EMailAlerter(Alerter):
         self.to_addr = cast(
             str, self.get_config_option("to", required=True, allow_empty=False)
         )
+        self.cc_addr = cast(Optional[str], self.get_config_option("cc", required=False))
         self.mail_port = cast(
             int, self.get_config_option("port", required_type="int", default=25)
         )
@@ -34,8 +36,6 @@ class EMailAlerter(Alerter):
             Optional[str],
             self.get_config_option("ssl", allowed_values=["starttls", "yes", None]),
         )
-        if self.ssl == "yes":
-            self.alerter_logger.warning("ssl=yes for email alerter is untested")
 
         self.support_catchup = True
 
@@ -46,7 +46,12 @@ class EMailAlerter(Alerter):
 
         message = MIMEMultipart()
         message["From"] = self.from_addr
-        message["To"] = self.to_addr
+        message["To"] = self.to_addr.replace(";", ",")
+        message["Date"] = email.utils.formatdate()
+        envelope_to = self.to_addr.split(";")
+        if self.cc_addr:
+            message["CC"] = self.cc_addr.replace(";", ",")
+            envelope_to.extend(self.cc_addr.split(";"))
 
         if alert_type == AlertType.NONE:
             return
@@ -62,20 +67,31 @@ class EMailAlerter(Alerter):
                     server = smtplib.SMTP(self.mail_host, self.mail_port)
                 elif self.ssl == "yes":
                     server = smtplib.SMTP_SSL(self.mail_host, self.mail_port)
+                else:
+                    self.alerter_logger.critical(
+                        "Cannot send mail, alerter's ssl configuration is broken"
+                    )
+                    return
 
                 if self.ssl == "starttls":
                     server.starttls()
 
                 if self.username is not None:
-                    server.login(self.username, self.password)
-                server.sendmail(
-                    self.from_addr, self.to_addr.split(";"), message.as_string()
-                )
+                    try:
+                        server.login(self.username, self.password)
+                    except smtplib.SMTPNotSupportedError:
+                        self.alerter_logger.exception(
+                            "You may need to add ssl=starttls and/or port=587 to your alerter config"
+                        )
+                        return
+                server.sendmail(self.from_addr, envelope_to, message.as_string())
                 server.quit()
             except Exception:
                 self.alerter_logger.exception("couldn't send mail")
-                self.available = False
         else:
             self.alerter_logger.info(
                 "dry_run: would send email: %s", message.as_string()
             )
+
+    def _describe_action(self) -> str:
+        return "sending mail to {target}".format(target=self.to_addr)

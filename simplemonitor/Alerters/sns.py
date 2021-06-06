@@ -25,7 +25,6 @@ class SNSAlerter(Alerter):
             self.alerter_logger.critical(
                 "boto3 package is not available, cannot use SNSAlerter."
             )
-            self.available = False
             return
 
         self.topic = cast(str, self.get_config_option("topic", default=""))
@@ -83,7 +82,6 @@ class SNSAlerter(Alerter):
                     )
             except Exception:
                 self.alerter_logger.exception("couldn't send notification")
-                self.available = False
         else:
             if subject is None:
                 target = self.number
@@ -93,3 +91,10 @@ class SNSAlerter(Alerter):
             if subject is not None:
                 self.alerter_logger.info("    Subject: %s", subject)
             self.alerter_logger.info("    Message: %s", message)
+
+    def _describe_action(self) -> str:
+        if self.topic:
+            return "posting to SNS topic {topic}".format(topic=self.topic)
+        elif self.number:
+            return "SMSing {target} via SNS".format(target=self.number)
+        return "not sending anything via SNS"

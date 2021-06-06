@@ -12,8 +12,8 @@ import arrow
 
 from ..Monitors.monitor import Monitor
 from ..util import (
-    AlerterConfigurationError,
     MonitorState,
+    check_group_match,
     format_datetime,
     get_config_option,
     subclass_dict_handler,
@@ -52,9 +52,8 @@ class Alerter:
     """BaseClass for Alerters"""
 
     alerter_type = "unknown"
-    _dependencies = None  # type: List[str]
+    _dependencies = None  # type: Optional[List[str]]
     hostname = gethostname()
-    available = False
 
     name = None  # type: Optional[str]
 
@@ -69,7 +68,6 @@ class Alerter:
         self.alerter_logger = logging.getLogger(
             "simplemonitor.alerter-" + self.alerter_type
         )
-        self.available = True
         self.name = cast(str, self.get_config_option("name", default="unamed"))
         self.dependencies = cast(
             List[str],
@@ -148,7 +146,7 @@ class Alerter:
             "ooh_recovery", required_type="bool", default=False
         )
 
-        if self.get_config_option("debug_times", required_type=bool, default=False):
+        if self.get_config_option("debug_times", required_type="bool", default=False):
             self._time_info = (
                 (datetime.datetime.utcnow() - datetime.timedelta(minutes=1)).time(),
                 (datetime.datetime.utcnow() + datetime.timedelta(minutes=1)).time(),
@@ -156,18 +154,40 @@ class Alerter:
             self.alerter_logger.debug("set times for alerter to %s", self._time_info)
 
         self._only_failures = self.get_config_option(
-            "only_failures", required_type=bool, default=False
+            "only_failures", required_type="bool", default=False
         )
         self._tz = cast(str, self.get_config_option("tz", default="UTC"))
+        self._times_tz = cast(str, self.get_config_option("times_tz", default="local"))
 
         if self._ooh_failures is None:
             self._ooh_failures = []
 
     def get_config_option(
-        self, key: str, **kwargs: Any
-    ) -> Union[None, str, int, float, bool, List[str], List[int]]:
-        kwargs["exception"] = AlerterConfigurationError
-        return get_config_option(self._config_options, key, **kwargs)
+        self,
+        key: str,
+        *,
+        default: Any = None,
+        required: bool = False,
+        required_type: str = "str",
+        allowed_values: Any = None,
+        allow_empty: bool = True,
+        minimum: Optional[Union[int, float]] = None,
+        maximum: Optional[Union[int, float]] = None,
+    ) -> Any:
+        """Get a config value.
+
+        Throws the right flavour exception if something is wrong."""
+        return get_config_option(
+            self._config_options,
+            key,
+            default=default,
+            required=required,
+            required_type=required_type,
+            allowed_values=allowed_values,
+            allow_empty=allow_empty,
+            minimum=minimum,
+            maximum=maximum,
+        )
 
     @property
     def dependencies(self) -> List[str]:
@@ -175,7 +195,9 @@ class Alerter:
 
         If a monitor we depend on fails, it means we can't reach the database,
         so we shouldn't bother trying to write to it."""
-        return self._dependencies
+        if self._dependencies is not None:
+            return self._dependencies
+        return []
 
     @dependencies.setter
     def dependencies(self, dependency_list: List[str]) -> None:
@@ -197,18 +219,22 @@ class Alerter:
 
     def check_dependencies(self, failed_list: List[str]) -> bool:
         """Check if anything we depend on has failed."""
+        if self._dependencies is None or len(self._dependencies) == 0:
+            return True
         for dependency in failed_list:
             if dependency in self._dependencies:
-                self.available = False
                 return False
-        self.available = True
         return True
 
     def should_alert(self, monitor: Monitor) -> AlertType:
         """Check if we should bother alerting, and what type."""
         out_of_hours = False
 
-        if not self.available:
+        if not check_group_match(monitor.group, self.groups):
+            return AlertType.NONE
+
+        # Sanity check
+        if not monitor.enabled:
             return AlertType.NONE
 
         if not self._allowed_today():
@@ -275,7 +301,7 @@ class Alerter:
 
     def _allowed_today(self) -> bool:
         """Check if today is an allowed day for an alert."""
-        if arrow.now().weekday() not in self._days:
+        if arrow.now(self._times_tz).weekday() not in self._days:
             self.alerter_logger.debug("not allowed to alert today")
             return False
         return True
@@ -285,12 +311,12 @@ class Alerter:
         if self._times_type == AlertTimeFilter.ALWAYS:
             return True
         if self._time_info[0] is not None and self._time_info[1] is not None:
-            now = arrow.now().time()
-            in_time_range = (now > self._time_info[0]) and (now < self._time_info[1])
+            now = arrow.now(self._times_tz).time()
+            in_time_range = self._time_info[0] <= now < self._time_info[1]
             if self._times_type == AlertTimeFilter.ONLY:
                 self.alerter_logger.debug("in_time_range: %s", in_time_range)
                 return in_time_range
-            elif self._times_type == AlertTimeFilter.NOT:
+            if self._times_type == AlertTimeFilter.NOT:
                 self.alerter_logger.debug(
                     "in_time_range: %s (inverting due to AlertTimeFilter.NOT)",
                     in_time_range,
@@ -305,12 +331,11 @@ class Alerter:
     def _get_verb(alert_type: AlertType) -> str:
         if alert_type == AlertType.CATCHUP:
             return "failed earlier"
-        elif alert_type == AlertType.FAILURE:
+        if alert_type == AlertType.FAILURE:
             return "failed"
-        elif alert_type == AlertType.SUCCESS:
+        if alert_type == AlertType.SUCCESS:
             return "succeeded"
-        else:
-            return "unknowned"
+        return "unknowned"
 
     def build_message(
         self, length: AlertLength, alert_type: AlertType, monitor: Monitor
@@ -398,6 +423,40 @@ class Alerter:
         if max_length and len(message) > max_length:
             message = textwrap.shorten(message, width=max_length, placeholder="...")
         return message
+
+    def _describe_times(self) -> str:
+        """Return a string describing the times we're active."""
+        if self._times_type == AlertTimeFilter.ALWAYS:
+            return "(always)"
+        days_list = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+        if self._days != list(range(0, 7)):
+            allowed_days = ", ".join([days_list[day] for day in sorted(self._days)])
+        else:
+            allowed_days = "any day"
+        start, end = self._time_info
+        if start is None or end is None:
+            return "(misconfigured times)"
+        message = "between {start} and {end} ({tz}) on {days}".format(
+            start=start.strftime("%H:%M"),
+            end=end.strftime("%H:%M"),
+            days=allowed_days,
+            tz=self._times_tz,
+        )
+        if self._times_type == AlertTimeFilter.ONLY:
+            return "only {}".format(message)
+        return "any time except {}".format(message)
+
+    def _describe_action(self) -> str:
+        """Return a string explaining what we do.
+
+        Should not include any time info"""
+        raise NotImplementedError
+
+    def describe(self) -> str:
+        """Return a string explaining what we do."""
+        return "{desc} {when}".format(
+            desc=self._describe_action(), when=self._describe_times()
+        )
 
 
 (register, get_class, all_types) = subclass_dict_handler(

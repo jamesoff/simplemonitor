@@ -85,75 +85,75 @@ class UpDownTime:
         """Generate an UpDownTime from a timedelta object"""
         if td is None:
             return UpDownTime()
-        else:
-            downtime_seconds = td.seconds
-            (hours, minutes) = (0, 0)
-            if downtime_seconds > 3600:
-                (hours, downtime_seconds) = divmod(downtime_seconds, 3600)
-            if downtime_seconds > 60:
-                (minutes, downtime_seconds) = divmod(downtime_seconds, 60)
-            return UpDownTime(td.days, hours, minutes, downtime_seconds)
+        downtime_seconds = td.seconds
+        (hours, minutes) = (0, 0)
+        if downtime_seconds > 3600:
+            (hours, downtime_seconds) = divmod(downtime_seconds, 3600)
+        if downtime_seconds > 60:
+            (minutes, downtime_seconds) = divmod(downtime_seconds, 60)
+        return UpDownTime(td.days, hours, minutes, downtime_seconds)
 
 
 def get_config_option(
-    config_options: dict, key: str, **kwargs: Any
+    config_options: Dict[str, Any],
+    key: str,
+    *,
+    default: Any = None,
+    required: bool = False,
+    required_type: str = "str",
+    allowed_values: Any = None,
+    allow_empty: bool = True,
+    minimum: Optional[Union[int, float]] = None,
+    maximum: Optional[Union[int, float]] = None,
 ) -> Union[None, str, int, float, bool, List[str], List[int]]:
     """Get a value out of a dict, with possible default, required type and requiredness."""
-    exception = kwargs.get("exception", ValueError)
 
     if not isinstance(config_options, dict):
-        raise exception("config_options should be a dict")
+        raise TypeError("config_options should be a dict")
 
-    default = kwargs.get("default", None)
-    required = kwargs.get("required", False)
     value = config_options.get(key, default)
     if required and value is None:
-        raise exception("config option {0} is missing and is required".format(key))
-    required_type = kwargs.get("required_type", "str")
-    allowed_values = kwargs.get("allowed_values", None)
-    allow_empty = kwargs.get("allow_empty", True)
+        raise ValueError("config option {0} is missing and is required".format(key))
     if isinstance(value, str) and required_type:
         if required_type == "str" and value == "" and not allow_empty:
-            raise exception("config option {0} cannot be empty".format(key))
+            raise ValueError("config option {0} cannot be empty".format(key))
         if required_type in ["int", "float"]:
             try:
                 if required_type == "int":
                     value = int(value)
                 else:
                     value = float(value)
-            except ValueError:
-                raise exception(
+            except TypeError as error:
+                raise TypeError(
                     "config option {0} needs to be an {1}".format(key, required_type)
-                )
-            minimum = kwargs.get("minimum")
+                ) from error
             if minimum is not None and value < minimum:
-                raise exception(
+                raise ValueError(
                     "config option {0} needs to be >= {1}".format(key, minimum)
                 )
-            maximum = kwargs.get("maximum")
             if maximum is not None and value > maximum:
-                raise exception(
+                raise ValueError(
                     "config option {0} needs to be <= {1}".format(key, maximum)
                 )
         if required_type == "[int]":
             try:
                 value = [int(x) for x in value.split(",")]
-            except ValueError:
-                raise exception(
+            except ValueError as error:
+                raise ValueError(
                     "config option {0} needs to be a list of int[int,...]".format(key)
-                )
+                ) from error
         if required_type == "bool":
             value = bool(value.lower() in ["1", "true", "yes"])
         if required_type == "[str]":
             value = [x.strip() for x in value.split(",")]
     if isinstance(value, list) and allowed_values:
         if not all([x in allowed_values for x in value]):
-            raise exception(
+            raise ValueError(
                 "config option {0} needs to be one of {1}".format(key, allowed_values)
             )
     else:
         if allowed_values is not None and value not in allowed_values:
-            raise exception(
+            raise ValueError(
                 "config option {0} needs to be one of {1}".format(key, allowed_values)
             )
     return value
@@ -222,3 +222,52 @@ def subclass_dict_handler(
         return list(_subclasses)
 
     return (register, get_class, all_types)
+
+
+def check_group_match(group: str, group_list: List[str]) -> bool:
+    """
+    Check if a group is contained in the group list.
+
+    If the group list is a single element, "_all", then it matches.
+    """
+    if group_list[0] == "_all":
+        return True
+    if group in group_list:
+        return True
+    return False
+
+
+def size_string_to_bytes(s: str) -> Optional[int]:
+    if s is None:
+        return None
+    if s.endswith("G"):
+        gigs = int(s[:-1])
+        _bytes = gigs * (1024 ** 3)
+    elif s.endswith("M"):
+        megs = int(s[:-1])
+        _bytes = megs * (1024 ** 2)
+    elif s.endswith("K"):
+        kilos = int(s[:-1])
+        _bytes = kilos * 1024
+    else:
+        return int(s)
+    return _bytes
+
+
+def bytes_to_size_string(b: int) -> str:
+    """Convert a number in bytes to a sensible unit."""
+
+    kb = 1024
+    mb = kb * 1024
+    gb = mb * 1024
+    tb = gb * 1024
+
+    if b > tb:
+        return "%0.2fTiB" % (b / float(tb))
+    if b > gb:
+        return "%0.2fGiB" % (b / float(gb))
+    if b > mb:
+        return "%0.2fMiB" % (b / float(mb))
+    if b > kb:
+        return "%0.2fKiB" % (b / float(kb))
+    return str(b)

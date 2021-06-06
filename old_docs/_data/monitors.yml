@@ -1,0 +1,328 @@
+- name: host
+  oneline: Pings a host (once per iteration) to see if it’s available. Multiplatform, but can break on non-English ping output without additional config. See also the "ping" monitor.
+  params:
+      - name: host
+        desc: The hostname to ping.
+        required: 'yes'
+      - name: ping_regexp
+        desc: The regexp which matches a successful ping line. You may need to set this if your ping output is not in English
+        required: 'no'
+        default: auto
+      - name: time_regexp
+        desc: The regexp which matches the ping time in the output. Must set a match group named "ms". you may need to set this if your ping output is not in English.
+        required: 'no'
+        default: auto
+- name: service
+  oneline: Checks a Windows service to make sure it’s running. Windows only.
+  params:
+      - name: service
+        desc: The short name of the service to monitor. This is the “Service name” on the General tab of the service properties (in the Services MMC snap-in).
+        required: 'yes'
+      - name: host
+        desc: The hostname to check the service on.
+        required: 'no'
+        default: localhost
+- name: tcp
+  oneline: Checks that a TCP port is open. Doesn’t care what happens after the connection is opened. Multiplatform.
+  params:
+      - name: host
+        desc: The name of the host to connect to.
+        required: 'yes'
+      - name: port
+        desc: The port to connect to. Integer only (no service names).
+        required: 'yes'
+- name: rc
+  oneline: Checks a FreeBSD-style service is running, by running its rc script (in /usr/local/etc/rc.d) with the `status` command. May work for other types of rc.d/init.d system. Not for Windows.
+  params:
+      - name: service
+        desc: The name of the service to check. This is the name of the rc.d script in /usr/local/etc/rc.d/. Any trailing “.sh” is optional and will be added if needed.
+        required: 'yes'
+      - name: path
+        desc: The path of the folder containing the rc script
+        required: 'no'
+        default: /usr/local/etc/rc.d
+      - name: return_code
+        desc: The integer return code required from the script
+        required: 'no'
+        default: '0'
+- name: svc
+  oneline: Checks a supervise service is running. Not for Windows.
+  params:
+      - name: path
+        desc: The path to the service’s directory (e.g. `/var/service/something`).
+        required: 'yes'
+- name: diskspace
+  oneline: Checks the free space on a partition is above a given limit. Multiplatform.
+  params:
+      - name: partition
+        desc: The partition to check for space on. On Windows, this is the drive letter (e.g. C:). On non-Windows, this is the mount point (e.g. /usr).
+        required: 'yes'
+      - name: limit
+        desc: The minimum amount of free space. Give a number in bytes, or suffix K, M or G for kilobytes, megabytes or gigabytes. Required, no default.
+        required: 'yes'
+- name: http
+  oneline: Attempts to fetch a URL and makes sure the HTTP return code is 200 OK. Can also look through the content of the page trying to match a regular expression. Multiplatform.
+  params:
+      - name: url
+        desc: The URL to open.
+        required: 'yes'
+      - name: regexp
+        desc: The regexp to look for in the page (only if the page loads with status `200 OK`). If the regexp does not match, the monitor reports a failure. See Python’s `re` module for syntax.
+        required: 'no'
+        default: 'none'
+      - name: allowed_codes
+        desc: A list of HTTP codes which are acceptable in addition to `200 OK`
+        required: 'no'
+      - name: verify_hostname
+        desc: If set to false, no SSL hostname verification will be made. Use with the https protocol and self-signed certificates.
+        required: 'no'
+        default: 'True'
+      - name: timeout
+        desc: The timeout for the HTTP request to complete
+        required: 'no'
+        default: '5'
+      - name: headers
+        desc: JSON map of HTTP header names and values to add to the request
+        required: 'no'
+- name: dns
+  oneline: Attempts to resolve a DNS record, and optionally checks the result. Requires the DNS utility `dig` to be in the `$PATH`.
+  params:
+    - name: record
+      desc: The DNS name to resolve.
+      required: 'yes'
+    - name: record_type
+      desc: The type of the record.
+      required: 'no'
+      default: 'A'
+    - name: desired_val
+      desc: >
+        The expected value for the record to resolve to. For results with newlines (e.g. MX records), you should format them like:
+
+            desired_val: 10 a.mx.domain.com
+              20 b.mx.domain.com
+              30 c.mx.domain.com
+
+        Note the leading spaces on the continuation lines.
+      required: 'no'
+    - name: server
+      desc: The server to send the request to. If absent, the system default is used.
+      required: 'no'
+- name: apcupsd
+  oneline: Uses (an existing and correctly configured) apcupsd to check that a UPS is not running from batteries or having some other problem. Multiplatform.
+  params:
+      - name: path
+        desc: The path to the `apcaccess` binary. You should only need to specify this if you’ve installed apcupsd somewhere exotic.
+        required: 'no'
+        default: 'UNIX: $PATH; Windows: C:\apcupsd\bin'
+- name: fail
+  oneline: This monitor fails 5 times in a row and then succeeds once. Use for testing. Multiplatform.
+- name: portaudit
+  oneline: Fails if `portaudit` reports any vulnerable ports installed.
+  params:
+    - name: path
+      desc: The path for for the portaudit binary.
+      required: 'no'
+      default: '/usr/local/sbin/portaudit'
+- name: pkgaudit
+  oneline: Fails if `pkg audit` reports any vulnerable packages installed.
+  params:
+    - name: path
+      desc: The path to the package binary.
+      required: 'no'
+      default: '/usr/local/sbin/pkg'
+- name: loadavg
+  oneline: Check the load average on the host.
+  params:
+    - name: which
+      desc: 'The load average to monitor: 0 = 1min, 1 = 5min, 2 = 15min'
+      required: 'no'
+      default: '1'
+    - name: max
+      desc: The maximum acceptable value for the given load average.
+      required: 'no'
+      default: '1.00'
+- name: command
+  oneline: 'Run a command and optionally verify the output. If the command exits non-zero, the monitor fails.'
+  params:
+    - name: command
+      desc: The command (and params) to execute
+      required: 'yes'
+    - name: result_regexp
+      desc: A regular expression against which the output of the command is matched.
+      required: 'no'
+    - name: result_max
+      desc: 'A maximum value for the command to output (on stdout)'
+      required: 'no'
+- name: compound
+  oneline: Combine (logical-and) multiple failures of other monitors for emergency escalation
+  params:
+    - name: monitors
+      desc: A comma-separated list of other monitors
+      required: 'yes'
+    - name: min_fail
+      desc: Number of monitors which should fail for this monitor to fail too
+      default: all
+      required: 'no'
+- name: filestat
+  oneline: Examine size and age of a file
+  params:
+    - name: filename
+      desc: The path to the file to monitor
+      required: 'yes'
+    - name: maxage
+      desc: Maximum allowed age of the file in seconds
+      required: 'no'
+      default: None; age is ignored
+    - name: minsize
+      desc: Minimum allowed size of the file in bytes; can be expressed using "KB" etc suffixes
+      required: 'no'
+      default: None; size is ignored
+- name: hass_sensor
+  oneline: Monitor the existence of a home automation sensor
+  params:
+    - name: url
+      desc: The API URL for the monitor
+      required: 'yes'
+    - name: sensor
+      desc: Name of the sensor
+      required: 'yes'
+    - name: token
+      desc: API token for the sensor
+      required: 'yes'
+- name: 'null'
+  oneline: Monitor which always passes. Use for testing.
+- name: systemd-unit
+  oneline: Monitor a systemd unit status
+  params:
+    - name: name
+      desc: The name of the unit to monitor
+      required: 'yes'
+    - name: load_states
+      desc: Comma-separated list of desired load states for the unit
+      required: 'no'
+      default: "`loaded`"
+    - name: active_states
+      desc: Comma-separated list of desired active states for the unit
+      required: 'no'
+      default: "`active, reloading`"
+    - name: sub_states
+      desc: Comma-separates list of desired sub states for the unit
+      required: 'no'
+- name: ring
+  oneline: Check battery level of Ring Doorbell
+  params:
+    - name: device_name
+      desc: The name of the Ring Doorbell to monitor
+      required: 'yes'
+    - name: minimum_battery
+      desc: The minimum battery percent allowed
+      required: 'no'
+      default: 25
+    - name: username
+      desc: Your Ring username (e.g. email address). Accounts using MFA are not supported. You can create a separate account for API access.
+      required: 'yes'
+    - name: password
+      desc: Your Ring password
+      required: 'yes'
+- name: memory
+  oneline: Check free memory percentage
+  params:
+    - name: percent_free
+      desc: The minimum percent of available (as per psutils' definition) memory
+      required: 'yes'
+- name: arlo_camera
+  oneline: Check Arlo camera battery level
+  params:
+    - name: username
+      desc: Arlo username
+      required: 'yes'
+    - name: password
+      desc: Arlo password
+      required: 'yes'
+    - name: device_name
+      desc: Camera device name (e.g. "Front")
+      required: 'yes'
+    - name: base_station_id
+      desc: The number of your base station; only required if you have more than one. It's an array index, but figuring out which one is which is an exercise left the reader
+      required: 'no'
+      default: 0
+- name: unix_service
+  oneline: Check a generic unix service with the "service" command
+  params:
+    - name: service
+      desc: Name of the service to check
+      required: 'yes'
+    - name: state
+      desc: The state the service should be in; either `running` (command exits 0) or `stopped` (command exits 1)
+      required: 'no'
+      default: running
+- name: process
+  oneline: Check for a running process
+  params:
+    - name: process_name
+      desc: The process name to check for
+      requried: 'yes'
+    - name: min_count
+      desc: The minimum number of processes to require
+      required: 'no'
+      default: 1
+    - name: max_count
+      desc: The maximum number of processes allowed
+      required: 'no'
+      default: infinity
+    - name: username
+      desc: Limit matches to processes owned by this username
+      required: 'no'
+      default: blank (any user)
+- name: ping
+  oneline: Pings a host to make sure it's up. Uses a Python ping module instead of calling out to an external app, but needs to be run as root.
+  params:
+    - name: host
+      desc: The host/IP to ping.
+      required: 'yes'
+    - name: timeout
+      desc: The timeout for the ping in seconds
+      required: 'no'
+      default: 5
+- name: unifi_failover
+  oneline: Checks a Unifi Security Gateway for failover WAN status. (The USG must be in your known_hosts file.)
+  params:
+    - name: router_address
+      desc: The address of the USG
+      required: 'yes'
+    - name: router_username
+      desc: The username to log in as
+      required: 'yes'
+    - name: router_password
+      desc: The password to log in with (if not using ssh key)
+      required: 'no'
+    - name: ssh_key
+      desc: The SSH private key to log in with (if not using password)
+      required: 'no'
+    - name: check_interface
+      desc: The name of the failover interface to check
+      required: 'no'
+      default: eth2
+- name: unifi_watchdog
+  oneline: Checks a Unifi Security Gateway to make sure the WAN failover is healthy (The USG must be in your known_host file.)
+  params:
+    - name: router_address
+      desc: The address of the USG
+      required: 'yes'
+    - name: router_username
+      desc: The username to log in as
+      required: 'yes'
+    - name: router_password
+      desc: The password to log in with (if not using ssh key)
+      required: 'no'
+    - name: ssh_key
+      desc: The SSH private key to log in with (if not using password)
+      required: 'no'
+    - name: primary_interface
+      desc: The name of the primary interface
+      required: 'no'
+      default: pppoe0
+    - name: secondary_interface
+      desc: The name of the secondary interface
+      required: 'no'
+      default: eth2

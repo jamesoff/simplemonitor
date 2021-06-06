@@ -11,7 +11,7 @@ from unittest.mock import patch
 
 from simplemonitor import Alerters, monitor, simplemonitor
 from simplemonitor.Loggers import network
-from simplemonitor.Monitors.monitor import MonitorNull
+from simplemonitor.Monitors.monitor import MonitorFail, MonitorNull
 
 
 class TestMonitor(unittest.TestCase):
@@ -36,12 +36,32 @@ class TestMonitor(unittest.TestCase):
         time.sleep(2)
         Path(temp_file_name).touch()
         self.assertEqual(
-            s._check_hup_file(), True, "check_hup_file did not trigger",
+            s._check_hup_file(),
+            True,
+            "check_hup_file did not trigger",
         )
         self.assertEqual(
-            s._check_hup_file(), False, "check_hup_file should not have triggered",
+            s._check_hup_file(),
+            False,
+            "check_hup_file should not have triggered",
         )
         os.unlink(temp_file_name)
+
+    def test_disabled_monitor_not_run(self):
+        s = simplemonitor.SimpleMonitor(Path("tests/monitor-empty.ini"))
+        m = MonitorNull("unnamed", {"enabled": 0})
+        with patch.object(m, "run_test") as mock_method:
+            s.add_monitor("test", m)
+            s.run_tests()
+        mock_method.assert_not_called()
+
+    def test_enabled_monitor_run(self):
+        s = simplemonitor.SimpleMonitor(Path("tests/monitor-empty.ini"))
+        m = MonitorNull("unnamed", {"enabled": 1})
+        with patch.object(m, "run_test") as mock_method:
+            s.add_monitor("test", m)
+            s.run_tests()
+        mock_method.assert_called_once()
 
 
 class TestPidFile(unittest.TestCase):
@@ -101,3 +121,38 @@ class TestNetworkMonitors(unittest.TestCase):
         s.update_remote_monitor(data, "remote.host")
         self.assertIn("test1", s.remote_monitors["remote.host"])
         self.assertNotIn("test2", s.remote_monitors["remote.host"])
+
+
+class TestFailedLogic(unittest.TestCase):
+    def test_disabled(self):
+        s = simplemonitor.SimpleMonitor("tests/monitor-empty.ini")
+        m1 = MonitorFail("fail", config_options={})
+        m2 = MonitorNull("null", config_options={"enabled": "0"})
+        s.add_monitor("fail", m1)
+        s.add_monitor("null", m2)
+        m2.reset_dependencies()
+        m1.run_test()
+        failed = s._failed_monitors()
+        self.assertListEqual(["fail", "null"], failed)
+
+    def test_no_disabled(self):
+        s = simplemonitor.SimpleMonitor("tests/monitor-empty.ini")
+        m1 = MonitorFail("fail", config_options={})
+        m2 = MonitorNull("null", config_options={})
+        s.add_monitor("fail", m1)
+        s.add_monitor("null", m2)
+        m2.reset_dependencies()
+        m1.run_test()
+        failed = s._failed_monitors()
+        self.assertListEqual(["fail"], failed)
+
+    def test_no_failed(self):
+        s = simplemonitor.SimpleMonitor("tests/monitor-empty.ini")
+        m1 = MonitorNull("null1", config_options={})
+        m2 = MonitorNull("null2", config_options={})
+        s.add_monitor("null1", m1)
+        s.add_monitor("null2", m2)
+        m2.reset_dependencies()
+        m1.run_test()
+        failed = s._failed_monitors()
+        self.assertListEqual([], failed)

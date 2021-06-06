@@ -11,6 +11,7 @@ functions.
 """
 
 import copy
+import datetime
 import logging
 import platform
 import subprocess  # nosec
@@ -20,7 +21,6 @@ from typing import Any, List, NoReturn, Optional, Tuple, Union, cast
 import arrow
 
 from ..util import (
-    MonitorConfigurationError,
     MonitorState,
     UpDownTime,
     format_datetime,
@@ -64,8 +64,9 @@ class Monitor:
         self.name = name
         self._deps = []  # type: List[str]
         self.monitor_logger = logging.getLogger("simplemonitor.monitor-" + self.name)
-        self._dependencies = self.get_config_option(
-            "depend", required_type="[str]", default=list()
+        self._dependencies = cast(
+            List[str],
+            self.get_config_option("depend", required_type="[str]", default=list()),
         )
         self._urgent = self.get_config_option(
             "urgent", required_type="bool", default=True
@@ -91,6 +92,16 @@ class Monitor:
         self.failure_doc = cast(
             Optional[str], self.get_config_option("failure_doc", default=None)
         )
+        self.enabled = cast(
+            bool, self.get_config_option("enabled", required_type="bool", default=True)
+        )
+        _gps = cast(Optional[str], self.get_config_option("gps"))
+        if _gps:
+            self.gps = [
+                float(x) for x in _gps.split(",")
+            ]  # type: Optional[List[float]]
+        else:
+            self.gps = None
 
         self.running_on = short_hostname()
         self._state = MonitorState.UNKNOWN
@@ -98,9 +109,32 @@ class Monitor:
         if self._first_load is None:
             self._first_load = arrow.utcnow()
 
-    def get_config_option(self, key: str, **kwargs: Any) -> Any:
-        kwargs["exception"] = MonitorConfigurationError
-        return get_config_option(self._config_options, key, **kwargs)
+    def get_config_option(
+        self,
+        key: str,
+        *,
+        default: Any = None,
+        required: bool = False,
+        required_type: str = "str",
+        allowed_values: Any = None,
+        allow_empty: bool = True,
+        minimum: Optional[Union[int, float]] = None,
+        maximum: Optional[Union[int, float]] = None,
+    ) -> Any:
+        """Get a config value.
+
+        Throws the right flavour exception if something is wrong."""
+        return get_config_option(
+            self._config_options,
+            key,
+            default=default,
+            required=required,
+            required_type=required_type,
+            allowed_values=allowed_values,
+            allow_empty=allow_empty,
+            minimum=minimum,
+            maximum=maximum,
+        )
 
     @property
     def dependencies(self) -> List[str]:
@@ -260,7 +294,7 @@ class Monitor:
         self._state = MonitorState.SKIPPED
         return True
 
-    def uptime(self) -> Optional[arrow.Arrow]:
+    def uptime(self) -> Optional[datetime.timedelta]:
         if self.uptime_start:
             return arrow.utcnow() - self.uptime_start
         return None
@@ -338,6 +372,8 @@ class Monitor:
         We always run if the minimum gap is 0, or if we're currently failing.
         Otherwise, we run if the last time we ran was more than minimum_gap seconds ago.
         """
+        if not self.enabled:
+            return False
         now = int(time.time())
         if self._force_run:
             self._force_run = False
@@ -391,7 +427,7 @@ class Monitor:
                 self.recovered_info = "Unable to run command: %s" % e
 
     def post_config_setup(self) -> None:
-        """ any post config setup needed """
+        """any post config setup needed"""
         pass
 
     def __getstate__(self) -> dict:

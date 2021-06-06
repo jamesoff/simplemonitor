@@ -1,5 +1,7 @@
 # coding=utf-8
 import json
+import logging
+import logging.handlers
 import os
 import shutil
 import socket
@@ -7,16 +9,18 @@ import stat
 import subprocess  # nosec
 import sys
 import tempfile
-import time
-from io import StringIO
-from typing import Any, List, Optional, TextIO, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, cast
 
 import arrow
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from ..Monitors.monitor import Monitor
-from ..util import format_datetime, short_hostname
+from ..util import format_datetime, short_hostname, size_string_to_bytes
 from ..version import VERSION
 from .logger import Logger, register
+
+if TYPE_CHECKING:
+    import datetime
 
 
 @register
@@ -29,7 +33,7 @@ class FileLogger(Logger):
     buffered = True
     dateformat = None
 
-    def __init__(self, config_options: dict = None) -> None:
+    def __init__(self, config_options: Optional[Dict[str, Any]] = None) -> None:
         if config_options is None:
             config_options = {}
         super().__init__(config_options)
@@ -46,16 +50,6 @@ class FileLogger(Logger):
             "buffered", required_type="bool", default=True
         )
 
-        self.dateformat = cast(
-            str,
-            self.get_config_option(
-                "dateformat",
-                required_type="str",
-                allowed_values=["timestamp", "iso8601"],
-                default="timestamp",
-            ),
-        )
-
         self.file_handle.write(
             "{} simplemonitor starting\n".format(self._get_datestring())
         )
@@ -64,11 +58,6 @@ class FileLogger(Logger):
 
     def __del__(self) -> None:
         self.file_handle.close()
-
-    def _get_datestring(self) -> str:
-        if self.dateformat == "iso8601":
-            return format_datetime(arrow.now(), self.tz)
-        return str(int(time.time()))
 
     def save_result2(self, name: str, monitor: Monitor) -> None:
         if self.only_failures and monitor.virtual_fail_count() == 0:
@@ -114,6 +103,82 @@ class FileLogger(Logger):
 
 
 @register
+class FileLoggerNG(Logger):
+    """
+    Log monitor status to a file, Next Generation
+
+    Uses the Python logging library to get features like rotation
+    """
+
+    logger_type = "logfileng"
+    only_failures = False
+
+    def __init__(self, config_options: dict = None) -> None:
+        if config_options is None:
+            config_options = {}
+        super().__init__(config_options)
+        self.only_failures = self.get_config_option(
+            "only_failures", required_type="bool", default=False
+        )
+        self._logger = logging.getLogger(f"logfileng-{self.name}")
+        if self.only_failures:
+            self._logger.setLevel(logging.WARNING)
+        else:
+            self._logger.setLevel(logging.INFO)
+        rotation_type = self.get_config_option(
+            "rotation_type", allowed_values=["time", "size"]
+        )
+        self.filename = self.get_config_option("filename")
+        self.backup_count = cast(
+            int, self.get_config_option("backup_count", required_type="int", default=1)
+        )
+        if rotation_type == "time":
+            handler = logging.handlers.TimedRotatingFileHandler(
+                filename=self.filename,
+                when=self.get_config_option("when", default="h"),
+                interval=self.get_config_option(
+                    "interval", default=1, required_type="int"
+                ),
+                backupCount=self.backup_count,
+                utc=self.get_config_option("utc", required_type="bool", default=True),
+                encoding="utf-8",
+            )  # type: logging.handlers.BaseRotatingHandler
+        elif rotation_type == "size":
+            max_bytes = size_string_to_bytes(self.get_config_option("max_bytes"))
+            if max_bytes is None:
+                raise ValueError("Missing max_bytes")
+            handler = logging.handlers.RotatingFileHandler(
+                filename=self.filename,
+                maxBytes=max_bytes,
+                backupCount=self.backup_count,
+                encoding="utf-8",
+            )
+        else:
+            raise ValueError(f"Invalid rotation_type {rotation_type}")
+        self._logger.addHandler(handler)
+
+    def save_result2(self, name: str, monitor: Monitor) -> None:
+        if monitor.virtual_fail_count() == 0:
+            self._logger.info(
+                "%s %s: ok (%0.3fs) (%s)",
+                self._get_datestring(),
+                name,
+                monitor.last_run_duration,
+                monitor.get_result(),
+            )
+        else:
+            self._logger.warning(
+                "%s %s: failed since %s; VFC=%d (%s) (%0.3fs)",
+                self._get_datestring(),
+                name,
+                format_datetime(monitor.first_failure_time(), self.tz),
+                monitor.virtual_fail_count(),
+                monitor.get_result(),
+                monitor.last_run_duration,
+            )
+
+
+@register
 class HTMLLogger(Logger):
     """A batching logger which writes a simple HTML page of the current state."""
 
@@ -131,18 +196,6 @@ class HTMLLogger(Logger):
         )
         self.filename = cast(
             str, self.get_config_option("filename", required=True, allow_empty=False)
-        )
-        self.header = cast(
-            str,
-            self.get_config_option(
-                "header", required=False, allow_empty=False, default="header.html"
-            ),
-        )
-        self.footer = cast(
-            str,
-            self.get_config_option(
-                "footer", required=False, allow_empty=False, default="footer.html"
-            ),
         )
         self.source_folder = cast(
             str,
@@ -165,68 +218,31 @@ class HTMLLogger(Logger):
             str,
             self.get_config_option("upload_command", required=False, allow_empty=False),
         )
+        self.map = cast(
+            bool, self.get_config_option("map", required_type="bool", default=False)
+        )
+        _map_start = cast(
+            Optional[List[str]],
+            self.get_config_option("map_start", required_type="[str]", default=None),
+        )
+        if _map_start and len(_map_start) == 3:
+            self.map_start = {
+                "latitude": _map_start[0],
+                "longitude": _map_start[1],
+                "zoom": _map_start[2],
+            }  # type: Optional[Dict[str, str]]
+        else:
+            self.map_start = None
+        self.map_token = cast(str, self.get_config_option("map_token"))
         self._resource_files = ["style.css"]  # type: List[str]
         self._my_host = short_hostname()
         self.status = ""
         self.header_class = ""
-
-    def _make_html_row(self, name: str, entry: dict) -> str:
-        row = ""
-        row_class = ""
-        cell_class = ""
-        if entry["age"] > entry["gap"] + 60:
-            status = "OLD"
-            cell_class = "table-warning"
-        elif entry["status"]:
-            status = "OK"
-            cell_class = "table-success"
-        else:
-            status = "FAIL"
-            row_class = "table-danger"
-        try:
-            monitor_name = name.split("/")[1]
-        except IndexError:
-            monitor_name = name
-        if row_class:
-            row = f'<tr class="{row_class}">'
-        else:
-            row = "<tr>"
-        row = (
-            row
-            + f'<td><span data-toggle="tooltip" data-placement="right" title="{entry["description"]}">{monitor_name}</span></td>'
+        self._env = Environment(
+            loader=FileSystemLoader(self.source_folder),
+            keep_trailing_newline=True,
+            autoescape=select_autoescape("html"),
         )
-
-        if cell_class:
-            row = row + f'<td class="{cell_class}">'
-        else:
-            row = row + "<td>"
-        row = row + status + "</td>"
-
-        row = row + f'<td>{entry["host"]}</td><td>{entry["fail_time"]}'
-        if not entry["fail_count"]:
-            row = row + "<td></td>"
-        else:
-            row = row + f'<td>{entry["fail_count"]}</td>'
-        row = row + (
-            f'<td>{entry["downtime"]} '
-            f'(<span data-toggle="tooltip" data-placement="right" title="{entry["availability"] * 100:0.5f}%">{entry["availability"] * 100:0.2f}%</span>)'
-            "</td>"
-        )
-        row = row + f'<td>{entry["fail_data"]}</td>'
-
-        if entry["failures"] == 0:
-            row = row + "<td></td><td></td>"
-        else:
-            row = row + (
-                f'<td>{entry["failures"]}</td>'
-                f'<td>{format_datetime(entry["last_failure"], self.tz)}</td>'
-            )
-        if entry["host"] == self._my_host:
-            row = row + "<td></td>"
-        else:
-            row = row + f'<td>{entry["age"]}</td>'
-        row = row + "</tr>\n"
-        return row
 
     def save_result2(self, name: str, monitor: Monitor) -> None:
         if not self.doing_batch:
@@ -236,10 +252,7 @@ class HTMLLogger(Logger):
             return
         if self.batch_data is None:
             self.batch_data = {}
-        if monitor.virtual_fail_count() == 0:
-            status = True
-        else:
-            status = False
+        status = bool(monitor.virtual_fail_count() == 0)
         if not status:
             fail_time = format_datetime(monitor.first_failure_time(), self.tz)
             fail_count = monitor.virtual_fail_count()
@@ -251,14 +264,16 @@ class HTMLLogger(Logger):
             fail_data = monitor.get_result()
             downtime = monitor.get_uptime()  # yes, I know
         failures = monitor.failures
-        last_failure = monitor.last_failure
+        last_failure = format_datetime(monitor.last_failure, self.tz)
         gap = monitor.minimum_gap
         if gap == 0:
-            gap = 60  # TODO: figure out a good way to know the interval value for both local and remote monitors
+            # TODO: figure out a good way to know the interval value for both local and
+            # remote monitors
+            gap = 60
 
         try:
             if monitor.last_update is not None:
-                age = arrow.utcnow() - monitor.last_update
+                age = arrow.utcnow() - monitor.last_update  # type: datetime.timedelta
                 age_seconds = age.days * 3600 + age.seconds
                 update = str(monitor.last_update)
             else:
@@ -266,9 +281,26 @@ class HTMLLogger(Logger):
         except ValueError:
             age_seconds = 0
             update = ""
+        row_class = ""
+        cell_class = ""
+        if not monitor.enabled:
+            status_text = "DISABLED"
+        elif age_seconds > gap + 60:
+            status_text = "OLD"
+            cell_class = "table-warning"
+        elif status:
+            status_text = "OK"
+            cell_class = "table-success"
+        else:
+            status_text = "FAIL"
+            row_class = "table-danger"
 
         data_line = {
+            "monitor_name": monitor.name,
             "status": status,
+            "status_text": status_text,
+            "row_class": row_class,
+            "cell_class": cell_class,
             "fail_time": fail_time,
             "fail_count": fail_count,
             "fail_data": fail_data,
@@ -282,7 +314,10 @@ class HTMLLogger(Logger):
             "availability": monitor.availability,
             "description": monitor.describe(),
             "link": monitor.failure_doc,
-        }
+            "enabled": monitor.enabled,
+            "my_host": True if monitor.running_on == self._my_host else False,
+            "gps": monitor.gps,
+        }  # type: Dict[str, Any]
         self.batch_data[monitor.name] = data_line
 
     def process_batch(self) -> None:
@@ -291,6 +326,7 @@ class HTMLLogger(Logger):
         fail_count = 0
         old_count = 0
         remote_count = 0
+        disabled_count = 0
 
         try:
             temp_file = tempfile.mkstemp()
@@ -302,8 +338,8 @@ class HTMLLogger(Logger):
             )
             return
 
-        output_ok = StringIO()
-        output_fail = StringIO()
+        fail_entries = []  # type: List[Dict[str, Any]]
+        ok_entries = []  # type: List[Dict[str, Any]]
 
         if self.batch_data is None:
             return
@@ -311,17 +347,20 @@ class HTMLLogger(Logger):
         keys.sort()
         for entry in keys:
             this_entry = self.batch_data[entry]
-            output = output_ok
-            if this_entry["age"] > this_entry["gap"] + 60:
+            this_list = ok_entries
+            if not this_entry["enabled"]:
+                disabled_count += 1
+            elif this_entry["age"] > this_entry["gap"] + 60:
                 old_count += 1
             elif this_entry["status"]:
                 ok_count += 1
             else:
                 fail_count += 1
-                output = output_fail
+                this_list = fail_entries
             if this_entry["host"] != self._my_host:
                 remote_count += 1
-            output.write(self._make_html_row(entry, this_entry))
+            # output.write(self._make_html_row(entry, this_entry))
+            this_list.append(this_entry)
         if old_count > 0:
             self.header_class = "border-warning"
             self.status = "OLD"
@@ -332,31 +371,32 @@ class HTMLLogger(Logger):
             self.header_class = "border-success"
             self.status = "OK"
 
-        self.count_data = " ".join(
-            [
-                f'<span class="badge badge-success">{ok_count} OK</span> '
-                if ok_count
-                else "",
-                f'<span class="badge badge-danger">{fail_count} FAIL</span> '
-                if fail_count
-                else "",
-                f'<span class="badge badge-warning">{old_count} OLD</span> '
-                if old_count
-                else "",
-                f'<span class="badge badge-info">{remote_count} remote</span> '
-                if remote_count
-                else "",
-            ]
+        template = self._env.get_template("status-template.html")
+        if self._global_info:
+            interval = max(30, self._global_info["interval"])
+        else:
+            interval = 30
+        file_handle.write(
+            template.render(
+                status=self.status,
+                status_border=self.header_class,
+                host=socket.gethostname(),
+                interval=interval,
+                timestamp=str(arrow.now().int_timestamp),
+                now=format_datetime(arrow.now(), self.tz),
+                version=VERSION,
+                ok_count=ok_count,
+                fail_count=fail_count,
+                disabled_count=disabled_count,
+                old_count=old_count,
+                remote_count=remote_count,
+                fail_entries=fail_entries,
+                ok_entries=ok_entries,
+                map=self.map,
+                map_start=self.map_start,
+                map_token=self.map_token,
+            )
         )
-
-        with open(os.path.join(self.source_folder, self.header), "r") as file_input:
-            file_handle.writelines(self.parse_file(file_input))
-
-        file_handle.write(output_fail.getvalue())
-        file_handle.write(output_ok.getvalue())
-
-        with open(os.path.join(self.source_folder, self.footer), "r") as file_input:
-            file_handle.writelines(self.parse_file(file_input))
 
         try:
             file_handle.flush()
@@ -384,26 +424,6 @@ class HTMLLogger(Logger):
                 self.logger_logger.exception(
                     "Failed to run upload command for HTML files"
                 )
-
-    def parse_file(self, file_handle: TextIO) -> List[str]:
-        """Process a file an substitute in template values."""
-        lines = []  # type: List[str]
-        for line in file_handle:
-            line = line.replace("_NOW_", format_datetime(arrow.now(), self.tz))
-            line = line.replace("_HOST_", socket.gethostname())
-            line = line.replace("_COUNTS_", self.count_data)
-            line = line.replace("_TIMESTAMP_", str(arrow.now().timestamp))
-            line = line.replace("_STATUS_BORDER_", self.header_class)
-            line = line.replace("_STATUS_", self.status)
-            line = line.replace("_VERSION_", VERSION)
-            if self._global_info:
-                line = line.replace(
-                    "_INTERVAL_", str(max(30, self._global_info["interval"]))
-                )
-            else:
-                line = line.replace("_INTERVAL_", "30")
-            lines.append(line)
-        return lines
 
     def describe(self) -> str:
         return "Writing HTML page to {0}".format(self.filename)
