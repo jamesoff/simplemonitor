@@ -41,7 +41,7 @@ psutil = "^5.7.2"
 pyOpenSSL = ">=19.1,<21.0"
 requests = "^2.24.0"
 pync = {version = "^2.0.3", platform = "darwin"}
-pywin32 = {version = ">=228,<301", platform = "win32"}
+pywin32 = {version = ">=228,<302", platform = "win32"}
 Jinja2 = ">=2.11.2,<4.0.0"
 twilio = "^6.58.0"
 ring-doorbell = ">=0.6.0"
@@ -57,12 +57,12 @@ mypy = "*"
 bandit = "*"
 freezegun = "*"
 pytest = "*"
-pylint = "^2.8.2"
+pylint = "^2.8.3"
 Sphinx = "^4.0.2"
 sphinx-rtd-theme = "^0.5.1"
-pytest-cov = "^2.12.0"
+pytest-cov = "^2.12.1"
 tox = "^3.23.1"
-tox-poetry = "^0.3.0"
+tox-poetry = "^0.4.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0", "setuptools"]
