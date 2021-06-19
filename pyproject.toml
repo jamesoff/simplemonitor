@@ -63,6 +63,9 @@ sphinx-rtd-theme = "^0.5.1"
 pytest-cov = "^2.12.1"
 tox = "^3.23.1"
 tox-poetry = "^0.4.0"
+types-paramiko = "^0.1.7"
+types-python-dateutil = "^0.1.4"
+types-requests = "^0.1.12"
 
 [build-system]
 requires = ["poetry-core>=1.0.0", "setuptools"]
