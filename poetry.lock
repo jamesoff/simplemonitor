@@ -550,7 +550,7 @@ python-versions = ">=2.6"
 
 [[package]]
 name = "ping3"
-version = "2.7.0"
+version = "2.8.1"
 description = "A pure python3 version of ICMP ping implementation using raw socket."
 category = "main"
 optional = false
@@ -1584,8 +1584,8 @@ pbr = [
     {file = "pbr-5.6.0.tar.gz", hash = "sha256:42df03e7797b796625b1029c0400279c7c34fd7df24a7d7818a1abb5b38710dd"},
 ]
 ping3 = [
-    {file = "ping3-2.7.0-py3-none-any.whl", hash = "sha256:1a564ec5fac325b622c0fdaf15da9f2623764bba0ae3244ec1ddb89e0de8c2f5"},
-    {file = "ping3-2.7.0.tar.gz", hash = "sha256:afb72038e18fd2b57651a3488a7cbb34b83f6bb6d3676ba37b249394c6dcb84b"},
+    {file = "ping3-2.8.1-py3-none-any.whl", hash = "sha256:c8b1974212151163fef306adfb2c59cb422ab29166562f3b1d6910b12494b720"},
+    {file = "ping3-2.8.1.tar.gz", hash = "sha256:9033a398a82efb84614f7c88d8855d5cedc6a6546a9c3bbc00e99cf96f597e5e"},
 ]
 pluggy = [
     {file = "pluggy-0.13.1-py2.py3-none-any.whl", hash = "sha256:966c145cd83c96502c3c3868f50408687b38434af77734af1e9ca461a4081d2d"},
