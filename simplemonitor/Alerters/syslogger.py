@@ -4,6 +4,7 @@ SimpleMonitor alerts into syslog
 
 try:
     import syslog
+
     SYSLOG_AVAILABLE = True
 except ImportError:
     SYSLOG_AVAILABLE = False
@@ -15,6 +16,7 @@ from .alerter import Alerter, AlertType, register
 @register
 class SyslogAlerter(Alerter):
     """Send alerts to syslog"""
+
     alerter_type = "syslog"
 
     def send_alert(self, name: str, monitor: Monitor) -> None:
