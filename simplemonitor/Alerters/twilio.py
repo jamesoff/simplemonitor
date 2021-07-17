@@ -1,4 +1,6 @@
-# coding=utf-8
+"""
+SimpleMonitor alerts via Twilio
+"""
 
 from typing import cast
 
@@ -11,7 +13,7 @@ from .alerter import Alerter, AlertLength, AlertType, register
 
 @register
 class TwilioSMSAlerter(Alerter):
-    """Send SMS alerts using Twilio."""
+    """Send SMS alerts using Twilio"""
 
     alerter_type = "twilio_sms"
 

@@ -1,4 +1,6 @@
-# coding=utf-8
+"""
+SimpleMonitor alerting via BulkSMS
+"""
 
 from typing import cast
 
@@ -10,7 +12,8 @@ from .alerter import Alerter, AlertLength, AlertType, register
 
 @register
 class BulkSMSAlerter(Alerter):
-    """Send SMS alerts using the BulkSMS service.
+    """
+    Send SMS alerts using the BulkSMS service
 
     Subscription required, see http://www.bulksms.co.uk"""
 
@@ -61,17 +64,19 @@ class BulkSMSAlerter(Alerter):
 
         if not self._dry_run:
             try:
-                r = requests.get(url, params=params)
-                s = r.text
-                if not s.startswith("0"):
+                response = requests.get(url, params=params)
+                status = response.text
+                if not status.startswith("0"):
                     self.alerter_logger.error(
-                        "Unable to send SMS: %s (%s)", s.split("|")[0], s.split("|")[1]
+                        "Unable to send SMS: %s (%s)",
+                        status.split("|")[0],
+                        status.split("|")[1],
                     )
-            except Exception:
+            except requests.exceptions.RequestException:
                 self.alerter_logger.exception("SMS sending failed")
         else:
             self.alerter_logger.info(
-                "dry_run: would send SMS: {} with message {}".format(url, message)
+                "dry_run: would send SMS: %s with message %s", url, message
             )
 
     def _describe_action(self) -> str:

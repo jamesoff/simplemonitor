@@ -1,13 +1,12 @@
-# coding=utf-8
-try:
-    import boto3
-
-    boto3_available = True
-except ImportError:
-    boto3_available = False
+"""
+SimpleMonitor alerts via Amazon Simple Email Service
+"""
 
 import os
 from typing import Any, Dict, cast
+
+import boto3
+from botocore.exceptions import ClientError
 
 from ..Monitors.monitor import Monitor
 from .alerter import Alerter, AlertLength, AlertType, register
@@ -21,11 +20,6 @@ class SESAlerter(Alerter):
 
     def __init__(self, config_options: dict) -> None:
         super().__init__(config_options)
-        if not boto3_available:
-            self.alerter_logger.critical(
-                "boto3 package is not available, cannot use SESAlerter."
-            )
-            return
 
         self.from_addr = cast(str, self.get_config_option("from", allow_empty=False))
         self.to_addr = cast(str, self.get_config_option("to", allow_empty=False))
@@ -71,7 +65,7 @@ class SESAlerter(Alerter):
             try:
                 client = boto3.client("ses", **self.ses_client_params)
                 client.send_email(**mail)
-            except Exception:
+            except ClientError:
                 self.alerter_logger.exception("couldn't send mail")
         else:
             self.alerter_logger.info("dry_run: would send email:")

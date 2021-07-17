@@ -1,4 +1,7 @@
-# coding=utf-8
+"""
+SimpleMonitor command execution as alerts
+"""
+
 import shlex
 import subprocess  # nosec
 from typing import Optional, cast
@@ -10,7 +13,7 @@ from .alerter import Alerter, AlertType, register
 
 @register
 class ExecuteAlerter(Alerter):
-    """Execute an external command when a monitor fails or recovers."""
+    """Execute an external command when a monitor fails or recovers"""
 
     alerter_type = "execute"
 
@@ -34,6 +37,7 @@ class ExecuteAlerter(Alerter):
             raise AlerterConfigurationError("execute alerter has no commands defined")
 
     def send_alert(self, name: str, monitor: Monitor) -> None:
+        """Execute the command"""
         alert_type = self.should_alert(monitor)
         command = None  # type: Optional[str]
         downtime = monitor.get_downtime()
@@ -44,7 +48,7 @@ class ExecuteAlerter(Alerter):
 
         if alert_type == AlertType.NONE:
             return
-        elif alert_type == AlertType.FAILURE:
+        if alert_type == AlertType.FAILURE:
             command = self.fail_command
         elif alert_type == AlertType.SUCCESS:
             command = self.success_command
@@ -78,7 +82,7 @@ class ExecuteAlerter(Alerter):
             try:
                 subprocess.call(shlex.split(command))  # nosec
                 self.alerter_logger.debug("Command has finished.")
-            except Exception:
+            except subprocess.SubprocessError:
                 self.alerter_logger.exception(
                     "Exception encountered running command: %s", command
                 )

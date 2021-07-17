@@ -1,11 +1,10 @@
-try:
-    import requests
-
-    requests_available = True
-except ImportError:
-    requests_available = False
+"""
+SimpleMonitor alerts via Slack webhooks
+"""
 
 from typing import Any, Dict, cast
+
+import requests
 
 from ..Monitors.monitor import Monitor
 from ..util import format_datetime
@@ -14,7 +13,7 @@ from .alerter import Alerter, AlertType, register
 
 @register
 class SlackAlerter(Alerter):
-    """Send alerts to a Slack webhook."""
+    """Send alerts to a Slack webhook"""
 
     alerter_type = "slack"
 
@@ -23,13 +22,6 @@ class SlackAlerter(Alerter):
 
     def __init__(self, config_options: dict) -> None:
         super().__init__(config_options)
-        if not requests_available:
-            self.alerter_logger.critical(
-                "Requests package is not available, cannot use SlackAlerter."
-            )
-            self.alerter_logger.critical("Try: pip install -r requirements.txt")
-            return
-
         self.url = cast(
             str, self.get_config_option("url", required=True, allow_empty=False)
         )
@@ -38,8 +30,7 @@ class SlackAlerter(Alerter):
         self.username = cast(str, self.get_config_option("username"))
 
     def send_alert(self, name: str, monitor: Monitor) -> None:
-        """Send the message."""
-
+        """Send the message"""
         alert_type = self.should_alert(monitor)
         downtime = monitor.get_downtime()
 
@@ -109,10 +100,12 @@ class SlackAlerter(Alerter):
 
         if not self._dry_run:
             try:
-                r = requests.post(self.url, json=message_json)
-                if not r.status_code == 200:
-                    self.alerter_logger.error("POST to slack webhook failed: %s", r)
-            except Exception:
+                response = requests.post(self.url, json=message_json)
+                if not response.status_code == 200:
+                    self.alerter_logger.error(
+                        "POST to slack webhook failed: %s", response
+                    )
+            except requests.exceptions.RequestException:
                 self.alerter_logger.exception("Failed to post to slack webhook")
         else:
             self.alerter_logger.info(

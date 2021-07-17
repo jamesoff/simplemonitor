@@ -1,6 +1,11 @@
+"""
+SimpleMonitor alerts via pushbullet
+"""
+
 from typing import cast
 
 import requests
+import requests.auth
 
 from ..Monitors.monitor import Monitor
 from .alerter import Alerter, AlertLength, AlertType, register
@@ -14,7 +19,6 @@ class PushbulletAlerter(Alerter):
 
     def __init__(self, config_options: dict) -> None:
         super().__init__(config_options)
-
         self.pushbullet_token = cast(
             str, self.get_config_option("token", required=True, allow_empty=False)
         )
@@ -23,14 +27,13 @@ class PushbulletAlerter(Alerter):
 
     def send_pushbullet_notification(self, subject: str, body: str) -> None:
         """Send a push notification."""
-
         _payload = {"type": "note", "title": subject, "body": body}
         _auth = requests.auth.HTTPBasicAuth(self.pushbullet_token, "")
 
-        r = requests.post(
+        response = requests.post(
             "https://api.pushbullet.com/v2/pushes", data=_payload, auth=_auth
         )
-        if not r.status_code == requests.codes.ok:
+        if not response.status_code == requests.codes.ok:
             raise RuntimeError("Unable to send Pushbullet notification")
 
     def send_alert(self, name: str, monitor: Monitor) -> None:
@@ -49,7 +52,7 @@ class PushbulletAlerter(Alerter):
             except Exception:
                 self.alerter_logger.exception("Couldn't send push notification")
         else:
-            self.alerter_logger.info("dry_run: would send push notification: %s" % body)
+            self.alerter_logger.info("dry_run: would send push notification: %s", body)
 
     def _describe_action(self) -> str:
         return "posting to pushbullet"

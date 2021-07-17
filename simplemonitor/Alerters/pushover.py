@@ -1,4 +1,7 @@
-# coding=utf-8
+"""
+SimpleMonitor alerts via pushover
+"""
+
 from typing import cast
 
 import requests
@@ -15,7 +18,6 @@ class PushoverAlerter(Alerter):
 
     def __init__(self, config_options: dict) -> None:
         super().__init__(config_options)
-
         self.pushover_token = cast(
             str, self.get_config_option("token", required=True, allow_empty=False)
         )
@@ -27,7 +29,6 @@ class PushoverAlerter(Alerter):
 
     def send_pushover_notification(self, subject: str, body: str) -> None:
         """Send a push notification."""
-
         requests.post(
             "https://api.pushover.net/1/messages.json",
             data={

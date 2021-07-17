@@ -1,5 +1,7 @@
 # coding=utf-8
-"""Alerting for SimpleMonitor"""
+"""
+Alerting for SimpleMonitor
+"""
 
 import datetime
 import logging
@@ -116,17 +118,15 @@ class Alerter:
                 self.get_config_option("time_upper", required_type="str", required=True)
             )
             try:
+                time_lower_split = list(map(int, time_lower.split(":")))
+                time_upper_split = list(map(int, time_upper.split(":")))
                 time_info = [
-                    datetime.time(
-                        int(time_lower.split(":")[0]), int(time_lower.split(":")[1])
-                    ),
-                    datetime.time(
-                        int(time_upper.split(":")[0]), int(time_upper.split(":")[1])
-                    ),
+                    datetime.time(time_lower_split[0], time_lower_split[1]),
+                    datetime.time(time_upper_split[0], time_upper_split[1]),
                 ]
                 self._time_info = (time_info[0], time_info[1])
-            except Exception:
-                raise RuntimeError("error processing time limit definition")
+            except Exception as error:
+                raise RuntimeError("error processing time limit definition") from error
         self._days = cast(
             List[int],
             self.get_config_option(

@@ -1,4 +1,6 @@
-# coding=utf-8
+"""
+SimpleMonitor alerts via SMS77
+"""
 
 from typing import cast
 
@@ -10,7 +12,7 @@ from .alerter import Alerter, AlertLength, AlertType, register
 
 @register
 class SMS77Alerter(Alerter):
-    """Send SMS alerts using the sms77 service."""
+    """Send SMS alerts using the sms77 service"""
 
     alerter_type = "sms77"
 
@@ -31,7 +33,7 @@ class SMS77Alerter(Alerter):
         self.support_catchup = True
 
     def send_alert(self, name: str, monitor: Monitor) -> None:
-        """Send an SMS alert."""
+        """Send an SMS alert"""
 
         if not monitor.urgent:
             return
@@ -52,11 +54,13 @@ class SMS77Alerter(Alerter):
 
         if not self._dry_run:
             try:
-                r = requests.get(url, params=params)
-                s = r.text
-                if not s.startswith("100"):
-                    self.alerter_logger.error("Unable to send SMS: status code %s", s)
-            except Exception:
+                response = requests.get(url, params=params)
+                status = response.text
+                if not status.startswith("100"):
+                    self.alerter_logger.error(
+                        "Unable to send SMS: status code %s", status
+                    )
+            except requests.RequestException:
                 self.alerter_logger.exception("SMS sending failed")
         else:
             self.alerter_logger.info("dry_run: would send SMS: %s", message)
