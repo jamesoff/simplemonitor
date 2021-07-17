@@ -1,5 +1,6 @@
-# coding=utf-8
-""" File-based monitors for SimpleMonitor. """
+"""
+File-based monitors for SimpleMonitor
+"""
 
 import os
 import os.path
@@ -10,6 +11,12 @@ from .monitor import Monitor, register
 
 @register
 class MonitorBackup(Monitor):
+    """
+    Monitor Veritas BackupExec
+
+    May be out of date
+    """
+
     monitor_type = "backup"
     filename = os.path.join(
         "C:\\", "Program Files", "VERITAS", "Backup Exec", "status.txt"

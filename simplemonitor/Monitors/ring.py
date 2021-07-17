@@ -1,12 +1,13 @@
-try:
-    import ring_doorbell
-    from oauthlib.oauth2.rfc6749.errors import MissingTokenError
-except ImportError:
-    ring_doorbell = None
+"""
+Ring doorbell battery monitoring for SimpleMonitor
+"""
 
 import json
 from pathlib import Path
 from typing import Optional, cast
+
+import ring_doorbell
+from oauthlib.oauth2.rfc6749.errors import MissingTokenError
 
 from ..Monitors.monitor import Monitor, register
 from ..version import VERSION
@@ -24,10 +25,6 @@ class MonitorRingDoorbell(Monitor):
         if "gap" not in config_options:
             config_options["gap"] = 21600  # 6 hours
         super().__init__(name, config_options)
-        if ring_doorbell is None:
-            self.monitor_logger.critical("ring_doorbell library is not installed")
-            self.monitor_logger.critical("Try: pip install ring-doorbell")
-            self.monitor_logger.critical("     or pip install simplemonitor[ring]")
         self.device_name = cast(str, self.get_config_option("device_name"))
         self.minimum_battery = cast(
             int,
@@ -65,8 +62,6 @@ class MonitorRingDoorbell(Monitor):
         self.cache_file.write_text(json.dumps(token))
 
     def run_test(self) -> bool:
-        if ring_doorbell is None:
-            return self.record_fail("ring_doorbell library is not installed")
         if self.ring is None:
             self.ring = ring_doorbell.Ring(self._ring_auth)
         self.ring.update_data()

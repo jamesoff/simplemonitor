@@ -1,11 +1,12 @@
-# coding=utf-8
-"""Network-related monitors for SimpleMonitor."""
+"""
+Network-related monitors for SimpleMonitor
+"""
 
 import datetime
 import json
 import re
 import socket
-import subprocess
+import subprocess  # nosec
 import sys
 from typing import TYPE_CHECKING, List, Optional, Pattern, Tuple, Union, cast
 
@@ -254,7 +255,7 @@ class MonitorHost(Monitor):
 
         try:
             cmd = (self.ping_command % self.host).split(" ")
-            output = subprocess.check_output(cmd)
+            output = subprocess.check_output(cmd)  # nosec
             for line in str(output).split("\n"):
                 matches = re.search(self.ping_regexp, line)
                 if matches:
@@ -310,7 +311,7 @@ class MonitorDNS(Monitor):
 
     def run_test(self) -> bool:
         try:
-            result = subprocess.check_output(self.params).decode("utf-8")
+            result = subprocess.check_output(self.params).decode("utf-8")  # nosec
             result = result.strip()
             if result is None or result == "":
                 if self.desired_val != "nxdomain":

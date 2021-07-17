@@ -1116,7 +1116,7 @@ python-versions = "*"
 name = "types-paramiko"
 version = "0.1.7"
 description = "Typing stubs for paramiko"
-category = "dev"
+category = "main"
 optional = false
 python-versions = "*"
 
@@ -1146,7 +1146,7 @@ python-versions = "*"
 name = "types-requests"
 version = "2.25.0"
 description = "Typing stubs for requests"
-category = "dev"
+category = "main"
 optional = false
 python-versions = "*"
 
@@ -1214,7 +1214,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pyt
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6.2"
-content-hash = "096337711813817c93231589e8dc79589c75cdfe69e69e0408ed6aa39b109193"
+content-hash = "b8da683a5b90580b973e936d04a73765f57e1cc043e4b8880cf830acfe5b966c"
 
 [metadata.files]
 alabaster = [
