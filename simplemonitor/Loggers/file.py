@@ -1,4 +1,7 @@
-# coding=utf-8
+"""
+SimpleMonitor logging to files
+"""
+
 import json
 import logging
 import logging.handlers
@@ -40,7 +43,9 @@ class FileLogger(Logger):
         self.filename = self.get_config_option(
             "filename", required=True, allow_empty=False
         )
-        self.file_handle = open(self.filename, "a+")
+        self.file_handle = open(
+            self.filename, "a+"
+        )  # pylint: disable=consider-using-with
 
         self.only_failures = self.get_config_option(
             "only_failures", required_type="bool", default=False
@@ -92,7 +97,9 @@ class FileLogger(Logger):
         """Close and reopen log file."""
         try:
             self.file_handle.close()
-            self.file_handle = open(self.filename, "a+")
+            self.file_handle = open(
+                self.filename, "a+"
+            )  # pylint: disable=consider-using-with
         except OSError:
             self.logger_logger.exception(
                 "Couldn't reopen log file %s after HUP", self.filename
@@ -315,7 +322,7 @@ class HTMLLogger(Logger):
             "description": monitor.describe(),
             "link": monitor.failure_doc,
             "enabled": monitor.enabled,
-            "my_host": True if monitor.running_on == self._my_host else False,
+            "my_host": monitor.running_on == self._my_host,
             "gps": monitor.gps,
         }  # type: Dict[str, Any]
         self.batch_data[monitor.name] = data_line
@@ -429,7 +436,7 @@ class HTMLLogger(Logger):
         return "Writing HTML page to {0}".format(self.filename)
 
 
-class MonitorResult(object):
+class MonitorResult:
     """Represent the current status of a Monitor."""
 
     def __init__(self) -> None:
@@ -441,15 +448,17 @@ class MonitorResult(object):
         self.dependencies = []  # type: List[str]
 
     def json_representation(self) -> dict:
+        """Get JSON representation"""
         return self.__dict__
 
 
-class MonitorJsonPayload(object):
+class MonitorJsonPayload:
     def __init__(self) -> None:
         self.generated = None  # type: Optional[str]
         self.monitors = {}  # type: dict
 
     def json_representation(self) -> dict:
+        """Get JSON res""presentation"""
         return self.__dict__
 
 

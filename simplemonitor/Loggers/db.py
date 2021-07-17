@@ -1,11 +1,8 @@
-# coding=utf-8
-try:
-    import sqlite3
+"""
+SimpleMonitor logging with sqlite
+"""
 
-    sqlite_available = True
-except ImportError:
-    sqlite_available = False
-
+import sqlite3
 import time
 from socket import gethostname
 
@@ -51,8 +48,6 @@ class DBLogger(Logger):
     def __init__(self, config_options: dict) -> None:
         """Open the database connection."""
         super().__init__(config_options)
-        if not sqlite_available:
-            raise RuntimeError("SQLite module not loaded.")
         self.db_path = self.get_config_option(
             "db_path", required=True, allow_empty=False
         )
@@ -95,6 +90,7 @@ class DBLogger(Logger):
             self.logger_logger.debug("Schema for %s is current", self.db_path)
 
     def roll_schema_forward(self, start: int) -> None:
+        """Update the db schema"""
         for sql in CREATE_SQL[start:]:
             self.logger_logger.info("Applying SQL schema update")
             self.logger_logger.debug(sql)
@@ -106,6 +102,9 @@ class DBLogger(Logger):
                     "Cannot use this DB logger until schema is fixed!"
                 )
                 self.connected = False
+
+    def save_result2(self, name: str, monitor: Monitor) -> None:
+        raise NotImplementedError
 
 
 @register
@@ -127,9 +126,13 @@ class DBFullLogger(DBLogger):
         if not self.connected:
             self.logger_logger.warning("cannot send results, a dependency failed")
             return
-        sql = "INSERT INTO results (result_id, monitor_host, monitor_name, monitor_type, monitor_params, monitor_result, timestamp, monitor_info) VALUES (null, ?, ?, ?, ?, ?, ?, ?)"
+        sql = (
+            "INSERT INTO results (result_id, monitor_host, monitor_name, monitor_type, "
+            "monitor_params, monitor_result, timestamp, monitor_info) "
+            "VALUES (null, ?, ?, ?, ?, ?, ?, ?)"
+        )
 
-        c = self.db_handle.cursor()
+        cursor = self.db_handle.cursor()
 
         join_string = ":"
         timestamp = int(time.time())
@@ -146,9 +149,9 @@ class DBFullLogger(DBLogger):
             monitor_info,
         )
         try:
-            c.execute(sql, params)
-        except sqlite3.OperationalError as e:
-            self.logger_logger.critical("sqlite failed to write to database: %s", e)
+            cursor.execute(sql, params)
+        except sqlite3.OperationalError:
+            self.logger_logger.exception("sqlite failed to write to database")
 
     def save_result2(self, name: str, monitor: Monitor) -> None:
         """new interface."""
@@ -174,7 +177,7 @@ class DBStatusLogger(DBLogger):
 
     logger_type = "dbstatus"
 
-    def save_result(
+    def _save_result(
         self,
         monitor_name: str,
         monitor_type: str,
@@ -183,28 +186,33 @@ class DBStatusLogger(DBLogger):
         monitor_info: str,
         hostname: str = "",
     ) -> None:
+        """Original implementation for saving a result"""
         if hostname == "":
             hostname = self.hostname
-        c = self.db_handle.cursor()
+        cursor = self.db_handle.cursor()
         try:
-            c.execute(
+            cursor.execute(
                 "DELETE FROM status WHERE monitor_host = ? AND monitor_name = ?",
                 (self.hostname, monitor_name),
             )
-            c.execute(
-                "REPLACE INTO status (monitor_host, monitor_name, monitor_result, monitor_info) VALUES (?, ?, ?, ?)",
+            cursor.execute(
+                (
+                    "REPLACE INTO status (monitor_host, monitor_name, "
+                    "monitor_result, monitor_info) "
+                    "VALUES (?, ?, ?, ?)"
+                ),
                 (hostname, monitor_name, monitor_result, monitor_info),
             )
-        except sqlite3.OperationalError as e:
-            self.logger_logger.critical("sqlite failed to write to database: %s", e)
+        except sqlite3.OperationalError:
+            self.logger_logger.exception("sqlite failed to write to database")
 
     def save_result2(self, name: str, monitor: Monitor) -> None:
-        """new interface."""
+        """Record a result"""
         if monitor.test_success():
             result = 1
         else:
             result = 0
-        self.save_result(
+        self._save_result(
             name,
             monitor.monitor_type,
             str(monitor.get_params()),
@@ -213,4 +221,4 @@ class DBStatusLogger(DBLogger):
         )
 
     def describe(self) -> str:
-        return "Logging status to {0}".format(self.db_path)
+        return f"Logging status to {self.db_path}"

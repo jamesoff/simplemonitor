@@ -1,6 +1,5 @@
-# coding=utf-8
-
-"""Logging for SimpleMonitor.
+"""
+Logging for SimpleMonitor.
 
 Loggers process every monitor, every iteration, to record their state in some fashion.
 """
