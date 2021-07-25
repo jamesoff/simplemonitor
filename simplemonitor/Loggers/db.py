@@ -2,7 +2,13 @@
 SimpleMonitor logging with sqlite
 """
 
-import sqlite3
+try:
+    import sqlite3
+
+    SQLLITE_AVAILABLE = True
+except ImportError:
+    SQLLITE_AVAILABLE = False
+
 import time
 from socket import gethostname
 
@@ -48,6 +54,13 @@ class DBLogger(Logger):
     def __init__(self, config_options: dict) -> None:
         """Open the database connection."""
         super().__init__(config_options)
+        if not SQLLITE_AVAILABLE:
+            self.logger_logger.critical(
+                "Python sqlite support not available. Maybe you need to install "
+                "sqlite-devel or libsqlite3-dev, or similar?"
+            )
+            self.connected = False
+            return
         self.db_path = self.get_config_option(
             "db_path", required=True, allow_empty=False
         )
