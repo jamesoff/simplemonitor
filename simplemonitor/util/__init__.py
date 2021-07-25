@@ -143,7 +143,7 @@ def get_config_option(
                     "config option {0} needs to be a list of int[int,...]".format(key)
                 ) from error
         if required_type == "bool":
-            value = bool(value.lower() in ["1", "true", "yes"])
+            value = bool(str(value).lower() in ["1", "true", "yes"])
         if required_type == "[str]":
             value = [x.strip() for x in value.split(",")]
     if isinstance(value, list) and allowed_values:

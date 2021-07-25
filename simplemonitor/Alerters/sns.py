@@ -17,6 +17,7 @@ class SNSAlerter(Alerter):
     """Send notifications using Amazon SNS"""
 
     alerter_type = "sns"
+    urgent = True
 
     def __init__(self, config_options: dict) -> None:
         super().__init__(config_options)
@@ -49,10 +50,7 @@ class SNSAlerter(Alerter):
     def send_alert(self, name: str, monitor: Monitor) -> None:
         """Send the alert"""
 
-        if not monitor.urgent:
-            return
         alert_type = self.should_alert(monitor)
-
         if alert_type == AlertType.NONE:
             return
 

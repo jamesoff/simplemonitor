@@ -367,6 +367,30 @@ class TestAlerter(unittest.TestCase):
         m.run_test()
         self.assertEqual(a.should_alert(m), alerter.AlertType.NONE)
 
+    def test_alert_not_urgent(self):
+        a = alerter.Alerter()
+        m = monitor.MonitorFail("fail", {})
+        m.run_test()
+        self.assertEqual(a.should_alert(m), alerter.AlertType.FAILURE)
+
+    def test_no_alert_urgent(self):
+        a = alerter.Alerter({"urgent": "1"})
+        m = monitor.MonitorFail("fail", {"urgent": "0"})
+        m.run_test()
+        self.assertEqual(a.should_alert(m), alerter.AlertType.NONE)
+
+    def test_alert_urgent(self):
+        a = alerter.Alerter({"urgent": "1"})
+        m = monitor.MonitorFail("fail", {"urgent": "1"})
+        m.run_test()
+        self.assertEqual(a.should_alert(m), alerter.AlertType.FAILURE)
+
+    def test_alert_alerter_not_urgent(self):
+        a = alerter.Alerter({"urgent": "0"})
+        m = monitor.MonitorFail("fail", {"urgent": "1"})
+        m.run_test()
+        self.assertEqual(a.should_alert(m), alerter.AlertType.FAILURE)
+
 
 class TestMessageBuilding(unittest.TestCase):
     def setUp(self):
@@ -542,6 +566,14 @@ class TestSNSAlerter(unittest.TestCase):
             sns.SNSAlerter({})
         with self.assertRaises(util.AlerterConfigurationError):
             sns.SNSAlerter({"topic": "a", "number": "b"})
+
+    def test_urgent(self):
+        a = sns.SNSAlerter({"topic": "a"})
+        self.assertEqual(a.urgent, True)
+
+    def test_not_urgent(self):
+        a = sns.SNSAlerter({"topic": "a", "urgent": 0})
+        self.assertEqual(a.urgent, False)
 
 
 class TestDescription(unittest.TestCase):

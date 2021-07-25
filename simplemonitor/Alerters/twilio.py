@@ -16,6 +16,7 @@ class TwilioSMSAlerter(Alerter):
     """Send SMS alerts using Twilio"""
 
     alerter_type = "twilio_sms"
+    urgent = True
 
     def __init__(self, config_options: dict) -> None:
         super().__init__(config_options)
@@ -39,9 +40,6 @@ class TwilioSMSAlerter(Alerter):
 
     def send_alert(self, name: str, monitor: Monitor) -> None:
         """Send an SMS alert."""
-
-        if not monitor.urgent:
-            return
 
         alert_type = self.should_alert(monitor)
         if alert_type not in [AlertType.FAILURE, AlertType.SUCCESS]:

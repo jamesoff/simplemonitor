@@ -62,6 +62,7 @@ class Alerter:
     _ooh_failures = None  # type: Optional[List[str]]
     # subclasses should set this to true if they support catchup notifications for delays
     support_catchup = False
+    urgent = False
 
     def __init__(self, config_options: dict = None) -> None:
         if config_options is None:
@@ -158,6 +159,10 @@ class Alerter:
         )
         self._tz = cast(str, self.get_config_option("tz", default="UTC"))
         self._times_tz = cast(str, self.get_config_option("times_tz", default="local"))
+        self.urgent = cast(
+            bool,
+            self.get_config_option("urgent", default=self.urgent, required_type="bool"),
+        )
 
         if self._ooh_failures is None:
             self._ooh_failures = []
@@ -243,6 +248,13 @@ class Alerter:
         if not monitor.enabled:
             self.alerter_logger.debug(
                 "not alerting for %s: monitor disabled", monitor.name
+            )
+            return AlertType.NONE
+
+        if self.urgent and not monitor.urgent:
+            self.alerter_logger.debug(
+                "not alerting for %s: alerter is urgent and monitor is not",
+                monitor.name,
             )
             return AlertType.NONE
 

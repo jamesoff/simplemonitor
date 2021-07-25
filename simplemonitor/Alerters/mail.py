@@ -46,6 +46,8 @@ class EMailAlerter(Alerter):
         """Send the email"""
 
         alert_type = self.should_alert(monitor)
+        if alert_type == AlertType.NONE:
+            return
 
         message = MIMEMultipart()
         message["From"] = self.from_addr
@@ -56,8 +58,6 @@ class EMailAlerter(Alerter):
             message["CC"] = self.cc_addr.replace(";", ",")
             envelope_to.extend(self.cc_addr.split(";"))
 
-        if alert_type == AlertType.NONE:
-            return
         message["Subject"] = self.build_message(
             AlertLength.NOTIFICATION, alert_type, monitor
         )
