@@ -209,18 +209,15 @@ class MonitorUnixService(Monitor):
         try:
             result = subprocess.run(
                 ["service", self.service_name, "status"],
-                check=True,
+                check=False,
                 stderr=subprocess.PIPE,
                 stdout=subprocess.PIPE,
             )  # nosec
             returncode = result.returncode
-        except subprocess.CalledProcessError as exception:
-            returncode = exception.returncode
-            if returncode == self._want_return_code:
-                return self.record_success()
-            self.record_fail(
+        except subprocess.SubprocessError as exception:
+            return self.record_fail(
                 "Failed to run 'service {} status: {}".format(
-                    self.service_name, exception.output
+                    self.service_name, exception
                 )
             )
         if returncode == self._want_return_code:
