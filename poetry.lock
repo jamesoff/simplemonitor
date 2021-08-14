@@ -1139,7 +1139,7 @@ types-cryptography = "*"
 
 [[package]]
 name = "types-pyopenssl"
-version = "20.0.3"
+version = "20.0.5"
 description = "Typing stubs for pyOpenSSL"
 category = "main"
 optional = false
@@ -1948,8 +1948,8 @@ types-paramiko = [
     {file = "types_paramiko-0.1.7-py2.py3-none-any.whl", hash = "sha256:9fb9f3a363c99ae735148a7ce3c28adbe8f87797ec3c8cce3103899acbdebfa8"},
 ]
 types-pyopenssl = [
-    {file = "types-pyOpenSSL-20.0.3.tar.gz", hash = "sha256:177e102b9e68986ca7b2b6aea11f6ee5b9c5e0f9c89dcaa8d28b31527571f625"},
-    {file = "types_pyOpenSSL-20.0.3-py3-none-any.whl", hash = "sha256:c51286c23e26e4c67d1e9d1e1ce2efd2d5386c32c15dc90a977290b79e16532a"},
+    {file = "types-pyOpenSSL-20.0.5.tar.gz", hash = "sha256:e9abf9c1ac91e0f3f18122820d7f25b68373620b061aa23be8769fd52c588197"},
+    {file = "types_pyOpenSSL-20.0.5-py3-none-any.whl", hash = "sha256:acd4f6c4d58822d79e6c8c84983da43607c5d094e817788acda68c34ac3348d9"},
 ]
 types-python-dateutil = [
     {file = "types-python-dateutil-0.1.4.tar.gz", hash = "sha256:e6486ca27b6dde73e0ec079a9e1b03e208766e6bc7f1e08964a7e9104a5c7d7a"},
