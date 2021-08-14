@@ -67,7 +67,7 @@ pytest-cov = "^2.12.1"
 tox = "^3.23.1"
 tox-poetry = "^0.4.0"
 types-paramiko = "^0.1.7"
-types-python-dateutil = "^0.1.4"
+types-python-dateutil = "^0.1.6"
 types-requests = "^2.25.0"
 
 [build-system]
