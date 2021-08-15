@@ -21,9 +21,8 @@ classifiers = [
 	"Typing :: Typed",
 ]
 include = [
-	"simplemonitor/html/marker-*.png",
+	"simplemonitor/html/dist/*",
 	"simplemonitor/html/status-template.html",
-	"simplemonitor/html/style.css"
 ]
 
 [tool.poetry.scripts]

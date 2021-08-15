@@ -2,6 +2,7 @@
 SimpleMonitor logging to files
 """
 
+import glob
 import json
 import logging
 import logging.handlers
@@ -241,7 +242,11 @@ class HTMLLogger(Logger):
         else:
             self.map_start = None
         self.map_token = cast(str, self.get_config_option("map_token"))
-        self._resource_files = ["style.css"]  # type: List[str]
+        self._resource_files = [
+            "dist/main.bundle.js*",
+            "dist/maps.bundle.js*",
+            "dist/*.png",
+        ]
         self._my_host = short_hostname()
         self.status = ""
         self.header_class = ""
@@ -418,12 +423,15 @@ class HTMLLogger(Logger):
                 return
             shutil.move(file_name, os.path.join(self.folder, self.filename))
             if self.copy_resources:
-                for filename in self._resource_files:
-                    shutil.copy(os.path.join(self.source_folder, filename), self.folder)
+                for fileglob in self._resource_files:
+                    for filename in glob.glob(
+                        os.path.join(self.source_folder, fileglob)
+                    ):
+                        shutil.copy(
+                            os.path.join(self.source_folder, filename), self.folder
+                        )
         except OSError:
-            self.logger_logger.exception(
-                "problem closing/moving temporary file for HTML output"
-            )
+            self.logger_logger.exception("problem closing/moving files for HTML output")
         if self.upload_command:
             try:
                 subprocess.run(self.upload_command.split(" "), check=True)  # nosec

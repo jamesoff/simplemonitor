@@ -61,3 +61,6 @@ docker-build:
 
 docker-compose-build:
 	docker-compose build
+
+html-bundle:
+	cd simplemonitor/html && npx webpack
