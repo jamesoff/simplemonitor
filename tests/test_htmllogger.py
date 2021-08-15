@@ -33,8 +33,8 @@ class TestHTMLLogger(unittest.TestCase):
             "status.html was not created",
         )
         self.assertTrue(
-            os.path.exists(os.path.join("test_html", "style.css")),
-            "style.css was not copied",
+            os.path.exists(os.path.join("test_html", "main.bundle.js")),
+            "main.bundle.js was not copied",
         )
 
     def tearDown(self):
