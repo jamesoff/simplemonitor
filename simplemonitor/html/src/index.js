@@ -1,5 +1,5 @@
 window.$ = require("jquery");
-import "bootstrap";
+window.bootstrap = require("bootstrap");
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './style.css'
 
