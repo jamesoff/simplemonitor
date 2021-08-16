@@ -19,7 +19,12 @@ import arrow
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from ..Monitors.monitor import Monitor
-from ..util import format_datetime, short_hostname, size_string_to_bytes
+from ..util import (
+    copy_if_different,
+    format_datetime,
+    short_hostname,
+    size_string_to_bytes,
+)
 from ..version import VERSION
 from .logger import Logger, register
 
@@ -427,9 +432,10 @@ class HTMLLogger(Logger):
                     for filename in glob.glob(
                         os.path.join(self.source_folder, fileglob)
                     ):
-                        shutil.copy(
+                        if copy_if_different(
                             os.path.join(self.source_folder, filename), self.folder
-                        )
+                        ):
+                            self.logger_logger.info(f"copied {filename}")
         except OSError:
             self.logger_logger.exception("problem closing/moving files for HTML output")
         if self.upload_command:

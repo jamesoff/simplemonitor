@@ -1,6 +1,8 @@
 """Utilities for SimpleMonitor."""
 
 import datetime
+import os
+import shutil
 import socket
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
@@ -271,3 +273,28 @@ def bytes_to_size_string(b: int) -> str:
     if b > kb:
         return "%0.2fKiB" % (b / float(kb))
     return str(b)
+
+
+def copy_if_different(source: str, dest: str) -> bool:
+    """Copy a file from src to dest, if newer or a different size"""
+    do_copy = False
+    if not os.path.exists(source):
+        return False
+    if os.path.isdir(dest):
+        dest = os.path.join(dest, os.path.basename(source))
+    if not os.path.exists(dest):
+        do_copy = True
+    else:
+        source_fileinfo = os.stat(source)
+        dest_fileinfo = os.stat(dest)
+        if source_fileinfo.st_size != dest_fileinfo.st_size:
+            do_copy = True
+        elif source_fileinfo.st_mtime > dest_fileinfo.st_mtime:
+            do_copy = True
+    if not do_copy:
+        return False
+    try:
+        shutil.copy(source, dest)
+    except IOError:
+        return False
+    return True
