@@ -343,14 +343,11 @@ class TestHTMLLogger(unittest.TestCase):
         return temp_htmlfile
 
     def _compare_files(self, test_file, golden_file):
-        test_fh = open(test_file, "r")
-        golden_fh = open(golden_file, "r")
         self.maxDiff = 6200
-        golden_data = golden_fh.read()
-        golden_data = golden_data.replace("__VERSION__", VERSION)
-        self.assertMultiLineEqual(golden_data, test_fh.read())
-        test_fh.close()
-        golden_fh.close()
+        with open(test_file) as test_fh, open(golden_file) as golden_fh:
+            golden_data = golden_fh.read()
+            golden_data = golden_data.replace("__VERSION__", VERSION)
+            self.assertMultiLineEqual(golden_data, test_fh.read())
 
     def test_html(self):
         test_file = self._write_html()

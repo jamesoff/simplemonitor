@@ -1,71 +1,167 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-        <meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
 
-		<title>FAIL@fake_hostname.local monitor</title>
+    <title>FAIL@fake_hostname.local monitor</title>
 
-        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-		<link rel="stylesheet" type="text/css" href="style.css" />
-		<meta http-equiv="refresh" content="30" />
-		<script language="javascript" type="text/javascript">
-			function too_old() {
-				$("#refresh_badge").removeClass("d-none");
-				$("#refresh_status").addClass("d-inline");
-				$("#summary").removeClass("border-success border-danger");
-				$("#summary").addClass("border-warning");
-			}
+    <script src="main.bundle.js"></script>
+    <meta http-equiv="refresh" content="30" />
+    <script language="javascript" type="text/javascript">
+      function check_age() {
+        var generated = 1587211200;
+        var now = Date.parse(new Date()) / 1000;
+        var diff = now - generated;
+        if (diff > (30 * 2)) {
+          too_old();
+        }
+      }
+      </script>
+    </head>
 
-			function check_age() {
-				var generated = 1587211200;
-				var now = Date.parse(new Date()) / 1000;
-				var diff = now - generated;
-				if (diff > (30 * 2)) {
-					too_old();
-				}
-			}
-
-		</script>
-	</head>
-
-	<body onload="check_age();">
-		<div class="navbar navbar-light bg-light border-bottom border-danger" id="summary">
-			<div class="navbar-brand">SimpleMonitor</div>
-			<div class="navbar-text d-none d-lg-block" id="updated">Updated at 2020-04-18 12:00:00+00:00 by fake_hostname.local (__VERSION__)</div>
-			<div class="navbar-text" id="refresh_status"><span class="badge badge-warning d-none" id="refresh_badge">OUT OF DATE</span></div>
-			<div class="navbar-text"><span class="badge badge-success">1 OK</span>  <span class="badge badge-danger">1 FAIL</span>  <span class="badge badge-secondary">1 DISABLED</span>   </div>
-		</div>
-	<table class="table table-borderless table-striped table-hover table-sm">
-		<tr>
-			<th scope="col">Monitor</th>
-			<th scope="col">Status</th>
-			<th scope="col">Host</th>
-			<th scope="col">Failed at</th>
-			<th scope="col">VFC</th>
-			<th scope="col">Up/downtime</th>
-			<th scope="col">Detail</th>
-			<th scope="col">Failures</th>
-			<th scope="col">Last Failure</th>
-			<th scope="col">Age</th>
-			</tr>
-<tr class="table-danger"><td><span data-toggle="tooltip" data-placement="right" title="A monitor which always fails.">fail</span></td><td>FAIL</td><td>fake_hostname</td><td>2020-04-18 12:00:00+00:00<td>1</td><td>0+00:00:00 (<span data-toggle="tooltip" data-placement="right" title="0.00000%">0.00%</span>)</td><td>This monitor always fails.</td><td>1</td><td>2020-04-18 12:00:00+00:00</td><td></td></tr>
-<tr><td><span data-toggle="tooltip" data-placement="right" title="A monitor which always fails.">disabled</span></td><td>DISABLED</td><td>fake_hostname</td><td><td></td><td>0+00:00:00 (<span data-toggle="tooltip" data-placement="right" title="0.00000%">0.00%</span>)</td><td></td><td></td><td></td><td></td></tr>
-<tr><td><span data-toggle="tooltip" data-placement="right" title="(Monitor did not write an auto-biography.)">unnamed</span></td><td class="table-success">OK</td><td>fake_hostname</td><td><td></td><td>0+00:00:00 (<span data-toggle="tooltip" data-placement="right" title="0.00000%">0.00%</span>)</td><td></td><td></td><td></td><td></td></tr>
+    <body onload="check_age();">
+      <div
+        class="navbar navbar-light bg-light border-bottom border-danger"
+        id="summary"
+      >
+      <div class="container-fluid">
+        <div class="navbar-brand">SimpleMonitor</div>
+        <div class="navbar-text d-none d-lg-block" id="updated">
+          Updated at 2020-04-18 12:00:00+00:00 by fake_hostname.local (__VERSION__)
+        </div>
+        <div class="navbar-text" id="refresh_status">
+          <span class="badge bg-warning d-none" id="refresh_badge"
+            >OUT OF DATE</span
+          >
+        </div>
+        <div class="navbar-text"><span class="badge bg-success">1 OK</span>  <span class="badge bg-danger">1 FAIL</span>  <span class="badge bg-secondary">1 DISABLED</span>   </div>
+        </div>
+      </div>
+      <table class="table table-borderless table-striped table-hover table-sm">
+        <tr>
+          <th scope="col">Monitor</th>
+          <th scope="col">Status</th>
+          <th scope="col">Host</th>
+          <th scope="col">Failed at</th>
+          <th scope="col">VFC</th>
+          <th scope="col">Up/downtime</th>
+          <th scope="col">Detail</th>
+          <th scope="col">Failures</th>
+          <th scope="col">Last Failure</th>
+          <th scope="col">Age</th>
+        </tr>
+<tr class="table-danger">
+          <td>
+            <span
+              data-toggle="tooltip"
+              data-placement="right"
+              title="A monitor which always fails."
+              >fail</span
+            >
+          </td>
+          <td>FAIL</td>
+          <td>fake_hostname</td>
+          <td>2020-04-18 12:00:00+00:00</td>
+          <td>1</td>
+          <td>0+00:00:00 (<span
+              data-toggle="tooltip"
+              data-placement="right"
+              title="0.00000%"
+              >0.00%</span
+            >)
+          </td>
+          <td>This monitor always fails.</td>
+          
+          <td>1</td>
+          <td>2020-04-18 12:00:00+00:00</td>
+          
+          <td></td>
+        </tr>
+<tr>
+          <td>
+            <span
+              data-toggle="tooltip"
+              data-placement="right"
+              title="A monitor which always fails."
+              >disabled</span
+            >
+          </td>
+          <td>DISABLED</td>
+          <td>fake_hostname</td>
+          <td></td>
+          <td></td>
+          <td>0+00:00:00 (<span
+              data-toggle="tooltip"
+              data-placement="right"
+              title="0.00000%"
+              >0.00%</span
+            >)
+          </td>
+          <td></td>
+          
+          <td></td><td></td>
+          
+          <td></td>
+        </tr>
+<tr>
+          <td>
+            <span
+              data-toggle="tooltip"
+              data-placement="right"
+              title="(Monitor did not write an auto-biography.)"
+              >unnamed</span
+            >
+          </td>
+          <td class="table-success">OK</td>
+          <td>fake_hostname</td>
+          <td></td>
+          <td></td>
+          <td>0+00:00:00 (<span
+              data-toggle="tooltip"
+              data-placement="right"
+              title="0.00000%"
+              >0.00%</span
+            >)
+          </td>
+          <td></td>
+          
+          <td></td><td></td>
+          
+          <td></td>
+        </tr>
 </table>
-<div class="navbar-text d-block d-lg-none" id="updated">Updated at 2020-04-18 12:00:00+00:00<br />by fake_hostname.local (__VERSION__)</div>
-
-<div class="text-right text-muted">SimpleMonitor __VERSION__ <a href="https://simplemonitor.readthedocs.io/en/latest/index.html" target="_blank">&raquo; Documentation</a> | <a href="https://github.com/jamesoff/simplemonitor" target="_blank">&raquo; Code</a></div>
-
-<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
-<script language="javascript" type="text/javascript">
-$(function () {
-    $('[data-toggle="tooltip"]').tooltip();
-    check_age();
-    setTimeout(too_old, (30 * 2000));
-})
-</script>
-</body>
+    <div class="navbar-text d-block d-lg-none" id="updated">
+      Updated at 2020-04-18 12:00:00+00:00<br />by fake_hostname.local (__VERSION__)
+    </div>
+    <div class="container-fluid">
+      <div class="text-end text-muted">
+        SimpleMonitor __VERSION__
+        <a
+          href="https://simplemonitor.readthedocs.io/en/latest/index.html"
+          target="_blank"
+          >&raquo; Documentation</a
+        >
+        |
+        <a href="https://github.com/jamesoff/simplemonitor" target="_blank"
+          >&raquo; Code</a
+        >
+      </div>
+    </div>
+    <script language="javascript" type="text/javascript">
+      $(function () {
+        var tooltipTriggerList = [].slice.call(
+          document.querySelectorAll('[data-toggle="tooltip"]')
+        );
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+          return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+        check_age();
+        setTimeout(too_old, (30 * 2000));
+      });
+    </script>
+  </body>
 </html>
