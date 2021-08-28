@@ -31,7 +31,7 @@
       <div class="container-fluid">
         <div class="navbar-brand">SimpleMonitor</div>
         <div class="navbar-text d-none d-lg-block" id="updated">
-          Updated at 2020-04-18 12:00:00+00:00 by fake_hostname.local (1.11.0)
+          Updated at 2020-04-18 12:00:00+00:00 by fake_hostname.local (__VERSION__)
         </div>
         <div class="navbar-text" id="refresh_status">
           <span class="badge bg-warning d-none" id="refresh_badge"
@@ -71,11 +71,11 @@ L.marker([52.01,1.01], {
         }).addTo(mymap).bindPopup("unnamed (OK) ");
 </script>
     <div class="navbar-text d-block d-lg-none" id="updated">
-      Updated at 2020-04-18 12:00:00+00:00<br />by fake_hostname.local (1.11.0)
+      Updated at 2020-04-18 12:00:00+00:00<br />by fake_hostname.local (__VERSION__)
     </div>
     <div class="container-fluid">
       <div class="text-end text-muted">
-        SimpleMonitor 1.11.0
+        SimpleMonitor __VERSION__
         <a
           href="https://simplemonitor.readthedocs.io/en/latest/index.html"
           target="_blank"
@@ -90,7 +90,7 @@ L.marker([52.01,1.01], {
     <script language="javascript" type="text/javascript">
       $(function () {
         var tooltipTriggerList = [].slice.call(
-          document.querySelectorAll('[data-bs-toggle="tooltip"]')
+          document.querySelectorAll('[data-toggle="tooltip"]')
         );
         var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
           return new bootstrap.Tooltip(tooltipTriggerEl);
