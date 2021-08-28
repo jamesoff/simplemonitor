@@ -23,8 +23,5 @@ module.exports = {
       jquery: "jquery/dist/jquery.slim.js",
     },
   },
-  mode: "development",
-  optimization: {
-    usedExports: false,
-  },
+  mode: "production",
 };
