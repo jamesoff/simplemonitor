@@ -131,7 +131,7 @@
 {% endfor -%}
 </table>
 {%- endif %}
-    <div class="navbar-text d-block d-lg-none" id="updated">
+    <div class="navbar-text d-block d-lg-none" id="updatedfooter">
       Updated at {{now}}<br />by {{host}} ({{version}})
     </div>
     <div class="container-fluid">
@@ -158,6 +158,14 @@
         });
         check_age();
         setTimeout(too_old, ({{interval}} * 2000));
+        update_props = {
+            timestamp: {{timestamp}},
+            host: "{{host}}",
+            version: "{{version}}",
+            updated: "{{now}}",
+        };
+        setInterval(update_age, 5000, update_props);
+        update_age(update_props);
       });
     </script>
   </body>
