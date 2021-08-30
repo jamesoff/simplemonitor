@@ -70,7 +70,7 @@ L.marker([52.01,1.01], {
             icon: markerIconUp,title: 'unnamed',
         }).addTo(mymap).bindPopup("unnamed (OK) ");
 </script>
-    <div class="navbar-text d-block d-lg-none" id="updated">
+    <div class="navbar-text d-block d-lg-none" id="updatedfooter">
       Updated at 2020-04-18 12:00:00+00:00<br />by fake_hostname.local (__VERSION__)
     </div>
     <div class="container-fluid">
@@ -97,6 +97,14 @@ L.marker([52.01,1.01], {
         });
         check_age();
         setTimeout(too_old, (30 * 2000));
+        update_props = {
+            timestamp: 1587211200,
+            host: "fake_hostname.local",
+            version: "__VERSION__",
+            updated: "2020-04-18 12:00:00+00:00",
+        };
+        setInterval(update_age, 5000, update_props);
+        update_age(update_props);
       });
     </script>
   </body>
