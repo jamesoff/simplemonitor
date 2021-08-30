@@ -22,7 +22,7 @@ env-test:
 	env TEST_VALUE=myenv poetry run coverage run --append monitor.py -t -f tests/monitor-env.ini
 
 unit-test:
-	poetry run pytest --cov-append --cov=simplemonitor tests
+	poetry run pytest --cov-append --cov=simplemonitor --cov-report= tests
 
 network-test:
 	rm -f master.log
