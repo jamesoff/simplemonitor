@@ -1,1 +1,3 @@
-VERSION = "1.11.0"
+import pkg_resources
+
+VERSION = pkg_resources.get_distribution("simplemonitor").version
