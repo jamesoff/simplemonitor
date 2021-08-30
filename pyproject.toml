@@ -45,9 +45,6 @@ twilio = "^6.58.0"
 ring-doorbell = ">=0.6.0"
 pyarlo = "^0.2.4"
 paramiko = "^2.7.2"
-types-pyOpenSSL = "^20.0.3"
-types-paramiko = "^0.1.7"
-types-requests = "^2.25.0"
 
 [tool.poetry.dev-dependencies]
 "flake8" = "*"
@@ -67,6 +64,8 @@ tox-poetry = "^0.4.0"
 types-paramiko = "^0.1.7"
 types-python-dateutil = "^0.1.4"
 types-requests = "^2.25.0"
+types-pyOpenSSL = "^20.0.3"
+types-setuptools = "^57.0.2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0", "setuptools"]
