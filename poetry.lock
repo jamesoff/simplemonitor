@@ -8,7 +8,7 @@ python-versions = "*"
 
 [[package]]
 name = "arrow"
-version = "1.1.1"
+version = "1.2.0"
 description = "Better dates & times for Python"
 category = "main"
 optional = false
@@ -113,7 +113,7 @@ typecheck = ["mypy"]
 
 [[package]]
 name = "black"
-version = "21.8b0"
+version = "21.9b0"
 description = "The uncompromising code formatter."
 category = "dev"
 optional = false
@@ -1055,7 +1055,7 @@ python-versions = ">=3.6"
 
 [[package]]
 name = "tox"
-version = "3.24.3"
+version = "3.24.4"
 description = "tox is a generic virtualenv management and test command line tool"
 category = "dev"
 optional = false
@@ -1253,7 +1253,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6.2"
-content-hash = "0e11807409d4c78b81061c99eb93732266992bb136d238a229b992803e770517"
+content-hash = "b53fe4e4310e8322bd605dedba5c10eb1975d0263fc2e7522459de70ccc20ccf"
 
 [metadata.files]
 alabaster = [
@@ -1261,8 +1261,8 @@ alabaster = [
     {file = "alabaster-0.7.12.tar.gz", hash = "sha256:a661d72d58e6ea8a57f7a86e37d86716863ee5e92788398526d58b26a4e4dc02"},
 ]
 arrow = [
-    {file = "arrow-1.1.1-py3-none-any.whl", hash = "sha256:77a60a4db5766d900a2085ce9074c5c7b8e2c99afeaa98ad627637ff6f292510"},
-    {file = "arrow-1.1.1.tar.gz", hash = "sha256:dee7602f6c60e3ec510095b5e301441bc56288cb8f51def14dcb3079f623823a"},
+    {file = "arrow-1.2.0-py3-none-any.whl", hash = "sha256:8fb7d9d3d4bf90e49e734c22fa077bdd0964135c4b8120de2510575a8d1f620c"},
+    {file = "arrow-1.2.0.tar.gz", hash = "sha256:16fc29bbd9e425e3eb0fef3018297910a0f4568f21116fc31771e2760a50e074"},
 ]
 astroid = [
     {file = "astroid-2.7.2-py3-none-any.whl", hash = "sha256:ecc50f9b3803ebf8ea19aa2c6df5622d8a5c31456a53c741d3be044d96ff0948"},
@@ -1298,8 +1298,8 @@ bcrypt = [
     {file = "bcrypt-3.2.0.tar.gz", hash = "sha256:5b93c1726e50a93a033c36e5ca7fdcd29a5c7395af50a6892f5d9e7c6cfbfb29"},
 ]
 black = [
-    {file = "black-21.8b0-py3-none-any.whl", hash = "sha256:2a0f9a8c2b2a60dbcf1ccb058842fb22bdbbcb2f32c6cc02d9578f90b92ce8b7"},
-    {file = "black-21.8b0.tar.gz", hash = "sha256:570608d28aa3af1792b98c4a337dbac6367877b47b12b88ab42095cfc1a627c2"},
+    {file = "black-21.9b0-py3-none-any.whl", hash = "sha256:380f1b5da05e5a1429225676655dddb96f5ae8c75bdf91e53d798871b902a115"},
+    {file = "black-21.9b0.tar.gz", hash = "sha256:7de4cfc7eb6b710de325712d40125689101d21d25283eed7e9998722cf10eb91"},
 ]
 boto3 = [
     {file = "boto3-1.18.31-py3-none-any.whl", hash = "sha256:203e86311253d291d39588ae2e8dce82eecc10b9f4567ef765d7c54ec02a3e2b"},
@@ -1442,6 +1442,8 @@ cryptography = [
     {file = "cryptography-3.4.8-cp36-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:34dae04a0dce5730d8eb7894eab617d8a70d0c97da76b905de9efb7128ad7085"},
     {file = "cryptography-3.4.8-cp36-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:1eb7bb0df6f6f583dd8e054689def236255161ebbcf62b226454ab9ec663746b"},
     {file = "cryptography-3.4.8-cp36-abi3-manylinux_2_24_x86_64.whl", hash = "sha256:9965c46c674ba8cc572bc09a03f4c649292ee73e1b683adb1ce81e82e9a6a0fb"},
+    {file = "cryptography-3.4.8-cp36-abi3-musllinux_1_1_aarch64.whl", hash = "sha256:3c4129fc3fdc0fa8e40861b5ac0c673315b3c902bbdc05fc176764815b43dd1d"},
+    {file = "cryptography-3.4.8-cp36-abi3-musllinux_1_1_x86_64.whl", hash = "sha256:695104a9223a7239d155d7627ad912953b540929ef97ae0c34c7b8bf30857e89"},
     {file = "cryptography-3.4.8-cp36-abi3-win32.whl", hash = "sha256:21ca464b3a4b8d8e86ba0ee5045e103a1fcfac3b39319727bc0fc58c09c6aff7"},
     {file = "cryptography-3.4.8-cp36-abi3-win_amd64.whl", hash = "sha256:3520667fda779eb788ea00080124875be18f2d8f0848ec00733c0ec3bb8219fc"},
     {file = "cryptography-3.4.8-pp36-pypy36_pp73-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:d2a6e5ef66503da51d2110edf6c403dc6b494cc0082f85db12f54e9c5d4c3ec5"},
@@ -1933,8 +1935,8 @@ tomli = [
     {file = "tomli-1.2.1.tar.gz", hash = "sha256:a5b75cb6f3968abb47af1b40c1819dc519ea82bcc065776a866e8d74c5ca9442"},
 ]
 tox = [
-    {file = "tox-3.24.3-py2.py3-none-any.whl", hash = "sha256:9fbf8e2ab758b2a5e7cb2c72945e4728089934853076f67ef18d7575c8ab6b88"},
-    {file = "tox-3.24.3.tar.gz", hash = "sha256:c6c4e77705ada004283610fd6d9ba4f77bc85d235447f875df9f0ba1bc23b634"},
+    {file = "tox-3.24.4-py2.py3-none-any.whl", hash = "sha256:5e274227a53dc9ef856767c21867377ba395992549f02ce55eb549f9fb9a8d10"},
+    {file = "tox-3.24.4.tar.gz", hash = "sha256:c30b57fa2477f1fb7c36aa1d83292d5c2336cd0018119e1b1c17340e2c2708ca"},
 ]
 tox-poetry = [
     {file = "tox-poetry-0.4.1.tar.gz", hash = "sha256:2395808e1ce487b5894c10f2202e14702bfa6d6909c0d1e525170d14809ac7ef"},
