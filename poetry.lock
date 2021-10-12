@@ -1144,7 +1144,7 @@ python-versions = "*"
 
 [[package]]
 name = "types-paramiko"
-version = "0.1.9"
+version = "2.7.2"
 description = "Typing stubs for paramiko"
 category = "dev"
 optional = false
@@ -1253,7 +1253,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6.2"
-content-hash = "a2f9d540c993d84903c464e92e2a2a58c45fbad3fa219d30bd3f2db383642b66"
+content-hash = "eba9da353d5d780ed1964ed911cf22d1d1ea437da3b98e53313bc24ebb3ebcc1"
 
 [metadata.files]
 alabaster = [
@@ -1442,6 +1442,8 @@ cryptography = [
     {file = "cryptography-3.4.8-cp36-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:34dae04a0dce5730d8eb7894eab617d8a70d0c97da76b905de9efb7128ad7085"},
     {file = "cryptography-3.4.8-cp36-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:1eb7bb0df6f6f583dd8e054689def236255161ebbcf62b226454ab9ec663746b"},
     {file = "cryptography-3.4.8-cp36-abi3-manylinux_2_24_x86_64.whl", hash = "sha256:9965c46c674ba8cc572bc09a03f4c649292ee73e1b683adb1ce81e82e9a6a0fb"},
+    {file = "cryptography-3.4.8-cp36-abi3-musllinux_1_1_aarch64.whl", hash = "sha256:3c4129fc3fdc0fa8e40861b5ac0c673315b3c902bbdc05fc176764815b43dd1d"},
+    {file = "cryptography-3.4.8-cp36-abi3-musllinux_1_1_x86_64.whl", hash = "sha256:695104a9223a7239d155d7627ad912953b540929ef97ae0c34c7b8bf30857e89"},
     {file = "cryptography-3.4.8-cp36-abi3-win32.whl", hash = "sha256:21ca464b3a4b8d8e86ba0ee5045e103a1fcfac3b39319727bc0fc58c09c6aff7"},
     {file = "cryptography-3.4.8-cp36-abi3-win_amd64.whl", hash = "sha256:3520667fda779eb788ea00080124875be18f2d8f0848ec00733c0ec3bb8219fc"},
     {file = "cryptography-3.4.8-pp36-pypy36_pp73-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:d2a6e5ef66503da51d2110edf6c403dc6b494cc0082f85db12f54e9c5d4c3ec5"},
@@ -1988,8 +1990,8 @@ types-ipaddress = [
     {file = "types_ipaddress-1.0.0-py3-none-any.whl", hash = "sha256:f6cfd6d7605fd26537565f91fff5a9dd4802db4fa6b6be7dc0a55d605c0d943d"},
 ]
 types-paramiko = [
-    {file = "types-paramiko-0.1.9.tar.gz", hash = "sha256:161f368940648230d5a3b7982b5cfc7995c893ee5f2f1c3b24af5d0a86739f12"},
-    {file = "types_paramiko-0.1.9-py3-none-any.whl", hash = "sha256:e176389cd6c8884a90e2d0d0eaad5a4ec549a43d863308ff9ea0324925f65407"},
+    {file = "types-paramiko-2.7.2.tar.gz", hash = "sha256:377d87708053451c2b54a39da7674152d28481847f2e510450443b699db2d777"},
+    {file = "types_paramiko-2.7.2-py3-none-any.whl", hash = "sha256:264ddf4624155d0485ef99d1f23b4dda782567d94e74ede3b2bd64054195b777"},
 ]
 types-pyopenssl = [
     {file = "types-pyOpenSSL-20.0.6.tar.gz", hash = "sha256:8e4a85d2139017b162f6281991b01f1219644c9f4fa85256e67613990f19712e"},
