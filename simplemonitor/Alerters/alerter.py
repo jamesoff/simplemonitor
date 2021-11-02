@@ -264,45 +264,43 @@ class Alerter:
         if not self._allowed_time():
             out_of_hours = True
 
+        # ensure OOH list is initalised to the empty list if not done
+        if self._ooh_failures is None:
+            self._ooh_failures = []
+
         virtual_failure_count = monitor.virtual_fail_count()
 
         if virtual_failure_count:
             self.alerter_logger.debug("monitor %s has failed", monitor.name)
             # Monitor has failed (not just first time)
             if self._delay_notification:
-                # Delayed notifications are enabled
+                # Delayed (catch-up) notifications are enabled
                 if not out_of_hours:
                     # Not out of hours
-                    if self._ooh_failures is not None:
-                        try:
-                            self._ooh_failures.remove(monitor.name)
-                            # if it was in there and we support catchup alerts, do it
-                            if self.support_catchup:
-                                self.alerter_logger.debug(
-                                    "alert for monitor %s is CATCHUP", monitor.name
-                                )
-                                return AlertType.CATCHUP
-                        except ValueError:
-                            pass
-                        self.alerter_logger.debug(
-                            "alert for monitor %s is FAILURE", monitor.name
-                        )
-                        return AlertType.FAILURE
-            # Delayed notifications are not enabled
+                    try:
+                        self._ooh_failures.remove(monitor.name)
+                        # if it was in there and we support catchup alerts, do it
+                        if self.support_catchup:
+                            self.alerter_logger.debug(
+                                "alert for monitor %s is CATCHUP", monitor.name
+                            )
+                            return AlertType.CATCHUP
+                    except ValueError:
+                        pass
+                    self.alerter_logger.debug(
+                        "alert for monitor %s is FAILURE", monitor.name
+                    )
+                    return AlertType.FAILURE
+            # Delayed notifications are not enabled (or are, and we didn't do anything above)
             if virtual_failure_count == self._limit or (
                 self._repeat and (virtual_failure_count % self._limit == 0)
             ):
                 # This is the first time or nth time we've failed
                 if out_of_hours:
-                    if (
-                        self._ooh_failures is not None
-                        and monitor.name not in self._ooh_failures
-                    ):
+                    if monitor.name not in self._ooh_failures:
                         self._ooh_failures.append(monitor.name)
-                        self.alerter_logger.debug(
-                            "not alerting for %s: OOH", monitor.name
-                        )
-                        return AlertType.NONE
+                    self.alerter_logger.debug("not alerting for %s: OOH", monitor.name)
+                    return AlertType.NONE
                 self.alerter_logger.debug(
                     "alert for monitor %s is FAILURE", monitor.name
                 )
@@ -321,8 +319,7 @@ class Alerter:
             # was failed, and enough to have alerted
             self.alerter_logger.debug("monitor %s has recovered", monitor.name)
             try:
-                if self._ooh_failures is not None:
-                    self._ooh_failures.remove(monitor.name)
+                self._ooh_failures.remove(monitor.name)
             except ValueError:
                 pass
             if out_of_hours:
