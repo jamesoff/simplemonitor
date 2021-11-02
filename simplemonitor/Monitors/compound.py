@@ -77,15 +77,6 @@ class CompoundMonitor(Monitor):
             if i not in list(self.m.keys()):
                 raise RuntimeError("No such monitor %s in compound monitor" % i)
 
-    def virtual_fail_count(self) -> int:
-        failcount = self.fail_count()
-        if failcount >= self.min_fail:
-            # greater or equal number failed: we return the real failure count
-            return failcount
-        else:
-            # we don't count failures if the specified min_fail isn't reached yet.
-            return 0
-
     def fail_count(self) -> int:
         """increments the fail counter by 1 if a sub-monitor failed"""
         failcount = 0

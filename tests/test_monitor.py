@@ -356,7 +356,7 @@ class TestMonitor(unittest.TestCase):
         self.assertEqual(result, False, "compound monitor should have failed")
         self.assertEqual(
             compound_monitor.virtual_fail_count(),
-            2,
+            1,
             "compound monitor should report fail count",
         )
         self.assertEqual(
