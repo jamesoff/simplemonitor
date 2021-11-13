@@ -536,7 +536,7 @@ proxy = ["pysocks"]
 
 [[package]]
 name = "paramiko"
-version = "2.7.2"
+version = "2.8.0"
 description = "SSH2 protocol library"
 category = "main"
 optional = false
@@ -1144,7 +1144,7 @@ python-versions = "*"
 
 [[package]]
 name = "types-paramiko"
-version = "0.1.9"
+version = "2.7.4"
 description = "Typing stubs for paramiko"
 category = "dev"
 optional = false
@@ -1166,7 +1166,7 @@ types-cryptography = "*"
 
 [[package]]
 name = "types-python-dateutil"
-version = "2.8.0"
+version = "2.8.2"
 description = "Typing stubs for python-dateutil"
 category = "dev"
 optional = false
@@ -1253,7 +1253,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6.2"
-content-hash = "5fd2702c6a06a7f1e32201eb0cab6465a0b17f0b92ca0c0e906ed934c12d0636"
+content-hash = "99c077b91b6320f2d7ecda5dd33e490e7b3f02c020c910c6e9bc031848ce4515"
 
 [metadata.files]
 alabaster = [
@@ -1660,8 +1660,8 @@ paho-mqtt = [
     {file = "paho-mqtt-1.5.1.tar.gz", hash = "sha256:9feb068e822be7b3a116324e01fb6028eb1d66412bf98595ae72698965cb1cae"},
 ]
 paramiko = [
-    {file = "paramiko-2.7.2-py2.py3-none-any.whl", hash = "sha256:4f3e316fef2ac628b05097a637af35685183111d4bc1b5979bd397c2ab7b5898"},
-    {file = "paramiko-2.7.2.tar.gz", hash = "sha256:7f36f4ba2c0d81d219f4595e35f70d56cc94f9ac40a6acdf51d6ca210ce65035"},
+    {file = "paramiko-2.8.0-py2.py3-none-any.whl", hash = "sha256:def3ec612399bab4e9f5eb66b0ae5983980db9dd9120d9e9c6ea3ff673865d1c"},
+    {file = "paramiko-2.8.0.tar.gz", hash = "sha256:e673b10ee0f1c80d46182d3af7751d033d9b573dd7054d2d0aa46be186c3c1d2"},
 ]
 pathspec = [
     {file = "pathspec-0.9.0-py2.py3-none-any.whl", hash = "sha256:7d15c4ddb0b5c802d161efc417ec1a2558ea2653c2e8ad9c19098201dc1c993a"},
@@ -2005,16 +2005,16 @@ types-ipaddress = [
     {file = "types_ipaddress-1.0.0-py3-none-any.whl", hash = "sha256:f6cfd6d7605fd26537565f91fff5a9dd4802db4fa6b6be7dc0a55d605c0d943d"},
 ]
 types-paramiko = [
-    {file = "types-paramiko-0.1.9.tar.gz", hash = "sha256:161f368940648230d5a3b7982b5cfc7995c893ee5f2f1c3b24af5d0a86739f12"},
-    {file = "types_paramiko-0.1.9-py3-none-any.whl", hash = "sha256:e176389cd6c8884a90e2d0d0eaad5a4ec549a43d863308ff9ea0324925f65407"},
+    {file = "types-paramiko-2.7.4.tar.gz", hash = "sha256:c8c5cad90e1a204311af4c7385b634b81030a3394c26f029b002027259d676da"},
+    {file = "types_paramiko-2.7.4-py3-none-any.whl", hash = "sha256:468511141007370f7eed4ae421ca6f28e0500903a78d8cabc074efd44ed27530"},
 ]
 types-pyopenssl = [
     {file = "types-pyOpenSSL-20.0.9.tar.gz", hash = "sha256:094fabc0a47a06a9a229732e19c48c9b7ab81df4d72837c0aa79d68f2aa811c4"},
     {file = "types_pyOpenSSL-20.0.9-py3-none-any.whl", hash = "sha256:9c0194962472f2a5964e235feb75ab8ec43dce94f0224bf4bbadfeb51c23558e"},
 ]
 types-python-dateutil = [
-    {file = "types-python-dateutil-2.8.0.tar.gz", hash = "sha256:540c6c53c3a52433d7088254e3afdc3f6c86b5ae452aaa1b796c26d01c9fd73c"},
-    {file = "types_python_dateutil-2.8.0-py3-none-any.whl", hash = "sha256:9954d87dc982344bb2aad73a7fe505bdca72f89088ef653c4c40f52649183437"},
+    {file = "types-python-dateutil-2.8.2.tar.gz", hash = "sha256:84a1b09fae40d61c01f450ea87cd594201bbe8511a64fecbe433051b87fb582c"},
+    {file = "types_python_dateutil-2.8.2-py3-none-any.whl", hash = "sha256:74d7d3a79ff07e7921472cf252b7fe4ffda5dc35570b9d3c7c4908761e9f9b87"},
 ]
 types-requests = [
     {file = "types-requests-2.25.12.tar.gz", hash = "sha256:055863c0aacf8f8f29cd2ca0d3320efdf39f28e71de68d327761751d2f62bb57"},
