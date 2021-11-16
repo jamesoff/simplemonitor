@@ -524,7 +524,7 @@ pyparsing = ">=2.0.2"
 
 [[package]]
 name = "paho-mqtt"
-version = "1.5.1"
+version = "1.6.1"
 description = "MQTT version 5.0/3.1.1 client class"
 category = "main"
 optional = false
@@ -1651,7 +1651,7 @@ packaging = [
     {file = "packaging-21.0.tar.gz", hash = "sha256:7dc96269f53a4ccec5c0670940a4281106dd0bb343f47b7471f779df49c2fbe7"},
 ]
 paho-mqtt = [
-    {file = "paho-mqtt-1.5.1.tar.gz", hash = "sha256:9feb068e822be7b3a116324e01fb6028eb1d66412bf98595ae72698965cb1cae"},
+    {file = "paho-mqtt-1.6.1.tar.gz", hash = "sha256:2a8291c81623aec00372b5a85558a372c747cbca8e9934dfe218638b8eefc26f"},
 ]
 paramiko = [
     {file = "paramiko-2.8.0-py2.py3-none-any.whl", hash = "sha256:def3ec612399bab4e9f5eb66b0ae5983980db9dd9120d9e9c6ea3ff673865d1c"},
