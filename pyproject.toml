@@ -63,7 +63,7 @@ tox = "^3.24.4"
 tox-poetry = "^0.4.0"
 types-paramiko = "^2.7.4"
 types-python-dateutil = "^2.8.0"
-types-requests = "^2.25.12"
+types-requests = "^2.26.0"
 types-pyOpenSSL = "^21.0.0"
 types-setuptools = "^57.0.2"
 
