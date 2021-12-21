@@ -849,7 +849,7 @@ rsa = ["oauthlib[signedtoken] (>=3.0.0)"]
 
 [[package]]
 name = "ring-doorbell"
-version = "0.7.1"
+version = "0.7.2"
 description = "A Python library to communicate with Ring Door Bell (https://ring.com/)"
 category = "main"
 optional = false
@@ -1181,7 +1181,7 @@ python-versions = "*"
 
 [[package]]
 name = "types-setuptools"
-version = "57.4.2"
+version = "57.4.4"
 description = "Typing stubs for setuptools"
 category = "dev"
 optional = false
@@ -1252,7 +1252,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6.2"
-content-hash = "90b18c39e2cc6dfa67854389f2b0afa1b4647aad7889834b01e52347f4ade290"
+content-hash = "f524bb6e06c4572ec9f1ad7dc36874794f7e6379fb4b47b782b9003fdaf7a025"
 
 [metadata.files]
 alabaster = [
@@ -1877,8 +1877,8 @@ requests-oauthlib = [
     {file = "requests_oauthlib-1.3.0-py3.7.egg", hash = "sha256:fa6c47b933f01060936d87ae9327fead68768b69c6c9ea2109c48be30f2d4dbc"},
 ]
 ring-doorbell = [
-    {file = "ring_doorbell-0.7.1-py3-none-any.whl", hash = "sha256:b4a4ef843702530ae5ffd660ed8bf7a38f1c64b4803642fb8f8e6f9cc1fb254e"},
-    {file = "ring_doorbell-0.7.1.tar.gz", hash = "sha256:c44dd3a977618947fd4f39b3738f03eb9639b757a46ae69cb13c30486d6eaf3e"},
+    {file = "ring_doorbell-0.7.2-py3-none-any.whl", hash = "sha256:b436a955faaf521f06c4d93ee51cb302e581f982ff5dfb9c4504f36c3fbabe48"},
+    {file = "ring_doorbell-0.7.2.tar.gz", hash = "sha256:0a7e82abf27086843eb39c0279f5dfccea6751ff848560e67154ca6fbfa4ef2b"},
 ]
 s3transfer = [
     {file = "s3transfer-0.5.0-py3-none-any.whl", hash = "sha256:9c1dc369814391a6bda20ebbf4b70a0f34630592c9aa520856bf384916af2803"},
@@ -2015,8 +2015,8 @@ types-requests = [
     {file = "types_requests-2.26.2-py3-none-any.whl", hash = "sha256:fabe1acc784708ac798ced6373568465b93642c8aa1ebd33e2921b60d4e7aa29"},
 ]
 types-setuptools = [
-    {file = "types-setuptools-57.4.2.tar.gz", hash = "sha256:5499a0f429281d1a3aa9494c79b6599ab356dfe6d393825426bc749e48ea1bf8"},
-    {file = "types_setuptools-57.4.2-py3-none-any.whl", hash = "sha256:9c96aab47fdcf066fef83160b2b9ddbfab3d2c8fdc89053579d0b306837bf22a"},
+    {file = "types-setuptools-57.4.4.tar.gz", hash = "sha256:a3cbcbf3f02142bb5d3b5c5f5918f453b8752362b96d58aba2a5cfa43ba6d209"},
+    {file = "types_setuptools-57.4.4-py3-none-any.whl", hash = "sha256:9fe4180548e5cbb44cc0d343a47e4dc1d6769c31e16447994788c28df169011f"},
 ]
 typing-extensions = [
     {file = "typing_extensions-3.10.0.2-py2-none-any.whl", hash = "sha256:d8226d10bc02a29bcc81df19a26e56a9647f8b0a6d4a83924139f4a8b01f17b7"},
