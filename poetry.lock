@@ -849,7 +849,7 @@ rsa = ["oauthlib[signedtoken] (>=3.0.0)"]
 
 [[package]]
 name = "ring-doorbell"
-version = "0.7.1"
+version = "0.7.2"
 description = "A Python library to communicate with Ring Door Bell (https://ring.com/)"
 category = "main"
 optional = false
@@ -1877,8 +1877,8 @@ requests-oauthlib = [
     {file = "requests_oauthlib-1.3.0-py3.7.egg", hash = "sha256:fa6c47b933f01060936d87ae9327fead68768b69c6c9ea2109c48be30f2d4dbc"},
 ]
 ring-doorbell = [
-    {file = "ring_doorbell-0.7.1-py3-none-any.whl", hash = "sha256:b4a4ef843702530ae5ffd660ed8bf7a38f1c64b4803642fb8f8e6f9cc1fb254e"},
-    {file = "ring_doorbell-0.7.1.tar.gz", hash = "sha256:c44dd3a977618947fd4f39b3738f03eb9639b757a46ae69cb13c30486d6eaf3e"},
+    {file = "ring_doorbell-0.7.2-py3-none-any.whl", hash = "sha256:b436a955faaf521f06c4d93ee51cb302e581f982ff5dfb9c4504f36c3fbabe48"},
+    {file = "ring_doorbell-0.7.2.tar.gz", hash = "sha256:0a7e82abf27086843eb39c0279f5dfccea6751ff848560e67154ca6fbfa4ef2b"},
 ]
 s3transfer = [
     {file = "s3transfer-0.5.0-py3-none-any.whl", hash = "sha256:9c1dc369814391a6bda20ebbf4b70a0f34630592c9aa520856bf384916af2803"},
