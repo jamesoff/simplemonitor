@@ -26,6 +26,9 @@ class MonitorRingDoorbell(Monitor):
             config_options["gap"] = 21600  # 6 hours
         super().__init__(name, config_options)
         self.device_name = cast(str, self.get_config_option("device_name"))
+        self.device_type = cast(
+            str, self.get_config_option("device_type", default="doorbell")
+        )
         self.minimum_battery = cast(
             int,
             self.get_config_option("minimum_battery", required_type="int", default=25),
@@ -70,23 +73,24 @@ class MonitorRingDoorbell(Monitor):
         # authorized_doorbots are ones shared with this account
         # the device of interest could be in either depending on how the API
         # user we're configured with relates to it
-        doorbells = devices["authorized_doorbots"]
-        doorbells.extend(devices["doorbots"])
+        if self.device_type == "doorbell":
+            doorbells = devices["authorized_doorbots"]
+            doorbells.extend(devices["doorbots"])
+        elif self.device_type == "camera":
+            doorbells = devices.get("authorized_stickup_cams", [])
+            doorbells.extend(devices["stickup_cams"])
+        else:
+            return self.record_fail(f"Unknown device type {self.device_type}")
         for doorbell in doorbells:
             if doorbell.name == self.device_name:
                 battery = int(doorbell.battery_life)
                 if battery < self.minimum_battery:
                     return self.record_fail(
-                        "Battery is at {}% (limit: {}%)".format(
-                            battery, self.minimum_battery
-                        )
+                        f"Battery is at {battery}% (limit: {self.minimum_battery}%)"
                     )
-                else:
-                    return self.record_success(
-                        "Battery is at {}% (limit: {}%)".format(
-                            battery, self.minimum_battery
-                        )
-                    )
+                return self.record_success(
+                    f"Battery is at {battery}% (limit: {self.minimum_battery}%)"
+                )
         return self.record_fail(
-            "Could not find doorbell named {}".format(self.device_name)
+            f"Could not find {self.device_type} named {self.device_name}"
         )

@@ -33,3 +33,11 @@ Check the battery level of a Ring doorbell.
     your Ring password.
 
 .. warning:: Do not commit credentials to source control!
+
+.. confval:: device_type
+
+    :type: string
+    :required: false
+    :default: ``doorbell``
+
+    the device type. Acceptable values are ``doorbell`` or ``camera``.
