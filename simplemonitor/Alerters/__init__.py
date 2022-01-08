@@ -16,3 +16,4 @@ from .sns import SNSAlerter
 from .syslogger import SyslogAlerter
 from .telegram import TelegramAlerter
 from .twilio import TwilioSMSAlerter
+from .nextcloud_notification import NextcloudNotificationAlerter
