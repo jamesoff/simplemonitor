@@ -1156,7 +1156,7 @@ types-cryptography = "*"
 
 [[package]]
 name = "types-python-dateutil"
-version = "2.8.4"
+version = "2.8.5"
 description = "Typing stubs for python-dateutil"
 category = "dev"
 optional = false
@@ -1243,7 +1243,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6.2"
-content-hash = "40782294dc250547b17d344e148b8ca05f15493499891a928cd62dcc9cee4050"
+content-hash = "066347fc07f984763988fbe0c3fac8229b6d10b97b1b4d6ce5ae2bc0f7025344"
 
 [metadata.files]
 alabaster = [
@@ -1960,8 +1960,8 @@ types-pyopenssl = [
     {file = "types_pyOpenSSL-21.0.3-py3-none-any.whl", hash = "sha256:6f16e31f35873d94d0ad521dbca062f7023c2685226216d5464c7cdf92a4ee5f"},
 ]
 types-python-dateutil = [
-    {file = "types-python-dateutil-2.8.4.tar.gz", hash = "sha256:29b85e25b832170f8d5ed383bf68cf5d9ee9066e2354221c6e9dd381dab71c5c"},
-    {file = "types_python_dateutil-2.8.4-py3-none-any.whl", hash = "sha256:82a6160961d7b24418eeb383a5356f262229bd1450e0ccd82ad40f8a67baaafd"},
+    {file = "types-python-dateutil-2.8.5.tar.gz", hash = "sha256:6f68d7eddb5830c61f102ee5d402e60e593df5bc4185cb27a3ce74947cdbcbf1"},
+    {file = "types_python_dateutil-2.8.5-py3-none-any.whl", hash = "sha256:da5a062026097116b9ce70ccd362f522d8be9c1908e39bf663e200231c276c75"},
 ]
 types-requests = [
     {file = "types-requests-2.26.2.tar.gz", hash = "sha256:0e22d9cdeff4c3eb068eb883d59b127c98d80525f3d0412a1c4499c6ae1f711e"},
