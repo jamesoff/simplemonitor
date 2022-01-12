@@ -204,9 +204,8 @@ class HTMLLogger(Logger):
         if config_options is None:
             config_options = {}
         super().__init__(config_options)
-        package_data_dir = os.path.join(
-            os.path.dirname(sys.modules["simplemonitor"].__file__), "html"
-        )
+        package_path = sys.modules["simplemonitor"].__file__ or "."
+        package_data_dir = os.path.join(os.path.dirname(package_path), "html")
         self.filename = cast(
             str, self.get_config_option("filename", required=True, allow_empty=False)
         )
