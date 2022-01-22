@@ -444,6 +444,8 @@ class HTMLLogger(Logger):
                 self.logger_logger.exception(
                     "Failed to run upload command for HTML files"
                 )
+            except FileNotFoundError:
+                self.logger_logger.exception("Could not find upload command")
 
     def describe(self) -> str:
         return "Writing HTML page to {0}".format(self.filename)
