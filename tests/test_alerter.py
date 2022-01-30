@@ -542,7 +542,7 @@ class TestMessageBuilding(unittest.TestCase):
                 textwrap.dedent(
                     """
                     Monitor winning on {hostname} succeeded!
-                    Recovered at: {expected_time}
+                    Recovered at: {expected_time} (was down for 0+00:00:00)
                     Additional info: 
                     Description: (Monitor did not write an auto-biography.)
                     """.format(  # noqa: W291
@@ -551,6 +551,14 @@ class TestMessageBuilding(unittest.TestCase):
                     )
                 ),
             )
+
+    def test_was_downtime(self):
+        m = monitor.MonitorFail("test", {})
+        with freeze_time(self.freeze_time_value) as frozen_time:
+            for _ in range(0, 6):
+                m.run_test()
+                frozen_time.tick(30)
+            self.assertEqual(m.get_wasdowntime(), util.UpDownTime(0, 0, 2, 30))
 
 
 class TestMessageBuildingTZ(TestMessageBuilding):

@@ -477,9 +477,16 @@ class Monitor:
         first_failure_time = self.first_failure_time()
         if first_failure_time is None:
             return UpDownTime()
-        else:
-            downtime = arrow.utcnow() - first_failure_time
+        downtime = arrow.utcnow() - first_failure_time
         return UpDownTime.from_timedelta(downtime)
+
+    def get_wasdowntime(self) -> UpDownTime:
+        """Get the downtime for our last failure"""
+        downtime_started = self._failed_at
+        downtime_ended = self.uptime_start
+        if downtime_started and downtime_ended:
+            return UpDownTime.from_timedelta(downtime_ended - downtime_started)
+        return UpDownTime()
 
     def get_uptime(self) -> UpDownTime:
         """Get monitor uptime"""

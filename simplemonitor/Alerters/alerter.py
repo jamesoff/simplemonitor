@@ -389,7 +389,7 @@ class Alerter:
         if monitor.state() == MonitorState.FAILED:
             downtime = str(monitor.get_downtime())
         elif monitor.state() == MonitorState.OK:
-            downtime = str(monitor.get_uptime())
+            downtime = str(monitor.get_wasdowntime())
         else:
             downtime = ""
 
@@ -434,7 +434,7 @@ class Alerter:
             elif alert_type == AlertType.SUCCESS:
                 message = """
                 Monitor {monitor.name}{host} {alert_verb}!
-                Recovered at: {recovered_time}
+                Recovered at: {recovered_time} (was down for {downtime})
                 Additional info: {result}
                 Description: {desc}
                 """
