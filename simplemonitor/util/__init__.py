@@ -244,10 +244,10 @@ def size_string_to_bytes(s: str) -> Optional[int]:
         return None
     if s.endswith("G"):
         gigs = int(s[:-1])
-        _bytes = gigs * (1024 ** 3)
+        _bytes = gigs * (1024**3)
     elif s.endswith("M"):
         megs = int(s[:-1])
-        _bytes = megs * (1024 ** 2)
+        _bytes = megs * (1024**2)
     elif s.endswith("K"):
         kilos = int(s[:-1])
         _bytes = kilos * 1024

@@ -152,6 +152,7 @@ def main() -> None:
 
     if options.dump_resources:
         import pprint
+
         import simplemonitor.Alerters.alerter as alerter
         import simplemonitor.Loggers.logger as logger
         import simplemonitor.Monitors.monitor as monitor
