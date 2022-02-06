@@ -54,7 +54,8 @@ class Logger:
         if self._global_info is None:
             self._global_info = {}
         self.heartbeat = cast(
-            bool, self.get_config_option("heartbeat", required_type=bool, default=False)
+            bool,
+            self.get_config_option("heartbeat", required_type="bool", default=False),
         )
 
     def __enter__(self) -> None:
