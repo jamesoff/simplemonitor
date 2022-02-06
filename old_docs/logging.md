@@ -27,6 +27,7 @@ The section name should be the name of your logger. This is the name you should 
 | depend | lists (comma-separated, no spaces) the names of the monitors this logger depends on. Use this if the database file lives over the network. If a monitor it depends on fails, no attempt will be made to update the database.| no | |
 | groups | comma-separated list of monitor groups this logger should operate for. Use `_all` to match all groups. | no | "default" |
 | tz | The [timezone](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) the logger should convert date/times to. | no | UTC |
+| heartbeat | If set, the logger only logs for monitors which executed on an iteration. Intended to be combined with the `gap` property of a Monitor. | no | 0 |
 
 ### <a name="db"></a><a name="dbstatus"></a>db and dbstatus loggers
 

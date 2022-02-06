@@ -107,6 +107,7 @@ class Monitor:
         self._force_run = True  # set to ensure we re-run ASAP after a HUP
         if self._first_load is None:
             self._first_load = arrow.utcnow()
+        self.ran_this_time = False
 
     def get_config_option(
         self,

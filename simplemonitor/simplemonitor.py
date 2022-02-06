@@ -402,6 +402,7 @@ class SimpleMonitor:
         """Clear all all monitors' dependency info back to default."""
         for key in list(self.monitors.keys()):
             self.monitors[key].reset_dependencies()
+            self.monitors[key].ran_this_time = False
 
     def _verify_dependencies(self) -> bool:
         """Check if all monitors have valid dependencies."""
@@ -460,6 +461,7 @@ class SimpleMonitor:
         try:
             if monitor.should_run():
                 did_run = True
+                monitor.ran_this_time = True
                 start_time = time.time()
                 monitor.run_test()
                 end_time = time.time()
@@ -585,9 +587,7 @@ class SimpleMonitor:
         logger.check_dependencies(self.failed + self.still_failing + self.skipped)
         with logger:
             for key, monitor in self.monitors.items():
-                if check_group_match(monitor.group, logger.groups):
-                    logger.save_result2(key, monitor)
-                else:
+                if not check_group_match(monitor.group, logger.groups):
                     module_logger.debug(
                         "not logging for %s due to group mismatch (monitor in group %s, "
                         "logger has groups %s",
@@ -595,6 +595,16 @@ class SimpleMonitor:
                         monitor.group,
                         logger.groups,
                     )
+                    continue
+                if logger.heartbeat and not monitor.ran_this_time:
+                    module_logger.debug(
+                        "not logging for %s as this logger is in heartbeat mode and"
+                        " the monitor did not run this loop",
+                        key,
+                    )
+                    continue
+                logger.save_result2(key, monitor)
+
             try:
                 # need to work on a copy here to prevent the dicts changing under us
                 # during the loop, as remote instances can connect and update our data
