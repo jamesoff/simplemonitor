@@ -570,7 +570,7 @@ python-versions = ">=2.6"
 
 [[package]]
 name = "ping3"
-version = "3.0.2"
+version = "4.0.0"
 description = "A pure python3 version of ICMP ping implementation using raw socket."
 category = "main"
 optional = false
@@ -1254,7 +1254,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6.2"
-content-hash = "175b9fa73fd16aeace25e531c36680b06f5dfdd2fb9a17ae96b0ca909dd6150c"
+content-hash = "867d03d7f4ba565c09678de03f5aedee791702611f2cfb5d5bfce4016ec3dce1"
 
 [metadata.files]
 alabaster = [
@@ -1692,8 +1692,8 @@ pbr = [
     {file = "pbr-5.6.0.tar.gz", hash = "sha256:42df03e7797b796625b1029c0400279c7c34fd7df24a7d7818a1abb5b38710dd"},
 ]
 ping3 = [
-    {file = "ping3-3.0.2-py3-none-any.whl", hash = "sha256:98be6eb30dedff822d80267a05ec3294a223809fb5b135b9de64fb0d1b69d2af"},
-    {file = "ping3-3.0.2.tar.gz", hash = "sha256:8e21c05876b864222ab5808471795906bf4d9b1d936c345ecb817729ac0d77ad"},
+    {file = "ping3-4.0.0-py3-none-any.whl", hash = "sha256:3400bf5897cf60d62ca2131e384a8bc7777ad8d998b94dbe9795871e1baa525a"},
+    {file = "ping3-4.0.0.tar.gz", hash = "sha256:0251652bc1ec54e795d706b027bd3cfa013acc16352154f5803598a1fc8434bd"},
 ]
 platformdirs = [
     {file = "platformdirs-2.2.0-py3-none-any.whl", hash = "sha256:4666d822218db6a262bdfdc9c39d21f23b4cfdb08af331a81e92751daf6c866c"},
