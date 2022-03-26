@@ -60,6 +60,15 @@ class UpDownTime:
         self.hours = hours
         self.minutes = minutes
         self.seconds = seconds
+        if self.seconds >= 60:
+            temp_min, self.seconds = divmod(self.seconds, 60)
+            self.minutes += temp_min
+        if self.minutes >= 60:
+            temp_hour, self.minutes = divmod(self.minutes, 60)
+            self.hours += temp_hour
+        if self.hours >= 24:
+            temp_day, self.hours = divmod(self.hours, 24)
+            self.days += temp_day
 
     def __str__(self) -> str:
         """Format as d+h:m:s"""
