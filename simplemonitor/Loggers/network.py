@@ -159,6 +159,9 @@ class Listener(Thread):
                         break
                     serialized += data
                 conn.close()
+                if len(data) == 0:
+                    self.logger.debug("No data from %s", addr[0])
+                    continue
                 self.logger.debug("Finished receiving from %s", addr[0])
                 try:
                     # first byte is the size of the MAC
