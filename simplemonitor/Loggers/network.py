@@ -217,6 +217,7 @@ class Listener(Thread):
                     self.logger.exception("Socket error caught in thread")
             except Exception:  # pylint: disable=broad-except
                 self.logger.exception("Listener thread caught exception")
+        self.logger.warning("Listener stopped")
 
     def _handle_data_v2(
         self, data: Dict[str, Union[str, int, Dict[str, dict]]], source: str
