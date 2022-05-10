@@ -134,6 +134,7 @@ class Listener(Thread):
                 self.sock.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, False)
             except OSError:
                 self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sock.bind((bind_host, port))
         self.simplemonitor = simplemonitor
         self.key = bytearray(key, "utf-8")
@@ -219,6 +220,7 @@ class Listener(Thread):
                     self.logger.exception("Socket error caught in thread")
             except Exception:  # pylint: disable=broad-except
                 self.logger.exception("Listener thread caught exception")
+        self.logger.warning("Listener stopped")
 
     def _handle_data_v2(
         self, data: Dict[str, Union[str, int, Dict[str, dict]]], source: str
