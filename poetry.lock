@@ -1160,7 +1160,7 @@ types-cryptography = "*"
 
 [[package]]
 name = "types-pyopenssl"
-version = "22.0.3"
+version = "22.0.4"
 description = "Typing stubs for pyOpenSSL"
 category = "dev"
 optional = false
@@ -1269,7 +1269,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6.2"
-content-hash = "4c9a7d43229eb29b64ada740dc1068e68bd360af097e4d76db04c5968ea53a74"
+content-hash = "cd5451fb2a2b9b390fa06f0bc16a54ce11629f0174029baf9ed4008a11b84dc9"
 
 [metadata.files]
 alabaster = [
@@ -2013,8 +2013,8 @@ types-paramiko = [
     {file = "types_paramiko-2.10.0-py3-none-any.whl", hash = "sha256:f558bb26ff3b085f7282125559927ebf9e1c08410cd4aac5766addbf4d15c8bc"},
 ]
 types-pyopenssl = [
-    {file = "types-pyOpenSSL-22.0.3.tar.gz", hash = "sha256:374e3d828017f31be1ce93e2e839208222f2f71447995a9e26979789b9aa2598"},
-    {file = "types_pyOpenSSL-22.0.3-py3-none-any.whl", hash = "sha256:cfa34b5cb57c2e4336a5f5b388cbab5abfe150bca66a6fa17104e4e3a252ddf8"},
+    {file = "types-pyOpenSSL-22.0.4.tar.gz", hash = "sha256:28963f16f9717b9beaa4e98d45b2e32f0f7e3e1b444707e282f637b7c01f8288"},
+    {file = "types_pyOpenSSL-22.0.4-py3-none-any.whl", hash = "sha256:c7bd025a8c8fbed1d427380866de70bea9fee5c21115e026724f87dd31af2310"},
 ]
 types-python-dateutil = [
     {file = "types-python-dateutil-2.8.15.tar.gz", hash = "sha256:7db1e4ed4916bd128cbee3eecdee0e06cc5684da2a1cdfd57f98541cdfbe0861"},
