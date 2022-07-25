@@ -77,8 +77,8 @@ python-versions = ">=2.7"
 importlib-metadata = {version = "*", markers = "python_version < \"3.8\""}
 
 [package.extras]
-docs = ["sphinx", "jaraco.packaging (>=8.2)", "rst.linker (>=1.9)"]
-testing = ["pytest (>=4.6)", "pytest-flake8", "pytest-cov", "pytest-black (>=0.3.7)", "pytest-mypy", "pytest-checkdocs (>=2.4)", "pytest-enabler (>=1.0.1)"]
+testing = ["pytest-enabler (>=1.0.1)", "pytest-checkdocs (>=2.4)", "pytest-mypy", "pytest-black (>=0.3.7)", "pytest-cov", "pytest-flake8", "pytest (>=4.6)"]
+docs = ["rst.linker (>=1.9)", "jaraco.packaging (>=8.2)", "sphinx"]
 
 [[package]]
 name = "bandit"
@@ -599,8 +599,8 @@ optional = false
 python-versions = ">=3.6"
 
 [package.extras]
-docs = ["Sphinx (>=4)", "furo (>=2021.7.5b38)", "proselint (>=0.10.2)", "sphinx-autodoc-typehints (>=1.12)"]
-test = ["appdirs (==1.4.4)", "pytest (>=6)", "pytest-cov (>=2.7)", "pytest-mock (>=3.6)"]
+test = ["pytest-mock (>=3.6)", "pytest-cov (>=2.7)", "pytest (>=6)", "appdirs (==1.4.4)"]
+docs = ["sphinx-autodoc-typehints (>=1.12)", "proselint (>=0.10.2)", "furo (>=2021.7.5b38)", "Sphinx (>=4)"]
 
 [[package]]
 name = "pluggy"
@@ -783,7 +783,7 @@ coverage = {version = ">=5.2.1", extras = ["toml"]}
 pytest = ">=4.6"
 
 [package.extras]
-testing = ["fields", "hunter", "process-tests", "six", "pytest-xdist", "virtualenv"]
+testing = ["virtualenv", "pytest-xdist", "six", "process-tests", "hunter", "fields"]
 
 [[package]]
 name = "python-dateutil"
@@ -949,7 +949,7 @@ docutils = "<0.18"
 sphinx = ">=1.6"
 
 [package.extras]
-dev = ["transifex-client", "sphinxcontrib-httpdomain", "bump2version"]
+dev = ["bump2version", "sphinxcontrib-httpdomain", "transifex-client"]
 
 [[package]]
 name = "sphinxcontrib-applehelp"
@@ -960,8 +960,8 @@ optional = false
 python-versions = ">=3.5"
 
 [package.extras]
-lint = ["flake8", "mypy", "docutils-stubs"]
 test = ["pytest"]
+lint = ["docutils-stubs", "mypy", "flake8"]
 
 [[package]]
 name = "sphinxcontrib-devhelp"
@@ -972,8 +972,8 @@ optional = false
 python-versions = ">=3.5"
 
 [package.extras]
-lint = ["flake8", "mypy", "docutils-stubs"]
 test = ["pytest"]
+lint = ["docutils-stubs", "mypy", "flake8"]
 
 [[package]]
 name = "sphinxcontrib-htmlhelp"
@@ -984,8 +984,8 @@ optional = false
 python-versions = ">=3.6"
 
 [package.extras]
-lint = ["flake8", "mypy", "docutils-stubs"]
-test = ["pytest", "html5lib"]
+test = ["html5lib", "pytest"]
+lint = ["docutils-stubs", "mypy", "flake8"]
 
 [[package]]
 name = "sphinxcontrib-jsmath"
@@ -996,7 +996,7 @@ optional = false
 python-versions = ">=3.5"
 
 [package.extras]
-test = ["pytest", "flake8", "mypy"]
+test = ["mypy", "flake8", "pytest"]
 
 [[package]]
 name = "sphinxcontrib-qthelp"
@@ -1007,8 +1007,8 @@ optional = false
 python-versions = ">=3.5"
 
 [package.extras]
-lint = ["flake8", "mypy", "docutils-stubs"]
 test = ["pytest"]
+lint = ["docutils-stubs", "mypy", "flake8"]
 
 [[package]]
 name = "sphinxcontrib-serializinghtml"
@@ -1095,7 +1095,7 @@ toml = "*"
 tox = {version = ">=3.7.0", markers = "python_version >= \"3\""}
 
 [package.extras]
-test = ["coverage", "pytest", "pycodestyle", "pylint"]
+test = ["pylint", "pycodestyle", "pytest", "coverage"]
 
 [[package]]
 name = "twilio"
@@ -1160,7 +1160,7 @@ types-cryptography = "*"
 
 [[package]]
 name = "types-pyopenssl"
-version = "22.0.3"
+version = "22.0.8"
 description = "Typing stubs for pyOpenSSL"
 category = "dev"
 optional = false
@@ -1269,7 +1269,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6.2"
-content-hash = "6aa48e1647fc74ed2ebbc6a108dfe62597f55e6b1016a41b70ec8bae8c4823ef"
+content-hash = "5c628994a27c56dd7c74737130023fdf9ef453c0c191593255794b6a23171465"
 
 [metadata.files]
 alabaster = [
@@ -2013,8 +2013,8 @@ types-paramiko = [
     {file = "types_paramiko-2.10.0-py3-none-any.whl", hash = "sha256:f558bb26ff3b085f7282125559927ebf9e1c08410cd4aac5766addbf4d15c8bc"},
 ]
 types-pyopenssl = [
-    {file = "types-pyOpenSSL-22.0.3.tar.gz", hash = "sha256:374e3d828017f31be1ce93e2e839208222f2f71447995a9e26979789b9aa2598"},
-    {file = "types_pyOpenSSL-22.0.3-py3-none-any.whl", hash = "sha256:cfa34b5cb57c2e4336a5f5b388cbab5abfe150bca66a6fa17104e4e3a252ddf8"},
+    {file = "types-pyOpenSSL-22.0.8.tar.gz", hash = "sha256:45b3876c5db2947ab9e4a68d2235bfec8cab643e8ec2e1d5c2fb26629150216e"},
+    {file = "types_pyOpenSSL-22.0.8-py3-none-any.whl", hash = "sha256:6ac3fbab1145b23504b7c0fdc0d75d1b34b0896892fa8ea524455f29a9cbeaea"},
 ]
 types-python-dateutil = [
     {file = "types-python-dateutil-2.8.15.tar.gz", hash = "sha256:7db1e4ed4916bd128cbee3eecdee0e06cc5684da2a1cdfd57f98541cdfbe0861"},
