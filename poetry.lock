@@ -1149,7 +1149,7 @@ python-versions = "*"
 
 [[package]]
 name = "types-paramiko"
-version = "2.10.0"
+version = "2.11.3"
 description = "Typing stubs for paramiko"
 category = "dev"
 optional = false
@@ -1269,7 +1269,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6.2"
-content-hash = "dcdb14d83914e467d3c43f2e0342cb5e4ca1803a9530b4687207326f3d6670cd"
+content-hash = "5ff185c0b2c3f10d346047b2151f2a325668d10812b05cce27f3a9bbe42ced81"
 
 [metadata.files]
 alabaster = [
@@ -2009,8 +2009,8 @@ types-ipaddress = [
     {file = "types_ipaddress-1.0.0-py3-none-any.whl", hash = "sha256:f6cfd6d7605fd26537565f91fff5a9dd4802db4fa6b6be7dc0a55d605c0d943d"},
 ]
 types-paramiko = [
-    {file = "types-paramiko-2.10.0.tar.gz", hash = "sha256:ab6893d5fce5ed06964d61939ed6a7168ab14952945a90995a628a5e82a5e161"},
-    {file = "types_paramiko-2.10.0-py3-none-any.whl", hash = "sha256:f558bb26ff3b085f7282125559927ebf9e1c08410cd4aac5766addbf4d15c8bc"},
+    {file = "types-paramiko-2.11.3.tar.gz", hash = "sha256:23af5366aa3f9bf3f76beb379bc2efd71ffd02a701a32fe8e822e3ee8b8d5787"},
+    {file = "types_paramiko-2.11.3-py3-none-any.whl", hash = "sha256:33ec5f1c28a5558267860d1567a440dad73a77063669c226ee956e905c45541e"},
 ]
 types-pyopenssl = [
     {file = "types-pyOpenSSL-22.0.9.tar.gz", hash = "sha256:83214d83a41c2ceb3dac2b25e8e5af15cda68c852dc8077028b5b1b58c15be4d"},
