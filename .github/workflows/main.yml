@@ -25,7 +25,7 @@ jobs:
       - name: Update pip
         run: pip install --upgrade pip
       - name: Install poetry
-        run: pip install poetry==1.1.4
+        run: pip install poetry==1.1.14
       - name: poetry install
         run: poetry install
       - name: Integration tests
