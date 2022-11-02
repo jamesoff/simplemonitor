@@ -12,9 +12,9 @@ jobs:
     name: Python ${{ matrix.python-version }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Setup python
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
           architecture: x64
@@ -40,4 +40,4 @@ jobs:
         run: make network-test
       - name: Output coverage report
         run: poetry run coverage xml -i
-      - uses: codecov/codecov-action@v1
+      - uses: codecov/codecov-action@v3
