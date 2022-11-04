@@ -1170,7 +1170,7 @@ python-versions = "*"
 
 [[package]]
 name = "types-requests"
-version = "2.27.19"
+version = "2.28.11.2"
 description = "Typing stubs for requests"
 category = "dev"
 optional = false
@@ -1259,7 +1259,7 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=4.6)", "pytest-black (
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7.0"
-content-hash = "eda731228a81f51a0fe2f05daea17479e0778adb1c0fc6f2a4db3c66ead748da"
+content-hash = "26b4c65ad86953b730952ef263e3702530e5dcff88bafac31b4a85d4218fa337"
 
 [metadata.files]
 alabaster = [
@@ -2003,8 +2003,8 @@ types-python-dateutil = [
     {file = "types_python_dateutil-2.8.19.2-py3-none-any.whl", hash = "sha256:3f4dbe465e7e0c6581db11fd7a4855d1355b78712b3f292bd399cd332247e9c0"},
 ]
 types-requests = [
-    {file = "types-requests-2.27.19.tar.gz", hash = "sha256:795e378117088d1e4bf41a2c01a153b73d6ea40aa9d7c0ac753abde84c0d3a8f"},
-    {file = "types_requests-2.27.19-py3-none-any.whl", hash = "sha256:c6c5384677d98f212516de50c4b2c38ef659b93008fbc5bb4b81726138bc8485"},
+    {file = "types-requests-2.28.11.2.tar.gz", hash = "sha256:fdcd7bd148139fb8eef72cf4a41ac7273872cad9e6ada14b11ff5dfdeee60ed3"},
+    {file = "types_requests-2.28.11.2-py3-none-any.whl", hash = "sha256:14941f8023a80b16441b3b46caffcbfce5265fd14555844d6029697824b5a2ef"},
 ]
 types-setuptools = [
     {file = "types-setuptools-63.2.2.tar.gz", hash = "sha256:a9aa0c01d5f3443cd544026d5ffc97b95ddadf731dab13419c393d43fd8617c0"},
