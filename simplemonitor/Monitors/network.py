@@ -37,8 +37,8 @@ class MonitorHTTP(Monitor):
     monitor_type = "http"
 
     # optional - for HTTPS client authentication only
-    certfile = None
-    keyfile = None
+    certfile: Optional[str] = None
+    keyfile: Optional[str] = None
 
     # optional - headers
     headers = None
@@ -57,8 +57,8 @@ class MonitorHTTP(Monitor):
 
         # optionnal - for HTTPS client authentication only
         # in this case, certfile is required
-        self.certfile = config_options.get("certfile")
-        self.keyfile = config_options.get("keyfile")
+        self.certfile = cast(Optional[str], config_options.get("certfile"))
+        self.keyfile = cast(Optional[str], config_options.get("keyfile"))
         if self.certfile and not self.keyfile:
             self.keyfile = self.certfile
         if not self.certfile and self.keyfile:
@@ -99,6 +99,7 @@ class MonitorHTTP(Monitor):
                     headers=self.headers,
                 )
             else:
+                assert self.certfile is not None and self.keyfile is not None
                 response = requests.get(
                     self.url,
                     timeout=self.request_timeout,
