@@ -46,10 +46,9 @@ ring-doorbell = ">=0.6.0"
 pyarlo = "^0.2.4"
 paramiko = "^2.7.2"
 importlib-metadata = "<4.3"
-flake8 = "5.0.4"
 
 [tool.poetry.dev-dependencies]
-"flake8" = "^5.0.4"
+"flake8" = "^4.0.1"
 codecov = "*"
 coverage = "*"
 black = "*"
