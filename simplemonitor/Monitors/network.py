@@ -344,7 +344,10 @@ class MonitorDNS(Monitor):
             very_end_part = " at %s" % self.server
         else:
             very_end_part = ""
-        port_part = f" on port {self.port}" if self.port else ""
+        try:
+            port_part = f" on port {self.port}" if self.port else ""
+        except AttributeError:
+            port_part = ""
         return "Checking that DNS %s %s%s%s" % (
             mid_part,
             end_part,
