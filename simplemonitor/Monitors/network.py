@@ -289,12 +289,10 @@ class MonitorDNS(Monitor):
     def __init__(self, name: str, config_options: dict) -> None:
         super().__init__(name, config_options)
         self.path = self.get_config_option("record", required=True)
-
         self.desired_val = self.get_config_option("desired_val")
-
         self.server = self.get_config_option("server")
-
         self.params = [self.command]
+        self.port = self.get_config_option("port", required_type="int")
 
         if self.server:
             self.params.append("@%s" % self.server)
@@ -306,6 +304,9 @@ class MonitorDNS(Monitor):
 
         self.params.append(self.path)
         self.params.append("+short")
+
+        if self.port:
+            self.params.extend(["-p", str(self.port)])
 
     def run_test(self) -> bool:
         try:
@@ -344,7 +345,16 @@ class MonitorDNS(Monitor):
             very_end_part = " at %s" % self.server
         else:
             very_end_part = ""
-        return "Checking that DNS %s %s%s" % (mid_part, end_part, very_end_part)
+        try:
+            port_part = f" on port {self.port}" if self.port else ""
+        except AttributeError:
+            port_part = ""
+        return "Checking that DNS %s %s%s%s" % (
+            mid_part,
+            end_part,
+            very_end_part,
+            port_part,
+        )
 
     def get_params(self) -> Tuple:
         return (self.path,)
