@@ -566,14 +566,14 @@ python-versions = ">=2.6"
 
 [[package]]
 name = "ping3"
-version = "3.0.2"
+version = "4.0.4"
 description = "A pure python3 version of ICMP ping implementation using raw socket."
 category = "main"
 optional = false
 python-versions = ">=3"
 
 [package.extras]
-dev = ["build", "pycodestyle", "twine"]
+dev = ["build", "pycodestyle", "wheel"]
 
 [[package]]
 name = "platformdirs"
@@ -1266,7 +1266,7 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=4.6)", "pytest-black (
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7.0"
-content-hash = "9e83add813d8d5a67c9a0446b4e7e39017419fe5046501688e096c0a24c0dd7d"
+content-hash = "fe34c32e8aadff16ac5d396af4d6ed856ad0899820af481ba5b8e360c8c760d5"
 
 [metadata.files]
 alabaster = [
@@ -1700,8 +1700,8 @@ pbr = [
     {file = "pbr-5.6.0.tar.gz", hash = "sha256:42df03e7797b796625b1029c0400279c7c34fd7df24a7d7818a1abb5b38710dd"},
 ]
 ping3 = [
-    {file = "ping3-3.0.2-py3-none-any.whl", hash = "sha256:98be6eb30dedff822d80267a05ec3294a223809fb5b135b9de64fb0d1b69d2af"},
-    {file = "ping3-3.0.2.tar.gz", hash = "sha256:8e21c05876b864222ab5808471795906bf4d9b1d936c345ecb817729ac0d77ad"},
+    {file = "ping3-4.0.4-py3-none-any.whl", hash = "sha256:dd8439ced69d6fec5885c8d4faefb055aacffb5a20f5e38a78459a5b18cc5e5a"},
+    {file = "ping3-4.0.4.tar.gz", hash = "sha256:1ea12acf6752d4666616341fd7c6393c664cffc510c693ef06f736fb267a13ba"},
 ]
 platformdirs = [
     {file = "platformdirs-2.2.0-py3-none-any.whl", hash = "sha256:4666d822218db6a262bdfdc9c39d21f23b4cfdb08af331a81e92751daf6c866c"},
