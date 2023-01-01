@@ -33,6 +33,7 @@ class MonitorHTTP(Monitor):
     regexp = None
     regexp_text = ""
     allowed_codes = []  # type: List[int]
+    allow_redirects = True  # type: bool
 
     monitor_type = "http"
 
@@ -51,11 +52,17 @@ class MonitorHTTP(Monitor):
         if regexp is not None:
             self.regexp = re.compile(regexp)
             self.regexp_text = regexp
+
         self.allowed_codes = self.get_config_option(
             "allowed_codes", default=[200], required_type="[int]"
         )
+        self.allow_redirects = self.get_config_option(
+            "allow_redirects",
+            default=True,
+            required_type="bool",
+        )
 
-        # optionnal - for HTTPS client authentication only
+        # optional - for HTTPS client authentication only
         # in this case, certfile is required
         self.certfile = cast(Optional[str], config_options.get("certfile"))
         self.keyfile = cast(Optional[str], config_options.get("keyfile"))
@@ -89,6 +96,7 @@ class MonitorHTTP(Monitor):
                     timeout=self.request_timeout,
                     verify=self.verify_hostname,
                     headers=self.headers,
+                    allow_redirects=self.allow_redirects,
                 )
             elif self.certfile is None and self.username is not None:
                 response = requests.get(
@@ -97,6 +105,7 @@ class MonitorHTTP(Monitor):
                     auth=HTTPBasicAuth(self.username, self.password),
                     verify=self.verify_hostname,
                     headers=self.headers,
+                    allow_redirects=self.allow_redirects,
                 )
             else:
                 assert self.certfile is not None and self.keyfile is not None
@@ -106,6 +115,7 @@ class MonitorHTTP(Monitor):
                     cert=(self.certfile, self.keyfile),
                     verify=self.verify_hostname,
                     headers=self.headers,
+                    allow_redirects=self.allow_redirects,
                 )
 
             end_time = arrow.get()
