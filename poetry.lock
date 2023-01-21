@@ -1825,22 +1825,6 @@ files = [
 ]
 
 [[package]]
-name = "types-cryptography"
-version = "3.3.5"
-description = "Typing stubs for cryptography"
-category = "dev"
-optional = false
-python-versions = "*"
-files = [
-    {file = "types-cryptography-3.3.5.tar.gz", hash = "sha256:65f51b899499a97efa155b2882eafca003b404af3c67a0ff492d3b7f140f6468"},
-    {file = "types_cryptography-3.3.5-py3-none-any.whl", hash = "sha256:1526811a0d5f2971b2d8719fce76790800eca6ca9c817b1552c8cacdc6e0cac3"},
-]
-
-[package.dependencies]
-types-enum34 = "*"
-types-ipaddress = "*"
-
-[[package]]
 name = "types-docutils"
 version = "0.19.1.2"
 description = "Typing stubs for docutils"
@@ -1850,30 +1834,6 @@ python-versions = "*"
 files = [
     {file = "types-docutils-0.19.1.2.tar.gz", hash = "sha256:ca3d2135484adb52dd042bbddbd6eddcbbda8c608ba3f5e5f908bd548ffcb399"},
     {file = "types_docutils-0.19.1.2-py3-none-any.whl", hash = "sha256:7be44dac1b160901308ac43762d5e89175105ed682092a3a1f08911d2573a470"},
-]
-
-[[package]]
-name = "types-enum34"
-version = "1.1.0"
-description = "Typing stubs for enum34"
-category = "dev"
-optional = false
-python-versions = "*"
-files = [
-    {file = "types-enum34-1.1.0.tar.gz", hash = "sha256:9d42b80e1d783aab2289ebdf599d9011bd39af6ed9308bbdfe63200df3d36455"},
-    {file = "types_enum34-1.1.0-py3-none-any.whl", hash = "sha256:d19c8e3c412064283f52507dcef7969f3252c00feaa414f9c6cc4eacdbea3fab"},
-]
-
-[[package]]
-name = "types-ipaddress"
-version = "1.0.0"
-description = "Typing stubs for ipaddress"
-category = "dev"
-optional = false
-python-versions = "*"
-files = [
-    {file = "types-ipaddress-1.0.0.tar.gz", hash = "sha256:2f32f181bf80ee5fb66e1326139d09737bd20f2a7a2b761ef895528a57e61ce9"},
-    {file = "types_ipaddress-1.0.0-py3-none-any.whl", hash = "sha256:f6cfd6d7605fd26537565f91fff5a9dd4802db4fa6b6be7dc0a55d605c0d943d"},
 ]
 
 [[package]]
@@ -1893,18 +1853,18 @@ cryptography = ">=37.0.0"
 
 [[package]]
 name = "types-pyopenssl"
-version = "22.1.0.2"
+version = "23.0.0.2"
 description = "Typing stubs for pyOpenSSL"
 category = "dev"
 optional = false
 python-versions = "*"
 files = [
-    {file = "types-pyOpenSSL-22.1.0.2.tar.gz", hash = "sha256:7a350e29e55bc3ee4571f996b4b1c18c4e4098947db45f7485b016eaa35b44bc"},
-    {file = "types_pyOpenSSL-22.1.0.2-py3-none-any.whl", hash = "sha256:54606a6afb203eb261e0fca9b7f75fa6c24d5ff71e13903c162ffb951c2c64c6"},
+    {file = "types-pyOpenSSL-23.0.0.2.tar.gz", hash = "sha256:2e95f9a667d5eeb0af699196f857f7d23d5b4d642437bd37355bc13a87e9f4ae"},
+    {file = "types_pyOpenSSL-23.0.0.2-py3-none-any.whl", hash = "sha256:ea7e5d06f9190a1cb013ad4b13d48896e5cd1e785c04491f38b206d1bc4b8dc1"},
 ]
 
 [package.dependencies]
-types-cryptography = "*"
+cryptography = ">=35.0.0"
 
 [[package]]
 name = "types-python-dateutil"
@@ -2107,4 +2067,4 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=4.6)", "pytest-black (
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.7.0"
-content-hash = "2def4f93e08dd8568479cd73b38f4b3b137ac1e16d185639351edc527b1bea5c"
+content-hash = "d39223697f130508b2d4cc1be7241487267685ce6f6b807afb9d3d024a7d3ce0"
