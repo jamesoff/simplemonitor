@@ -495,13 +495,12 @@ class TestMessageBuilding(unittest.TestCase):
                 ),
                 textwrap.dedent(
                     """
-                    Monitor test on {hostname} failed!
+                    Monitor test failed!
                     Failed at: {expected_time} (down 0+00:00:00)
                     Virtual failure count: 1
                     Additional info: This monitor always fails.
                     Description: A monitor which always fails.
                     """.format(
-                        hostname=util.short_hostname(),
                         expected_time=self.expected_time_string,
                     )
                 ),
@@ -517,14 +516,13 @@ class TestMessageBuilding(unittest.TestCase):
                 ),
                 textwrap.dedent(
                     """
-                    Monitor test on {hostname} failed!
+                    Monitor test failed!
                     Failed at: {expected_time} (down 0+00:00:00)
                     Virtual failure count: 1
                     Additional info: This monitor always fails.
                     Description: A monitor which always fails.
                     Documentation: whoops
                     """.format(
-                        hostname=util.short_hostname(),
                         expected_time=self.expected_time_string,
                     )
                 ),
@@ -541,12 +539,11 @@ class TestMessageBuilding(unittest.TestCase):
                 ),
                 textwrap.dedent(
                     """
-                    Monitor winning on {hostname} succeeded!
+                    Monitor winning succeeded!
                     Recovered at: {expected_time} (was down for 0+00:00:00)
                     Additional info: 
                     Description: (Monitor did not write an auto-biography.)
                     """.format(  # noqa: W291
-                        hostname=util.short_hostname(),
                         expected_time=self.expected_time_string,
                     )
                 ),
