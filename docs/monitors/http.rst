@@ -26,6 +26,30 @@ Attempts to fetch a URL and makes sure the HTTP return code is (by default) 200/
 
     a list of acceptable HTTP status codes
 
+.. confval:: allow_redirects
+
+    :type: bool
+    :required: false
+    :default: `true`
+
+    Follow redirects
+
+.. confval:: username
+
+    :type: str
+    :required: false
+    :default: none
+
+    Username for http basic auth
+
+.. confval:: password
+
+    :type: str
+    :required: false
+    :default: none
+
+    Password for http basic auth
+
 .. confval:: verify_hostname
 
     :type: boolean
