@@ -126,7 +126,7 @@ class FileLoggerNG(Logger):
     logger_type = "logfileng"
     only_failures = False
 
-    def __init__(self, config_options: dict = None) -> None:
+    def __init__(self, config_options: Optional[dict] = None) -> None:
         if config_options is None:
             config_options = {}
         super().__init__(config_options)
@@ -200,7 +200,7 @@ class HTMLLogger(Logger):
     filename = ""
     count_data = ""
 
-    def __init__(self, config_options: dict = None) -> None:
+    def __init__(self, config_options: Optional[dict] = None) -> None:
         if config_options is None:
             config_options = {}
         super().__init__(config_options)
@@ -492,7 +492,7 @@ class JsonLogger(Logger):
     filename = ""  # type: str
     supports_batch = True
 
-    def __init__(self, config_options: dict = None) -> None:
+    def __init__(self, config_options: Optional[dict] = None) -> None:
         if config_options is None:
             config_options = {}
         super().__init__(config_options)

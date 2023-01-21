@@ -7,7 +7,7 @@ import logging
 import socket
 import struct
 from threading import Thread
-from typing import Any, Dict, Union, cast
+from typing import Any, Dict, Optional, Union, cast
 
 from ..Monitors.monitor import Monitor
 from ..util import LoggerConfigurationError
@@ -114,7 +114,7 @@ class Listener(Thread):
         self,
         simplemonitor: Any,
         port: int,
-        key: str = None,
+        key: Optional[str] = None,
         bind_host: str = "",
         ipv4_only: bool = False,
     ) -> None:

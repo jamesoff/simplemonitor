@@ -64,7 +64,7 @@ class Alerter:
     support_catchup = False
     urgent = False
 
-    def __init__(self, config_options: dict = None) -> None:
+    def __init__(self, config_options: Optional[dict] = None) -> None:
         if config_options is None:
             config_options = {}
         self._config_options = config_options
@@ -446,7 +446,7 @@ class Alerter:
                 raise ValueError(
                     "Can't write a message for AlertType {}".format(alert_type)
                 )
-            if monitor.is_remote:
+            if monitor.is_remote():
                 host = " on {}".format(monitor.running_on)
             else:
                 host = ""

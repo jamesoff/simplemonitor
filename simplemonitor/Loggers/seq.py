@@ -7,7 +7,7 @@ https://raw.githubusercontent.com/eifinger/appdaemon-scripts/master/seqSink/seqS
 
 import datetime
 import json
-from typing import cast
+from typing import Optional, cast
 
 import requests
 
@@ -24,7 +24,7 @@ class SeqLogger(Logger):
     buffered = False
     dateformat = None
 
-    def __init__(self, config_options: dict = None) -> None:
+    def __init__(self, config_options: Optional[dict] = None) -> None:
         if config_options is None:
             config_options = {}
         super().__init__(config_options)

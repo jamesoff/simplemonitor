@@ -8,7 +8,7 @@ contact: dev@swtk.info
 """
 
 import json
-from typing import List, cast
+from typing import List, Optional, cast
 
 import paho.mqtt.publish
 
@@ -25,7 +25,7 @@ class MQTTLogger(Logger):
     buffered = False
     dateformat = None
 
-    def __init__(self, config_options: dict = None) -> None:
+    def __init__(self, config_options: Optional[dict] = None) -> None:
         if config_options is None:
             config_options = {}
         super().__init__(config_options)

@@ -191,7 +191,9 @@ class MonitorUnixService(Monitor):
 
     monitor_type = "unix_service"
 
-    def __init__(self, name: str = "unnamed", config_options: dict = None) -> None:
+    def __init__(
+        self, name: str = "unnamed", config_options: Optional[dict] = None
+    ) -> None:
         super().__init__(name=name, config_options=config_options)
         self.service_name = cast(str, self.get_config_option("service", required=True))
         self.want_state = cast(
@@ -277,6 +279,8 @@ class MonitorSystemdUnit(Monitor):
 
     @classmethod
     def _list_units(cls) -> List[Any]:
+        if pydbus is None:
+            raise RuntimeError("pydbus module not installed")
         if cls._listunit_cache_expiry < time.time():
             bus = pydbus.SystemBus()
             systemd = bus.get(".systemd1")

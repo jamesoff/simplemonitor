@@ -60,4 +60,4 @@ class MonitorBackup(Monitor):
         return self.record_success()
 
     def describe(self) -> str:
-        "Checking Backup Exec runs daily, and doesn't run for too long."
+        return "Checking Backup Exec runs daily, and doesn't run for too long."
