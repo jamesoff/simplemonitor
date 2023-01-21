@@ -1829,6 +1829,18 @@ types-enum34 = "*"
 types-ipaddress = "*"
 
 [[package]]
+name = "types-docutils"
+version = "0.19.1.2"
+description = "Typing stubs for docutils"
+category = "dev"
+optional = false
+python-versions = "*"
+files = [
+    {file = "types-docutils-0.19.1.2.tar.gz", hash = "sha256:ca3d2135484adb52dd042bbddbd6eddcbbda8c608ba3f5e5f908bd548ffcb399"},
+    {file = "types_docutils-0.19.1.2-py3-none-any.whl", hash = "sha256:7be44dac1b160901308ac43762d5e89175105ed682092a3a1f08911d2573a470"},
+]
+
+[[package]]
 name = "types-enum34"
 version = "1.1.0"
 description = "Typing stubs for enum34"
@@ -1911,15 +1923,18 @@ types-urllib3 = "<1.27"
 
 [[package]]
 name = "types-setuptools"
-version = "65.5.0.3"
+version = "65.7.0.3"
 description = "Typing stubs for setuptools"
 category = "dev"
 optional = false
 python-versions = "*"
 files = [
-    {file = "types-setuptools-65.5.0.3.tar.gz", hash = "sha256:17769171f5f2a2dc69b25c0d3106552a5cda767bbf6b36cb6212b26dae5aa9fc"},
-    {file = "types_setuptools-65.5.0.3-py3-none-any.whl", hash = "sha256:9254c32b0cc91c486548e7d7561243b5bd185402a383e93c6691e1b9bc8d86e2"},
+    {file = "types-setuptools-65.7.0.3.tar.gz", hash = "sha256:c00f2dd1e6dcbb893faea4a57dbae80bb96d826b865d9ade8ae250a830cba10c"},
+    {file = "types_setuptools-65.7.0.3-py3-none-any.whl", hash = "sha256:b823969ea92a6d41d35933881d4c732248df834062e0d6f044c3eb36c446254e"},
 ]
+
+[package.dependencies]
+types-docutils = "*"
 
 [[package]]
 name = "types-urllib3"
@@ -2080,4 +2095,4 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=4.6)", "pytest-black (
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.7.0"
-content-hash = "199f2cff8000e9cecc4944177ee2a4cfa31fd70278b9bf2a2fc9e99a59151442"
+content-hash = "8ae229a3094168bae0c0ffc0d8e50e726d41da3fb440dba62fd4daa352a4b6c5"
