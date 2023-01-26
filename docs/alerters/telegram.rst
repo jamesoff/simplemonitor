@@ -10,7 +10,7 @@ telegram - send to a chat
 
     the token to access Telegram
 
-.. confval:: client_id
+.. confval:: chat_id
 
     :type: string
     :required: true
