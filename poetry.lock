@@ -1749,20 +1749,20 @@ testing = ["flaky (>=3.4.0)", "freezegun (>=0.3.11)", "pathlib2 (>=2.3.3)", "psu
 
 [[package]]
 name = "tox-poetry"
-version = "0.4.1"
+version = "0.5.0"
 description = "Tox poetry plugin"
 category = "dev"
 optional = false
 python-versions = "*"
 files = [
-    {file = "tox-poetry-0.4.1.tar.gz", hash = "sha256:2395808e1ce487b5894c10f2202e14702bfa6d6909c0d1e525170d14809ac7ef"},
-    {file = "tox_poetry-0.4.1-py2.py3-none-any.whl", hash = "sha256:11d9cd4e51d4cd9484b3ba63f2650ab4cfb4096e5f0682ecf561ddfc3c8e8c92"},
+    {file = "tox-poetry-0.5.0.tar.gz", hash = "sha256:5bf3bc8bcbcac0f52ff73c11062123cc1450cd3bdde4b3f71e015ce1020b3b36"},
+    {file = "tox_poetry-0.5.0-py2.py3-none-any.whl", hash = "sha256:072c994cd23e0a818c4bf9db10a2adcb7fbee85a23a0826a74d649701b9bdcab"},
 ]
 
 [package.dependencies]
 pluggy = "*"
 toml = "*"
-tox = {version = ">=3.7.0", markers = "python_version >= \"3\""}
+tox = {version = ">=3.7.0,<4", markers = "python_version >= \"3\""}
 
 [package.extras]
 test = ["coverage", "pycodestyle", "pylint", "pytest"]
@@ -2067,4 +2067,4 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=4.6)", "pytest-black (
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.7.0"
-content-hash = "d39223697f130508b2d4cc1be7241487267685ce6f6b807afb9d3d024a7d3ce0"
+content-hash = "e6b6584681d7f84269075ace44210be0cfb735fc64815e08ad399491fa4c0f33"
