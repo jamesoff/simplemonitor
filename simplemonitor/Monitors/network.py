@@ -83,8 +83,8 @@ class MonitorHTTP(Monitor):
             "timeout", default=5, required_type="int"
         )
 
-        self.username = config_options.get("username")
-        self.password = config_options.get("password")
+        self.username = cast(Optional[str], config_options.get("username"))
+        self.password = cast(Optional[str], config_options.get("password"))
 
     def run_test(self) -> bool:
         start_time = arrow.get()
@@ -98,7 +98,11 @@ class MonitorHTTP(Monitor):
                     headers=self.headers,
                     allow_redirects=self.allow_redirects,
                 )
-            elif self.certfile is None and self.username is not None:
+            elif (
+                self.certfile is None
+                and self.username is not None
+                and self.password is not None
+            ):
                 response = requests.get(
                     self.url,
                     timeout=self.request_timeout,
