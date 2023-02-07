@@ -1880,14 +1880,14 @@ files = [
 
 [[package]]
 name = "types-requests"
-version = "2.28.11.8"
+version = "2.28.11.11"
 description = "Typing stubs for requests"
 category = "dev"
 optional = false
 python-versions = "*"
 files = [
-    {file = "types-requests-2.28.11.8.tar.gz", hash = "sha256:e67424525f84adfbeab7268a159d3c633862dafae15c5b19547ce1b55954f0a3"},
-    {file = "types_requests-2.28.11.8-py3-none-any.whl", hash = "sha256:61960554baca0008ae7e2db2bd3b322ca9a144d3e80ce270f5fb640817e40994"},
+    {file = "types-requests-2.28.11.11.tar.gz", hash = "sha256:19622ace35a5da1838ee9cad0df4a50c7e3a420f8a37e8357ce870fed492fa81"},
+    {file = "types_requests-2.28.11.11-py3-none-any.whl", hash = "sha256:b4adf81c6bcd2f9fa0f6ab8669e96fad7f04429d6e22c486b2b3382d729ca364"},
 ]
 
 [package.dependencies]
