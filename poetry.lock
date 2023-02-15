@@ -1834,14 +1834,14 @@ files = [
 
 [[package]]
 name = "types-paramiko"
-version = "2.12.0.3"
+version = "3.0.0.2"
 description = "Typing stubs for paramiko"
 category = "dev"
 optional = false
 python-versions = "*"
 files = [
-    {file = "types-paramiko-2.12.0.3.tar.gz", hash = "sha256:3a79232382bcc7ed140f53d865feaec35188fd2ee105efdbf325200736e01aa2"},
-    {file = "types_paramiko-2.12.0.3-py3-none-any.whl", hash = "sha256:a8b224e8a93cc0ffb60f67516890e49977ea0d3f5811c605238e71d9c49a152d"},
+    {file = "types-paramiko-3.0.0.2.tar.gz", hash = "sha256:9f582a3a96cd9df1ab0a21fb333a3c40f120ccf01aaab326daa0df3887376059"},
+    {file = "types_paramiko-3.0.0.2-py3-none-any.whl", hash = "sha256:5328f60d0f83ef90d8196c8b24c6c6124aebf1fa9ab3ccfd72cd3b623512ae61"},
 ]
 
 [package.dependencies]
@@ -2063,4 +2063,4 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=4.6)", "pytest-black (
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.7.0"
-content-hash = "b51b4a36387cdbca8c6c250590a7552b7eb1348d8310c9bb0e1553cbb665f060"
+content-hash = "95db73cdff000ddf0ecb22d9b27134c24786da8ebe7222af06c6683efda119c0"
