@@ -191,7 +191,8 @@ def format_datetime(
 def short_hostname() -> str:
     """Get just our machine name.
 
-    TODO: This might actually be redundant. Python probably provides it's own version of this."""
+    TODO: This might actually be redundant. Python probably provides it's own version of this.
+    """
 
     return (socket.gethostname() + ".").split(".")[0]
 
@@ -201,7 +202,7 @@ def get_config_dict(
 ) -> Dict[str, str]:
     options = config.items(monitor)
     ret = {}
-    for (key, value) in options:
+    for key, value in options:
         ret[key] = value
     return ret
 

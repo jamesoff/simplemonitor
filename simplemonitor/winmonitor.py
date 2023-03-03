@@ -111,7 +111,6 @@ class AppServerSvc(win32serviceutil.ServiceFramework):
 
 
 def run_monitor() -> None:
-
     sys.argv = ["monitor.py", "-vH", "--config={}".format(CONFIG)]
     monitor.main()
 

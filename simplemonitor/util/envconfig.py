@@ -38,7 +38,7 @@ class EnvironmentAwareConfigParser(ConfigParser):
                 matches = self.r.search(section)
             if section != original_section:
                 self.add_section(section)
-                for (option, value) in self.items(original_section):
+                for option, value in self.items(original_section):
                     self.set(section, option, value)
                 self.remove_section(original_section)
         return result

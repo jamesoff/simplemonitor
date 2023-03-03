@@ -627,7 +627,7 @@ class SimpleMonitor:
     def do_alert(self, alerter: Alerter) -> None:
         """Use the given alerter object to send an alert, if needed."""
         alerter.check_dependencies(self.failed + self.still_failing + self.skipped)
-        for (name, this_monitor) in list(self.monitors.items()):
+        for name, this_monitor in list(self.monitors.items()):
             # Don't generate alerts for monitors which want it done remotely
             if this_monitor.remote_alerting:
                 module_logger.debug(
@@ -642,7 +642,7 @@ class SimpleMonitor:
             except Exception:  # pragma: no cover
                 module_logger.exception("exception caught while alerting for %s", name)
         for host_monitors in self.remote_monitors.copy().values():
-            for (name, monitor) in host_monitors.copy().items():
+            for name, monitor in host_monitors.copy().items():
                 try:
                     if monitor.remote_alerting:
                         alerter.send_alert(name, monitor)
@@ -749,7 +749,7 @@ class SimpleMonitor:
         seen_monitors = []  # type: List[str]
         if hostname not in self.remote_monitors:
             self.remote_monitors[hostname] = {}
-        for (name, state) in data.items():
+        for name, state in data.items():
             module_logger.info(
                 "updating remote monitor %s from host %s", name, hostname
             )
