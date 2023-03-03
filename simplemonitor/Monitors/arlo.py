@@ -4,7 +4,7 @@ Arlo monitoring for SimpleMonitor
 
 from typing import Optional, cast
 
-import pyarlo
+import pyaarlo
 
 from ..Monitors.monitor import Monitor, register
 
@@ -34,16 +34,18 @@ class MonitorArloCamera(Monitor):
             int,
             self.get_config_option("base_station_id", required_type="int", default=0),
         )
-        self.arlo = None  # type: Optional[pyarlo.PyArlo]
-        self.arlo_base = None  # type: Optional[pyarlo.ArloBaseStation]
-        self.camera = None  # type: Optional[pyarlo.ArloCamera]
+        self.arlo: Optional[pyaarlo.PyArlo] = None
+        self.arlo_base: Optional[pyaarlo.ArloBase] = None
+        self.camera: Optional[pyaarlo.ArloCamera] = None
 
     def run_test(self) -> bool:
         if self.arlo is None:
             self.monitor_logger.info("logging in to Arlo")
             try:
-                self.arlo = pyarlo.PyArlo(
-                    username=self.arlo_username, password=self.arlo_password
+                self.arlo = pyaarlo.PyArlo(
+                    username=self.arlo_username,
+                    password=self.arlo_password,
+                    synchronous_mode=True,
                 )
             except Exception:
                 self.monitor_logger.exception("arlo login failed")
@@ -70,12 +72,6 @@ class MonitorArloCamera(Monitor):
                 return self.record_fail(
                     "could not find camera named {}".format(self.device_name)
                 )
-        else:
-            self.monitor_logger.info("Updating Arlo camera")
-            try:
-                self.camera.update()
-            except Exception:
-                return self.record_fail("failed to update Arlo camera")
         battery = self.camera.battery_level or 0  # type: int
         if battery < self.minimum_battery:
             return self.record_fail(
