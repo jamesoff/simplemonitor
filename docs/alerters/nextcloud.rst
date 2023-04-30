@@ -34,3 +34,11 @@ Send a notification to a Nextcloud_ server.
     :required: true
 
     the user id who should receive the notification
+
+.. confval:: timeout
+
+    :type: int
+    :required: false
+    :default: ``5``
+
+    Timeout for HTTP request

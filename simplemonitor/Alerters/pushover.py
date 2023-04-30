@@ -24,6 +24,9 @@ class PushoverAlerter(Alerter):
         self.pushover_user = cast(
             str, self.get_config_option("user", required=True, allow_empty=False)
         )
+        self.timeout = cast(
+            int, self.get_config_option("timeout", required_type="int", default=5)
+        )
 
         self.support_catchup = True
 
@@ -37,6 +40,7 @@ class PushoverAlerter(Alerter):
                 "title": subject,
                 "message": body,
             },
+            timeout=self.timeout,
         )
 
     def send_alert(self, name: str, monitor: Monitor) -> None:

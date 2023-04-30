@@ -9,3 +9,11 @@ Sends the status of monitors to a **seq** log server. See https://datalust.co fo
     :required: true
 
     the full URI for the endpoint on the seq server, for example ``http:://localhost:5341/api/events/seq``.
+
+.. confval:: timeout
+
+    :type: int
+    :required: false
+    :default: ``5``
+
+    Timeout for HTTP request to seq

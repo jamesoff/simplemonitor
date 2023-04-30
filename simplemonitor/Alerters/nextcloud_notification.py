@@ -28,6 +28,9 @@ class NextcloudNotificationAlerter(Alerter):
         self.nextcloud_receiver = cast(
             str, self.get_config_option("receiver", required=True, allow_empty=False)
         )
+        self.timeout = cast(
+            int, self.get_config_option("timeout", required_type="int", default=5)
+        )
 
         self.support_catchup = True
 
@@ -43,6 +46,7 @@ class NextcloudNotificationAlerter(Alerter):
                 "shortMessage": shortMessage,
                 "longMessage": longMessage,
             },
+            timeout=self.timeout,
         )
 
     def send_alert(self, name: str, monitor: Monitor) -> None:

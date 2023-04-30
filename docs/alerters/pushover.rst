@@ -20,3 +20,11 @@ You will need to be registered at pushover_.
     :required: true
 
     your pushover app token
+
+.. confval:: timeout
+
+    :type: int
+    :required: false
+    :default: ``5``
+
+    Timeout for HTTP request

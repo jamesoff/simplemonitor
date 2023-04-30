@@ -27,14 +27,19 @@ class TelegramAlerter(Alerter):
             str, self.get_config_option("chat_id", required=True, allow_empty=False)
         )
 
+        self.timeout = cast(
+            int, self.get_config_option("timeout", required_type="int", default=5)
+        )
+
         self.support_catchup = True
 
     def send_telegram_notification(self, body: str) -> None:
         """Send a push notification."""
 
         response = requests.post(
-            "https://api.telegram.org/bot{}/sendMessage".format(self.telegram_token),
+            f"https://api.telegram.org/bot{self.telegram_token}/sendMessage",
             data={"chat_id": self.telegram_chatid, "text": body},
+            timeout=self.timeout,
         )
         if not response.status_code == requests.codes.ok:
             raise RuntimeError("Unable to send telegram notification")
@@ -57,6 +62,4 @@ class TelegramAlerter(Alerter):
             self.alerter_logger.info("dry_run: would send push notification: %s", body)
 
     def _describe_action(self) -> str:
-        return "posting messages to {chatid} on Telegram".format(
-            chatid=self.telegram_chatid
-        )
+        return f"posting messages to {self.telegram_chatid} on Telegram"

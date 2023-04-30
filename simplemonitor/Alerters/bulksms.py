@@ -38,6 +38,9 @@ class BulkSMSAlerter(Alerter):
             self.sender = self.sender[:11]
 
         self.api_host = self.get_config_option("api_host", default="www.bulksms.co.uk")
+        self.timeout = cast(
+            int, self.get_config_option("timeout", required_type="int", default=5)
+        )
 
         self.support_catchup = True
 
@@ -50,7 +53,7 @@ class BulkSMSAlerter(Alerter):
 
         message = self.build_message(AlertLength.SMS, alert_type, monitor)
 
-        url = "https://{}/eapi/submission/send_sms/2/2.0".format(self.api_host)
+        url = f"https://{self.api_host}/eapi/submission/send_sms/2/2.0"
         params = {
             "username": self.username,
             "password": self.password,
@@ -62,7 +65,7 @@ class BulkSMSAlerter(Alerter):
 
         if not self._dry_run:
             try:
-                response = requests.get(url, params=params)
+                response = requests.get(url, params=params, timeout=self.timeout)
                 status = response.text
                 if not status.startswith("0"):
                     self.alerter_logger.error(

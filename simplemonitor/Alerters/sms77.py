@@ -31,6 +31,10 @@ class SMS77Alerter(Alerter):
             self.alerter_logger.warning("truncating SMS sender name to 11 chars")
             self.sender = self.sender[:11]
 
+        self.timeout = cast(
+            int, self.get_config_option("timeout", required_type="int", default=5)
+        )
+
         self.support_catchup = True
 
     def send_alert(self, name: str, monitor: Monitor) -> None:
@@ -52,7 +56,7 @@ class SMS77Alerter(Alerter):
 
         if not self._dry_run:
             try:
-                response = requests.get(url, params=params)
+                response = requests.get(url, params=params, timeout=self.timeout)
                 status = response.text
                 if not status.startswith("100"):
                     self.alerter_logger.error(

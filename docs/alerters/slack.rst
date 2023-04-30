@@ -30,3 +30,11 @@ First, set up a webhook for this to use.
     :type: string
     :required: false
     :default: a username to send to
+
+.. confval:: timeout
+
+    :type: int
+    :required: false
+    :default: ``5``
+
+    Timeout for HTTP request to Slack

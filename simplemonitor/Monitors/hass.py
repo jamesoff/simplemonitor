@@ -20,6 +20,9 @@ class MonitorSensor(Monitor):
         self.url = cast(str, self.get_config_option("url", required=True))
         self.sensor = cast(str, self.get_config_option("sensor", required=True))
         self.token = cast(str, self.get_config_option("token", default=None))
+        self.timeout = cast(
+            int, self.get_config_option("timeout", required_type="int", default=5)
+        )
 
     def describe(self) -> str:
         return "monitor the existence of a sensor"
@@ -28,12 +31,15 @@ class MonitorSensor(Monitor):
         try:
             # retrieve the status from hass API
             self.monitor_logger.debug(
-                requests.get("{}/api/states/{}".format(self.url, self.sensor)).text
+                requests.get(
+                    f"{self.url}/api/states/{self.sensor}", timeout=self.timeout
+                ).text
             )
             call = requests.get(
-                "{}/api/states/{}".format(self.url, self.sensor),
+                f"{self.url}/api/states/{self.sensor}",
+                timeout=self.timeout,
                 headers={
-                    "Authorization": "Bearer {}".format(self.token),
+                    "Authorization": f"Bearer {self.token}",
                     "Content-Type": "application/json",
                 },
             )
@@ -45,7 +51,7 @@ class MonitorSensor(Monitor):
             # a general issue getting to the API
             # nothing special to report, this monitor should be configured to be
             # dependent of general hass API availability
-            return self.record_fail("cannot get info from hass: {}".format(error))
+            return self.record_fail(f"cannot get info from hass: {error}")
         else:
             # we have a response from the API
             # now: is the sensor defined at all in hass? If not the answer is basically empty

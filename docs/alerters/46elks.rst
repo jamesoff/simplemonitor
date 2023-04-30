@@ -43,3 +43,11 @@ You will need to register for an account at 46elks_.
     :default: ``api.46elks.com``
 
     API endpoint to use
+
+.. confval:: timeout
+
+    :type: int
+    :required: false
+    :default: ``5``
+
+    Timeout for HTTP request

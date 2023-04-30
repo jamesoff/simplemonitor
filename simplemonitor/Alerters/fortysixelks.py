@@ -47,6 +47,9 @@ class FortySixElksAlerter(Alerter):
             self.sender = self.sender[:11]
 
         self.api_host = self.get_config_option("api_host", default="api.46elks.com")
+        self.timeout = cast(
+            int, self.get_config_option("timeout", required_type="int", default=5)
+        )
 
         self.support_catchup = True
 
@@ -58,13 +61,15 @@ class FortySixElksAlerter(Alerter):
             return
 
         message = self.build_message(AlertLength.SMS, alert_type, monitor)
-        url = "https://{}/a1/SMS".format(self.api_host)
+        url = f"https://{self.api_host}/a1/SMS"
         auth = (self.username, self.password)
         params = {"from": self.sender, "to": self.target, "message": message}
 
         if not self._dry_run:
             try:
-                response = requests.post(url, data=params, auth=auth)
+                response = requests.post(
+                    url, data=params, auth=auth, timeout=self.timeout
+                )
                 status = response.json()
                 if status["status"] not in ("created", "delivered"):
                     self.alerter_logger.error("Unable to send SMS: %s", status)

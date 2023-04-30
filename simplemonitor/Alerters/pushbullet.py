@@ -22,6 +22,9 @@ class PushbulletAlerter(Alerter):
         self.pushbullet_token = cast(
             str, self.get_config_option("token", required=True, allow_empty=False)
         )
+        self.timeout = cast(
+            int, self.get_config_option("timeout", required_type="int", default=5)
+        )
 
         self.support_catchup = True
 
@@ -31,7 +34,10 @@ class PushbulletAlerter(Alerter):
         _auth = requests.auth.HTTPBasicAuth(self.pushbullet_token, "")
 
         response = requests.post(
-            "https://api.pushbullet.com/v2/pushes", data=_payload, auth=_auth
+            "https://api.pushbullet.com/v2/pushes",
+            data=_payload,
+            auth=_auth,
+            timeout=self.timeout,
         )
         if not response.status_code == requests.codes.ok:
             raise RuntimeError("Unable to send Pushbullet notification")

@@ -31,3 +31,11 @@ bulksms - SMS via BulkSMS
     :required: true
 
     the number to send the SMS to. Specify using country code and number, with no ``+`` or international prefix. For example, ``447777123456`` for a UK mobile.
+
+.. confval:: timeout
+
+    :type: int
+    :required: false
+    :default: ``5``
+
+    Timeout for HTTP request

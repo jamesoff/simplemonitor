@@ -28,6 +28,9 @@ class SlackAlerter(Alerter):
 
         self.channel = cast(str, self.get_config_option("channel"))
         self.username = cast(str, self.get_config_option("username"))
+        self.timeout = cast(
+            int, self.get_config_option("timeout", required_type="int", default=5)
+        )
 
     def send_alert(self, name: str, monitor: Monitor) -> None:
         """Send the message"""
@@ -47,7 +50,7 @@ class SlackAlerter(Alerter):
         if alert_type == AlertType.NONE:
             return
         if alert_type == AlertType.FAILURE:
-            message_json["text"] = "Monitor {} failed!".format(name)
+            message_json["text"] = f"Monitor {name} failed!"
             message_json["attachments"][0]["color"] = "danger"
             fields = [
                 {
@@ -71,7 +74,7 @@ class SlackAlerter(Alerter):
                     fields.append(
                         {
                             "title": "Recovery info",
-                            "value": "Recovery info: %s" % monitor.recover_info,
+                            "value": f"Recovery info: {monitor.recover_info}",
                         }
                     )
                     message_json["attachments"][0]["color"] = "warning"
@@ -80,7 +83,7 @@ class SlackAlerter(Alerter):
             message_json["attachments"][0]["fields"] = fields
 
         elif alert_type == AlertType.SUCCESS:
-            message_json["text"] = "Monitor {} succeeded.".format(name)
+            message_json["text"] = f"Monitor {name} succeeded."
             fields = [
                 {
                     "title": "Failed at",
@@ -100,7 +103,9 @@ class SlackAlerter(Alerter):
 
         if not self._dry_run:
             try:
-                response = requests.post(self.url, json=message_json)
+                response = requests.post(
+                    self.url, json=message_json, timeout=self.timeout
+                )
                 if not response.status_code == 200:
                     self.alerter_logger.error(
                         "POST to slack webhook failed: %s", response
@@ -119,5 +124,5 @@ class SlackAlerter(Alerter):
         elif self.username:
             target = self.username
         if target:
-            return "posting to {target} on Slack".format(target=target)
+            return f"posting to {target} on Slack"
         return "posting to Slack"

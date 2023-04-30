@@ -26,3 +26,11 @@ Send SMSes via the SMS77 service.
     :default: ``SmplMntr``
 
     the sender to use for the SMS
+
+.. confval:: timeout
+
+    :type: int
+    :required: false
+    :default: ``5``
+
+    Timeout for HTTP request
