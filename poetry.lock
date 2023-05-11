@@ -2065,14 +2065,14 @@ files = [
 
 [[package]]
 name = "types-paramiko"
-version = "3.0.0.9"
+version = "3.0.0.10"
 description = "Typing stubs for paramiko"
 category = "dev"
 optional = false
 python-versions = "*"
 files = [
-    {file = "types-paramiko-3.0.0.9.tar.gz", hash = "sha256:c96791305cc4404ef250d5a0413535cdee1cef5ad0e327218b042b0b371810a6"},
-    {file = "types_paramiko-3.0.0.9-py3-none-any.whl", hash = "sha256:2d4ccf7e9929ccae9d4aea5b503e99347975de05c27d79785b2df4ae3e2dc21e"},
+    {file = "types-paramiko-3.0.0.10.tar.gz", hash = "sha256:6cbc2b6169d97ce80a25fa8e991e80c3eca36eae305a1426212772428980bf26"},
+    {file = "types_paramiko-3.0.0.10-py3-none-any.whl", hash = "sha256:ab842aa11592f52f9bdc6aa384458f02e4a6e721438028160a9c5d9e60f325b6"},
 ]
 
 [package.dependencies]
