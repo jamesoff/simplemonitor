@@ -1,4 +1,6 @@
-# coding=utf-8
+"""
+SimpleMonitor alerting via BulkSMS
+"""
 
 from typing import cast
 
@@ -10,11 +12,13 @@ from .alerter import Alerter, AlertLength, AlertType, register
 
 @register
 class BulkSMSAlerter(Alerter):
-    """Send SMS alerts using the BulkSMS service.
+    """
+    Send SMS alerts using the BulkSMS service
 
     Subscription required, see http://www.bulksms.co.uk"""
 
     alerter_type = "bulksms"
+    urgent = True
 
     def __init__(self, config_options: dict) -> None:
         super().__init__(config_options)
@@ -34,14 +38,14 @@ class BulkSMSAlerter(Alerter):
             self.sender = self.sender[:11]
 
         self.api_host = self.get_config_option("api_host", default="www.bulksms.co.uk")
+        self.timeout = cast(
+            int, self.get_config_option("timeout", required_type="int", default=5)
+        )
 
         self.support_catchup = True
 
     def send_alert(self, name: str, monitor: Monitor) -> None:
         """Send an SMS alert."""
-
-        if not monitor.urgent:
-            return
 
         alert_type = self.should_alert(monitor)
         if alert_type not in [AlertType.FAILURE, AlertType.SUCCESS]:
@@ -49,7 +53,7 @@ class BulkSMSAlerter(Alerter):
 
         message = self.build_message(AlertLength.SMS, alert_type, monitor)
 
-        url = "https://{}/eapi/submission/send_sms/2/2.0".format(self.api_host)
+        url = f"https://{self.api_host}/eapi/submission/send_sms/2/2.0"
         params = {
             "username": self.username,
             "password": self.password,
@@ -61,17 +65,19 @@ class BulkSMSAlerter(Alerter):
 
         if not self._dry_run:
             try:
-                r = requests.get(url, params=params)
-                s = r.text
-                if not s.startswith("0"):
+                response = requests.get(url, params=params, timeout=self.timeout)
+                status = response.text
+                if not status.startswith("0"):
                     self.alerter_logger.error(
-                        "Unable to send SMS: %s (%s)", s.split("|")[0], s.split("|")[1]
+                        "Unable to send SMS: %s (%s)",
+                        status.split("|")[0],
+                        status.split("|")[1],
                     )
-            except Exception:
+            except requests.exceptions.RequestException:
                 self.alerter_logger.exception("SMS sending failed")
         else:
             self.alerter_logger.info(
-                "dry_run: would send SMS: {} with message {}".format(url, message)
+                "dry_run: would send SMS: %s with message %s", url, message
             )
 
     def _describe_action(self) -> str:

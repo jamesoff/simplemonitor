@@ -1,5 +1,3 @@
-# coding=utf-8
-
 """
 Network logging support for SimpleMonitor
 """
@@ -9,7 +7,7 @@ import logging
 import socket
 import struct
 from threading import Thread
-from typing import Any, Dict, Union, cast
+from typing import Any, Dict, Optional, Union, cast
 
 from ..Monitors.monitor import Monitor
 from ..util import LoggerConfigurationError
@@ -116,7 +114,7 @@ class Listener(Thread):
         self,
         simplemonitor: Any,
         port: int,
-        key: str = None,
+        key: Optional[str] = None,
         bind_host: str = "",
         ipv4_only: bool = False,
     ) -> None:
@@ -136,6 +134,7 @@ class Listener(Thread):
                 self.sock.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, False)
             except OSError:
                 self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sock.bind((bind_host, port))
         self.simplemonitor = simplemonitor
         self.key = bytearray(key, "utf-8")
@@ -161,6 +160,9 @@ class Listener(Thread):
                         break
                     serialized += data
                 conn.close()
+                if len(serialized) == 0:
+                    self.logger.debug("No data from %s", addr[0])
+                    continue
                 self.logger.debug("Finished receiving from %s", addr[0])
                 try:
                     # first byte is the size of the MAC
@@ -218,6 +220,7 @@ class Listener(Thread):
                     self.logger.exception("Socket error caught in thread")
             except Exception:  # pylint: disable=broad-except
                 self.logger.exception("Listener thread caught exception")
+        self.logger.warning("Listener stopped")
 
     def _handle_data_v2(
         self, data: Dict[str, Union[str, int, Dict[str, dict]]], source: str

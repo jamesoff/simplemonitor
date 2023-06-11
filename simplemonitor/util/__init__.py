@@ -1,6 +1,8 @@
 """Utilities for SimpleMonitor."""
 
 import datetime
+import os
+import shutil
 import socket
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
@@ -58,6 +60,15 @@ class UpDownTime:
         self.hours = hours
         self.minutes = minutes
         self.seconds = seconds
+        if self.seconds >= 60:
+            temp_min, self.seconds = divmod(self.seconds, 60)
+            self.minutes += temp_min
+        if self.minutes >= 60:
+            temp_hour, self.minutes = divmod(self.minutes, 60)
+            self.hours += temp_hour
+        if self.hours >= 24:
+            temp_day, self.hours = divmod(self.hours, 24)
+            self.days += temp_day
 
     def __str__(self) -> str:
         """Format as d+h:m:s"""
@@ -143,7 +154,7 @@ def get_config_option(
                     "config option {0} needs to be a list of int[int,...]".format(key)
                 ) from error
         if required_type == "bool":
-            value = bool(value.lower() in ["1", "true", "yes"])
+            value = bool(str(value).lower() in ["1", "true", "yes"])
         if required_type == "[str]":
             value = [x.strip() for x in value.split(",")]
     if isinstance(value, list) and allowed_values:
@@ -180,7 +191,8 @@ def format_datetime(
 def short_hostname() -> str:
     """Get just our machine name.
 
-    TODO: This might actually be redundant. Python probably provides it's own version of this."""
+    TODO: This might actually be redundant. Python probably provides it's own version of this.
+    """
 
     return (socket.gethostname() + ".").split(".")[0]
 
@@ -190,7 +202,7 @@ def get_config_dict(
 ) -> Dict[str, str]:
     options = config.items(monitor)
     ret = {}
-    for (key, value) in options:
+    for key, value in options:
         ret[key] = value
     return ret
 
@@ -242,10 +254,10 @@ def size_string_to_bytes(s: str) -> Optional[int]:
         return None
     if s.endswith("G"):
         gigs = int(s[:-1])
-        _bytes = gigs * (1024 ** 3)
+        _bytes = gigs * (1024**3)
     elif s.endswith("M"):
         megs = int(s[:-1])
-        _bytes = megs * (1024 ** 2)
+        _bytes = megs * (1024**2)
     elif s.endswith("K"):
         kilos = int(s[:-1])
         _bytes = kilos * 1024
@@ -271,3 +283,28 @@ def bytes_to_size_string(b: int) -> str:
     if b > kb:
         return "%0.2fKiB" % (b / float(kb))
     return str(b)
+
+
+def copy_if_different(source: str, dest: str) -> bool:
+    """Copy a file from src to dest, if newer or a different size"""
+    do_copy = False
+    if not os.path.exists(source):
+        return False
+    if os.path.isdir(dest):
+        dest = os.path.join(dest, os.path.basename(source))
+    if not os.path.exists(dest):
+        do_copy = True
+    else:
+        source_fileinfo = os.stat(source)
+        dest_fileinfo = os.stat(dest)
+        if source_fileinfo.st_size != dest_fileinfo.st_size:
+            do_copy = True
+        elif source_fileinfo.st_mtime > dest_fileinfo.st_mtime:
+            do_copy = True
+    if not do_copy:
+        return False
+    try:
+        shutil.copy(source, dest)
+    except IOError:
+        return False
+    return True

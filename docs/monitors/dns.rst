@@ -41,3 +41,11 @@ Attempts to resolve the DNS record, and optionally checks the result. Requires `
     :required: false
 
     the server to send the request to. If not given, uses the system default.
+
+.. confval:: port
+
+    :type: integer
+    :required: false
+    :default: ``53``
+
+    the port on the DNS server to use

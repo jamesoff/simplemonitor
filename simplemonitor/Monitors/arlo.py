@@ -1,11 +1,10 @@
-try:
-    import pyarlo
-
-    pyarlo_available = True
-except ImportError:
-    pyarlo_available = False
+"""
+Arlo monitoring for SimpleMonitor
+"""
 
 from typing import Optional, cast
+
+import pyaarlo
 
 from ..Monitors.monitor import Monitor, register
 
@@ -20,10 +19,6 @@ class MonitorArloCamera(Monitor):
         if "gap" not in config_options:
             config_options["gap"] = 21600  # 6 hours
         super().__init__(name, config_options)
-        if not pyarlo_available:
-            self.monitor_logger.critical("pyarlo library is not installed")
-            self.monitor_logger.critical("Try: pip install pyarlo")
-            self.monitor_logger.critical("     or pip install simplemonitor[arlo]")
         self.device_name = cast(str, self.get_config_option("device_name"))
         self.minimum_battery = cast(
             int,
@@ -39,18 +34,18 @@ class MonitorArloCamera(Monitor):
             int,
             self.get_config_option("base_station_id", required_type="int", default=0),
         )
-        self.arlo = None  # type: Optional[pyarlo.PyArlo]
-        self.arlo_base = None  # type: Optional[pyarlo.ArloBaseStation]
-        self.camera = None  # type: Optional[pyarlo.ArloCamera]
+        self.arlo: Optional[pyaarlo.PyArlo] = None
+        self.arlo_base: Optional[pyaarlo.ArloBase] = None
+        self.camera: Optional[pyaarlo.ArloCamera] = None
 
     def run_test(self) -> bool:
-        if not pyarlo_available:
-            return self.record_fail("pyarlo library is not installed")
         if self.arlo is None:
             self.monitor_logger.info("logging in to Arlo")
             try:
-                self.arlo = pyarlo.PyArlo(
-                    username=self.arlo_username, password=self.arlo_password
+                self.arlo = pyaarlo.PyArlo(
+                    username=self.arlo_username,
+                    password=self.arlo_password,
+                    synchronous_mode=True,
                 )
             except Exception:
                 self.monitor_logger.exception("arlo login failed")
@@ -59,35 +54,32 @@ class MonitorArloCamera(Monitor):
             return self.record_fail("failed to get Arlo object")
         if self.arlo_base is None:
             try:
-                self.arlo_base = self.arlo.base_stations[self.base_station_id]
-            except Exception:
+                base_stations = self.arlo.base_stations
+                if base_stations:
+                    self.arlo_base = base_stations[self.base_station_id]
+            except KeyError:
                 self.monitor_logger.exception("arlo base station fetch failed")
                 return self.record_fail("could not fetch base station")
         if self.arlo_base is None:
             return self.record_fail("failed to get ArloBaseStation object")
         if self.camera is None:
-            for camera in self.arlo.cameras:
-                if camera.name == self.device_name:
-                    self.camera = camera
-            if camera is None:
+            cameras = self.arlo.cameras
+            if cameras:
+                for camera in cameras:
+                    if camera.name == self.device_name:
+                        self.camera = camera
+            if self.camera is None:
                 return self.record_fail(
                     "could not find camera named {}".format(self.device_name)
                 )
-        else:
-            self.monitor_logger.info("Updating Arlo camera")
-            try:
-                camera.update()
-            except Exception:
-                return self.record_fail("failed to update Arlo camera")
-        battery = camera.battery_level  # type: int
+        battery = self.camera.battery_level or 0  # type: int
         if battery < self.minimum_battery:
             return self.record_fail(
                 "Battery is at {}% (limit: {}%)".format(battery, self.minimum_battery)
             )
-        else:
-            return self.record_success(
-                "Battery is at {}% (limit: {}%)".format(battery, self.minimum_battery)
-            )
+        return self.record_success(
+            "Battery is at {}% (limit: {}%)".format(battery, self.minimum_battery)
+        )
 
     def describe(self) -> str:
         return "Checking Arlo camera {} has battery level of at least {}%".format(

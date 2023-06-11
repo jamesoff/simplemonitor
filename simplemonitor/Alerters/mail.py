@@ -1,6 +1,9 @@
-# coding=utf-8
-import smtplib
+"""
+SimpleMonitor alerts via email/SMTP
+"""
+
 import email.utils
+import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import Optional, cast
@@ -11,7 +14,7 @@ from .alerter import Alerter, AlertLength, AlertType, register
 
 @register
 class EMailAlerter(Alerter):
-    """Send email alerts using SMTP to a mail server."""
+    """Send email alerts using SMTP to a mail server"""
 
     alerter_type = "email"
 
@@ -40,9 +43,11 @@ class EMailAlerter(Alerter):
         self.support_catchup = True
 
     def send_alert(self, name: str, monitor: Monitor) -> None:
-        """Send the email."""
+        """Send the email"""
 
         alert_type = self.should_alert(monitor)
+        if alert_type == AlertType.NONE:
+            return
 
         message = MIMEMultipart()
         message["From"] = self.from_addr
@@ -53,8 +58,6 @@ class EMailAlerter(Alerter):
             message["CC"] = self.cc_addr.replace(";", ",")
             envelope_to.extend(self.cc_addr.split(";"))
 
-        if alert_type == AlertType.NONE:
-            return
         message["Subject"] = self.build_message(
             AlertLength.NOTIFICATION, alert_type, monitor
         )
@@ -81,12 +84,13 @@ class EMailAlerter(Alerter):
                         server.login(self.username, self.password)
                     except smtplib.SMTPNotSupportedError:
                         self.alerter_logger.exception(
-                            "You may need to add ssl=starttls and/or port=587 to your alerter config"
+                            "You may need to add ssl=starttls and/or port=587 to "
+                            "your alerter config"
                         )
                         return
                 server.sendmail(self.from_addr, envelope_to, message.as_string())
                 server.quit()
-            except Exception:
+            except smtplib.SMTPException:
                 self.alerter_logger.exception("couldn't send mail")
         else:
             self.alerter_logger.info(

@@ -1,12 +1,11 @@
-# coding=utf-8
-try:
-    import boto3
-
-    boto3_available = True
-except ImportError:
-    boto3_available = False
+"""
+SimpleMonitor alerts via Amazon SNS
+"""
 
 from typing import Dict, Optional, cast
+
+import boto3
+from botocore.exceptions import ClientError
 
 from ..Monitors.monitor import Monitor
 from ..util import AlerterConfigurationError
@@ -18,15 +17,10 @@ class SNSAlerter(Alerter):
     """Send notifications using Amazon SNS"""
 
     alerter_type = "sns"
+    urgent = True
 
     def __init__(self, config_options: dict) -> None:
         super().__init__(config_options)
-        if not boto3_available:
-            self.alerter_logger.critical(
-                "boto3 package is not available, cannot use SNSAlerter."
-            )
-            return
-
         self.topic = cast(str, self.get_config_option("topic", default=""))
         self.number = cast(str, self.get_config_option("number", default=""))
 
@@ -54,17 +48,14 @@ class SNSAlerter(Alerter):
             self.sns_client_params["aws_secret_access_key"] = aws_secret_key
 
     def send_alert(self, name: str, monitor: Monitor) -> None:
-        """Send the email."""
-
-        if not monitor.urgent:
-            return
+        """Send the alert"""
 
         alert_type = self.should_alert(monitor)
-
         if alert_type == AlertType.NONE:
             return
 
         subject = None  # type: Optional[str]
+        message = "Misconfiguration: could not build message"
         if self.topic:
             subject = self.build_message(AlertLength.NOTIFICATION, alert_type, monitor)
             message = self.build_message(AlertLength.FULL, alert_type, monitor)
@@ -80,7 +71,7 @@ class SNSAlerter(Alerter):
                     client.publish(
                         TopicArn=self.topic, Subject=subject, Message=message
                     )
-            except Exception:
+            except ClientError:
                 self.alerter_logger.exception("couldn't send notification")
         else:
             if subject is None:
@@ -95,6 +86,6 @@ class SNSAlerter(Alerter):
     def _describe_action(self) -> str:
         if self.topic:
             return "posting to SNS topic {topic}".format(topic=self.topic)
-        elif self.number:
+        if self.number:
             return "SMSing {target} via SNS".format(target=self.number)
         return "not sending anything via SNS"

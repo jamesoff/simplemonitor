@@ -1,5 +1,7 @@
 # coding=utf-8
-"""Alerting for SimpleMonitor"""
+"""
+Alerting for SimpleMonitor
+"""
 
 import datetime
 import logging
@@ -60,8 +62,9 @@ class Alerter:
     _ooh_failures = None  # type: Optional[List[str]]
     # subclasses should set this to true if they support catchup notifications for delays
     support_catchup = False
+    urgent = False
 
-    def __init__(self, config_options: dict = None) -> None:
+    def __init__(self, config_options: Optional[dict] = None) -> None:
         if config_options is None:
             config_options = {}
         self._config_options = config_options
@@ -116,17 +119,15 @@ class Alerter:
                 self.get_config_option("time_upper", required_type="str", required=True)
             )
             try:
+                time_lower_split = list(map(int, time_lower.split(":")))
+                time_upper_split = list(map(int, time_upper.split(":")))
                 time_info = [
-                    datetime.time(
-                        int(time_lower.split(":")[0]), int(time_lower.split(":")[1])
-                    ),
-                    datetime.time(
-                        int(time_upper.split(":")[0]), int(time_upper.split(":")[1])
-                    ),
+                    datetime.time(time_lower_split[0], time_lower_split[1]),
+                    datetime.time(time_upper_split[0], time_upper_split[1]),
                 ]
                 self._time_info = (time_info[0], time_info[1])
-            except Exception:
-                raise RuntimeError("error processing time limit definition")
+            except Exception as error:
+                raise RuntimeError("error processing time limit definition") from error
         self._days = cast(
             List[int],
             self.get_config_option(
@@ -158,6 +159,10 @@ class Alerter:
         )
         self._tz = cast(str, self.get_config_option("tz", default="UTC"))
         self._times_tz = cast(str, self.get_config_option("times_tz", default="local"))
+        self.urgent = cast(
+            bool,
+            self.get_config_option("urgent", default=self.urgent, required_type="bool"),
+        )
 
         if self._ooh_failures is None:
             self._ooh_failures = []
@@ -231,10 +236,26 @@ class Alerter:
         out_of_hours = False
 
         if not check_group_match(monitor.group, self.groups):
+            self.alerter_logger.debug(
+                "not alerting for %s: group mismatch (monitor: %s; alerter: %s)",
+                monitor.name,
+                monitor.group,
+                self.groups,
+            )
             return AlertType.NONE
 
         # Sanity check
         if not monitor.enabled:
+            self.alerter_logger.debug(
+                "not alerting for %s: monitor disabled", monitor.name
+            )
+            return AlertType.NONE
+
+        if self.urgent and not monitor.urgent:
+            self.alerter_logger.debug(
+                "not alerting for %s: alerter is urgent and monitor is not",
+                monitor.name,
+            )
             return AlertType.NONE
 
         if not self._allowed_today():
@@ -243,37 +264,51 @@ class Alerter:
         if not self._allowed_time():
             out_of_hours = True
 
+        # ensure OOH list is initalised to the empty list if not done
+        if self._ooh_failures is None:
+            self._ooh_failures = []
+
         virtual_failure_count = monitor.virtual_fail_count()
 
         if virtual_failure_count:
             self.alerter_logger.debug("monitor %s has failed", monitor.name)
             # Monitor has failed (not just first time)
             if self._delay_notification:
-                # Delayed notifications are enabled
+                # Delayed (catch-up) notifications are enabled
                 if not out_of_hours:
                     # Not out of hours
-                    if self._ooh_failures is not None:
-                        try:
-                            self._ooh_failures.remove(monitor.name)
-                            # if it was in there and we support catchup alerts, do it
-                            if self.support_catchup:
-                                return AlertType.CATCHUP
-                        except ValueError:
-                            pass
-                        return AlertType.FAILURE
-            # Delayed notifications are not enabled
+                    try:
+                        self._ooh_failures.remove(monitor.name)
+                        # if it was in there and we support catchup alerts, do it
+                        if self.support_catchup:
+                            self.alerter_logger.debug(
+                                "alert for monitor %s is CATCHUP", monitor.name
+                            )
+                            return AlertType.CATCHUP
+                    except ValueError:
+                        pass
+                    self.alerter_logger.debug(
+                        "alert for monitor %s is FAILURE", monitor.name
+                    )
+                    return AlertType.FAILURE
+            # Delayed notifications are not enabled (or are, and we didn't do anything above)
             if virtual_failure_count == self._limit or (
                 self._repeat and (virtual_failure_count % self._limit == 0)
             ):
                 # This is the first time or nth time we've failed
                 if out_of_hours:
-                    if (
-                        self._ooh_failures is not None
-                        and monitor.name not in self._ooh_failures
-                    ):
+                    if monitor.name not in self._ooh_failures:
                         self._ooh_failures.append(monitor.name)
-                        return AlertType.NONE
+                    self.alerter_logger.debug("not alerting for %s: OOH", monitor.name)
+                    return AlertType.NONE
+                self.alerter_logger.debug(
+                    "alert for monitor %s is FAILURE", monitor.name
+                )
                 return AlertType.FAILURE
+            self.alerter_logger.debug(
+                "not alerting for monitor %s: not failed or repeated enough",
+                monitor.name,
+            )
             return AlertType.NONE
 
         # Not failed
@@ -282,16 +317,26 @@ class Alerter:
             and monitor.last_virtual_fail_count() >= self._limit
         ):
             # was failed, and enough to have alerted
+            self.alerter_logger.debug("monitor %s has recovered", monitor.name)
             try:
-                if self._ooh_failures is not None:
-                    self._ooh_failures.remove(monitor.name)
+                self._ooh_failures.remove(monitor.name)
             except ValueError:
                 pass
             if out_of_hours:
                 if self._ooh_recovery and not self._only_failures:
+                    self.alerter_logger.debug(
+                        "alert for monitor %s is SUCCESS (OOH recovery)", monitor.name
+                    )
                     return AlertType.SUCCESS
+                self.alerter_logger.debug(
+                    "not alerting for monitor %s: OOH and not recovery/only failures",
+                    monitor.name,
+                )
                 return AlertType.NONE
             if not self._only_failures:
+                self.alerter_logger.debug(
+                    "alert for monitor %s is SUCCESS", monitor.name
+                )
                 return AlertType.SUCCESS
         return AlertType.NONE
 
@@ -344,7 +389,7 @@ class Alerter:
         if monitor.state() == MonitorState.FAILED:
             downtime = str(monitor.get_downtime())
         elif monitor.state() == MonitorState.OK:
-            downtime = str(monitor.get_uptime())
+            downtime = str(monitor.get_wasdowntime())
         else:
             downtime = ""
 
@@ -389,7 +434,7 @@ class Alerter:
             elif alert_type == AlertType.SUCCESS:
                 message = """
                 Monitor {monitor.name}{host} {alert_verb}!
-                Recovered at: {recovered_time}
+                Recovered at: {recovered_time} (was down for {downtime})
                 Additional info: {result}
                 Description: {desc}
                 """
@@ -401,7 +446,7 @@ class Alerter:
                 raise ValueError(
                     "Can't write a message for AlertType {}".format(alert_type)
                 )
-            if monitor.is_remote:
+            if monitor.is_remote():
                 host = " on {}".format(monitor.running_on)
             else:
                 host = ""

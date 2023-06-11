@@ -1,3 +1,19 @@
+1.12:
+	* Require Python 3.7+
+	* Add allow_redirects option for HTTP monitor
+	* Add port option for DNS monitor
+	* Improve reliability of network logging thread
+	* Fix display of 60 seconds up/downtime as "1:00" instead of "0:60"
+	* Add heartbeat option to Loggers
+	* Add downtime to monitor recovery message
+	* Add nextcloud alerter
+	* Add support for Ring camera
+	* Improve logic for OOH alerting
+	* Improve compound monitor alert/failure calculation
+	* Remove PyOpenSSL and use native SSL support
+	* Improve efficiency for copying HTML files around
+	* Fix double-call to record_fail in unix service monitor
+
 1.11:
 	* Run monitors multithreaded
 	* Add TLS certificate expiry monitor

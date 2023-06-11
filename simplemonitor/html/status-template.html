@@ -1,79 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-        <meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
 
-		<title>{{status}}@{{host}} monitor</title>
+    <title>{{status}}@{{host}} monitor</title>
 
-        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-		<link rel="stylesheet" type="text/css" href="style.css" />
+    <script src="main.bundle.js"></script>
 {%- if map -%}
-        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==" crossorigin=""/>
-        <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
+    <script src="maps.bundle.js"></script>
 {%- endif %}
-		<meta http-equiv="refresh" content="{{interval}}" />
-		<script language="javascript" type="text/javascript">
-			function too_old() {
-				$("#refresh_badge").removeClass("d-none");
-				$("#refresh_status").addClass("d-inline");
-				$("#summary").removeClass("border-success border-danger");
-				$("#summary").addClass("border-warning");
-			}
+    <meta http-equiv="refresh" content="{{interval}}" />
+    <script language="javascript" type="text/javascript">
+      function check_age() {
+        var generated = {{timestamp}};
+        var now = Date.parse(new Date()) / 1000;
+        var diff = now - generated;
+        if (diff > ({{interval}} * 2)) {
+          too_old();
+        }
+      }
+      </script>
+    </head>
 
-			function check_age() {
-				var generated = {{timestamp}};
-				var now = Date.parse(new Date()) / 1000;
-				var diff = now - generated;
-				if (diff > ({{interval}} * 2)) {
-					too_old();
-				}
-			}
-
-		</script>
-	</head>
-
-	<body onload="check_age();">
-		<div class="navbar navbar-light bg-light border-bottom {{status_border}}" id="summary">
-			<div class="navbar-brand">SimpleMonitor</div>
-			<div class="navbar-text d-none d-lg-block" id="updated">Updated at {{now}} by {{host}} ({{version}})</div>
-			<div class="navbar-text" id="refresh_status"><span class="badge badge-warning d-none" id="refresh_badge">OUT OF DATE</span></div>
-			<div class="navbar-text">
-                {%- if ok_count %}<span class="badge badge-success">{{ok_count}} OK</span>  {% endif %}{%- if fail_count %}<span class="badge badge-danger">{{fail_count}} FAIL</span>  {% endif %}{%- if disabled_count %}<span class="badge badge-secondary">{{disabled_count}} DISABLED</span>  {% endif %}{%- if old_count %}<span class="badge badge-warning">{{old_count}} OLD</span>  {% endif %}{%- if remote_count %}<span class="badge badge-info">{{remote_count}} remote</span>  {% endif %} </div>
-		</div>
+    <body onload="check_age();">
+      <div
+        class="navbar navbar-light bg-light border-bottom {{status_border}}"
+        id="summary"
+      >
+      <div class="container-fluid">
+        <div class="navbar-brand">SimpleMonitor</div>
+        <div class="navbar-text d-none d-lg-block" id="updated">
+          Updated at {{now}} by {{host}} ({{version}})
+        </div>
+        <div class="navbar-text" id="refresh_status">
+          <span class="badge bg-warning d-none" id="refresh_badge"
+            >OUT OF DATE</span
+          >
+        </div>
+        <div class="navbar-text">
+          {%- if ok_count %}<span class="badge bg-success">{{ok_count}} OK</span>  {% endif %}{%- if fail_count %}<span class="badge bg-danger">{{fail_count}} FAIL</span>  {% endif %}{%- if disabled_count %}<span class="badge bg-secondary">{{disabled_count}} DISABLED</span>  {% endif %}{%- if old_count %}<span class="badge bg-warning">{{old_count}} OLD</span>  {% endif %}{%- if remote_count %}<span class="badge bg-info">{{remote_count}} remote</span>  {% endif %} </div>
+        </div>
+      </div>
 {%- if map -%}
-<div id="mapid" style="fill: 1440px; height: 960px;"></div>
-	<script>
-		var mymap = L.map('mapid', {
-			center: [{{ map_start.latitude }}, {{ map_start.longitude }}],
-			zoom: {{ map_start.zoom }}
-		});
-		L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={{ map_token }}', {
-			maxZoom: 18,
-			attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, ' +
-				'<a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
-				'Imagery &copy; <a href="https://www.mapbox.com/">Mapbox</a>',
-			id: 'mapbox/streets-v11'
-		}).addTo(mymap);
+      <div id="mapid" style="fill: 1440px; height: 960px;"></div>
+      <script>
+        var mymap = L.map('mapid', {
+          center: [{{ map_start.latitude }}, {{ map_start.longitude }}],
+          zoom: {{ map_start.zoom }}
+        });
+        L.tileLayer(
+          'https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={{ map_token }}', {
+            maxZoom: 18,
+            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, ' +
+                '<a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+                'Imagery &copy; <a href="https://www.mapbox.com/">Mapbox</a>',
+            id: 'mapbox/streets-v11'
+          }).addTo(mymap);
 
-		var markerIcon1 = L.icon({
-			iconUrl: 'marker-single-up.png',
-			popupAnchor: [11,2]
-		});
-
-		var markerIcon2 = L.icon({
-			iconUrl: 'marker-single-down.png',
-			popupAnchor: [11,2]
-		});
 {% macro map_pin(entry) -%}
-		L.marker([{{entry.gps[0]}},{{entry.gps[1]}}], {
+        L.marker([{{entry.gps[0]}},{{entry.gps[1]}}], {
 {% if entry.status %}
-			icon: markerIcon1,
+            icon: markerIconUp,
 {%- else -%}
-			icon: markerIcon2,
+            icon: markerIconDown,
 {%- endif -%}
-			title: '{{entry.monitor_name}}',
-		}).addTo(mymap).bindPopup("{{entry.monitor_name}} ({{entry.status_text}}) {{entry.fail_data}}");
+            title: '{{entry.monitor_name}}',
+        }).addTo(mymap).bindPopup("{{entry.monitor_name}} ({{entry.status_text}}) {{entry.fail_data}}");
 {%- endmacro -%}
 {% for entry in fail_entries %}
 {{map_pin(entry)}}
@@ -81,23 +77,51 @@
 {% for entry in ok_entries %}
 {{map_pin(entry)}}
 {% endfor -%}
-	</script>
+      </script>
 {%- else %}
-	<table class="table table-borderless table-striped table-hover table-sm">
-		<tr>
-			<th scope="col">Monitor</th>
-			<th scope="col">Status</th>
-			<th scope="col">Host</th>
-			<th scope="col">Failed at</th>
-			<th scope="col">VFC</th>
-			<th scope="col">Up/downtime</th>
-			<th scope="col">Detail</th>
-			<th scope="col">Failures</th>
-			<th scope="col">Last Failure</th>
-			<th scope="col">Age</th>
-			</tr>
+      <table class="table table-borderless table-striped table-hover table-sm">
+        <tr>
+          <th scope="col">Monitor</th>
+          <th scope="col">Status</th>
+          <th scope="col">Host</th>
+          <th scope="col">Failed at</th>
+          <th scope="col">VFC</th>
+          <th scope="col">Up/downtime</th>
+          <th scope="col">Detail</th>
+          <th scope="col">Failures</th>
+          <th scope="col">Last Failure</th>
+          <th scope="col">Age</th>
+        </tr>
 {% macro table_row(entry) -%}
-		<tr{% if entry.row_class %} class="{{entry.row_class}}"{% endif %}><td><span data-toggle="tooltip" data-placement="right" title="{{entry.description}}">{{entry.monitor_name}}</span></td><td{% if entry.cell_class %} class="{{entry.cell_class}}"{% endif %}>{{entry.status_text}}</td><td>{{entry.host}}</td><td>{{entry.fail_time}}<td>{% if entry.fail_count %}{{entry.fail_count}}{% endif %}</td><td>{{entry.downtime}} (<span data-toggle="tooltip" data-placement="right" title="{{"%.5f" | format(entry.availability * 100)}}%">{{"%.2f" | format(entry.availability * 100)}}%</span>)</td><td>{{entry.fail_data}}</td>{% if entry.failures == 0 %}<td></td><td></td>{% else %}<td>{{entry.failures}}</td><td>{{entry.last_failure}}</td>{% endif %}<td>{% if not entry.my_host %}{{entry.age}}{% endif %}</td></tr>
+        <tr{% if entry.row_class %} class="{{entry.row_class}}"{% endif %}>
+          <td>
+            <span
+              data-toggle="tooltip"
+              data-placement="right"
+              title="{{entry.description}}"
+              >{{entry.monitor_name}}</span
+            >
+          </td>
+          <td{% if entry.cell_class %} class="{{entry.cell_class}}"{% endif %}>{{entry.status_text}}</td>
+          <td>{{entry.host}}</td>
+          <td>{{entry.fail_time}}</td>
+          <td>{% if entry.fail_count %}{{entry.fail_count}}{% endif %}</td>
+          <td>{{entry.downtime}} (<span
+              data-toggle="tooltip"
+              data-placement="right"
+              title="{{"%.5f" | format(entry.availability * 100)}}%"
+              >{{"%.2f" | format(entry.availability * 100)}}%</span
+            >)
+          </td>
+          <td>{{entry.fail_data}}</td>
+          {% if entry.failures == 0 %}
+          <td></td><td></td>
+          {% else %}
+          <td>{{entry.failures}}</td>
+          <td>{{entry.last_failure}}</td>
+          {% endif %}
+          <td>{% if not entry.my_host %}{{entry.age}}{% endif %}</td>
+        </tr>
 {%- endmacro -%}
 {% for entry in fail_entries -%}
 {{table_row(entry)}}
@@ -107,19 +131,42 @@
 {% endfor -%}
 </table>
 {%- endif %}
-<div class="navbar-text d-block d-lg-none" id="updated">Updated at {{now}}<br />by {{host}} ({{version}})</div>
-
-<div class="text-right text-muted">SimpleMonitor {{version}} <a href="https://simplemonitor.readthedocs.io/en/latest/index.html" target="_blank">&raquo; Documentation</a> | <a href="https://github.com/jamesoff/simplemonitor" target="_blank">&raquo; Code</a></div>
-
-<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
-<script language="javascript" type="text/javascript">
-$(function () {
-    $('[data-toggle="tooltip"]').tooltip();
-    check_age();
-    setTimeout(too_old, ({{interval}} * 2000));
-})
-</script>
-</body>
+    <div class="navbar-text d-block d-lg-none" id="updatedfooter">
+      Updated at {{now}}<br />by {{host}} ({{version}})
+    </div>
+    <div class="container-fluid">
+      <div class="text-end text-muted">
+        SimpleMonitor {{version}}
+        <a
+          href="https://simplemonitor.readthedocs.io/en/latest/index.html"
+          target="_blank"
+          >&raquo; Documentation</a
+        >
+        |
+        <a href="https://github.com/jamesoff/simplemonitor" target="_blank"
+          >&raquo; Code</a
+        >
+      </div>
+    </div>
+    <script language="javascript" type="text/javascript">
+      $(function () {
+        var tooltipTriggerList = [].slice.call(
+          document.querySelectorAll('[data-toggle="tooltip"]')
+        );
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+          return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+        check_age();
+        setTimeout(too_old, ({{interval}} * 2000));
+        update_props = {
+            timestamp: {{timestamp}},
+            host: "{{host}}",
+            version: "{{version}}",
+            updated: "{{now}}",
+        };
+        setInterval(update_age, 5000, update_props);
+        update_age(update_props);
+      });
+    </script>
+  </body>
 </html>

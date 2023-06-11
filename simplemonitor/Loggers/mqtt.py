@@ -1,20 +1,16 @@
-# coding=utf-8
+"""
+Simplemonitor logger for MQTT
 
-# Simplemonitor logger for MQTT
-# It is intended to be used with Home Assistant and its MQTT Discovery feature
-# (this the default topic)
-# but can be used in any other context
-# Python 3 only
-# contact: dev@swtk.info
+It is intended to be used with Home Assistant and its MQTT Discovery feature
+(this the default topic)
+but can be used in any other context
+contact: dev@swtk.info
+"""
 
-try:
-    import paho.mqtt.publish
-
-    mqtt_available = True
-except ImportError:
-    mqtt_available = False
 import json
-from typing import List, cast
+from typing import List, Optional, cast
+
+import paho.mqtt.publish
 
 from ..Monitors.monitor import Monitor
 from .logger import Logger, register
@@ -22,19 +18,17 @@ from .logger import Logger, register
 
 @register
 class MQTTLogger(Logger):
+    """Log to MQTT endpoints"""
+
     logger_type = "mqtt"
     only_failures = False
     buffered = False
     dateformat = None
 
-    def __init__(self, config_options: dict = None) -> None:
+    def __init__(self, config_options: Optional[dict] = None) -> None:
         if config_options is None:
             config_options = {}
         super().__init__(config_options)
-
-        if not mqtt_available:
-            self.logger_logger.error("Missing paho.mqtt module!")
-            return
 
         self.host = cast(
             str, self.get_config_option("host", required=True, allow_empty=False)
@@ -113,7 +107,10 @@ class MQTTLogger(Logger):
         if self.hass:
             if " " in safe_name:
                 self.logger_logger.warning(
-                    "replacing spaces with underscores for monitor %s as spaces are not supported for MQTT/HASS names",
+                    (
+                        "replacing spaces with underscores for monitor %s as spaces are "
+                        "not supported for MQTT/HASS names"
+                    ),
                     monitor.name,
                 )
                 safe_name = monitor.name.replace(" ", "_")

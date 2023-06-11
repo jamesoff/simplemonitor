@@ -1,6 +1,5 @@
-# coding=utf-8
-
-"""Logging for SimpleMonitor.
+"""
+Logging for SimpleMonitor.
 
 Loggers process every monitor, every iteration, to record their state in some fashion.
 """
@@ -54,6 +53,10 @@ class Logger:
 
         if self._global_info is None:
             self._global_info = {}
+        self.heartbeat = cast(
+            bool,
+            self.get_config_option("heartbeat", required_type="bool", default=False),
+        )
 
     def __enter__(self) -> None:
         """Context manager entry."""

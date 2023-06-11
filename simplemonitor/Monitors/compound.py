@@ -1,5 +1,6 @@
-# coding=utf-8
-"""compound checks (logical and of failure of multiple probes) for SimpleMonitor."""
+"""
+Compound checks (logical and of failure of multiple probes) for SimpleMonitor
+"""
 
 from typing import Dict, List, Optional, Tuple, cast
 from weakref import WeakValueDictionary
@@ -9,7 +10,8 @@ from .monitor import Monitor, register
 
 @register
 class CompoundMonitor(Monitor):
-    """Combine (logical-and) multiple failures for emergency escalation.
+    """
+    Combine (logical-and) multiple failures for emergency escalation
 
     Check most recent proble of provided monitors, if all are fail, then report fail.
     """
@@ -75,17 +77,8 @@ class CompoundMonitor(Monitor):
             if i not in list(self.m.keys()):
                 raise RuntimeError("No such monitor %s in compound monitor" % i)
 
-    def virtual_fail_count(self) -> int:
-        failcount = self.fail_count()
-        if failcount >= self.min_fail:
-            # greater or equal number failed: we return the real failure count
-            return failcount
-        else:
-            # we don't count failures if the specified min_fail isn't reached yet.
-            return 0
-
     def fail_count(self) -> int:
-        # increments the fail counter by 1 if a sub-monitor failed.
+        """increments the fail counter by 1 if a sub-monitor failed"""
         failcount = 0
         if self.m is not None:
             for i in self.monitors:

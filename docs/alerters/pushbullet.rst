@@ -13,3 +13,11 @@ You will need to be registered at pushbullet_.
     :required: true
 
     your pushbullet token
+
+.. confval:: timeout
+
+    :type: int
+    :required: false
+    :default: ``5``
+
+    Timeout for HTTP request

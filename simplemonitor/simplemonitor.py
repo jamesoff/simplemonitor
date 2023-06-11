@@ -402,6 +402,7 @@ class SimpleMonitor:
         """Clear all all monitors' dependency info back to default."""
         for key in list(self.monitors.keys()):
             self.monitors[key].reset_dependencies()
+            self.monitors[key].ran_this_time = False
 
     def _verify_dependencies(self) -> bool:
         """Check if all monitors have valid dependencies."""
@@ -460,6 +461,7 @@ class SimpleMonitor:
         try:
             if monitor.should_run():
                 did_run = True
+                monitor.ran_this_time = True
                 start_time = time.time()
                 monitor.run_test()
                 end_time = time.time()
@@ -585,9 +587,7 @@ class SimpleMonitor:
         logger.check_dependencies(self.failed + self.still_failing + self.skipped)
         with logger:
             for key, monitor in self.monitors.items():
-                if check_group_match(monitor.group, logger.groups):
-                    logger.save_result2(key, monitor)
-                else:
+                if not check_group_match(monitor.group, logger.groups):
                     module_logger.debug(
                         "not logging for %s due to group mismatch (monitor in group %s, "
                         "logger has groups %s",
@@ -595,6 +595,16 @@ class SimpleMonitor:
                         monitor.group,
                         logger.groups,
                     )
+                    continue
+                if logger.heartbeat and not monitor.ran_this_time:
+                    module_logger.debug(
+                        "not logging for %s as this logger is in heartbeat mode and"
+                        " the monitor did not run this loop",
+                        key,
+                    )
+                    continue
+                logger.save_result2(key, monitor)
+
             try:
                 # need to work on a copy here to prevent the dicts changing under us
                 # during the loop, as remote instances can connect and update our data
@@ -617,7 +627,7 @@ class SimpleMonitor:
     def do_alert(self, alerter: Alerter) -> None:
         """Use the given alerter object to send an alert, if needed."""
         alerter.check_dependencies(self.failed + self.still_failing + self.skipped)
-        for (name, this_monitor) in list(self.monitors.items()):
+        for name, this_monitor in list(self.monitors.items()):
             # Don't generate alerts for monitors which want it done remotely
             if this_monitor.remote_alerting:
                 module_logger.debug(
@@ -632,7 +642,7 @@ class SimpleMonitor:
             except Exception:  # pragma: no cover
                 module_logger.exception("exception caught while alerting for %s", name)
         for host_monitors in self.remote_monitors.copy().values():
-            for (name, monitor) in host_monitors.copy().items():
+            for name, monitor in host_monitors.copy().items():
                 try:
                     if monitor.remote_alerting:
                         alerter.send_alert(name, monitor)
@@ -739,7 +749,7 @@ class SimpleMonitor:
         seen_monitors = []  # type: List[str]
         if hostname not in self.remote_monitors:
             self.remote_monitors[hostname] = {}
-        for (name, state) in data.items():
+        for name, state in data.items():
             module_logger.info(
                 "updating remote monitor %s from host %s", name, hostname
             )

@@ -44,3 +44,4 @@ docs/_build
 *.log
 .tox
 pyrightconfig.json
+simplemonitor/html/node_modules

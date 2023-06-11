@@ -1,16 +1,17 @@
-# coding=utf-8
-"""Network-related monitors for SimpleMonitor."""
+"""
+Network-related monitors for SimpleMonitor
+"""
 
 import datetime
 import json
 import re
 import socket
-import subprocess
+import ssl
+import subprocess  # nosec
 import sys
-from typing import TYPE_CHECKING, List, Optional, Pattern, Tuple, Union, cast
+from typing import List, Optional, Pattern, Tuple, Union, cast
 
 import arrow
-import OpenSSL.SSL
 import requests
 from requests.auth import HTTPBasicAuth
 
@@ -23,9 +24,6 @@ try:
 except ImportError:
     pass
 
-if TYPE_CHECKING:
-    from OpenSSL.crypto import X509
-
 
 @register
 class MonitorHTTP(Monitor):
@@ -35,12 +33,13 @@ class MonitorHTTP(Monitor):
     regexp = None
     regexp_text = ""
     allowed_codes = []  # type: List[int]
+    allow_redirects = True  # type: bool
 
     monitor_type = "http"
 
     # optional - for HTTPS client authentication only
-    certfile = None
-    keyfile = None
+    certfile: Optional[str] = None
+    keyfile: Optional[str] = None
 
     # optional - headers
     headers = None
@@ -53,14 +52,20 @@ class MonitorHTTP(Monitor):
         if regexp is not None:
             self.regexp = re.compile(regexp)
             self.regexp_text = regexp
+
         self.allowed_codes = self.get_config_option(
             "allowed_codes", default=[200], required_type="[int]"
         )
+        self.allow_redirects = self.get_config_option(
+            "allow_redirects",
+            default=True,
+            required_type="bool",
+        )
 
-        # optionnal - for HTTPS client authentication only
+        # optional - for HTTPS client authentication only
         # in this case, certfile is required
-        self.certfile = config_options.get("certfile")
-        self.keyfile = config_options.get("keyfile")
+        self.certfile = cast(Optional[str], config_options.get("certfile"))
+        self.keyfile = cast(Optional[str], config_options.get("keyfile"))
         if self.certfile and not self.keyfile:
             self.keyfile = self.certfile
         if not self.certfile and self.keyfile:
@@ -78,8 +83,8 @@ class MonitorHTTP(Monitor):
             "timeout", default=5, required_type="int"
         )
 
-        self.username = config_options.get("username")
-        self.password = config_options.get("password")
+        self.username = cast(Optional[str], config_options.get("username"))
+        self.password = cast(Optional[str], config_options.get("password"))
 
     def run_test(self) -> bool:
         start_time = arrow.get()
@@ -91,22 +96,30 @@ class MonitorHTTP(Monitor):
                     timeout=self.request_timeout,
                     verify=self.verify_hostname,
                     headers=self.headers,
+                    allow_redirects=self.allow_redirects,
                 )
-            elif self.certfile is None and self.username is not None:
+            elif (
+                self.certfile is None
+                and self.username is not None
+                and self.password is not None
+            ):
                 response = requests.get(
                     self.url,
                     timeout=self.request_timeout,
                     auth=HTTPBasicAuth(self.username, self.password),
                     verify=self.verify_hostname,
                     headers=self.headers,
+                    allow_redirects=self.allow_redirects,
                 )
             else:
+                assert self.certfile is not None and self.keyfile is not None
                 response = requests.get(
                     self.url,
                     timeout=self.request_timeout,
                     cert=(self.certfile, self.keyfile),
                     verify=self.verify_hostname,
                     headers=self.headers,
+                    allow_redirects=self.allow_redirects,
                 )
 
             end_time = arrow.get()
@@ -254,7 +267,7 @@ class MonitorHost(Monitor):
 
         try:
             cmd = (self.ping_command % self.host).split(" ")
-            output = subprocess.check_output(cmd)
+            output = subprocess.check_output(cmd)  # nosec
             for line in str(output).split("\n"):
                 matches = re.search(self.ping_regexp, line)
                 if matches:
@@ -290,12 +303,10 @@ class MonitorDNS(Monitor):
     def __init__(self, name: str, config_options: dict) -> None:
         super().__init__(name, config_options)
         self.path = self.get_config_option("record", required=True)
-
         self.desired_val = self.get_config_option("desired_val")
-
         self.server = self.get_config_option("server")
-
         self.params = [self.command]
+        self.port = self.get_config_option("port", required_type="int")
 
         if self.server:
             self.params.append("@%s" % self.server)
@@ -308,9 +319,12 @@ class MonitorDNS(Monitor):
         self.params.append(self.path)
         self.params.append("+short")
 
+        if self.port:
+            self.params.extend(["-p", str(self.port)])
+
     def run_test(self) -> bool:
         try:
-            result = subprocess.check_output(self.params).decode("utf-8")
+            result = subprocess.check_output(self.params).decode("utf-8")  # nosec
             result = result.strip()
             if result is None or result == "":
                 if self.desired_val != "nxdomain":
@@ -345,7 +359,16 @@ class MonitorDNS(Monitor):
             very_end_part = " at %s" % self.server
         else:
             very_end_part = ""
-        return "Checking that DNS %s %s%s" % (mid_part, end_part, very_end_part)
+        try:
+            port_part = f" on port {self.port}" if self.port else ""
+        except AttributeError:
+            port_part = ""
+        return "Checking that DNS %s %s%s%s" % (
+            mid_part,
+            end_part,
+            very_end_part,
+            port_part,
+        )
 
     def get_params(self) -> Tuple:
         return (self.path,)
@@ -410,66 +433,55 @@ class MonitorTLSCert(Monitor):
         self.sni = cast(Optional[str], self.get_config_option("sni", required=False))
 
     def run_test(self) -> bool:
-        # Note: at time of writing, pyOpenSSL does not support TLS1.3
-        ssl_context = OpenSSL.SSL.Context(OpenSSL.SSL.TLSv1_2_METHOD)
+        # Note: at time of writing, ssl does not support TLS1.3
+        ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+        ssl_context.verify_mode = ssl.CERT_REQUIRED
+        ssl_context.check_hostname = bool(self.sni)
+        ssl_context.load_default_certs()
+
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-            try:
-                sock.connect((self.host, self.port))
-            except socket.gaierror as error:
-                self.monitor_logger.exception("Failed to connect socket")
-                return self.record_fail("Failed to connect: {}".format(error))
-            ssl_connection = OpenSSL.SSL.Connection(ssl_context, sock)
-            if self.sni:
-                ssl_connection.set_tlsext_host_name(self.sni.encode("utf-8"))
-            ssl_connection.set_connect_state()
-            try:
-                ssl_connection.do_handshake()
-                cert = ssl_connection.get_peer_certificate()  # type: Optional[X509]
-            except OpenSSL.SSL.Error:
-                self.monitor_logger.exception(
-                    "Failed SSL handshake. Unsupported SSL/TLS version (1.3)?"
-                )
-                return self.record_fail(
-                    "Failed SSL handshake. Unsupported SSL/TLS version?"
-                )
-            except Exception as error:
-                self.monitor_logger.exception(
-                    "Failed to perform handshake or get certificate"
-                )
-                return self.record_fail("Failed to connect with SSL: {}".format(error))
-            if cert is None:
-                return self.record_fail(
-                    "Did not receive a certificate from {}:{}".format(
-                        self.host, self.port
+            with ssl_context.wrap_socket(
+                sock, server_hostname=self.sni if self.sni else None
+            ) as ssl_sock:
+                try:
+                    ssl_sock.connect((self.host, self.port))
+                except socket.gaierror as error:
+                    self.monitor_logger.exception("Failed to connect socket")
+                    return self.record_fail("Failed to connect: {}".format(error))
+                except ssl.CertificateError as error:
+                    self.monitor_logger.exception(
+                        "SSL certification validation error: %s", error.verify_message
+                    )
+                    return self.record_fail(
+                        "SSL validation error: {}".format(error.verify_message)
+                    )
+                except ssl.SSLError as error:
+                    self.monitor_logger.exception("SSL Error: %s", error.reason)
+                    return self.record_fail("SSL Error: {}".format(error.reason))
+                cert = ssl_sock.getpeercert()
+                if not cert:
+                    return self.record_fail("Did not receive certifcate")
+                not_after = str(cert["notAfter"])
+                expiry = datetime.datetime.strptime(not_after, r"%b %d %H:%M:%S %Y %Z")
+                delta = expiry - datetime.datetime.utcnow()
+                days_left = delta.days
+                if days_left < self.min_days:
+                    if days_left < 0:
+                        return self.record_fail(
+                            "Certificate at {}:{} expired {} days ago".format(
+                                self.host, self.port, abs(days_left)
+                            )
+                        )
+                    return self.record_fail(
+                        "Certificate at {}:{} expires in {} days".format(
+                            self.host, self.port, days_left
+                        )
+                    )
+                return self.record_success(
+                    "Certificate at {}:{} has {} days left to expiry".format(
+                        self.host, self.port, days_left
                     )
                 )
-        expiry_date = cast(Optional[bytes], cert.get_notAfter())
-        if expiry_date is None:
-            return self.record_fail("Did not get an expiry date for certificate")
-        try:
-            expiry = datetime.datetime.strptime(expiry_date.decode(), "%Y%m%d%H%M%SZ")
-        except ValueError:
-            self.monitor_logger.exception("Failed to parse cert date format")
-            return self.record_fail("Unable to parse certificate expiry date")
-        delta = expiry - datetime.datetime.utcnow()
-        days_left = delta.days
-        if days_left < self.min_days:
-            if days_left < 0:
-                return self.record_fail(
-                    "Certificate at {}:{} expired {} days ago".format(
-                        self.host, self.port, abs(days_left)
-                    )
-                )
-            return self.record_fail(
-                "Certificate at {}:{} expires in {} days".format(
-                    self.host, self.port, days_left
-                )
-            )
-        return self.record_success(
-            "Certificate at {}:{} has {} days left to expiry".format(
-                self.host, self.port, days_left
-            )
-        )
 
     def get_params(self) -> Tuple:
         return (self.host, self.port, self.min_days)

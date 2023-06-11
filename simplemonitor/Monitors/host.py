@@ -1,3 +1,7 @@
+"""
+Monitor things on a host for SimpleMonitor
+"""
+
 import os
 import re
 import shlex
@@ -17,9 +21,9 @@ except ImportError:
 try:
     import win32api
 
-    win32_available = True
+    WIN32_AVAILABLE = True
 except ImportError:
-    win32_available = False
+    WIN32_AVAILABLE = False
 
 
 @register
@@ -32,7 +36,7 @@ class MonitorDiskSpace(Monitor):
         super().__init__(name, config_options)
         if self.is_windows(allow_cygwin=False):
             self.use_statvfs = False
-            if not win32_available:
+            if not WIN32_AVAILABLE:
                 raise RuntimeError(
                     "win32api is not available, but is needed for DiskSpace monitor."
                 )
@@ -53,8 +57,8 @@ class MonitorDiskSpace(Monitor):
                 win_result = win32api.GetDiskFreeSpaceEx(self.partition)
                 space = win_result[2]
                 percent = float(win_result[2]) / float(win_result[1]) * 100
-        except Exception as e:
-            return self.record_fail("Couldn't get free disk space: %s" % e)
+        except Exception as error:
+            return self.record_fail("Couldn't get free disk space: %s" % error)
 
         if self.limit and space <= self.limit:
             return self.record_fail(
@@ -107,8 +111,8 @@ class MonitorFileStat(Monitor):
             statinfo = os.stat(self.filename)
         except FileNotFoundError:
             return self.record_fail("File %s does not exist" % self.filename)
-        except Exception as e:
-            return self.record_fail("Unable to check file: %s" % e)
+        except Exception as error:
+            return self.record_fail("Unable to check file: %s" % error)
 
         if self.minsize:
             if statinfo.st_size < self.minsize:
@@ -177,12 +181,12 @@ class MonitorApcupsd(Monitor):
         try:
             _output = subprocess.check_output(executable)  # nosec
             output = _output.decode("utf-8")  # type: str
-        except subprocess.CalledProcessError as e:
-            output = e.output
-        except OSError as e:
-            return self.record_fail("Could not run {0}: {1}".format(executable, e))
-        except Exception as e:
-            return self.record_fail("Error while getting UPS info: {0}".format(e))
+        except subprocess.CalledProcessError as error:
+            output = error.output
+        except OSError as error:
+            return self.record_fail("Could not run {0}: {1}".format(executable, error))
+        except Exception as error:
+            return self.record_fail("Error while getting UPS info: {0}".format(error))
 
         for line in output.splitlines():
             if line.find(":") > -1:
@@ -243,12 +247,12 @@ class MonitorPortAudit(Monitor):
                 # nosec
                 _output = subprocess.check_output([self.path, "-a", "-X", "1"])  # nosec
                 output = _output.decode("utf-8")
-            except subprocess.CalledProcessError as e:
-                output = e.output
-            except OSError as e:
-                return self.record_fail("Error running %s: %s" % (self.path, e))
-            except Exception as e:
-                return self.record_fail("Error running portaudit: %s" % e)
+            except subprocess.CalledProcessError as error:
+                output = error.output
+            except OSError as error:
+                return self.record_fail("Error running %s: %s" % (self.path, error))
+            except Exception as error:
+                return self.record_fail("Error running portaudit: %s" % error)
 
             for line in output.splitlines():
                 matches = self.regexp.match(line)
@@ -261,8 +265,8 @@ class MonitorPortAudit(Monitor):
                         return self.record_fail("1 problem")
                     return self.record_fail("%d problems" % count)
             return self.record_success()
-        except Exception as e:
-            return self.record_fail("Could not run portaudit: %s" % e)
+        except Exception as error:
+            return self.record_fail("Could not run portaudit: %s" % error)
 
 
 @register
@@ -290,14 +294,14 @@ class MonitorPkgAudit(Monitor):
             try:
                 _output = subprocess.check_output([self.path, "audit"])  # nosec
                 output = _output.decode("utf-8")
-            except subprocess.CalledProcessError as e:
-                output = e.output.decode("utf-8")
-            except OSError as e:
+            except subprocess.CalledProcessError as error:
+                output = error.output.decode("utf-8")
+            except OSError as error:
                 return self.record_fail(
-                    "Failed to run %s audit: {0} {1}".format(self.path, e)
+                    "Failed to run %s audit: {0} {1}".format(self.path, error)
                 )
-            except Exception as e:
-                return self.record_fail("Error running pkg audit: {0}".format(e))
+            except Exception as error:
+                return self.record_fail("Error running pkg audit: {0}".format(error))
 
             for line in output.splitlines():
                 matches = self.regexp.match(line)
@@ -310,8 +314,8 @@ class MonitorPkgAudit(Monitor):
                         return self.record_fail("1 problem")
                     return self.record_fail("%d problems" % count)
             return self.record_success()
-        except Exception as e:
-            return self.record_fail("Could not run pkg: %s" % e)
+        except Exception as error:
+            return self.record_fail("Could not run pkg: %s" % error)
 
 
 @register
@@ -335,16 +339,15 @@ class MonitorLoadAvg(Monitor):
     def describe(self) -> str:
         if self.which == 0:
             return "Checking 1min loadavg is <= %0.2f" % self.max
-        elif self.which == 1:
+        if self.which == 1:
             return "Checking 5min loadavg is <= %0.2f" % self.max
-        else:
-            return "Checking 15min loadavg is <= %0.2f" % self.max
+        return "Checking 15min loadavg is <= %0.2f" % self.max
 
     def run_test(self) -> bool:
         try:
             loadavg = os.getloadavg()
-        except Exception as e:
-            return self.record_fail("Exception getting loadavg: %s" % e)
+        except Exception as error:
+            return self.record_fail("Exception getting loadavg: %s" % error)
 
         if loadavg[self.which] > self.max:
             return self.record_fail("%0.2f" % loadavg[self.which])
@@ -378,8 +381,7 @@ class MonitorMemory(Monitor):
         message = "{}% free".format(percent)
         if percent < self.percent_free:
             return self.record_fail(message)
-        else:
-            return self.record_success(message)
+        return self.record_success(message)
 
     def get_params(self) -> Tuple:
         return (self.percent_free,)
@@ -409,17 +411,16 @@ class MonitorSwap(Monitor):
             return self.record_fail("psutil is not installed")
         stats = psutil.swap_memory()
         percent = 100 - stats.percent
-        message = "{}% free".format(percent)
+        message = f"{percent:.2f}% free"
         if percent < self.percent_free:
             return self.record_fail(message)
-        else:
-            return self.record_success(message)
+        return self.record_success(message)
 
     def get_params(self) -> Tuple:
         return (self.percent_free,)
 
     def describe(self) -> str:
-        return "Checking for at least {}% free swap".format(self.percent_free)
+        return f"Checking for at least {self.percent_free}% free swap"
 
 
 @register
@@ -447,8 +448,8 @@ class MonitorZap(Monitor):
                         return self.record_fail("status is %s" % status)
                     return self.record_success()
             return self.record_fail("Error getting status")
-        except Exception as e:
-            return self.record_fail("Error running ztscan: %s" % e)
+        except Exception as error:
+            return self.record_fail("Error running ztscan: %s" % error)
 
     def describe(self) -> str:
         return "Checking status of zap span %d is OK" % self.span
@@ -461,7 +462,8 @@ class MonitorZap(Monitor):
 class MonitorCommand(Monitor):
     """Check the output of a command.
 
-    We can check for a regexp match in the output or give a max value and check the output is lower that this value.
+    We can check for a regexp match in the output or give a max value and check the
+    output is lower than this value.
     """
 
     result_regexp = None
@@ -476,7 +478,8 @@ class MonitorCommand(Monitor):
             self.result_regexp = re.compile(self.result_regexp_text)
             if self.result_max is not None:
                 self.monitor_logger.error(
-                    "command monitors do not support result_regexp AND result_max settings simultaneously"
+                    "command monitors do not support result_regexp AND"
+                    "result_max settings simultaneously"
                 )
                 self.result_max = None
 

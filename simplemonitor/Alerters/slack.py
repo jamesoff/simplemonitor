@@ -1,11 +1,10 @@
-try:
-    import requests
-
-    requests_available = True
-except ImportError:
-    requests_available = False
+"""
+SimpleMonitor alerts via Slack webhooks
+"""
 
 from typing import Any, Dict, cast
+
+import requests
 
 from ..Monitors.monitor import Monitor
 from ..util import format_datetime
@@ -14,7 +13,7 @@ from .alerter import Alerter, AlertType, register
 
 @register
 class SlackAlerter(Alerter):
-    """Send alerts to a Slack webhook."""
+    """Send alerts to a Slack webhook"""
 
     alerter_type = "slack"
 
@@ -23,23 +22,18 @@ class SlackAlerter(Alerter):
 
     def __init__(self, config_options: dict) -> None:
         super().__init__(config_options)
-        if not requests_available:
-            self.alerter_logger.critical(
-                "Requests package is not available, cannot use SlackAlerter."
-            )
-            self.alerter_logger.critical("Try: pip install -r requirements.txt")
-            return
-
         self.url = cast(
             str, self.get_config_option("url", required=True, allow_empty=False)
         )
 
         self.channel = cast(str, self.get_config_option("channel"))
         self.username = cast(str, self.get_config_option("username"))
+        self.timeout = cast(
+            int, self.get_config_option("timeout", required_type="int", default=5)
+        )
 
     def send_alert(self, name: str, monitor: Monitor) -> None:
-        """Send the message."""
-
+        """Send the message"""
         alert_type = self.should_alert(monitor)
         downtime = monitor.get_downtime()
 
@@ -56,7 +50,7 @@ class SlackAlerter(Alerter):
         if alert_type == AlertType.NONE:
             return
         if alert_type == AlertType.FAILURE:
-            message_json["text"] = "Monitor {} failed!".format(name)
+            message_json["text"] = f"Monitor {name} failed!"
             message_json["attachments"][0]["color"] = "danger"
             fields = [
                 {
@@ -80,7 +74,7 @@ class SlackAlerter(Alerter):
                     fields.append(
                         {
                             "title": "Recovery info",
-                            "value": "Recovery info: %s" % monitor.recover_info,
+                            "value": f"Recovery info: {monitor.recover_info}",
                         }
                     )
                     message_json["attachments"][0]["color"] = "warning"
@@ -89,7 +83,7 @@ class SlackAlerter(Alerter):
             message_json["attachments"][0]["fields"] = fields
 
         elif alert_type == AlertType.SUCCESS:
-            message_json["text"] = "Monitor {} succeeded.".format(name)
+            message_json["text"] = f"Monitor {name} succeeded."
             fields = [
                 {
                     "title": "Failed at",
@@ -109,10 +103,14 @@ class SlackAlerter(Alerter):
 
         if not self._dry_run:
             try:
-                r = requests.post(self.url, json=message_json)
-                if not r.status_code == 200:
-                    self.alerter_logger.error("POST to slack webhook failed: %s", r)
-            except Exception:
+                response = requests.post(
+                    self.url, json=message_json, timeout=self.timeout
+                )
+                if not response.status_code == 200:
+                    self.alerter_logger.error(
+                        "POST to slack webhook failed: %s", response
+                    )
+            except requests.exceptions.RequestException:
                 self.alerter_logger.exception("Failed to post to slack webhook")
         else:
             self.alerter_logger.info(
@@ -126,5 +124,5 @@ class SlackAlerter(Alerter):
         elif self.username:
             target = self.username
         if target:
-            return "posting to {target} on Slack".format(target=target)
+            return f"posting to {target} on Slack"
         return "posting to Slack"

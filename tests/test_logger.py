@@ -107,6 +107,40 @@ class TestLogger(unittest.TestCase):
             s.log_result(this_logger)
         mock_method.assert_called_once()
 
+    def test_heartbeat_off(self):
+        with patch.object(logger.Logger, "save_result2") as mock_method:
+            this_logger = logger.Logger({})
+            s = SimpleMonitor(Path("tests/monitor-empty.ini"))
+            s.add_monitor("test", MonitorNull("unnamed"))
+            s.add_logger("test", this_logger)
+            s.run_loop()
+            s.run_loop()
+            self.assertEqual(mock_method.call_count, 2)
+
+    def test_heartbeat_on(self):
+        with patch.object(logger.Logger, "save_result2") as mock_method:
+            this_logger = logger.Logger({"heartbeat": 1})
+            this_monitor = MonitorNull("unnamed", {"gap": 10})
+            s = SimpleMonitor(Path("tests/monitor-empty.ini"))
+            s.add_monitor("test", this_monitor)
+            s.add_logger("test", this_logger)
+            s.run_loop()
+            s.run_loop()
+            mock_method.assert_called_once()
+
+    def test_reset_monitor(self):
+        s = SimpleMonitor(Path("tests/monitor-empty.ini"))
+        s.add_monitor("monitor1", MonitorNull("monitor1"))
+        s.add_monitor("monitor2", MonitorNull("monitor2", {"depend": "monitor1"}))
+        s.run_loop()
+        self.assertTrue(s.monitors["monitor1"].ran_this_time)
+        self.assertTrue(s.monitors["monitor2"].ran_this_time)
+        self.assertEqual(s.monitors["monitor2"].remaining_dependencies, [])
+        s.reset_monitors()
+        self.assertFalse(s.monitors["monitor1"].ran_this_time)
+        self.assertFalse(s.monitors["monitor2"].ran_this_time)
+        self.assertEqual(s.monitors["monitor2"].remaining_dependencies, ["monitor1"])
+
 
 class TestFileLogger(unittest.TestCase):
     @freeze_time("2020-04-18 12:00+00:00")
@@ -343,14 +377,11 @@ class TestHTMLLogger(unittest.TestCase):
         return temp_htmlfile
 
     def _compare_files(self, test_file, golden_file):
-        test_fh = open(test_file, "r")
-        golden_fh = open(golden_file, "r")
         self.maxDiff = 6200
-        golden_data = golden_fh.read()
-        golden_data = golden_data.replace("__VERSION__", VERSION)
-        self.assertMultiLineEqual(golden_data, test_fh.read())
-        test_fh.close()
-        golden_fh.close()
+        with open(test_file) as test_fh, open(golden_file) as golden_fh:
+            golden_data = golden_fh.read()
+            golden_data = golden_data.replace("__VERSION__", VERSION)
+            self.assertMultiLineEqual(golden_data, test_fh.read())
 
     def test_html(self):
         test_file = self._write_html()

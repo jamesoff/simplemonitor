@@ -23,3 +23,11 @@ This monitor checks for the existence of a home automation sensor.
     :required: true
 
     API token for the sensor
+
+.. confval:: timeout
+
+    :type: int
+    :required: false
+    :default: ``5``
+
+    Timeout for HTTP request to HASS

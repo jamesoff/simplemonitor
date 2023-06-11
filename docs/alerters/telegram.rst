@@ -16,3 +16,11 @@ telegram - send to a chat
     :required: true
 
     the chat id to send to
+
+.. confval:: timeout
+
+    :type: int
+    :required: false
+    :default: ``5``
+
+    Timeout for HTTP request to Telegram

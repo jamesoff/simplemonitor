@@ -1,19 +1,19 @@
+"""
+UniFi monitoring for SimpleMonitor
+"""
+
 import re
 from typing import Dict, NoReturn, Union, cast
 
+from paramiko.client import RejectPolicy, SSHClient
+from paramiko.ssh_exception import SSHException
+
 from .monitor import Monitor, register
-
-try:
-    from paramiko.client import SSHClient, RejectPolicy
-    from paramiko.ssh_exception import SSHException
-
-    ssh2_available = True
-except ImportError:
-    ssh2_available = False
 
 
 @register
 class MonitorUnifiFailover(Monitor):
+    """Monitor USG WAN Failover"""
 
     monitor_type = "unifi_failover"
 
@@ -36,9 +36,6 @@ class MonitorUnifiFailover(Monitor):
         )
 
     def run_test(self) -> Union[NoReturn, bool]:
-        if not ssh2_available:
-            return self.record_fail("ssh2_python library is not installed")
-
         try:
             with SSHClient() as client:
                 client.set_missing_host_key_policy(RejectPolicy)
@@ -120,6 +117,7 @@ class MonitorUnifiFailover(Monitor):
 
 @register
 class MonitorUnifiFailoverWatchdog(Monitor):
+    """Monitor UniFi WAN watchdog"""
 
     monitor_type = "unifi_watchdog"
 
@@ -145,9 +143,6 @@ class MonitorUnifiFailoverWatchdog(Monitor):
         )
 
     def run_test(self) -> Union[NoReturn, bool]:
-        if not ssh2_available:
-            return self.record_fail("ssh2_python library is not installed")
-
         try:
             with SSHClient() as client:
                 client.set_missing_host_key_policy(RejectPolicy)

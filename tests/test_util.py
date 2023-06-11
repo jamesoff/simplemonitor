@@ -202,6 +202,18 @@ class TestUpDownTime(unittest.TestCase):
         u2 = util.UpDownTime(2, 2, 3, 4)
         self.assertNotEqual(u1, u2)
 
+    def test_minute(self):
+        u = util.UpDownTime(0, 0, 1, 0)
+        self.assertEqual(str(u), "0+00:01:00")
+
+    def test_60_sec(self):
+        u = util.UpDownTime(0, 0, 0, 60)
+        self.assertEqual(str(u), "0+00:01:00")
+
+    def test_values_overrun(self):
+        u = util.UpDownTime(0, 23, 59, 60)
+        self.assertEqual(str(u), "1+00:00:00")
+
 
 class TestGroupMatch(unittest.TestCase):
     def test_simple(self):

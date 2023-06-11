@@ -1,4 +1,8 @@
-# coding=utf-8
+"""
+SimpleMonitor logging to files
+"""
+
+import glob
 import json
 import logging
 import logging.handlers
@@ -15,7 +19,12 @@ import arrow
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from ..Monitors.monitor import Monitor
-from ..util import format_datetime, short_hostname, size_string_to_bytes
+from ..util import (
+    copy_if_different,
+    format_datetime,
+    short_hostname,
+    size_string_to_bytes,
+)
 from ..version import VERSION
 from .logger import Logger, register
 
@@ -40,7 +49,9 @@ class FileLogger(Logger):
         self.filename = self.get_config_option(
             "filename", required=True, allow_empty=False
         )
-        self.file_handle = open(self.filename, "a+")
+        self.file_handle = open(
+            self.filename, "a+"
+        )  # pylint: disable=consider-using-with
 
         self.only_failures = self.get_config_option(
             "only_failures", required_type="bool", default=False
@@ -92,7 +103,9 @@ class FileLogger(Logger):
         """Close and reopen log file."""
         try:
             self.file_handle.close()
-            self.file_handle = open(self.filename, "a+")
+            self.file_handle = open(
+                self.filename, "a+"
+            )  # pylint: disable=consider-using-with
         except OSError:
             self.logger_logger.exception(
                 "Couldn't reopen log file %s after HUP", self.filename
@@ -113,7 +126,7 @@ class FileLoggerNG(Logger):
     logger_type = "logfileng"
     only_failures = False
 
-    def __init__(self, config_options: dict = None) -> None:
+    def __init__(self, config_options: Optional[dict] = None) -> None:
         if config_options is None:
             config_options = {}
         super().__init__(config_options)
@@ -187,13 +200,12 @@ class HTMLLogger(Logger):
     filename = ""
     count_data = ""
 
-    def __init__(self, config_options: dict = None) -> None:
+    def __init__(self, config_options: Optional[dict] = None) -> None:
         if config_options is None:
             config_options = {}
         super().__init__(config_options)
-        package_data_dir = os.path.join(
-            os.path.dirname(sys.modules["simplemonitor"].__file__), "html"
-        )
+        package_path = sys.modules["simplemonitor"].__file__ or "."
+        package_data_dir = os.path.join(os.path.dirname(package_path), "html")
         self.filename = cast(
             str, self.get_config_option("filename", required=True, allow_empty=False)
         )
@@ -234,7 +246,11 @@ class HTMLLogger(Logger):
         else:
             self.map_start = None
         self.map_token = cast(str, self.get_config_option("map_token"))
-        self._resource_files = ["style.css"]  # type: List[str]
+        self._resource_files = [
+            "dist/main.bundle.js*",
+            "dist/maps.bundle.js*",
+            "dist/*.png",
+        ]
         self._my_host = short_hostname()
         self.status = ""
         self.header_class = ""
@@ -315,7 +331,7 @@ class HTMLLogger(Logger):
             "description": monitor.describe(),
             "link": monitor.failure_doc,
             "enabled": monitor.enabled,
-            "my_host": True if monitor.running_on == self._my_host else False,
+            "my_host": monitor.running_on == self._my_host,
             "gps": monitor.gps,
         }  # type: Dict[str, Any]
         self.batch_data[monitor.name] = data_line
@@ -411,12 +427,16 @@ class HTMLLogger(Logger):
                 return
             shutil.move(file_name, os.path.join(self.folder, self.filename))
             if self.copy_resources:
-                for filename in self._resource_files:
-                    shutil.copy(os.path.join(self.source_folder, filename), self.folder)
+                for fileglob in self._resource_files:
+                    for filename in glob.glob(
+                        os.path.join(self.source_folder, fileglob)
+                    ):
+                        if copy_if_different(
+                            os.path.join(self.source_folder, filename), self.folder
+                        ):
+                            self.logger_logger.info(f"copied {filename}")
         except OSError:
-            self.logger_logger.exception(
-                "problem closing/moving temporary file for HTML output"
-            )
+            self.logger_logger.exception("problem closing/moving files for HTML output")
         if self.upload_command:
             try:
                 subprocess.run(self.upload_command.split(" "), check=True)  # nosec
@@ -424,12 +444,14 @@ class HTMLLogger(Logger):
                 self.logger_logger.exception(
                     "Failed to run upload command for HTML files"
                 )
+            except FileNotFoundError:
+                self.logger_logger.exception("Could not find upload command")
 
     def describe(self) -> str:
         return "Writing HTML page to {0}".format(self.filename)
 
 
-class MonitorResult(object):
+class MonitorResult:
     """Represent the current status of a Monitor."""
 
     def __init__(self) -> None:
@@ -441,15 +463,17 @@ class MonitorResult(object):
         self.dependencies = []  # type: List[str]
 
     def json_representation(self) -> dict:
+        """Get JSON representation"""
         return self.__dict__
 
 
-class MonitorJsonPayload(object):
+class MonitorJsonPayload:
     def __init__(self) -> None:
         self.generated = None  # type: Optional[str]
         self.monitors = {}  # type: dict
 
     def json_representation(self) -> dict:
+        """Get JSON res""presentation"""
         return self.__dict__
 
 
@@ -468,7 +492,7 @@ class JsonLogger(Logger):
     filename = ""  # type: str
     supports_batch = True
 
-    def __init__(self, config_options: dict = None) -> None:
+    def __init__(self, config_options: Optional[dict] = None) -> None:
         if config_options is None:
             config_options = {}
         super().__init__(config_options)

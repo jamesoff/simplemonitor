@@ -1,11 +1,15 @@
+"""
+SimpleMonitor alerts via macOS Notification Center
+"""
+
+import platform
+
 try:
     import pync
 
-    pync_available = True
-except Exception:
-    pync_available = False
-
-import platform
+    PYNC_AVAILABLE = True
+except ImportError:
+    PYNC_AVAILABLE = False
 
 from ..Monitors.monitor import Monitor
 from .alerter import Alerter, AlertLength, AlertType, register
@@ -13,28 +17,23 @@ from .alerter import Alerter, AlertLength, AlertType, register
 
 @register
 class NotificationCenterAlerter(Alerter):
-    """Send alerts to the Mac OS X Notification Center."""
+    """Send alerts to the macOS Notification Center"""
 
     alerter_type = "nc"
 
     def __init__(self, config_options: dict) -> None:
         super().__init__(config_options)
-        if not pync_available:
-            self.alerter_logger.critical(
-                "Pync package is not available, which is necessary to use NotificationCenterAlerter."
-            )
-            self.alerter_logger.critical("Try: pip install -r requirements.txt")
-            return
-
-        if platform.system() != "Darwin":
+        if platform.system() != "Darwin" or not PYNC_AVAILABLE:
             self.alerter_logger.critical(
                 "This alerter (currently) only works on Mac OS X!"
             )
             return
 
     def send_alert(self, name: str, monitor: Monitor) -> None:
-        """Send the message."""
-
+        """Send the message"""
+        if not PYNC_AVAILABLE:
+            self.alerter_logger.critical("Missing pync package")
+            return
         alert_type = self.should_alert(monitor)
         message = ""
 

@@ -1,44 +1,40 @@
-# coding=utf-8
+"""
+Simplemonitor logger for seq
 
-# Simplemonitor logger for seq
-# Inspiration from https://raw.githubusercontent.com/eifinger/appdaemon-scripts/master/seqSink/seqSink.py
-# Python 3 only
+Inspiration from
+https://raw.githubusercontent.com/eifinger/appdaemon-scripts/master/seqSink/seqSink.py
+"""
 
-try:
-    import json
-    import requests
-    import datetime
+import datetime
+import json
+from typing import Optional, cast
 
-    from typing import cast
+import requests
 
-    from ..Monitors.monitor import Monitor
-    from .logger import Logger, register
-
-    is_available = True
-
-except ImportError:
-    is_available = False
+from ..Monitors.monitor import Monitor
+from .logger import Logger, register
 
 
 @register
 class SeqLogger(Logger):
+    """Logging to seq"""
+
     logger_type = "seq"
     only_failures = False
     buffered = False
     dateformat = None
 
-    def __init__(self, config_options: dict = None) -> None:
+    def __init__(self, config_options: Optional[dict] = None) -> None:
         if config_options is None:
             config_options = {}
         super().__init__(config_options)
 
-        if not is_available:
-            self.logger_logger.error("Missing modules!")
-            return
-
         # i.e. http://192.168.0.5:5341
         self.endpoint = cast(
             str, self.get_config_option("endpoint", required=True, allow_empty=False)
+        )
+        self.timeout = cast(
+            int, self.get_config_option("timeout", required_type="int", default=5)
         )
         # Potentially, would need to add a header for ApiKey
 
@@ -71,11 +67,11 @@ class SeqLogger(Logger):
 
     def describe(self) -> str:
         return "Sends simple log to seq using raw endpoint"
-        # From https://raw.githubusercontent.com/eifinger/appdaemon-scripts/master/seqSink/seqSink.py
 
     def log_to_seq(
         self, endpoint, name, app_name, monitor_type, params, description, is_fail
     ):
+        """Send an event to seq"""
         event_data = {
             "Timestamp": str(datetime.datetime.now()),
             "Level": "Error" if is_fail is True else "Information",
@@ -96,12 +92,16 @@ class SeqLogger(Logger):
         try:
             _ = json.dumps(request_body)  # This just checks it is valid...
         except TypeError:
-            self.alerter_logger.error("Could not serialise %s", request_body)
+            self.logger_logger.error("Could not serialise %s", request_body)
             return
 
         try:
-            r = requests.post(self.endpoint, json=request_body)
-            if not r.status_code == 200 and not r.status_code == 201:
-                self.alerter_logger.error("POST to seq failed with status code: %s", r)
-        except Exception:
-            self.alerter_logger.exception("Failed to log to seq")
+            response = requests.post(
+                self.endpoint, json=request_body, timeout=self.timeout
+            )
+            if not response.status_code == 200 and not response.status_code == 201:
+                self.logger_logger.error(
+                    "POST to seq failed with status code: %s", response
+                )
+        except requests.RequestException:
+            self.logger_logger.exception("Failed to log to seq")

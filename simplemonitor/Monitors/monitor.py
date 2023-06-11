@@ -1,4 +1,3 @@
-# coding=utf-8
 """A collection of monitors for the SimpleMonitor application.
 
 The Monitor class contains the monitor-independent logic for handling results etc.
@@ -108,6 +107,7 @@ class Monitor:
         self._force_run = True  # set to ensure we re-run ASAP after a HUP
         if self._first_load is None:
             self._first_load = arrow.utcnow()
+        self.ran_this_time = False
 
     def get_config_option(
         self,
@@ -182,6 +182,7 @@ class Monitor:
         return False
 
     def state(self) -> MonitorState:
+        """Get the monitor state"""
         return self._state
 
     def get_result(self) -> str:
@@ -204,6 +205,7 @@ class Monitor:
 
         TODO: remove when known safe"""
         self.monitor_logger.critical("Unexpected call to log_result()")
+        raise NotImplementedError
 
     def get_params(self) -> Tuple:
         """Override this method to return a list of parameters (for logging)"""
@@ -295,11 +297,13 @@ class Monitor:
         return True
 
     def uptime(self) -> Optional[datetime.timedelta]:
+        """Get the monitor uptime"""
         if self.uptime_start:
             return arrow.utcnow() - self.uptime_start
         return None
 
     def skipped(self) -> bool:
+        """Check if the monitor was skipped"""
         if self._state == MonitorState.SKIPPED:
             return True
         return False
@@ -322,6 +326,7 @@ class Monitor:
 
     @property
     def availability(self) -> float:
+        """Calculate the monitor's availablity"""
         if self.tests_run <= 1:
             return 0.0
         if self._first_load is not None:
@@ -337,6 +342,7 @@ class Monitor:
 
     @property
     def notify(self) -> bool:
+        """Should the monitor notify"""
         return self._notify
 
     @notify.setter
@@ -348,6 +354,7 @@ class Monitor:
 
     @property
     def urgent(self) -> bool:
+        """Is the monitor urgent"""
         return self._urgent
 
     @urgent.setter
@@ -364,6 +371,7 @@ class Monitor:
 
     @property
     def was_skipped(self) -> bool:
+        """Was the monitor skipped"""
         return self._state == MonitorState.SKIPPED
 
     def should_run(self) -> bool:
@@ -395,10 +403,12 @@ class Monitor:
         return False
 
     def last_virtual_fail_count(self) -> int:
+        """The last VFC"""
         value = self.last_error_count - self._tolerance
         return max(0, value)
 
     def attempt_recover(self) -> None:
+        """Attempt to recover, if a command is set"""
         if self._recover_command is None:
             self.recover_info = ""
             return
@@ -407,24 +417,27 @@ class Monitor:
 
         try:
             self.monitor_logger.info("Attempting recovery command")
-            p = subprocess.Popen(self._recover_command.split(" "))  # nosec
-            p.wait()
-            self.recover_info = "Command executed and returned %d" % p.returncode
-        except Exception as e:
-            self.recover_info = "Unable to run command: %s" % e
+            process = subprocess.Popen(self._recover_command.split(" "))  # nosec
+            process.wait()
+            self.recover_info = "Command executed and returned %d" % process.returncode
+        except Exception as error:
+            self.recover_info = "Unable to run command: %s" % error
 
     def run_recovered(self) -> None:
+        """Run the post-recover command, if set"""
         if self._recovered_command is None:
             self.recovered_info = ""
             return
         if self.all_better_now():
             self.monitor_logger.info("Attempting recovered command")
             try:
-                p = subprocess.Popen(self._recovered_command.split(" "))  # nosec
-                p.wait()
-                self.recovered_info = "Command executed and returned %d" % p.returncode
-            except Exception as e:
-                self.recovered_info = "Unable to run command: %s" % e
+                process = subprocess.Popen(self._recovered_command.split(" "))  # nosec
+                process.wait()
+                self.recovered_info = (
+                    "Command executed and returned %d" % process.returncode
+                )
+            except Exception as error:
+                self.recovered_info = "Unable to run command: %s" % error
 
     def post_config_setup(self) -> None:
         """any post config setup needed"""
@@ -447,15 +460,17 @@ class Monitor:
         self.monitor_logger = logging.getLogger("simplemonitor.monitor-" + self.name)
 
     def to_python_dict(self) -> dict:
+        """Get a dict of the monitor state"""
         return self.__getstate__()
 
     @classmethod
     def from_python_dict(
-        cls: Any, d: dict
+        cls: Any, load_dict: dict
     ) -> "Monitor":  # can't return Monitor type as flake8 gets cross
+        """Set up a monitor from a dict"""
         monitor = Monitor()
         monitor.__class__ = cls
-        monitor.__setstate__(d)
+        monitor.__setstate__(load_dict)
         return monitor
 
     def get_downtime(self) -> UpDownTime:
@@ -463,9 +478,16 @@ class Monitor:
         first_failure_time = self.first_failure_time()
         if first_failure_time is None:
             return UpDownTime()
-        else:
-            downtime = arrow.utcnow() - first_failure_time
+        downtime = arrow.utcnow() - first_failure_time
         return UpDownTime.from_timedelta(downtime)
+
+    def get_wasdowntime(self) -> UpDownTime:
+        """Get the downtime for our last failure"""
+        downtime_started = self._failed_at
+        downtime_ended = self.uptime_start
+        if downtime_started and downtime_ended:
+            return UpDownTime.from_timedelta(downtime_ended - downtime_started)
+        return UpDownTime()
 
     def get_uptime(self) -> UpDownTime:
         """Get monitor uptime"""
@@ -475,7 +497,7 @@ class Monitor:
         return UpDownTime.from_timedelta(uptime)
 
     def state_dict(self) -> dict:
-        """Get a dict containing state information about the Monitor to use for logging or alerting"""
+        """Get state information about the Monitor to use for logging or alerting"""
         ret = {
             "failed_at": format_datetime(self.first_failure_time()),
             "name": self.name,

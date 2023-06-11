@@ -22,7 +22,7 @@ env-test:
 	env TEST_VALUE=myenv poetry run coverage run --append monitor.py -t -f tests/monitor-env.ini
 
 unit-test:
-	poetry run pytest --cov-append --cov=simplemonitor tests
+	poetry run pytest --cov-append --cov=simplemonitor --cov-report= tests
 
 network-test:
 	rm -f master.log
@@ -61,3 +61,9 @@ docker-build:
 
 docker-compose-build:
 	docker-compose build
+
+html-bundle:
+	cd simplemonitor/html && npx webpack
+
+fix-html-tests:
+	for i in tests/html/*.html; do sed -i -E -e 's/1.12.0\+dev/__VERSION__/g' "$i"; done

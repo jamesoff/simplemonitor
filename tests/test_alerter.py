@@ -367,6 +367,30 @@ class TestAlerter(unittest.TestCase):
         m.run_test()
         self.assertEqual(a.should_alert(m), alerter.AlertType.NONE)
 
+    def test_alert_not_urgent(self):
+        a = alerter.Alerter()
+        m = monitor.MonitorFail("fail", {})
+        m.run_test()
+        self.assertEqual(a.should_alert(m), alerter.AlertType.FAILURE)
+
+    def test_no_alert_urgent(self):
+        a = alerter.Alerter({"urgent": "1"})
+        m = monitor.MonitorFail("fail", {"urgent": "0"})
+        m.run_test()
+        self.assertEqual(a.should_alert(m), alerter.AlertType.NONE)
+
+    def test_alert_urgent(self):
+        a = alerter.Alerter({"urgent": "1"})
+        m = monitor.MonitorFail("fail", {"urgent": "1"})
+        m.run_test()
+        self.assertEqual(a.should_alert(m), alerter.AlertType.FAILURE)
+
+    def test_alert_alerter_not_urgent(self):
+        a = alerter.Alerter({"urgent": "0"})
+        m = monitor.MonitorFail("fail", {"urgent": "1"})
+        m.run_test()
+        self.assertEqual(a.should_alert(m), alerter.AlertType.FAILURE)
+
 
 class TestMessageBuilding(unittest.TestCase):
     def setUp(self):
@@ -471,13 +495,12 @@ class TestMessageBuilding(unittest.TestCase):
                 ),
                 textwrap.dedent(
                     """
-                    Monitor test on {hostname} failed!
+                    Monitor test failed!
                     Failed at: {expected_time} (down 0+00:00:00)
                     Virtual failure count: 1
                     Additional info: This monitor always fails.
                     Description: A monitor which always fails.
                     """.format(
-                        hostname=util.short_hostname(),
                         expected_time=self.expected_time_string,
                     )
                 ),
@@ -493,14 +516,13 @@ class TestMessageBuilding(unittest.TestCase):
                 ),
                 textwrap.dedent(
                     """
-                    Monitor test on {hostname} failed!
+                    Monitor test failed!
                     Failed at: {expected_time} (down 0+00:00:00)
                     Virtual failure count: 1
                     Additional info: This monitor always fails.
                     Description: A monitor which always fails.
                     Documentation: whoops
                     """.format(
-                        hostname=util.short_hostname(),
                         expected_time=self.expected_time_string,
                     )
                 ),
@@ -517,16 +539,23 @@ class TestMessageBuilding(unittest.TestCase):
                 ),
                 textwrap.dedent(
                     """
-                    Monitor winning on {hostname} succeeded!
-                    Recovered at: {expected_time}
+                    Monitor winning succeeded!
+                    Recovered at: {expected_time} (was down for 0+00:00:00)
                     Additional info: 
                     Description: (Monitor did not write an auto-biography.)
                     """.format(  # noqa: W291
-                        hostname=util.short_hostname(),
                         expected_time=self.expected_time_string,
                     )
                 ),
             )
+
+    def test_was_downtime(self):
+        m = monitor.MonitorFail("test", {})
+        with freeze_time(self.freeze_time_value) as frozen_time:
+            for _ in range(0, 6):
+                m.run_test()
+                frozen_time.tick(30)
+            self.assertEqual(m.get_wasdowntime(), util.UpDownTime(0, 0, 2, 30))
 
 
 class TestMessageBuildingTZ(TestMessageBuilding):
@@ -542,6 +571,14 @@ class TestSNSAlerter(unittest.TestCase):
             sns.SNSAlerter({})
         with self.assertRaises(util.AlerterConfigurationError):
             sns.SNSAlerter({"topic": "a", "number": "b"})
+
+    def test_urgent(self):
+        a = sns.SNSAlerter({"topic": "a"})
+        self.assertEqual(a.urgent, True)
+
+    def test_not_urgent(self):
+        a = sns.SNSAlerter({"topic": "a", "urgent": 0})
+        self.assertEqual(a.urgent, False)
 
 
 class TestDescription(unittest.TestCase):

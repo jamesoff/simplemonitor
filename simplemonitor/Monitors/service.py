@@ -1,4 +1,7 @@
-# coding=utf-8
+"""
+Service monitoring for SimpleMonitor
+"""
+
 import fnmatch
 import os
 import platform
@@ -7,12 +10,9 @@ import subprocess
 import time
 from typing import Any, List, Optional, Tuple, cast
 
-from .monitor import Monitor, register
+import psutil
 
-try:
-    import psutil
-except ImportError:
-    psutil = None
+from .monitor import Monitor, register
 
 try:
     import pydbus
@@ -42,8 +42,8 @@ class MonitorSvc(Monitor):
             if result > 0:
                 return self.record_fail("svok returned %d" % int(result))
             return self.record_success()
-        except Exception as e:
-            return self.record_fail("Exception while executing svok: %s" % e)
+        except Exception as error:
+            return self.record_fail("Exception while executing svok: %s" % error)
 
     def describe(self) -> str:
         return (
@@ -103,7 +103,11 @@ class MonitorService(Monitor):
             self.monitor_logger.exception("Failed to get service")
             return self.record_fail("Unable to get service")
 
-        state = service.status().upper()
+        _state = service.status()
+        if _state:
+            state = _state.upper()
+        else:
+            state = "NONE"
         if state != self.want_state:
             return self.record_fail(
                 "Service state is {} (wanted {})".format(state, self.want_state)
@@ -159,12 +163,12 @@ class MonitorRC(Monitor):
             returncode = subprocess.check_call([self.script_path, "status"])
             if returncode == self.want_return_code:
                 return self.record_success()
-        except subprocess.CalledProcessError as e:
-            if e.returncode == self.want_return_code:
+        except subprocess.CalledProcessError as error:
+            if error.returncode == self.want_return_code:
                 return self.record_success()
             returncode = -1
-        except Exception as e:
-            return self.record_fail("Exception while executing script: %s" % e)
+        except Exception as error:
+            return self.record_fail("Exception while executing script: %s" % error)
         return self.record_fail(
             "Return code: %d (wanted %d)" % (returncode, int(self.want_return_code))
         )
@@ -187,7 +191,9 @@ class MonitorUnixService(Monitor):
 
     monitor_type = "unix_service"
 
-    def __init__(self, name: str = "unnamed", config_options: dict = None) -> None:
+    def __init__(
+        self, name: str = "unnamed", config_options: Optional[dict] = None
+    ) -> None:
         super().__init__(name=name, config_options=config_options)
         self.service_name = cast(str, self.get_config_option("service", required=True))
         self.want_state = cast(
@@ -205,18 +211,15 @@ class MonitorUnixService(Monitor):
         try:
             result = subprocess.run(
                 ["service", self.service_name, "status"],
-                check=True,
+                check=False,
                 stderr=subprocess.PIPE,
                 stdout=subprocess.PIPE,
             )  # nosec
             returncode = result.returncode
-        except subprocess.CalledProcessError as exception:
-            returncode = exception.returncode
-            if returncode == self._want_return_code:
-                return self.record_success()
-            self.record_fail(
+        except subprocess.SubprocessError as exception:
+            return self.record_fail(
                 "Failed to run 'service {} status: {}".format(
-                    self.service_name, exception.output
+                    self.service_name, exception
                 )
             )
         if returncode == self._want_return_code:
@@ -276,6 +279,8 @@ class MonitorSystemdUnit(Monitor):
 
     @classmethod
     def _list_units(cls) -> List[Any]:
+        if pydbus is None:
+            raise RuntimeError("pydbus module not installed")
         if cls._listunit_cache_expiry < time.time():
             bus = pydbus.SystemBus()
             systemd = bus.get(".systemd1")
@@ -447,13 +452,12 @@ class MonitorEximQueue(Monitor):
                         if count == 1:
                             return self.record_fail("%d message queued" % count)
                         return self.record_fail("%d messages queued" % count)
-                    else:
-                        if count == 1:
-                            return self.record_success("%d message queued" % count)
-                        return self.record_success("%d messages queued" % count)
+                    if count == 1:
+                        return self.record_success("%d message queued" % count)
+                    return self.record_success("%d messages queued" % count)
             return self.record_fail("Error getting queue size")
-        except Exception as e:
-            return self.record_fail("Error running exiqgrep: %s" % e)
+        except Exception as error:
+            return self.record_fail("Error running exiqgrep: %s" % error)
 
     def describe(self) -> str:
         return "Checking the exim queue length is < %d" % self.max_length
@@ -498,8 +502,8 @@ class MonitorWindowsDHCPScope(Monitor):
                     return self.record_fail("%d clients in scope" % clients)
                 return self.record_success("%d clients in scope" % clients)
             return self.record_fail("Error getting client count: no match")
-        except Exception as e:
-            return self.record_fail("Error getting client count: {0}".format(e))
+        except Exception as error:
+            return self.record_fail("Error getting client count: {0}".format(error))
 
     def describe(self) -> str:
         return "Checking the DHCP scope has fewer than %d leases" % self.max_used

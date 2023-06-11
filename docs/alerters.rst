@@ -96,6 +96,17 @@ These options are common to all alerter types.
 
     fire this alerter (for a failed monitor) every iteration
 
+.. confval:: urgent
+
+    :type: boolean
+    :required: false
+
+    if the alerter should be urgent or not. The default varies from alerter to
+    alerter. Typically, those which send "page" style alerts such as SMS default
+    to urgent. You can use this option to override that in e.g. the case of the
+    SNS alerter, which could be urgent if sending SMSes, but non-urgent if
+    sending emails.
+
 Time restrictions
 -----------------
 

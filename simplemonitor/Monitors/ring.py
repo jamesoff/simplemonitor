@@ -1,12 +1,13 @@
-try:
-    import ring_doorbell
-    from oauthlib.oauth2.rfc6749.errors import MissingTokenError
-except ImportError:
-    ring_doorbell = None
+"""
+Ring doorbell battery monitoring for SimpleMonitor
+"""
 
 import json
 from pathlib import Path
 from typing import Optional, cast
+
+import ring_doorbell
+from oauthlib.oauth2.rfc6749.errors import MissingTokenError
 
 from ..Monitors.monitor import Monitor, register
 from ..version import VERSION
@@ -24,11 +25,10 @@ class MonitorRingDoorbell(Monitor):
         if "gap" not in config_options:
             config_options["gap"] = 21600  # 6 hours
         super().__init__(name, config_options)
-        if ring_doorbell is None:
-            self.monitor_logger.critical("ring_doorbell library is not installed")
-            self.monitor_logger.critical("Try: pip install ring-doorbell")
-            self.monitor_logger.critical("     or pip install simplemonitor[ring]")
         self.device_name = cast(str, self.get_config_option("device_name"))
+        self.device_type = cast(
+            str, self.get_config_option("device_type", default="doorbell")
+        )
         self.minimum_battery = cast(
             int,
             self.get_config_option("minimum_battery", required_type="int", default=25),
@@ -65,8 +65,6 @@ class MonitorRingDoorbell(Monitor):
         self.cache_file.write_text(json.dumps(token))
 
     def run_test(self) -> bool:
-        if ring_doorbell is None:
-            return self.record_fail("ring_doorbell library is not installed")
         if self.ring is None:
             self.ring = ring_doorbell.Ring(self._ring_auth)
         self.ring.update_data()
@@ -75,23 +73,24 @@ class MonitorRingDoorbell(Monitor):
         # authorized_doorbots are ones shared with this account
         # the device of interest could be in either depending on how the API
         # user we're configured with relates to it
-        doorbells = devices["authorized_doorbots"]
-        doorbells.extend(devices["doorbots"])
+        if self.device_type == "doorbell":
+            doorbells = devices["authorized_doorbots"]
+            doorbells.extend(devices["doorbots"])
+        elif self.device_type == "camera":
+            doorbells = devices.get("authorized_stickup_cams", [])
+            doorbells.extend(devices["stickup_cams"])
+        else:
+            return self.record_fail(f"Unknown device type {self.device_type}")
         for doorbell in doorbells:
             if doorbell.name == self.device_name:
                 battery = int(doorbell.battery_life)
                 if battery < self.minimum_battery:
                     return self.record_fail(
-                        "Battery is at {}% (limit: {}%)".format(
-                            battery, self.minimum_battery
-                        )
+                        f"Battery is at {battery}% (limit: {self.minimum_battery}%)"
                     )
-                else:
-                    return self.record_success(
-                        "Battery is at {}% (limit: {}%)".format(
-                            battery, self.minimum_battery
-                        )
-                    )
+                return self.record_success(
+                    f"Battery is at {battery}% (limit: {self.minimum_battery}%)"
+                )
         return self.record_fail(
-            "Could not find doorbell named {}".format(self.device_name)
+            f"Could not find {self.device_type} named {self.device_name}"
         )
