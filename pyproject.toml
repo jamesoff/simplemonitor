@@ -46,6 +46,7 @@ ring-doorbell = ">=0.6.0"
 paramiko = ">=2.7.2,<4.0.0"
 importlib-metadata = "<4.3"
 pyaarlo = "^0.7.1.3"
+icmplib = "^3.0.3"
 
 [tool.poetry.dev-dependencies]
 "flake8" = "^5.0.4"

@@ -18,9 +18,8 @@ from requests.auth import HTTPBasicAuth
 from .monitor import Monitor, register
 
 try:
-    import ping3
+    from icmplib import NameLookupError, SocketPermissionError, ping
 
-    ping3.EXCEPTIONS = True
 except ImportError:
     pass
 
@@ -390,14 +389,18 @@ class MonitorPing(Monitor):
         )
 
     def run_test(self) -> bool:
-        if "ping3" not in sys.modules:
-            return self.record_fail("Missing required ping3 module")
+        if "icmplib" not in sys.modules:
+            return self.record_fail("Missing required icmplib module")
         try:
-            response_time = ping3.ping(self.host, timeout=self.timeout, unit="ms")
-            return self.record_success("Ping time {:0.3f}ms".format(response_time))
-        except ping3.errors.PingError as excepton:
-            return self.record_fail(str(excepton))
-        except PermissionError:
+            result = ping(self.host, count=1, timeout=self.timeout)
+            if result.is_alive:
+                return self.record_success(
+                    "RTT for {}: {:0.3f}ms".format(result.address, result.avg_rtt)
+                )
+            return self.record_fail(f"Host {result.address} is not alive")
+        except NameLookupError:
+            return self.record_fail(f"Failed to resolve {self.host}")
+        except SocketPermissionError:
             return self.record_fail(
                 "ping monitor requires root to work; "
                 "try the 'host' monitor if this is not an option for you"
