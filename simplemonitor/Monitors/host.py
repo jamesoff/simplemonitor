@@ -518,7 +518,7 @@ class MonitorCommand(Monitor):
                 " ".join(self.command),
                 self.result_max,
             )
-        return 'checking command "%s" has return status 0' % " ".join(self.command)
+        return "checking command '%s' has return status 0" % " ".join(self.command)
 
     def get_params(self) -> Tuple:
         return (self.command, self.result_regexp_text, self.result_max)
