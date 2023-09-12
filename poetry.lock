@@ -1617,13 +1617,13 @@ jupyter = ["ipywidgets (>=7.5.1,<9)"]
 
 [[package]]
 name = "ring-doorbell"
-version = "0.7.2"
+version = "0.7.3"
 description = "A Python library to communicate with Ring Door Bell (https://ring.com/)"
 optional = false
 python-versions = "*"
 files = [
-    {file = "ring_doorbell-0.7.2-py3-none-any.whl", hash = "sha256:b436a955faaf521f06c4d93ee51cb302e581f982ff5dfb9c4504f36c3fbabe48"},
-    {file = "ring_doorbell-0.7.2.tar.gz", hash = "sha256:0a7e82abf27086843eb39c0279f5dfccea6751ff848560e67154ca6fbfa4ef2b"},
+    {file = "ring_doorbell-0.7.3-py3-none-any.whl", hash = "sha256:59fdada07c9a2db634768065065d4cfccd726a9f0ba9494d32254f6f693b48ca"},
+    {file = "ring_doorbell-0.7.3.tar.gz", hash = "sha256:1d846e419a5db419157c505da90ba9023cd0a4b201bca1a6e36702ba6734dc63"},
 ]
 
 [package.dependencies]
