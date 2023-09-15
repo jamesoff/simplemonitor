@@ -82,11 +82,15 @@ class TestHostMonitors(unittest.TestCase):
     def test_Command_get_params(self):
         config_options = {"command": "ls /", "result_regexp": "moo", "result_max": "10"}
         m = host.MonitorCommand("test", config_options)
-        self.assertTupleEqual(m.get_params(), (["ls", "/"], "moo", None))
+        self.assertTupleEqual(m.get_params(), (["ls", "/"], "moo", None, False))
 
         config_options = {"command": "ls /", "result_max": "10"}
         m = host.MonitorCommand("test", config_options)
-        self.assertTupleEqual(m.get_params(), (["ls", "/"], "", 10))
+        self.assertTupleEqual(m.get_params(), (["ls", "/"], "", 10, False))
+
+        config_options = {"command": "ls /", "result_max": "10", "show_output": True}
+        m = host.MonitorCommand("test", config_options)
+        self.assertTupleEqual(m.get_params(), (["ls", "/"], "", 10, True))
 
 
 if __name__ == "__main__":
