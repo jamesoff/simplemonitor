@@ -526,4 +526,9 @@ class MonitorCommand(Monitor):
         return "checking command '%s' has return status 0" % " ".join(self.command)
 
     def get_params(self) -> Tuple:
-        return (self.command, self.result_regexp_text, self.result_max, self.show_output)
+        return (
+            self.command,
+            self.result_regexp_text,
+            self.result_max,
+            self.show_output
+        )
