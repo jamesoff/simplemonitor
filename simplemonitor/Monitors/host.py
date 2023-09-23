@@ -8,6 +8,7 @@ import shlex
 import subprocess  # nosec
 import time
 from typing import Tuple, cast
+
 from markupsafe import escape
 
 from ..util import bytes_to_size_string, size_string_to_bytes
@@ -483,7 +484,9 @@ class MonitorCommand(Monitor):
                     "result_max settings simultaneously"
                 )
                 self.result_max = None
-        self.show_output = self.get_config_option("show_output", required_type="bool", default=False)
+        self.show_output = self.get_config_option(
+            "show_output", required_type="bool", default=False
+        )
 
         command = self.get_config_option("command", required=True, allow_empty=False)
         self.command = shlex.split(command)
@@ -530,5 +533,5 @@ class MonitorCommand(Monitor):
             self.command,
             self.result_regexp_text,
             self.result_max,
-            self.show_output
+            self.show_output,
         )
