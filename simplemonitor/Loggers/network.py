@@ -152,6 +152,7 @@ class Listener(Thread):
             try:
                 self.sock.listen(5)
                 conn, addr = self.sock.accept()
+                conn.settimeout(5.0)
                 self.logger.debug("Got connection from %s", addr[0])
                 serialized = bytearray()
                 while 1:
@@ -208,6 +209,9 @@ class Listener(Thread):
                         version,
                         addr[0],
                     )
+            except socket.timeout:
+                self.logger.warning("Timeout during recv from %s", addr[0])
+                conn.close()
             except socket.error as exception:
                 if exception.errno == 4:
                     # Interrupted system call
