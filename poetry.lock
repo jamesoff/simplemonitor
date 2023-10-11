@@ -722,13 +722,13 @@ test = ["black", "coverage[toml]", "ddt (>=1.1.1,!=1.4.3)", "mypy", "pre-commit"
 
 [[package]]
 name = "icmplib"
-version = "3.0.3"
-description = "The power to forge ICMP packets and do ping and traceroute."
+version = "3.0.4"
+description = "Easily forge ICMP packets and make your own ping and traceroute."
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "icmplib-3.0.3-py3-none-any.whl", hash = "sha256:607cf7bbd02b161f0bfcf205c288c7b5e22f1d99ee1d95184326ac85eefefe8b"},
-    {file = "icmplib-3.0.3.tar.gz", hash = "sha256:e4fbda6ab3e0ffa5c2eedc7ffe4134b4abd4c3e3873ce576e58c56af57805afb"},
+    {file = "icmplib-3.0.4-py3-none-any.whl", hash = "sha256:336b75c6c23c5ce99ddec33f718fab09661f6ad698e35b6f1fc7cc0ecf809398"},
+    {file = "icmplib-3.0.4.tar.gz", hash = "sha256:57868f2cdb011418c0e1d5586b16d1fabd206569fe9652654c27b6b2d6a316de"},
 ]
 
 [[package]]
