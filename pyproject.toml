@@ -70,7 +70,7 @@ types-pyOpenSSL = "^23.1.0"
 types-setuptools = "^68.2.0"
 
 [tool.poetry.group.dev.dependencies]
-ruff = ">=0.0.265,<0.0.293"
+ruff = ">=0.0.265,<0.1.5"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
