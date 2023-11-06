@@ -415,13 +415,13 @@ importlib-metadata = {version = "*", markers = "python_version < \"3.8\""}
 
 [[package]]
 name = "cloudscraper"
-version = "1.2.69"
+version = "1.2.71"
 description = "A Python module to bypass Cloudflare's anti-bot page."
 optional = false
 python-versions = "*"
 files = [
-    {file = "cloudscraper-1.2.69-py2.py3-none-any.whl", hash = "sha256:ad1e70be61fa071bc9a1409c2f419687b49a1780405ad8a226df59b52fb135db"},
-    {file = "cloudscraper-1.2.69.tar.gz", hash = "sha256:1ff4befeeae63a67076c0264515162935981dd5d51552f052dc266bf64997345"},
+    {file = "cloudscraper-1.2.71-py2.py3-none-any.whl", hash = "sha256:76f50ca529ed2279e220837befdec892626f9511708e200d48d5bb76ded679b0"},
+    {file = "cloudscraper-1.2.71.tar.gz", hash = "sha256:429c6e8aa6916d5bad5c8a5eac50f3ea53c9ac22616f6cb21b18dcc71517d0d3"},
 ]
 
 [package.dependencies]
@@ -1209,18 +1209,20 @@ files = [
 
 [[package]]
 name = "pyaarlo"
-version = "0.7.1.3"
+version = "0.8.0.2"
 description = "PyAarlo is a library that provides asynchronous access to Arlo security cameras."
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.7"
 files = [
-    {file = "pyaarlo-0.7.1.3-py3-none-any.whl", hash = "sha256:69df6135b68c1eb4a44e68eb50ab5b53d9c23c436d62b2db77182d1c465b14d7"},
-    {file = "pyaarlo-0.7.1.3.tar.gz", hash = "sha256:1ca28a4b1e65aec9a54f6eb62ede6c6164278ba2b83dcbd85e5ce65fa3004f8f"},
+    {file = "pyaarlo-0.8.0.2-py3-none-any.whl", hash = "sha256:02279795c88765b0f78fc1511855d364ec556870b8c8bc84fc3c68a13987d063"},
+    {file = "pyaarlo-0.8.0.2.tar.gz", hash = "sha256:60f551368acd5fa6f3001949fd3bbcadcd578357f548545e3dbff62ae3a84100"},
 ]
 
 [package.dependencies]
 click = "*"
-cloudscraper = "*"
+cloudscraper = ">=1.2.71"
+cryptography = "*"
+paho-mqtt = "*"
 pycryptodome = "*"
 requests = "*"
 unidecode = "*"
@@ -2252,4 +2254,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.7.0"
-content-hash = "374e825fc0102e1fbb1570af61b18eb01fce4241c7e2f7362fe833b2014afdbc"
+content-hash = "ce4d4ae122c9ae8b1db042b13abfc383d483bc3ae84f008e4b1e326678e3a704"
