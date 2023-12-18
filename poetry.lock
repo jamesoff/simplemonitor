@@ -2019,13 +2019,13 @@ files = [
 
 [[package]]
 name = "types-paramiko"
-version = "3.0.0.9"
+version = "3.3.0.2"
 description = "Typing stubs for paramiko"
 optional = false
-python-versions = "*"
+python-versions = ">=3.7"
 files = [
-    {file = "types-paramiko-3.0.0.9.tar.gz", hash = "sha256:c96791305cc4404ef250d5a0413535cdee1cef5ad0e327218b042b0b371810a6"},
-    {file = "types_paramiko-3.0.0.9-py3-none-any.whl", hash = "sha256:2d4ccf7e9929ccae9d4aea5b503e99347975de05c27d79785b2df4ae3e2dc21e"},
+    {file = "types-paramiko-3.3.0.2.tar.gz", hash = "sha256:4615fa0bc5b78c0f1b68b106071dc29737cb2cf53903712df72785dad5b359c3"},
+    {file = "types_paramiko-3.3.0.2-py3-none-any.whl", hash = "sha256:18fe96e6ef78ca04b2ac2a111f9404409b31a1d28bb2f5dca1a1afd62b8351a9"},
 ]
 
 [package.dependencies]
@@ -2254,4 +2254,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.7.0"
-content-hash = "df5f1754abdb2671b92ad7abe6ce49590af33bd9a11712b75f61c8de17bf39ee"
+content-hash = "f1ed3fa0292b65f2d30207f956700c35fb3caa04624150bd1f04744d8176ba2f"
