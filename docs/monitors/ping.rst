@@ -20,4 +20,10 @@ Pings a host to make sure it’s up. Uses a Python ping module instead of callin
 
     the timeout for the ping in seconds
 
-.. _pkgaudit:
+.. confval:: count
+
+    :type: int
+    :required: false
+    :default: ``1``
+
+    the number of pings to send

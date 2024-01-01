@@ -236,17 +236,21 @@ class MonitorHost(Monitor):
         )
         ping_ms = str(ping_ttl * 1000)
         ping_ttl = str(ping_ttl)
+        self.count = cast(
+            int,
+            self.get_config_option("count", required_type="int", default=1, minimum=1),
+        )
         platform = sys.platform
         if platform in ["win32", "cygwin"]:
-            self.ping_command = "ping -n 1 -w " + ping_ms + " %s"
+            self.ping_command = f"ping -n {self.count} -w " + ping_ms + " %s"
             self.ping_regexp = r"Reply from [0-9a-f:.]+:.+time[=<]\d+ms"
             self.time_regexp = r"Average = (?P<ms>\d+)ms"
         elif platform.startswith("freebsd") or platform.startswith("darwin"):
-            self.ping_command = "ping -c1 -t" + ping_ttl + " %s"
+            self.ping_command = f"ping -c{self.count} -t" + ping_ttl + " %s"
             self.ping_regexp = "bytes from"
             self.time_regexp = r"min/avg/max/stddev = [\d.]+/(?P<ms>[\d.]+)/"
         elif platform.startswith("linux"):
-            self.ping_command = "ping -c1 -W" + ping_ttl + " %s"
+            self.ping_command = f"ping -c{self.count} -W" + ping_ttl + " %s"
             self.ping_regexp = "bytes from"
             self.time_regexp = r"min/avg/max/stddev = [\d.]+/(?P<ms>[\d.]+)/"
         else:
@@ -387,12 +391,16 @@ class MonitorPing(Monitor):
         self.timeout = cast(
             int, self.get_config_option("timeout", required_type="int", default=5)
         )
+        self.count = cast(
+            int,
+            self.get_config_option("count", required_type="int", default=1, minimum=1),
+        )
 
     def run_test(self) -> bool:
         if "icmplib" not in sys.modules:
             return self.record_fail("Missing required icmplib module")
         try:
-            result = ping(self.host, count=1, timeout=self.timeout)
+            result = ping(self.host, count=self.count, timeout=self.timeout)
             if result.is_alive:
                 return self.record_success(
                     "RTT for {}: {:0.3f}ms".format(result.address, result.avg_rtt)
@@ -407,10 +415,12 @@ class MonitorPing(Monitor):
             )
 
     def get_params(self) -> Tuple:
-        return (self.host, self.timeout)
+        return (self.host, self.timeout, self.count)
 
     def describe(self) -> str:
-        return "Checking {} pings within {} seconds".format(self.host, self.timeout)
+        return "Checking {} pings within {} seconds ({} attempt(s))".format(
+            self.host, self.timeout, self.count
+        )
 
 
 @register

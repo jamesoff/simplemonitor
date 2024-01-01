@@ -27,3 +27,11 @@ Check a host is pingable.
     :default: automatic
 
     the regexp which matches the ping time in the output. Must set a match group named ``ms``. You may need to set this as above.
+
+.. confval:: count
+
+    :type: int
+    :required: false
+    :default: ``1``
+
+    the number of pings to send
