@@ -159,7 +159,7 @@ class SimpleMonitor:
         config.read(filenames)
         module_logger.info(
             "Loaded monitor config from: %s",
-            ", ".join(map(lambda x: str(x), filenames)),
+            ", ".join(map(str, filenames)),
         )
         monitors = config.sections()
         if "defaults" in monitors:
