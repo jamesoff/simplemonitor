@@ -124,10 +124,10 @@ def get_config_option(
 
     value = config_options.get(key, default)
     if required and value is None:
-        raise ValueError("config option {0} is missing and is required".format(key))
+        raise ValueError(f"config option {key} is missing and is required")
     if isinstance(value, str) and required_type:
         if required_type == "str" and value == "" and not allow_empty:
-            raise ValueError("config option {0} cannot be empty".format(key))
+            raise ValueError(f"config option {key} cannot be empty")
         if required_type in ["int", "float"]:
             try:
                 if required_type == "int":
@@ -136,37 +136,37 @@ def get_config_option(
                     value = float(value)
             except TypeError as error:
                 raise TypeError(
-                    "config option {0} needs to be an {1}".format(key, required_type)
+                    f"config option {key} needs to be an {required_type}"
                 ) from error
             if minimum is not None and value < minimum:
-                raise ValueError(
-                    "config option {0} needs to be >= {1}".format(key, minimum)
-                )
+                raise ValueError(f"config option {key} needs to be >= {minimum}")
             if maximum is not None and value > maximum:
-                raise ValueError(
-                    "config option {0} needs to be <= {1}".format(key, maximum)
-                )
+                raise ValueError(f"config option {key} needs to be <= {minimum}")
         if required_type == "[int]":
+            if not isinstance(value, str):
+                raise ValueError(
+                    f"config option {key} needs to be a list of int,int,..."
+                )
             try:
                 value = [int(x) for x in value.split(",")]
             except ValueError as error:
                 raise ValueError(
-                    "config option {0} needs to be a list of int[int,...]".format(key)
+                    f"config option {key} needs to be a list of int[int,...]"
                 ) from error
         if required_type == "bool":
             value = bool(str(value).lower() in ["1", "true", "yes"])
         if required_type == "[str]":
+            if not isinstance(value, str):
+                raise ValueError(
+                    f"config option {key} needs to be a list of int,int,..."
+                )
             value = [x.strip() for x in value.split(",")]
     if isinstance(value, list) and allowed_values:
-        if not all([x in allowed_values for x in value]):
-            raise ValueError(
-                "config option {0} needs to be one of {1}".format(key, allowed_values)
-            )
+        if not all(x in allowed_values for x in value):
+            raise ValueError(f"config option {key} needs to be one of {allowed_values}")
     else:
         if allowed_values is not None and value not in allowed_values:
-            raise ValueError(
-                "config option {0} needs to be one of {1}".format(key, allowed_values)
-            )
+            raise ValueError(f"config option {key} needs to be one of {allowed_values}")
     return value
 
 
