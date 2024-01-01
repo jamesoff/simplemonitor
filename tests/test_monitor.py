@@ -15,7 +15,6 @@ from simplemonitor.util import MonitorState, UpDownTime
 
 
 class TestMonitor(unittest.TestCase):
-
     safe_config = {"partition": "/", "limit": "10G"}
 
     one_KB = 1024
@@ -207,7 +206,7 @@ class TestMonitor(unittest.TestCase):
 
     def test_sighup(self):
         m = SimpleMonitor("tests/monitor-empty.ini")
-        m._load_monitors(Path("tests/monitors-prehup.ini"))
+        m._load_monitors([Path("tests/monitors-prehup.ini")])
         self.assertEqual(m._need_hup, False, "need_hup did not start False")
         m._handle_sighup(None, None)
         self.assertEqual(m._need_hup, True, "need_hup did not get set to True")
@@ -226,7 +225,7 @@ class TestMonitor(unittest.TestCase):
             m.monitors["monitor2"].host, "127.0.0.1", "monitor2 did not load correctly"
         )
 
-        m._load_monitors(Path("tests/monitors-posthup.ini"))
+        m._load_monitors([Path("tests/monitors-posthup.ini")])
         self.assertEqual(
             m.monitors["monitor1"].monitor_type, "null", "monitor1 changed type"
         )
