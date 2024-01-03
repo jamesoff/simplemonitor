@@ -406,7 +406,7 @@ class TestMessageBuilding(unittest.TestCase):
                 self.test_alerter.build_message(
                     alerter.AlertLength.NOTIFICATION, alerter.AlertType.FAILURE, m
                 ),
-                "Monitor test failed",
+                "Monitor test on %s failed" % self.test_alerter.hostname,
             )
 
     def test_notification_format_success(self):
@@ -418,7 +418,7 @@ class TestMessageBuilding(unittest.TestCase):
                 self.test_alerter.build_message(
                     alerter.AlertLength.NOTIFICATION, alerter.AlertType.SUCCESS, m
                 ),
-                "Monitor winning succeeded",
+                "Monitor winning on %s succeeded" % self.test_alerter.hostname,
             )
 
     def test_oneline_format_failure(self):
@@ -429,7 +429,7 @@ class TestMessageBuilding(unittest.TestCase):
                 self.test_alerter.build_message(
                     alerter.AlertLength.ONELINE, alerter.AlertType.FAILURE, m
                 ),
-                "failure: test failed on {hostname} at {expected_time} (0+00:00:00): This monitor always fails.".format(
+                "failure: test on {hostname} failed at {expected_time} (0+00:00:00): This monitor always fails.".format(
                     hostname=util.short_hostname(),
                     expected_time=self.expected_time_string,
                 ),
@@ -442,7 +442,7 @@ class TestMessageBuilding(unittest.TestCase):
                 m.run_test()
             m.last_result = "a " * 80
             desired = (
-                "success: winning succeeded on {hostname} at  (0+00:00:00): ".format(
+                "success: winning on {hostname} succeeded at  (0+00:00:00): ".format(
                     hostname=util.short_hostname()
                 )
                 + "a " * 80
@@ -460,7 +460,7 @@ class TestMessageBuilding(unittest.TestCase):
                 self.test_alerter.build_message(
                     alerter.AlertLength.SMS, alerter.AlertType.FAILURE, m
                 ),
-                "failure: test failed on {hostname} at {expected_time} (0+00:00:00): This monitor always fails.".format(
+                "failure: test on {hostname} failed at {expected_time} (0+00:00:00): This monitor always fails.".format(
                     hostname=util.short_hostname(),
                     expected_time=self.expected_time_string,
                 ),
@@ -477,7 +477,7 @@ class TestMessageBuilding(unittest.TestCase):
                     alerter.AlertLength.SMS, alerter.AlertType.SUCCESS, m
                 ),
                 textwrap.shorten(
-                    "success: winning succeeded on {hostname} at (0+00:00:00): {a}".format(
+                    "success: winning on {hostname} succeeded at (0+00:00:00): {a}".format(
                         hostname=util.short_hostname(), a=m.last_result
                     ),
                     width=160,
@@ -495,13 +495,14 @@ class TestMessageBuilding(unittest.TestCase):
                 ),
                 textwrap.dedent(
                     """
-                    Monitor test failed!
+                    Monitor test on {hostname} failed!
                     Failed at: {expected_time} (down 0+00:00:00)
                     Virtual failure count: 1
                     Additional info: This monitor always fails.
                     Description: A monitor which always fails.
                     """.format(
                         expected_time=self.expected_time_string,
+                        hostname=self.test_alerter.hostname,
                     )
                 ),
             )
@@ -516,7 +517,7 @@ class TestMessageBuilding(unittest.TestCase):
                 ),
                 textwrap.dedent(
                     """
-                    Monitor test failed!
+                    Monitor test on {host} failed!
                     Failed at: {expected_time} (down 0+00:00:00)
                     Virtual failure count: 1
                     Additional info: This monitor always fails.
@@ -524,6 +525,7 @@ class TestMessageBuilding(unittest.TestCase):
                     Documentation: whoops
                     """.format(
                         expected_time=self.expected_time_string,
+                        host=self.test_alerter.hostname,
                     )
                 ),
             )
@@ -539,12 +541,13 @@ class TestMessageBuilding(unittest.TestCase):
                 ),
                 textwrap.dedent(
                     """
-                    Monitor winning succeeded!
+                    Monitor winning on {host} succeeded!
                     Recovered at: {expected_time} (was down for 0+00:00:00)
                     Additional info: 
                     Description: (Monitor did not write an auto-biography.)
                     """.format(  # noqa: W291
                         expected_time=self.expected_time_string,
+                        host=self.test_alerter.hostname,
                     )
                 ),
             )
