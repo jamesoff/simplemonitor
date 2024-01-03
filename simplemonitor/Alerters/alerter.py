@@ -393,14 +393,20 @@ class Alerter:
         else:
             downtime = ""
 
+        host = " on {}".format(
+            monitor.running_on if monitor.is_remote() else self.hostname
+        )
+
         max_length = None  # type: Optional[int]
         if length == AlertLength.NOTIFICATION:
-            message = "Monitor {monitor.name} {alert_verb}".format(
-                monitor=monitor, alert_verb=Alerter._get_verb(alert_type)
+            message = "Monitor {monitor.name}{host} {alert_verb}".format(
+                monitor=monitor,
+                alert_verb=Alerter._get_verb(alert_type),
+                host=host,
             )
         elif length in [AlertLength.SMS, AlertLength.ONELINE]:
             message = (
-                "{alert_type}: {monitor.name} {alert_verb} on {monitor.running_on} "
+                "{alert_type}: {monitor.name}{host} {alert_verb} "
                 "at {failure_time} ({downtime}): {result}"
             ).format(
                 alert_type=alert_type.value,
@@ -408,6 +414,7 @@ class Alerter:
                 downtime=downtime,
                 failure_time=format_datetime(monitor.first_failure_time(), self._tz),
                 monitor=monitor,
+                host=host,
                 result=monitor.get_result(),
             )
             if length == AlertLength.SMS:
@@ -446,10 +453,6 @@ class Alerter:
                 raise ValueError(
                     "Can't write a message for AlertType {}".format(alert_type)
                 )
-            if monitor.is_remote():
-                host = " on {}".format(monitor.running_on)
-            else:
-                host = ""
             message = message.format(
                 alert_type=alert_type,
                 monitor=monitor,
