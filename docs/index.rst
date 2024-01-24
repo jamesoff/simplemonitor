@@ -85,7 +85,7 @@ Some of the options include (for the complete list, see :ref:`Loggers<loggers-li
 * Sending a message via BulkSMS, Amazon Simple Notification Service (SNS), Telegram, Slack, MQTT (with HomeBridge support) and more
 * Writing an HTML status page
 * Writing an entry to the syslog (non-Windows only)
-* Executing arbitary commands on monitor failure and recovery
+* Executing arbitrary commands on monitor failure and recovery
 
 Other features
 --------------

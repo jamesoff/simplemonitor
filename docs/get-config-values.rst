@@ -5,7 +5,7 @@ Getting configuration values
 
 When loading configuration values for Monitors, Alerters and Loggers, you can use the `get_config_option()` function to perform sanity checks on the loaded config.
 
-.. py:function:: get_config_option(config_options: dict, key: str, [default=None[, required=False[, required_type="str"[, allowed_values=None[, allow_empty=True[, mininum=None[,maximum=None]]]]]]])
+.. py:function:: get_config_option(config_options: dict, key: str, [default=None[, required=False[, required_type="str"[, allowed_values=None[, allow_empty=True[, minimum=None[,maximum=None]]]]]]])
 
     Get a config value out of a dict, and perform basic validation on it.
 
