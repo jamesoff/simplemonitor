@@ -94,7 +94,7 @@ class TestMonitor(unittest.TestCase):
         self.assertEqual(
             m.remaining_dependencies,
             ["a", "c"],
-            "monitor did not remove succeded dependency",
+            "monitor did not remove succeeded dependency",
         )
         m.reset_dependencies()
         self.assertEqual(
@@ -278,7 +278,7 @@ class TestMonitor(unittest.TestCase):
         self.assertIn(
             "m", compound_monitor.all_monitors, "compound all_monitors not set"
         )
-        self.assertIn("m", compound_monitor.m, "compund m not set")
+        self.assertIn("m", compound_monitor.m, "compound m not set")
 
         m.run_test()
         m2.run_test()
@@ -310,7 +310,7 @@ class TestMonitor(unittest.TestCase):
         self.assertIn(
             "m", compound_monitor.all_monitors, "compound all_monitors not set"
         )
-        self.assertIn("m", compound_monitor.m, "compund m not set")
+        self.assertIn("m", compound_monitor.m, "compound m not set")
 
         m.run_test()
         m2.run_test()
@@ -342,7 +342,7 @@ class TestMonitor(unittest.TestCase):
         self.assertIn(
             "m", compound_monitor.all_monitors, "compound all_monitors not set"
         )
-        self.assertIn("m2", compound_monitor.m, "compund m not set")
+        self.assertIn("m2", compound_monitor.m, "compound m not set")
         self.assertNotIn(
             "m", compound_monitor.m, "compound m should not include monitor m"
         )

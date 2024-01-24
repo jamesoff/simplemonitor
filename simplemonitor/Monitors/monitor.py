@@ -326,7 +326,7 @@ class Monitor:
 
     @property
     def availability(self) -> float:
-        """Calculate the monitor's availablity"""
+        """Calculate the monitor's availability"""
         if self.tests_run <= 1:
             return 0.0
         if self._first_load is not None:

@@ -473,7 +473,7 @@ class MonitorTLSCert(Monitor):
                     return self.record_fail("SSL Error: {}".format(error.reason))
                 cert = ssl_sock.getpeercert()
                 if not cert:
-                    return self.record_fail("Did not receive certifcate")
+                    return self.record_fail("Did not receive certificate")
                 not_after = str(cert["notAfter"])
                 expiry = datetime.datetime.strptime(not_after, r"%b %d %H:%M:%S %Y %Z")
                 delta = expiry - datetime.datetime.utcnow()
