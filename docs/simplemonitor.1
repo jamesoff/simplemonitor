@@ -1,0 +1,74 @@
+.TH SIMPLEMONITOR 1
+.SH NAME
+simplemonitor \- Monitor hosts status and network connectivity
+.SH SYNOPSIS
+\fBsimplemonitor [OPTIONS]\fR
+.SH DESCRIPTION
+simplemonitor monitors hosts (disk space, load average, services, HTTP availability and much more) and network connectivity (based on ping replies).
+
+This manual page is for the \fBsimplemonitor\fR executable options. The full documentation for how to add monitors and alerters can be found in \fI/usr/share/doc/simplemonitor/html\fR.
+
+.SH OPTIONS
+.TP
+\fB-h, --help\fR
+Show help and exit
+
+.TP
+\fB-p PIDFILE, --pidfile PIDFILE\fR
+Write PID into PIDFILE
+
+.TP
+\fB-N, --no-network\fR
+Disable network listening socket (if enabled in config)
+
+.TP
+\fB-f CONFIG, --config CONFIG\fR
+Configuration file (this is the main config; monitors.ini is also needed (default filename))
+
+.SH OUTPUT CONTROLS
+.TP
+\fB-v, --verbose\fR
+Alias for --log-level=info
+
+.TP
+\fB-q, --quiet\fR
+Alias for --log-level=critical
+
+.TP
+\fB-d, --debug\fR
+Alias for --log-level=debug
+
+.TP
+\fB-l LOGLEVEL, --log-level LOGLEVEL\fR
+Log level: critical, error, warn, info, debug
+
+.TP
+\fB-C, --no-colour, --no-color\fR
+Do not colourise log output
+
+.TP
+\fB--no-timestamps\fR
+Do not prefix log output with timestamps
+
+.SH TEST AND DEBUG TOOLS
+.TP
+\fB-t, --test\fR
+Test config and exit
+
+.TP
+\fB-l, --one-shot\fR
+Run the monitors once only, without alerting. Require monitors without "fail" in the name, to succeed. Exit zero or non-zero accordingly
+
+.TP
+\fB--loops LOOPS\fR
+Number of iterations to run before exiting
+
+.TP
+\fB--dump-known-resources\fR
+Print out loaded Monitor, Alerter and Logger types
+
+.SH AUTHOR
+This manual page was written by Carles Pina i Estany <carles@pina.cat> for the \fBDebian\fR system (but may be used by others). Permission is granted to copy, distribute and/or modify this document under the terms of the BSD-3-clause.
+
+.SH SEE ALSO
+Full documentation in \fI/usr/share/doc/simplemonitor/html\fP
