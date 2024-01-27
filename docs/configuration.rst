@@ -233,7 +233,7 @@ Reloading
 You can send SimpleMonitor a SIGHUP to make it reload its configuration. On
 platforms which don't have that (e.g. Windows), you can specify a file to
 watch. If the modification time of the file changes, SimpleMonitor will reload
-its configration.
+its configuration.
 
 Reloading will pick up a change to ``interval`` but no other configuration in
 the ``[monitor]`` section. Monitors, Alerters and Loggers are reloaded. You can

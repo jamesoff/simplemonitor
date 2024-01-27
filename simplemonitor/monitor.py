@@ -78,7 +78,7 @@ def main() -> None:
         default="monitor.ini",
         help=(
             "configuration file (this is the main config; "
-            "you also need monitors.ini (default filename)"
+            "you also need monitors.ini (default filename))"
         ),
     )
     parser.add_argument(
@@ -107,7 +107,7 @@ def main() -> None:
         default=False,
         help=(
             "Run the monitors once only, without alerting. Require monitors without "
-            '"fail" in the name to succeed. Exit zero or non-zero accordingly.'
+            '"fail" in the name to succeed. Exit zero or non-zero accordingly'
         ),
     )
     testing_group.add_argument(
