@@ -23,7 +23,7 @@ email - send via SMTP
     :type: string
     :required: true
 
-    the email address to give as the sender
+    the email address to give as the sender. You can use ``user@example.com`` or ``Some name <user@example.com>`` formats.
 
 .. confval:: to
 
