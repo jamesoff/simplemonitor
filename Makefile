@@ -66,4 +66,4 @@ html-bundle:
 	cd simplemonitor/html && npx webpack
 
 fix-html-tests:
-	for i in tests/html/*.html; do sed -i -E -e 's/1.12.0\+dev/__VERSION__/g' "$i"; done
+	for i in tests/html/*.html; do sed -i -E -e 's/1.12.0/__VERSION__/g' "$$i"; done
