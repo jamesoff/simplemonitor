@@ -18,6 +18,7 @@ from ..util import (
     check_group_match,
     format_datetime,
     get_config_option,
+    short_hostname,
     subclass_dict_handler,
 )
 
@@ -405,6 +406,9 @@ class Alerter:
                 host=host,
             )
         elif length in [AlertLength.SMS, AlertLength.ONELINE]:
+            host = " on {}".format(
+                monitor.running_on if monitor.is_remote() else short_hostname()
+            )
             message = (
                 "{alert_type}: {monitor.name}{host} {alert_verb} "
                 "at {failure_time} ({downtime}): {result}"
