@@ -245,6 +245,10 @@ class HTMLLogger(Logger):
             }  # type: Optional[Dict[str, str]]
         else:
             self.map_start = None
+        if self.map and not self.map_start:
+            raise RuntimeError(
+                f"map is set for logger {self.name} but map_start is missing or badly formatted"
+            )
         self.map_token = cast(str, self.get_config_option("map_token"))
         if self.map_token:
             self.logger_logger.info(

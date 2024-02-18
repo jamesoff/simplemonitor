@@ -403,3 +403,9 @@ class TestHTMLLogger(unittest.TestCase):
         )
         golden_file = "tests/html/map1.html"
         self._compare_files(test_file, golden_file)
+
+    def test_config_start(self):
+        with self.assertRaises(RuntimeError):
+            _ = HTMLLogger({"map": "1", "filename": "something"})
+        with self.assertRaises(RuntimeError):
+            _ = HTMLLogger({"map": "1", "map_start": "1, 2", "filename": "something"})
