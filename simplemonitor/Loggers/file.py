@@ -246,6 +246,11 @@ class HTMLLogger(Logger):
         else:
             self.map_start = None
         self.map_token = cast(str, self.get_config_option("map_token"))
+        if self.map_token:
+            self.logger_logger.info(
+                "map_token option for logger %s is no longer required; ignoring",
+                self.name,
+            )
         self._resource_files = [
             "dist/main.bundle.js*",
             "dist/maps.bundle.js*",

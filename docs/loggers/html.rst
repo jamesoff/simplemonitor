@@ -61,10 +61,3 @@ You can use the ``upload_command`` setting to specify a command to push the gene
     :required: false
 
     three comma-separated values: the latitude the map display should start at, the longitude, and the zoom level. A good starting value for the zoom is probably between 10 and 15.
-
-.. confval:: map_token
-
-    :type: string
-    :required: yes, if using the map
-
-    an API token for mapbox.com in order to make the map work
