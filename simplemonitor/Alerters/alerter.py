@@ -5,6 +5,7 @@ Alerting for SimpleMonitor
 
 import datetime
 import logging
+import os
 import textwrap
 from enum import Enum
 from socket import gethostname
@@ -158,8 +159,13 @@ class Alerter:
         self._only_failures = self.get_config_option(
             "only_failures", required_type="bool", default=False
         )
-        self._tz = cast(str, self.get_config_option("tz", default="UTC"))
-        self._times_tz = cast(str, self.get_config_option("times_tz", default="local"))
+        self._tz = cast(
+            str, self.get_config_option("tz", default=os.environ.get("TZ", "UTC"))
+        )
+        self._times_tz = cast(
+            str,
+            self.get_config_option("times_tz", default=os.environ.get("TZ", "local")),
+        )
         self.urgent = cast(
             bool,
             self.get_config_option("urgent", default=self.urgent, required_type="bool"),
