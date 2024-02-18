@@ -355,14 +355,17 @@ class TestLogFileNG(unittest.TestCase):
 
 
 class TestHTMLLogger(unittest.TestCase):
-    @staticmethod
+    def setUp(self) -> None:
+        self.html_dir = tempfile.mkdtemp()
+        print(f"writing html tests to {self.html_dir}")
+
     @freeze_time("2020-04-18 12:00:00+00:00")
-    def _write_html(logger_options: dict = None) -> str:
+    def _write_html(self, logger_options: dict = None) -> str:
         if logger_options is None:
             logger_options = {}
         with patch.object(socket, "gethostname", return_value="fake_hostname.local"):
             temp_htmlfile = tempfile.mkstemp()[1]
-            logger_options.update({"filename": temp_htmlfile})
+            logger_options.update({"filename": temp_htmlfile, "folder": self.html_dir})
             html_logger = HTMLLogger(logger_options)
             monitor1 = MonitorNull(config_options={"gps": "52.01,1.01"})
             monitor2 = MonitorFail("fail", {"gps": "52.02,1.02"})
@@ -374,6 +377,7 @@ class TestHTMLLogger(unittest.TestCase):
             html_logger.save_result2("fail", monitor2)
             html_logger.save_result2("disabled", monitor3)
             html_logger.end_batch()
+        print(temp_htmlfile)
         return temp_htmlfile
 
     def _compare_files(self, test_file, golden_file):
