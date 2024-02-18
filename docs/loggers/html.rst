@@ -58,6 +58,6 @@ You can use the ``upload_command`` setting to specify a command to push the gene
 .. confval:: map_start
 
     :type: comma-separated list of float
-    :required: false
+    :required: if ``map`` is enabled
 
     three comma-separated values: the latitude the map display should start at, the longitude, and the zoom level. A good starting value for the zoom is probably between 10 and 15.
