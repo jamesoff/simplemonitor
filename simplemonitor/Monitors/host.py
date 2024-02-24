@@ -512,7 +512,10 @@ class MonitorCommand(Monitor):
                 msg = escape(_out.decode("utf-8"))
             return self.record_success(msg)
         except Exception as exception:
-            return self.record_fail(str(exception))
+            msg = str(exception)
+            if self.show_output:
+                msg += " " + exception.output.decode('utf-8')
+            return self.record_fail(msg)
 
     def describe(self) -> str:
         """Explains what this instance is checking"""
