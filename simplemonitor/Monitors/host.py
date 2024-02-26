@@ -514,7 +514,7 @@ class MonitorCommand(Monitor):
         except Exception as exception:
             msg = str(exception)
             if self.show_output:
-                msg = exception.output.decode('utf-8')
+                msg = exception.output.decode("utf-8")
             return self.record_fail(msg)
 
     def describe(self) -> str:
