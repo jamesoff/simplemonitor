@@ -511,11 +511,12 @@ class MonitorCommand(Monitor):
             if self.show_output:
                 msg = escape(_out.decode("utf-8"))
             return self.record_success(msg)
-        except Exception as exception:
-            msg = str(exception)
+        except subprocess.CalledProcessError as exception:
             if self.show_output:
-                msg = exception.output.decode("utf-8")
-            return self.record_fail(msg)
+                return self.record_fail(exception.output.decode("utf-8"))
+            return self.record_fail(str(exception))
+        except Exception as exception:
+            return self.record_fail(str(exception))
 
     def describe(self) -> str:
         """Explains what this instance is checking"""
