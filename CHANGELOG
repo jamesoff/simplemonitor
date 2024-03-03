@@ -1,3 +1,15 @@
+1.12.1:
+	* Adjust no-alerters message to warn not critical
+	* Include output on "command" monitor failure
+	* Switch map output to just OSM
+	* Make make_start option required if map is enabled
+	* Improve help output and add basic man page
+	* Add hostname to notifications
+	* Support loading config files from a directory
+	* Add timeout for receive in network listener
+	* Add option to capture "command" monitor output
+	* Switch to icmplib for "ping" monitor
+
 1.12:
 	* Require Python 3.7+
 	* Add allow_redirects option for HTTP monitor
