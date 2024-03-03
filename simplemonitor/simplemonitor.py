@@ -132,7 +132,7 @@ class SimpleMonitor:
         if not self._verify_dependencies():
             raise RuntimeError("Broken dependency configuration")
         if not self.verify_alerting():
-            module_logger.critical("No alerters defined and no remote logger found")
+            module_logger.warning("No alerters defined and no remote logger found")
 
     def _start_network_thread(self) -> None:
         if self._remote_listening_thread:
