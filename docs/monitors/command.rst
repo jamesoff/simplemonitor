@@ -30,4 +30,4 @@ Run a command, and optionally verify its output. If the command exits non-zero, 
     :type: boolean
     :required: false
 
-    if set to true, the output of the command will be captured as the message with a successful test.
+    if set to true, the output of the command will be captured as the message with a successful test or appended to the message on a failed test.

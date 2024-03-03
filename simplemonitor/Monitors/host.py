@@ -511,6 +511,10 @@ class MonitorCommand(Monitor):
             if self.show_output:
                 msg = escape(_out.decode("utf-8"))
             return self.record_success(msg)
+        except subprocess.CalledProcessError as exception:
+            if self.show_output:
+                return self.record_fail(exception.output.decode("utf-8"))
+            return self.record_fail(str(exception))
         except Exception as exception:
             return self.record_fail(str(exception))
 
