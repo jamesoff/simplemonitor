@@ -17,6 +17,7 @@ from .sns import SNSAlerter
 from .syslogger import SyslogAlerter
 from .telegram import TelegramAlerter
 from .twilio import TwilioSMSAlerter
+from .ntfy import NtfyAlerter
 
 __all__ = [
     "BulkSMSAlerter",
@@ -34,4 +35,5 @@ __all__ = [
     "SyslogAlerter",
     "TelegramAlerter",
     "TwilioSMSAlerter",
+    "NtfyAlerter"
 ]
