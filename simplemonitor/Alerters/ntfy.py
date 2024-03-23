@@ -18,19 +18,36 @@ class NtfyAlerter(Alerter):
 
     def __init__(self, config_options: dict) -> None:
         super().__init__(config_options)
-        self.ntfy_token = cast(str, self.get_config_option("token", default=""))
+        self.ntfy_token = cast(str, self.get_config_option("token"))
         self.ntfy_topic = cast(str, self.get_config_option("topic", required=True))
         self.ntfy_server = cast(
             str, self.get_config_option("server", default="https://ntfy.sh")
         )
         self.ntfy_priority = cast(
-            str, self.get_config_option("priority", default="default")
+            str,
+            self.get_config_option(
+                "priority",
+                required_type="str",
+                allowed_values=[
+                    "max",
+                    "urgent",
+                    "high",
+                    "default",
+                    "low",
+                    "min",
+                    "1",
+                    "2",
+                    "3",
+                    "4",
+                    "5",
+                ],
+                default="default",
+            ),
         )
-        self.ntfy_tags = cast(int, self.get_config_option("tags", default=""))
+        self.ntfy_tags = cast(str, self.get_config_option("tags", required_type="str"))
         self.timeout = cast(
             int, self.get_config_option("timeout", required_type="int", default=5)
         )
-
         self.support_catchup = True
 
     def send_ntfy_notification(self, subject: str, body: str) -> None:
@@ -41,8 +58,12 @@ class NtfyAlerter(Alerter):
             headers={
                 "Title": subject,
                 "Priority": self.ntfy_priority,
-                "Tags": self.ntfy_tags,
-                "Authorization": f"Bearer {self.ntfy_token}",
+                **({"Tags": self.ntfy_tags} if self.ntfy_tags else {}),
+                **(
+                    {"Authorization": f"Bearer {self.ntfy_token}"}
+                    if self.ntfy_token
+                    else {}
+                ),
             },
             timeout=self.timeout,
         )
@@ -66,4 +87,4 @@ class NtfyAlerter(Alerter):
             self.alerter_logger.info("dry_run: would send nfty notification: %s", body)
 
     def _describe_action(self) -> str:
-        return "posting to ntfy"
+        return f"posting to ntfy topic {self.ntfy_topic}"
