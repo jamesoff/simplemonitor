@@ -1,0 +1,53 @@
+ntfy - ntfy notifications
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. include:: ../creds-warning.rst
+
+Send alerts using the ntfy_ service.
+
+.. _ntfy: https://ntfy.sh
+
+.. confval:: topic
+
+    :type: string
+    :required: true
+
+    the ntfy topic to send to
+
+.. confval:: priority
+
+    :type: str or int
+    :required: false
+    :default: ``default``
+
+    the priority to use for notifications. an int 1 to 5 (1 is lowest, 5 is highest), or one of ``max``, ``high``, ``default``, ``low``, ``min``
+
+.. confval:: tags
+
+    :type: string
+    :required: false
+
+    the tags to add to the notification. A comma-separated list of strings
+
+.. confval:: token
+
+    :type: string
+    :required: false
+
+    your token for ntfy, if required
+
+.. confval:: server
+
+    :type: string
+    :required: false
+    :default: ``https://ntfy.sh``
+
+    the server to send to
+
+.. confval:: timeout
+
+    :type: int
+    :required: false
+    :default: ``5``
+
+    Timeout for HTTP request
