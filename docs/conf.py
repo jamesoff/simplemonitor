@@ -20,7 +20,7 @@ from sphinx.util.docfields import Field
 # -- Project information -----------------------------------------------------
 
 project = "SimpleMonitor"
-copyright = "2021, James Seward"
+copyright = "2024, James Seward"
 author = "James Seward"
 
 
