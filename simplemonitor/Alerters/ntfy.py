@@ -18,21 +18,15 @@ class NtfyAlerter(Alerter):
 
     def __init__(self, config_options: dict) -> None:
         super().__init__(config_options)
-        self.ntfy_token = cast(
-            str, self.get_config_option("token",default="")
-        )
-        self.ntfy_topic = cast(
-            str, self.get_config_option("topic",required=True )
-        )
+        self.ntfy_token = cast(str, self.get_config_option("token", default=""))
+        self.ntfy_topic = cast(str, self.get_config_option("topic", required=True))
         self.ntfy_server = cast(
             str, self.get_config_option("server", default="https://ntfy.sh")
         )
         self.ntfy_priority = cast(
             str, self.get_config_option("priority", default="default")
         )
-        self.ntfy_tags = cast(
-            int, self.get_config_option("tags", default="")
-        )
+        self.ntfy_tags = cast(int, self.get_config_option("tags", default=""))
         self.timeout = cast(
             int, self.get_config_option("timeout", required_type="int", default=5)
         )
@@ -45,13 +39,12 @@ class NtfyAlerter(Alerter):
             f"{self.ntfy_server}/{self.ntfy_topic}",
             data=body,
             headers={
-                    "Title": subject,
-                    "Priority": self.ntfy_priority,
-                    "Tags": self.ntfy_tags,
-                    "Authorization": f"Bearer {self.ntfy_token}"
-                },
-
-            timeout=self.timeout
+                "Title": subject,
+                "Priority": self.ntfy_priority,
+                "Tags": self.ntfy_tags,
+                "Authorization": f"Bearer {self.ntfy_token}",
+            },
+            timeout=self.timeout,
         )
 
     def send_alert(self, name: str, monitor: Monitor) -> None:
