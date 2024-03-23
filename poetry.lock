@@ -1131,13 +1131,13 @@ files = [
 
 [[package]]
 name = "ping3"
-version = "4.0.4"
+version = "4.0.5"
 description = "A pure python3 version of ICMP ping implementation using raw socket."
 optional = false
-python-versions = ">=3"
+python-versions = ">=3.5"
 files = [
-    {file = "ping3-4.0.4-py3-none-any.whl", hash = "sha256:dd8439ced69d6fec5885c8d4faefb055aacffb5a20f5e38a78459a5b18cc5e5a"},
-    {file = "ping3-4.0.4.tar.gz", hash = "sha256:1ea12acf6752d4666616341fd7c6393c664cffc510c693ef06f736fb267a13ba"},
+    {file = "ping3-4.0.5-py3-none-any.whl", hash = "sha256:87f662c80761dbe95314b0ace1f0e06a74605bb3e079693dce337aba12dde26b"},
+    {file = "ping3-4.0.5.tar.gz", hash = "sha256:1f09185e89321436524996b212d203d3cab5ad22687de7464570f1c7fb9dc051"},
 ]
 
 [package.extras]
