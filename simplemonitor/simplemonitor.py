@@ -96,10 +96,9 @@ class SimpleMonitor:
             )
             self._check_hup_file()
 
-        if (
-            not self._no_network
-            and config.get("monitor", "remote", fallback="0") == "1"
-        ):
+        if not self._no_network and config.get(
+            "monitor", "remote", fallback="0"
+        ).lower() in ["1", "true", "yes"]:
             self._network = True
             self._remote_port = int(config.get("monitor", "remote_port"))
             self._network_key = config.get("monitor", "key", fallback=None)
