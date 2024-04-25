@@ -62,7 +62,7 @@ Send alerts using the ntfy_ service.
 
 .. confval:: icon_failed
 
-    :type: bool
+    :type: str
     :required: false
     :default: ``274C``
 
@@ -70,7 +70,7 @@ Send alerts using the ntfy_ service.
 
 .. confval:: icon_succeeded
 
-    :type: bool
+    :type: str
     :required: false
     :default: ``2705``
 
