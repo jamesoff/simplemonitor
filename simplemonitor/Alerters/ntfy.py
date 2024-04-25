@@ -67,12 +67,6 @@ class NtfyAlerter(Alerter):
 
     def send_ntfy_notification(self, subject: str, body: str) -> None:
         """Send a push notification."""
-        # prefix icon to subject when relevant
-        if self.ntfy_icon_prefix and subject.endswith("failed"):
-            subject = f"{chr(int(self.ntfy_icon_failed, 16))} {subject}"
-        if self.ntfy_icon_prefix and subject.endswith("succeeded"):
-            subject = f"{chr(int(self.ntfy_icon_succeeded, 16))} {subject}"
-        # send the notification
         requests.post(
             f"{self.ntfy_server}/{self.ntfy_topic}",
             data=body,
@@ -98,6 +92,12 @@ class NtfyAlerter(Alerter):
             return
         subject = self.build_message(AlertLength.NOTIFICATION, alert_type, monitor)
         body = self.build_message(AlertLength.FULL, alert_type, monitor)
+
+        # prefix icon to subject when relevant
+        if self.ntfy_icon_prefix and subject.endswith("failed"):
+            subject = f"{chr(int(self.ntfy_icon_failed, 16))} {subject}"
+        if self.ntfy_icon_prefix and subject.endswith("succeeded"):
+            subject = f"{chr(int(self.ntfy_icon_succeeded, 16))} {subject}"
 
         if not self._dry_run:
             try:
