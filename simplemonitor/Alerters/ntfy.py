@@ -54,16 +54,8 @@ class NtfyAlerter(Alerter):
             str,
             self.get_config_option("icon_prefix", required_type="bool", default=False),
         )
-        self.ntfy_icon_failed = cast(
-            str,
-            self.get_config_option("icon_failed", required_type="str", default="274C"),
-        )
-        self.ntfy_icon_succeeded = cast(
-            str,
-            self.get_config_option(
-                "icon_succeeded", required_type="str", default="2705"
-            ),
-        )
+        self.ntfy_icon_failed = chr(int(cast(str,self.get_config_option("icon_failed", required_type="str", default="274C")), 16))
+        self.ntfy_icon_succeeded = chr(int(cast(str, self.get_config_option("icon_succeeded", required_type="str", default="2705")), 16)) 
 
     def send_ntfy_notification(self, subject: str, body: str) -> None:
         """Send a push notification."""
@@ -95,9 +87,9 @@ class NtfyAlerter(Alerter):
 
         # prefix icon to subject when relevant
         if self.ntfy_icon_prefix and subject.endswith("failed"):
-            subject = f"{chr(int(self.ntfy_icon_failed, 16))} {subject}"
+            subject = f"{self.ntfy_icon_failed} {subject}"
         if self.ntfy_icon_prefix and subject.endswith("succeeded"):
-            subject = f"{chr(int(self.ntfy_icon_succeeded, 16))} {subject}"
+            subject = f"{self.ntfy_icon_succeeded} {subject}"
 
         if not self._dry_run:
             try:
