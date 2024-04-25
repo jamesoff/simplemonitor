@@ -49,6 +49,13 @@ class NtfyAlerter(Alerter):
             int, self.get_config_option("timeout", required_type="int", default=5)
         )
         self.support_catchup = True
+        # prefix icon to subject
+        self.ntfy_icon_prefix = cast(
+            str,
+            self.get_config_option("icon_prefix", required_type="bool", default=False),
+        )
+        self.ntfy_icon_failed = chr(int(cast(str,self.get_config_option("icon_failed", required_type="str", default="274C")), 16))
+        self.ntfy_icon_succeeded = chr(int(cast(str, self.get_config_option("icon_succeeded", required_type="str", default="2705")), 16)) 
 
     def send_ntfy_notification(self, subject: str, body: str) -> None:
         """Send a push notification."""
@@ -56,7 +63,7 @@ class NtfyAlerter(Alerter):
             f"{self.ntfy_server}/{self.ntfy_topic}",
             data=body,
             headers={
-                "Title": subject,
+                "Title": subject.encode("UTF-8"),
                 "Priority": self.ntfy_priority,
                 **({"Tags": self.ntfy_tags} if self.ntfy_tags else {}),
                 **(
@@ -77,6 +84,12 @@ class NtfyAlerter(Alerter):
             return
         subject = self.build_message(AlertLength.NOTIFICATION, alert_type, monitor)
         body = self.build_message(AlertLength.FULL, alert_type, monitor)
+
+        # prefix icon to subject when relevant
+        if self.ntfy_icon_prefix and subject.endswith("failed"):
+            subject = f"{self.ntfy_icon_failed} {subject}"
+        if self.ntfy_icon_prefix and subject.endswith("succeeded"):
+            subject = f"{self.ntfy_icon_succeeded} {subject}"
 
         if not self._dry_run:
             try:
