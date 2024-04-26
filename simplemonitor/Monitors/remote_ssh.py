@@ -13,7 +13,7 @@ from .monitor import Monitor, register
 from enum import Enum
 import paramiko
 import re
-from typing import cast
+from typing import Tuple, cast
 
 
 class Operator(Enum):
@@ -98,6 +98,18 @@ class MonitorRemoteSSH(Monitor):
             return self.record_success(f"it worked: {actual_value}")
         else:
             return self.record_fail(f"actual value: {actual_value} | operator: {self.operator} | target value: {self.target_value}")
+
+    def get_params(self) -> Tuple:
+        return (
+            self.command,
+            self.regex,
+            self.target_value,
+            self.operator,
+            self.result_type,
+            self.ssh_private_key_path,
+            self.ssh_username,
+            self.target_hostname,
+        )
 
     def describe(self) -> str:
         return "run a remote command, extract its output and apply logic"
