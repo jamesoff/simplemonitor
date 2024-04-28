@@ -63,7 +63,27 @@ To create your own Monitor, you need to:
         def describe(self) -> str:
             return f"checking that thing f{my_setting} does foo"
 
-7. In :file:`simplemonitor/Monitors/__init__.py`, add your Monitor to the list of imports.
+7. You should also provide a ``get_params()`` method that sends back a tuple of the configuration entries of your Monitor. It will be used by Loggers as an input of which information to log.
+
+.. code-block:: python
+
+    @register
+    class MonitorMyThing(Monitor):
+
+        def __init__(self, name: str, config_options: dict) -> None:
+            super().__init__(name, config_options)
+            self.some_configuration = cast(str, self.get_config_option("some_configuration"))
+            self.some_other_configuration = cast(str, self.get_config_option("some_other_configuration"))
+
+        # ...
+         
+        def get_params(self) -> Tuple:
+            return (
+                self.some_configuration,
+                self.some_other_configuration,
+            )
+
+8. In :file:`simplemonitor/Monitors/__init__.py`, add your Monitor to the list of imports.
 
 That's it! You should now be able to use ``type=my_thing`` in your Monitors configuration to use your monitor.
 
