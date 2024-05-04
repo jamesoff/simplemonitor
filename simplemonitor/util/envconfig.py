@@ -2,11 +2,11 @@
 
 import os
 import re
-from configparser import BasicInterpolation, ConfigParser
+from configparser import BasicInterpolation, ConfigParser, RawConfigParser
 from typing import Any, List, Optional
 
 
-class EnvironmentAwareConfigParser(ConfigParser):
+class EnvironmentAwareConfigParser(RawConfigParser):
     """A subclass of ConfigParser which allows %env:VAR% interpolation via the
     get method."""
 
@@ -16,11 +16,11 @@ class EnvironmentAwareConfigParser(ConfigParser):
         """Init with our specific interpolation class (for Python 3)"""
         interpolation = EnvironmentAwareInterpolation()
         kwargs["interpolation"] = interpolation
-        ConfigParser.__init__(self, *args, **kwargs)
+        RawConfigParser.__init__(self, *args, **kwargs)
 
     def read(self, filenames: Any, encoding: Optional[str] = None) -> List[str]:
         """Load a config file and do environment variable interpolation on the section names."""
-        result = ConfigParser.read(self, filenames)
+        result = RawConfigParser.read(self, filenames)
         for section in self.sections():
             original_section = section
             matches = self.r.search(section)
