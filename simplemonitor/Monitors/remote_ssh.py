@@ -79,6 +79,7 @@ class MonitorRemoteSSH(Monitor):
             return self.record_fail(f"connection to {self.target_hostname} actively refused")
         else:
             _, stdout, _ = client.exec_command(self.command)
+            client.close()
 
         # extract and cast the actual value
         command_result = stdout.read().decode("utf-8")  # let's hope for the best
