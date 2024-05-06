@@ -66,12 +66,19 @@ class MonitorRemoteSSH(Monitor):
         # run remote command
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy)
-        client.connect(
-            self.target_hostname,
-            username=self.ssh_username,
-            key_filename=self.ssh_private_key_path,
-        )
-        stdin, stdout, stderr = client.exec_command(self.command)
+        try:
+            client.connect(
+                self.target_hostname,
+                username=self.ssh_username,
+                key_filename=self.ssh_private_key_path,
+                port=self.target_port,
+            )
+        except TimeoutError:
+            return self.record_fail(f"connection to {self.target_hostname} timed out")
+        except ConnectionRefusedError:
+            return self.record_fail(f"connection to {self.target_hostname} actively refused")
+        else:
+            _, stdout, _ = client.exec_command(self.command)
 
         # extract and cast the actual value
         command_result = stdout.read().decode("utf-8")  # let's hope for the best
