@@ -35,6 +35,9 @@ class MonitorRemoteSSH(Monitor):
 
     def __init__(self, name: str, config_options: dict) -> None:
         super().__init__(name, config_options)
+        # description
+        self.description = cast(str, self.get_config_option("description", required=False)) # maybe define default here instead of a try: ?
+        self.success_message = cast(str, self.get_config_option("success_message", required=False, default="it worked"))
         # ssh configuration
         self.command = cast(str, self.get_config_option("command", required=True))
         self.ssh_private_key_path = cast(str, self.get_config_option("ssh_private_key_path", required=True))
@@ -104,13 +107,15 @@ class MonitorRemoteSSH(Monitor):
         if self.result_type == OperatorType.STRING.value and (self.operator in [Operator.GREATER_THAN.value, Operator.LESS_THAN.value]):
             logger.warning(f"strings compared with '{self.operator}'")
         if test_succeeded:
-            return self.record_success(f"it worked: {actual_value}")
+            return self.record_success(self.success_message.format(actual_value))
         else:
             return self.record_fail(f"actual value: {actual_value} | operator: {self.operator} | target value: {self.target_value}")
 
     def get_params(self) -> Tuple:
         return (
             self.command,
+            self.description,
+            self.success_message,
             self.regex,
             self.target_value,
             self.operator,
@@ -122,4 +127,7 @@ class MonitorRemoteSSH(Monitor):
         )
 
     def describe(self) -> str:
-        return "run a remote command, extract its output and apply logic"
+        try:
+            return self.description
+        except AttributeError:
+            return "run a remote command, extract its output and apply logic"
