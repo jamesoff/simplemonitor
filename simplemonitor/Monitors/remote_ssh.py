@@ -40,6 +40,7 @@ class MonitorRemoteSSH(Monitor):
         self.ssh_private_key_path = cast(str, self.get_config_option("ssh_private_key_path", required=True))
         self.ssh_username = cast(str, self.get_config_option("ssh_username", required=True))
         self.target_hostname = cast(str, self.get_config_option("target_hostname", required=True))
+        self.target_port = cast(int, self.get_config_option("target_port", required=False, default="22"))
         # operator logic
         self.operator = cast(
             str,
