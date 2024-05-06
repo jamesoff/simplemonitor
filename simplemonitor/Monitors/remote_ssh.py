@@ -118,6 +118,7 @@ class MonitorRemoteSSH(Monitor):
             self.ssh_private_key_path,
             self.ssh_username,
             self.target_hostname,
+            self.target_port,
         )
 
     def describe(self) -> str:
