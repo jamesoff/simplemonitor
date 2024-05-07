@@ -54,8 +54,28 @@ class NtfyAlerter(Alerter):
             str,
             self.get_config_option("icon_prefix", required_type="bool", default=False),
         )
-        self.ntfy_icon_failed = chr(int(cast(str,self.get_config_option("icon_failed", required_type="str", default="274C")), 16))
-        self.ntfy_icon_succeeded = chr(int(cast(str, self.get_config_option("icon_succeeded", required_type="str", default="2705")), 16)) 
+        self.ntfy_icon_failed = chr(
+            int(
+                cast(
+                    str,
+                    self.get_config_option(
+                        "icon_failed", required_type="str", default="274C"
+                    ),
+                ),
+                16,
+            )
+        )
+        self.ntfy_icon_succeeded = chr(
+            int(
+                cast(
+                    str,
+                    self.get_config_option(
+                        "icon_succeeded", required_type="str", default="2705"
+                    ),
+                ),
+                16,
+            )
+        )
 
     def send_ntfy_notification(self, subject: str, body: str) -> None:
         """Send a push notification."""
