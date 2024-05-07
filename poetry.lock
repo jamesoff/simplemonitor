@@ -1220,13 +1220,13 @@ files = [
 
 [[package]]
 name = "pyaarlo"
-version = "0.8.0.6"
+version = "0.8.0.7"
 description = "PyAarlo is a library that provides asynchronous access to Arlo security cameras."
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "pyaarlo-0.8.0.6-py3-none-any.whl", hash = "sha256:f379893bb5e5333ee83a620951884a7be7a85e1bc75d5355ae02d68a81359485"},
-    {file = "pyaarlo-0.8.0.6.tar.gz", hash = "sha256:c7019eb0becd2c9aea794f30dae1025b62df657593898d204e1f0a5977841577"},
+    {file = "pyaarlo-0.8.0.7-py3-none-any.whl", hash = "sha256:42e5fe83af002370daf490e688cc84c8abb85dee8b35be46227c542aeca36cd8"},
+    {file = "pyaarlo-0.8.0.7.tar.gz", hash = "sha256:9a19527453739c38fd5aa0ebea8ef57f41015138595125ec247db9f66481ceb3"},
 ]
 
 [package.dependencies]
