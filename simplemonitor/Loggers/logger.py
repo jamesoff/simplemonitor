@@ -4,7 +4,6 @@ Logging for SimpleMonitor.
 Loggers process every monitor, every iteration, to record their state in some fashion.
 """
 
-
 import logging
 import time
 from typing import Any, Dict, List, Optional, Union, cast

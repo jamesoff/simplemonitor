@@ -62,9 +62,9 @@ class MQTTLogger(Logger):
                 "topic",
                 required=False,
                 allow_empty=False,
-                default="simplemonitor"
-                if not self.hass
-                else "homeassistant/binary_sensor",
+                default=(
+                    "simplemonitor" if not self.hass else "homeassistant/binary_sensor"
+                ),
             ),
         )
         # username for authentication
