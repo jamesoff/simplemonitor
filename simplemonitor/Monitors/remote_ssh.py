@@ -80,6 +80,8 @@ class MonitorRemoteSSH(Monitor):
             return self.record_fail(f"connection to {self.target_hostname} timed out")
         except ConnectionRefusedError:
             return self.record_fail(f"connection to {self.target_hostname} actively refused")
+        except Exception as e:
+            return self.record_fail(f"connection to {self.target_hostname} failed: {e}")
         else:
             _, stdout, _ = client.exec_command(self.command)
 
