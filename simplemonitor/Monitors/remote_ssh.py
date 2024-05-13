@@ -36,7 +36,7 @@ class MonitorRemoteSSH(Monitor):
     def __init__(self, name: str, config_options: dict) -> None:
         super().__init__(name, config_options)
         # description
-        self.description = cast(str, self.get_config_option("description", required=False)) # maybe define default here instead of a try: ?
+        self.description = cast(str, self.get_config_option("description", required=False))  # maybe define default here instead of a try: ?
         self.success_message = cast(str, self.get_config_option("success_message", required=False, default="it worked"))
         # ssh configuration
         self.command = cast(str, self.get_config_option("command", required=True))
@@ -50,7 +50,7 @@ class MonitorRemoteSSH(Monitor):
             self.get_config_option(
                 "operator",
                 required=True,
-                allowed_values=[Operator.EQUALS.value, Operator.GREATER_THAN.value, Operator.LESS_THAN.value, Operator.GREATER_THAN.value],
+                allowed_values=[Operator.EQUALS.value, Operator.NOT_EQUALS.value, Operator.LESS_THAN.value, Operator.GREATER_THAN.value],
             ),
         )
         self.regex = re.compile(cast(str, self.get_config_option("regex", required=True)))
