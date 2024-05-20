@@ -18,6 +18,8 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, cast
 import arrow
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
+import jsonpickle
+
 from ..Monitors.monitor import Monitor
 from ..util import (
     copy_if_different,
@@ -29,7 +31,7 @@ from ..version import VERSION
 from .logger import Logger, register
 
 if TYPE_CHECKING:
-    import datetime
+    pass
 
 
 @register
@@ -544,3 +546,54 @@ class JsonLogger(Logger):
 
     def describe(self) -> str:
         return "Writing JSON file to {0}".format(self.filename)
+
+
+@register
+class JsonLoggerFull(Logger):
+    """Write monitor status to a full JSON file."""
+
+    logger_type = "json_full"
+    filename = ""  # type: str
+    supports_batch = True
+
+    def __init__(self, config_options: Optional[dict] = None) -> None:
+        if config_options is None:
+            config_options = {}
+        super().__init__(config_options)
+        self.filename = self.get_config_option(
+            "filename", required=True, allow_empty=False
+        )
+
+    def save_result2(self, name: str, monitor: Monitor) -> None:
+        if self.batch_data is None:
+            self.batch_data = {}
+        result = MonitorResult()
+        for k, v in vars(monitor).items():
+            # remove built-in attributes
+            if k.startswith("__"):
+                continue
+            # remove attributes that are not JSON serializable
+            if not isinstance(v, (str, int, float, bool, dict, list)):
+                continue
+            # handle arrow dates
+            if isinstance(v, arrow.Arrow):
+                v = v.isoformat()
+            result.__setattr__(k, v)
+        # transform some attributes per the original JSON logger
+        if hasattr(monitor, "was_skipped") and monitor.was_skipped:
+            result.status = "Skipped"
+        elif monitor.virtual_fail_count() <= 0:
+            result.status = "OK"
+        self.batch_data[name] = result
+
+    def process_batch(self) -> None:
+        payload = MonitorJsonPayload()
+        payload.generated = arrow.now().isoformat()
+        if self.batch_data is not None:
+            payload.monitors = self.batch_data
+        with open(self.filename, "w") as f:
+            f.write(jsonpickle.encode(payload, unpicklable=False))
+        self.batch_data = {}
+
+    def describe(self) -> str:
+        return "Writing full JSON file to {0}".format(self.filename)
