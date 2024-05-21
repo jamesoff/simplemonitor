@@ -67,23 +67,29 @@ class MonitorRemoteSSH(Monitor):
 
     def run_test(self) -> bool:
         # run remote command
-        client = paramiko.SSHClient()
-        client.set_missing_host_key_policy(paramiko.AutoAddPolicy)
-        try:
-            client.connect(
-                self.target_hostname,
-                username=self.ssh_username,
-                key_filename=self.ssh_private_key_path,
-                port=self.target_port,
-            )
-        except TimeoutError:
-            return self.record_fail(f"connection to {self.target_hostname} timed out")
-        except ConnectionRefusedError:
-            return self.record_fail(f"connection to {self.target_hostname} actively refused")
-        except Exception as e:
-            return self.record_fail(f"connection to {self.target_hostname} failed: {e}")
-        else:
-            _, stdout, _ = client.exec_command(self.command)
+        with paramiko.SSHClient() as client:
+            client.set_missing_host_key_policy(paramiko.AutoAddPolicy)
+            try:
+                client.connect(
+                    self.target_hostname,
+                    username=self.ssh_username,
+                    key_filename=self.ssh_private_key_path,
+                    port=self.target_port,
+                )
+            except TimeoutError:
+                return self.record_fail(
+                    f"connection to {self.target_hostname} timed out"
+                )
+            except ConnectionRefusedError:
+                return self.record_fail(
+                    f"connection to {self.target_hostname} actively refused"
+                )
+            except paramiko.SSHException as e:
+                return self.record_fail(
+                    f"connection to {self.target_hostname} failed: {e}"
+                )
+            else:
+                _, stdout, _ = client.exec_command(self.command)
 
         # extract and cast the actual value
         command_result = stdout.read().decode("utf-8")  # let's hope for the best
