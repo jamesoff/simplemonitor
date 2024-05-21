@@ -2,7 +2,7 @@
 
 import os
 import re
-from configparser import BasicInterpolation, ConfigParser, RawConfigParser
+from configparser import BasicInterpolation, RawConfigParser
 from typing import Any, List, Optional
 
 
