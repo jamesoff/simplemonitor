@@ -91,9 +91,14 @@ class MonitorRemoteSSH(Monitor):
             else:
                 _, stdout, _ = client.exec_command(self.command)
 
-        # extract and cast the actual value
-        command_result = stdout.read().decode("utf-8")  # let's hope for the best
-        client.close()  # it's only now that we are done with the client
+            # extract and cast the actual value
+            try:
+                # let's hope for the best
+                command_result = stdout.read().decode("utf-8")
+            except Exception as e:
+                return self.record_fail(
+                    f"cannot decode the output of the ssh command: {e}"
+                )
         actual_value = re.match(self.regex, command_result).groups()[0]
         match self.result_type:
             case OperatorType.INTEGER.value:
