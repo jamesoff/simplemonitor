@@ -1,3 +1,6 @@
+1.13.0:
+	* Add ntfy alerter
+
 1.12.1:
 	* Adjust no-alerters message to warn not critical
 	* Include output on "command" monitor failure
