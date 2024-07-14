@@ -8,6 +8,7 @@ from .fortysixelks import FortySixElksAlerter
 from .mail import EMailAlerter
 from .nc import NotificationCenterAlerter
 from .nextcloud_notification import NextcloudNotificationAlerter
+from .ntfy import NtfyAlerter
 from .pushbullet import PushbulletAlerter
 from .pushover import PushoverAlerter
 from .ses import SESAlerter
@@ -34,4 +35,5 @@ __all__ = [
     "SyslogAlerter",
     "TelegramAlerter",
     "TwilioSMSAlerter",
+    "NtfyAlerter",
 ]
