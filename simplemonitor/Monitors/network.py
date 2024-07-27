@@ -446,8 +446,7 @@ class MonitorTLSCert(Monitor):
         self.sni = cast(Optional[str], self.get_config_option("sni", required=False))
 
     def run_test(self) -> bool:
-        # Note: at time of writing, ssl does not support TLS1.3
-        ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+        ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
         ssl_context.verify_mode = ssl.CERT_REQUIRED
         ssl_context.check_hostname = bool(self.sni)
         ssl_context.load_default_certs()
