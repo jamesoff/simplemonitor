@@ -5,8 +5,6 @@ Checks an SSL/TLS certificate is not due to expire/has expired.
 
 .. note:: This monitor's :ref:`gap<gap>` defaults to 12 hours.
 
-.. warning:: Due to a limitation of the underlying Python modules in use, this does not currently support TLS 1.3.
-
 .. confval:: host
 
     :type: string
