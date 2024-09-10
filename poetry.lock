@@ -1216,13 +1216,13 @@ files = [
 
 [[package]]
 name = "pyaarlo"
-version = "0.8.0.7"
+version = "0.8.0.10"
 description = "PyAarlo is a library that provides asynchronous access to Arlo security cameras."
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "pyaarlo-0.8.0.7-py3-none-any.whl", hash = "sha256:42e5fe83af002370daf490e688cc84c8abb85dee8b35be46227c542aeca36cd8"},
-    {file = "pyaarlo-0.8.0.7.tar.gz", hash = "sha256:9a19527453739c38fd5aa0ebea8ef57f41015138595125ec247db9f66481ceb3"},
+    {file = "pyaarlo-0.8.0.10-py3-none-any.whl", hash = "sha256:bf8c055cf1115f2de02f67a45e9ee3c5d8ba275b366347e8803f57b5f4d050b2"},
+    {file = "pyaarlo-0.8.0.10.tar.gz", hash = "sha256:fe43698fd3da1f68a2de72a79a10823ec0d7fac7808a616ed526ba710e7c577a"},
 ]
 
 [package.dependencies]
@@ -1232,6 +1232,7 @@ cryptography = "*"
 paho-mqtt = "*"
 pycryptodome = "*"
 requests = "*"
+slugify = "*"
 unidecode = "*"
 
 [[package]]
@@ -1712,6 +1713,16 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*"
 files = [
     {file = "six-1.16.0-py2.py3-none-any.whl", hash = "sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"},
     {file = "six-1.16.0.tar.gz", hash = "sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926"},
+]
+
+[[package]]
+name = "slugify"
+version = "0.0.1"
+description = "A generic slugifier."
+optional = false
+python-versions = "*"
+files = [
+    {file = "slugify-0.0.1.tar.gz", hash = "sha256:c5703cc11c1a6947536f3ce8bb306766b8bb5a84a53717f5a703ce0f18235e4c"},
 ]
 
 [[package]]
