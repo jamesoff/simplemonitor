@@ -41,11 +41,22 @@ class MonitorHTTP(Monitor):
     keyfile: Optional[str] = None
 
     # optional - headers
-    headers = None
+    headers: Optional[str] = None
+    data: Optional[str] = None
 
     def __init__(self, name: str, config_options: dict) -> None:
         super().__init__(name, config_options)
         self.url = self.get_config_option("url", required=True)
+
+        method = self.get_config_option("method")
+        if method is not None:
+            method = method.strip().upper()
+            if method in ["GET", "POST", "HEAD"]:
+                self.method = method
+            else:
+                raise ValueError("unsupported HTTP method")
+        else:
+            self.method = "GET"
 
         regexp = self.get_config_option("regexp")
         if regexp is not None:
@@ -70,9 +81,19 @@ class MonitorHTTP(Monitor):
         if not self.certfile and self.keyfile:
             raise ValueError("config option keyfile is set but certfile is not")
 
+        if self.certfile is not None and self.keyfile is not None:
+            self.cert = (self.certfile, self.keyfile)
+            assert self.certfile is not None and self.keyfile is not None
+        else:
+            self.cert = None
+
         self.headers = config_options.get("headers")
         if self.headers:
             self.headers = json.loads(self.headers)
+
+        self.data = config_options.get("data")
+        if self.data:
+            self.data = json.loads(self.data)
 
         self.verify_hostname = self.get_config_option(
             "verify_hostname", default=True, required_type="bool"
@@ -85,41 +106,26 @@ class MonitorHTTP(Monitor):
         self.username = cast(Optional[str], config_options.get("username"))
         self.password = cast(Optional[str], config_options.get("password"))
 
+        if self.username is not None and self.password is not None:
+            self.auth = HTTPBasicAuth(self.username, self.password)
+        else:
+            self.auth = None
+
     def run_test(self) -> bool:
         start_time = arrow.get()
         end_time = None
         try:
-            if self.certfile is None and self.username is None:
-                response = requests.get(
-                    self.url,
-                    timeout=self.request_timeout,
-                    verify=self.verify_hostname,
-                    headers=self.headers,
-                    allow_redirects=self.allow_redirects,
-                )
-            elif (
-                self.certfile is None
-                and self.username is not None
-                and self.password is not None
-            ):
-                response = requests.get(
-                    self.url,
-                    timeout=self.request_timeout,
-                    auth=HTTPBasicAuth(self.username, self.password),
-                    verify=self.verify_hostname,
-                    headers=self.headers,
-                    allow_redirects=self.allow_redirects,
-                )
-            else:
-                assert self.certfile is not None and self.keyfile is not None
-                response = requests.get(
-                    self.url,
-                    timeout=self.request_timeout,
-                    cert=(self.certfile, self.keyfile),
-                    verify=self.verify_hostname,
-                    headers=self.headers,
-                    allow_redirects=self.allow_redirects,
-                )
+            response = requests.request(
+                self.method,
+                self.url,
+                timeout=self.request_timeout,
+                auth=self.auth,
+                cert=self.cert,
+                data=self.data,
+                verify=self.verify_hostname,
+                headers=self.headers,
+                allow_redirects=self.allow_redirects,
+            )
 
             end_time = arrow.get()
             load_time = end_time - start_time
