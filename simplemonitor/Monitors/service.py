@@ -60,7 +60,7 @@ class MonitorSvc(Monitor):
             return self.record_fail("Could not parse output from svstat")
 
     def describe(self) -> str:
-        return f"Checking that the supervise-managed service in {self.path} is up for at least {self.uptime} seconds."
+        return f"Checking that the supervise-managed service in {self.path} is up for at least {self.minimum_uptime} seconds."
 
     def get_params(self) -> Tuple:
         return (self.path, self.uptime)
