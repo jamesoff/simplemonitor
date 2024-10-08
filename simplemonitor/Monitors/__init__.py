@@ -38,6 +38,7 @@ from .service import (
     MonitorWindowsDHCPScope,
 )
 from .unifi import MonitorUnifiFailover, MonitorUnifiFailoverWatchdog
+from .remote_ssh import MonitorRemoteSSH
 
 __all__ = [
     "CompoundMonitor",
@@ -61,6 +62,7 @@ __all__ = [
     "MonitorRingDoorbell",
     "MonitorSensor",
     "MonitorService",
+    "MonitorRemoteSSH",
     "MonitorSvc",
     "MonitorSwap",
     "MonitorSystemdUnit",
