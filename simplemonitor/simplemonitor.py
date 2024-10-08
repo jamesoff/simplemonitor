@@ -3,6 +3,7 @@
 
 import concurrent.futures
 import copy
+import json
 import logging
 import os
 import signal
@@ -109,6 +110,14 @@ class SimpleMonitor:
         else:
             self._network = False
 
+        monitors_headers = config.get("monitor", "monitors_headers", fallback=None)
+        if monitors_headers:
+            try:
+                monitors_headers_dict_check = json.loads(monitors_headers)
+                self.monitors_headers = monitors_headers
+            except:
+                self.monitors_headers = None
+
         monitors_files = [
             Path(config.get("monitor", "monitors", fallback="monitors.ini"))
         ]
@@ -123,6 +132,7 @@ class SimpleMonitor:
         if monitors_dir:
             monitors_files.extend(list(sorted(Path(monitors_dir).glob("*.ini"))))
         self._load_monitors(monitors_files)
+
         count = self.count_monitors()
         if count == 0:
             module_logger.critical("No monitors loaded")
@@ -171,6 +181,7 @@ class SimpleMonitor:
 
         module_logger.info("=== Loading monitors")
         for this_monitor in monitors:
+
             if config.has_option(this_monitor, "runon"):
                 if myhostname != config.get(this_monitor, "runon").lower():
                     module_logger.warning(
@@ -179,7 +190,14 @@ class SimpleMonitor:
                         config.get(this_monitor, "runon"),
                     )
                     continue
+
             monitor_type = config.get(this_monitor, "type")
+
+            if monitor_type == "http":
+                if not config.has_option(this_monitor, "headers"):
+                    if self.monitors_headers:
+                        config[this_monitor]["headers"] = self.monitors_headers
+
             new_monitor = None
             config_options = default_config.copy()
             config_options.update(get_config_dict(config, this_monitor))
