@@ -102,6 +102,8 @@ class Monitor:
         else:
             self.gps = None
 
+        self.slug = cast(Optional[str], self.get_config_option("slug"))
+
         self.running_on = short_hostname()
         self._state = MonitorState.UNKNOWN
         self._force_run = True  # set to ensure we re-run ASAP after a HUP
