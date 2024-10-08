@@ -1,8 +1,9 @@
 # type: ignore
-import unittest
 import subprocess
-from simplemonitor.Monitors import service
+import unittest
 from unittest.mock import patch
+
+from simplemonitor.Monitors import service
 
 
 class TestUnixServiceMonitors(unittest.TestCase):
@@ -50,6 +51,40 @@ class TestUnixServiceMonitors(unittest.TestCase):
         m.run_test()
         self.assertFalse(m.test_success())
         self.assertEqual(m.error_count, 2)
+
+    @patch("subprocess.check_output")
+    def test_svc_ok(self, subprocess_run_fn):
+        config_options = {"path": "/var/service/thing"}
+        subprocess_run_fn.return_value = b"/var/service/thing: up (pid 1234) 10 seconds"
+        m = service.MonitorSvc("unittest", config_options)
+        m.run_test()
+        self.assertTrue(m.test_success())
+
+    @patch("subprocess.check_output")
+    def test_svc_down(self, subprocess_run_fn):
+        config_options = {"path": "/var/service/thing"}
+        subprocess_run_fn.return_value = (
+            b"/var/service/thing: down 10 seconds, normally up"
+        )
+        m = service.MonitorSvc("unittest", config_options)
+        m.run_test()
+        self.assertFalse(m.test_success())
+
+    @patch("subprocess.check_output")
+    def test_svc_up_enough(self, subprocess_run_fn):
+        config_options = {"path": "/var/service/thing", "minimum_uptime": 5}
+        subprocess_run_fn.return_value = b"/var/service/thing: up (pid 1234) 10 seconds"
+        m = service.MonitorSvc("unittest", config_options)
+        m.run_test()
+        self.assertTrue(m.test_success())
+
+    @patch("subprocess.check_output")
+    def test_svc_up_not_enough(self, subprocess_run_fn):
+        config_options = {"path": "/var/service/thing", "minimum_uptime": 15}
+        subprocess_run_fn.return_value = b"/var/service/thing: up (pid 1234) 10 seconds"
+        m = service.MonitorSvc("unittest", config_options)
+        m.run_test()
+        self.assertFalse(m.test_success())
 
 
 if __name__ == "__main__":
