@@ -26,32 +26,44 @@ class MonitorSvc(Monitor):
 
     monitor_type = "svc"
     path = ""
+    regexp = re.compile(r": up \(pid \d+\) (?P<uptime>\d+) seconds")
 
     def __init__(self, name: str, config_options: dict) -> None:
         super().__init__(name, config_options)
         self.path = cast(str, self.get_config_option("path", required=True))
-        self.params = ("svok %s" % self.path).split(" ")
+        self.params = ["svstat", self.path]
+        self.minimum_uptime = int(
+            self.get_config_option(
+                "minimum_uptime", required_type="int", minimum=0, default=0
+            )
+        )
 
     def run_test(self) -> bool:
         if self.path == "":
             return self.record_fail("Path is not configured")
         try:
-            result = subprocess.call(self.params)
-            if result is None:
-                result = 0
-            if result > 0:
-                return self.record_fail("svok returned %d" % int(result))
-            return self.record_success()
+            result = subprocess.check_output(self.params).decode()
+            matches = self.regexp.search(result)
+            if not matches:
+                return self.record_fail(result)
+
         except Exception as error:
-            return self.record_fail("Exception while executing svok: %s" % error)
+            return self.record_fail(f"Exception while executing svstat: {error!r}")
+        try:
+            uptime = int(matches.group("uptime"))
+            if uptime < self.minimum_uptime:
+                return self.record_fail(
+                    f"{result} (wanted up at least {uptime} seconds)"
+                )
+            return self.record_success(result)
+        except ValueError:
+            return self.record_fail("Could not parse output from svstat")
 
     def describe(self) -> str:
-        return (
-            "Checking that the supervise-managed service in %s is running." % self.path
-        )
+        return f"Checking that the supervise-managed service in {self.path} is up for at least {self.uptime} seconds."
 
     def get_params(self) -> Tuple:
-        return (self.path,)
+        return (self.path, self.uptime)
 
 
 @register
