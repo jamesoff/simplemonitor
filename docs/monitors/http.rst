@@ -82,6 +82,8 @@ Attempts to fetch a URL and makes sure the HTTP return code is (by default) 200/
 
     JSON map of HTTP header names and values to add to the request
 
+.. warning:: Use only one of the following options - either json OR data.
+
 .. confval:: data
 
     :type: string
