@@ -114,7 +114,8 @@ class SimpleMonitor:
         if monitors_headers:
             try:
                 self.monitors_headers = json.loads(monitors_headers)
-            except:
+            except json.JSONDecodeError as e:
+                module_logger.error(f"Parsing monitors_headers to JSON failed: {e}")
                 self.monitors_headers = None
 
         monitors_files = [

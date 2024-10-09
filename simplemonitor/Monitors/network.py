@@ -91,7 +91,8 @@ class MonitorHTTP(Monitor):
         if headers:
             try:
                 self.headers = json.loads(headers)
-            except:
+            except json.JSONDecodeError as e:
+                self.monitor_logger.error(f"Parsing headers to JSON failed: {e}")
                 self.headers = None
 
         self.data = config_options.get("data")
@@ -100,7 +101,8 @@ class MonitorHTTP(Monitor):
         if data_json:
             try:
                 self.json = json.loads(data_json)
-            except:
+            except json.JSONDecodeError as e:
+                self.monitor_logger.error(f"Parsing json to JSON failed: {e}")
                 self.json = None
 
         self.verify_hostname = self.get_config_option(
