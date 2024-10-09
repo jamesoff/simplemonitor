@@ -53,7 +53,7 @@ class MonitorSvc(Monitor):
             uptime = int(matches.group("uptime"))
             if uptime < self.minimum_uptime:
                 return self.record_fail(
-                    f"{result} (wanted up at least {uptime} seconds)"
+                    f"{result} (wanted {self.minimum_uptime} seconds)"
                 )
             return self.record_success(result)
         except ValueError:
