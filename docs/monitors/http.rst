@@ -74,7 +74,7 @@ Attempts to fetch a URL and makes sure the HTTP return code is (by default) 200/
 
     the timeout in seconds for the HTTP request to complete
 
-.. tip:: You can set the headers globally in monitors.ini [defaults] section
+.. tip:: You can set the headers globally in :file:`monitors.ini` - just create ``[defaults]`` section on top of the file
 
 .. confval:: headers
 
