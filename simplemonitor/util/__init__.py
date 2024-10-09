@@ -236,7 +236,7 @@ def subclass_dict_handler(
     return (register, get_class, all_types)
 
 
-def check_group_match(group: List[str], group_list: List[str]) -> bool:
+def check_group_match(group: Union[str, List[str]], group_list: List[str]) -> bool:
     """
     Check if a group is contained in the group list.
 
@@ -244,6 +244,9 @@ def check_group_match(group: List[str], group_list: List[str]) -> bool:
     """
     if group_list[0] == "_all":
         return True
+
+    if isinstance(group, str):
+        group = group.strip().split(",")
 
     if any(element in group_list for element in group):
         return True
