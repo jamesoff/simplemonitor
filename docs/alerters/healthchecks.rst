@@ -3,9 +3,9 @@ healthchecks - notifications
 
 .. include:: ../creds-warning.rst
 
-You will need to be registered at healthchecks_.
+You will need to be registered at healthchecks.io_.
 
-.. _healthchecks: https://healthchecks.io/
+.. _healthchecks.io: https://healthchecks.io/
 
 .. note:: To enable posting to Healthchecks Pinging API - a monitor MUST have ``slug`` defined.
 
@@ -25,10 +25,15 @@ You will need to be registered at healthchecks_.
 
     Add create=1 param to support Auto provisioning - creating new checks for undeclared slugs
 
+.. warning:: You might need to adjust some settings_ for the newly created checks.
+
+.. _settings: https://healthchecks.io/docs/autoprovisioning/
+
 .. confval:: headers
 
-    :type: string
+    :type: JSON map as string
     :required: false
+    :default: ``{"User-Agent": "SimpleMonitor"}``
 
     Add custom headers for the POST request
 
