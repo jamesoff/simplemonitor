@@ -22,12 +22,8 @@ class HealthchecksAlerter(Alerter):
         self.hc_token = cast(
             str, self.get_config_option("token", required=True, allow_empty=False)
         )
-        self.hc_create = cast(
-            str, self.get_config_option("create", required_type=bool)
-        )
-        hc_headers = cast(
-            str, self.get_config_option("headers")
-        )
+        self.hc_create = cast(str, self.get_config_option("create", required_type=bool))
+        hc_headers = cast(str, self.get_config_option("headers"))
         if hc_headers:
             try:
                 self.hc_headers = json.loads(hc_headers)
@@ -39,7 +35,15 @@ class HealthchecksAlerter(Alerter):
 
         self.support_catchup = True
 
-    def send_hc_notification(self, subject: str, body: str, alert_type: str, name: str, slug: str, dry_run=False) -> None:
+    def send_hc_notification(
+        self,
+        subject: str,
+        body: str,
+        alert_type: str,
+        name: str,
+        slug: str,
+        dry_run=False,
+    ) -> None:
         """Send a push notification."""
         url = "https://hc-ping.com/" + self.hc_token + "/" + slug
         if alert_type != "success":
@@ -77,11 +81,20 @@ class HealthchecksAlerter(Alerter):
 
         if not self._dry_run:
             try:
-                self.send_hc_notification(subject, body, alert_type.value, monitor.name, monitor.slug)
+                self.send_hc_notification(
+                    subject, body, alert_type.value, monitor.name, monitor.slug
+                )
             except Exception:
                 self.alerter_logger.exception("Couldn't send push notification")
         else:
-            self.send_hc_notification(subject, body, alert_type.value, monitor.name, monitor.slug, dry_run=self._dry_run)
+            self.send_hc_notification(
+                subject,
+                body,
+                alert_type.value,
+                monitor.name,
+                monitor.slug,
+                dry_run=self._dry_run,
+            )
 
     def _describe_action(self) -> str:
         return "posting to healthchecks"
