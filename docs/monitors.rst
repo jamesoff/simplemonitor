@@ -109,11 +109,11 @@ These options are common to all monitor types.
 
 .. confval:: group
 
-    :type: string
+    :type: comma-separated list of string
     :required: false
     :default: ``default``
 
-    the group the monitor belongs to. Alerters and Loggers will only fire for monitors which appear in their groups.
+    the group(s) the monitor belongs to. Alerters and Loggers will only fire for monitors which appear in their groups.
 
 .. confval:: failure_doc
 
