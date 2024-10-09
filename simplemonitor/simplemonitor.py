@@ -110,14 +110,6 @@ class SimpleMonitor:
         else:
             self._network = False
 
-        monitors_headers = config.get("monitor", "monitors_headers", fallback=None)
-        if monitors_headers:
-            try:
-                self.monitors_headers = json.loads(monitors_headers)
-            except json.JSONDecodeError as e:
-                module_logger.error(f"Parsing monitors_headers to JSON failed: {e}")
-                self.monitors_headers = None
-
         monitors_files = [
             Path(config.get("monitor", "monitors", fallback="monitors.ini"))
         ]
@@ -193,11 +185,6 @@ class SimpleMonitor:
 
             monitor_type = config.get(this_monitor, "type")
 
-            if monitor_type == "http":
-                if not config.has_option(this_monitor, "headers"):
-                    if self.monitors_headers:
-                        config[this_monitor]["headers"] = self.monitors_headers
-
             new_monitor = None
             config_options = default_config.copy()
             config_options.update(get_config_dict(config, this_monitor))
@@ -229,10 +216,16 @@ class SimpleMonitor:
             new_monitor = cls(this_monitor, config_options)
             # new_monitor.set_mon_refs(m)
 
-            module_logger.info(
-                "Adding %s monitor %s: %s", monitor_type, this_monitor, new_monitor
-            )
-            self.add_monitor(this_monitor, new_monitor)
+            if new_monitor.enabled:
+                module_logger.info(
+                    "Adding %s monitor %s: %s", monitor_type, this_monitor, new_monitor
+                )
+                self.add_monitor(this_monitor, new_monitor)
+            else:
+                module_logger.info(
+                    "Skipping disabled %s monitor: %s", monitor_type, this_monitor
+                )
+            # del new_monitor  # ?
 
         for monitor in self.monitors.values():
             monitor.set_mon_refs(self.monitors)
@@ -281,10 +274,19 @@ class SimpleMonitor:
             new_logger.set_global_info(
                 {"interval": config.getint("monitor", "interval")}
             )
-            module_logger.info(
-                "Adding %s logger %s: %s", logger_type, config_logger, new_logger
-            )
-            self.add_logger(config_logger, new_logger)
+            if new_logger.enabled:
+                module_logger.info(
+                    "Adding %s logger %s: %s",
+                    logger_type,
+                    config_logger,
+                    new_logger.describe(),
+                )
+                self.add_logger(config_logger, new_logger)
+            else:
+                module_logger.info(
+                    "Skipping disabled %s logger: %s", logger_type, config_logger
+                )
+
             del new_logger
         self.prune_loggers(loggers)
         module_logger.info("--- Loaded %d loggers", len(self.loggers))
@@ -325,14 +327,21 @@ class SimpleMonitor:
                 )
                 continue
             new_alerter = alerter_cls(config_options)  # type: Alerter
-            module_logger.info(
-                "Adding %s alerter %s: %s",
-                alerter_type,
-                this_alerter,
-                new_alerter.describe(),
-            )
-            new_alerter.name = this_alerter
-            self.add_alerter(this_alerter, new_alerter)
+
+            if new_alerter.enabled:
+                module_logger.info(
+                    "Adding %s alerter %s: %s",
+                    alerter_type,
+                    this_alerter,
+                    new_alerter.describe(),
+                )
+                new_alerter.name = this_alerter
+                self.add_alerter(this_alerter, new_alerter)
+            else:
+                module_logger.info(
+                    "Skipping disabled %s alerter: %s", alerter_type, this_alerter
+                )
+
             del new_alerter
         self.prune_alerters(alerters)
         module_logger.info("--- Loaded %d alerters", len(self.alerters))
