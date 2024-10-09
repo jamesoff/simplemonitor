@@ -76,14 +76,6 @@ This file must contain a ``[monitor]`` section, which must contain at least the 
 
     The main ``monitors`` file is always loaded first.
 
-.. confval:: monitors_headers
-
-    :type: JSON map as string
-    :required: false
-    :default: none
-
-    JSON map of HTTP header names and values to add to the requests - you can override this with ``headers`` in a monitor config
-
 .. confval:: pidfile
 
     :type: string
