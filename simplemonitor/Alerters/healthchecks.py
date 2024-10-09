@@ -9,6 +9,7 @@ import requests
 
 from ..Monitors.monitor import Monitor
 from .alerter import Alerter, AlertLength, AlertType, register
+from ..util import check_group_match
 
 
 @register
@@ -16,6 +17,7 @@ class HealthchecksAlerter(Alerter):
     """Send push notification via Healthchecks."""
 
     alerter_type = "healthchecks"
+    default_headers = {"User-Agent": "SimpleMonitor"}
 
     def __init__(self, config_options: dict) -> None:
         super().__init__(config_options)
@@ -29,7 +31,9 @@ class HealthchecksAlerter(Alerter):
                 self.hc_headers = json.loads(hc_headers)
             except json.JSONDecodeError as e:
                 self.alerter_logger.error(f"Parsing headers to JSON failed: {e}")
-                self.hc_headers = None
+                self.hc_headers = self.default_headers
+        else:
+            self.hc_headers = self.default_headers
         self.timeout = cast(
             int, self.get_config_option("timeout", required_type="int", default=5)
         )
@@ -52,24 +56,44 @@ class HealthchecksAlerter(Alerter):
         if self.hc_create:
             url += "?create=1"
         if dry_run:
-            self.alerter_logger.info("dry_run - url: %s", url)
+            self.alerter_logger.info(
+                f"dry_run - monitor: {self.name} | alerter: {name} | {url}"
+            )
             return
-        req = requests.post(
-            url,
-            data=body,
-            headers=self.hc_headers,
-            timeout=self.timeout,
-        )
-        req.raise_for_status()
-        self.alerter_logger.info("monitor: %s - pushing to url: %s", name, url)
+
+        data = ""
+        data_json = {}
+        if subject:
+            data_json["subject"] = subject
+        if body:
+            data = body
+            data_json["body"] = body.strip()
+
+        try:
+            req = requests.post(
+                url,
+                data=data,
+                # json=data_json,
+                headers=self.hc_headers,
+                timeout=self.timeout,
+            )
+            req.raise_for_status()
+            self.alerter_logger.info(f"monitor: {name} | alerter: {self.name} | {url}")
+        except requests.exceptions.RequestException:
+            raise ValueError(
+                f"alerter: {self.name} | {slug} | {req.status_code}"
+            ) from None
 
     def send_alert(self, name: str, monitor: Monitor) -> None:
         """Build up the content for the push notification."""
 
-        alert_type = self.should_alert(monitor)
-
         if monitor.slug is None or not monitor.enabled:
             return
+
+        if not check_group_match(monitor.group, self.groups):
+            return
+
+        alert_type = self.should_alert(monitor)
 
         if alert_type == AlertType.NONE:
             if monitor.failures:
@@ -85,8 +109,10 @@ class HealthchecksAlerter(Alerter):
                 self.send_hc_notification(
                     subject, body, alert_type.value, monitor.name, monitor.slug
                 )
-            except Exception:
-                self.alerter_logger.exception("Couldn't send push notification")
+            except Exception as e:
+                self.alerter_logger.error(
+                    f"Notification failed: monitor: {monitor.name} | group: {monitor.group} | {e}"
+                )
         else:
             self.send_hc_notification(
                 subject,
