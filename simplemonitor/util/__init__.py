@@ -244,7 +244,13 @@ def check_group_match(group: str, group_list: List[str]) -> bool:
     """
     if group_list[0] == "_all":
         return True
-    if group in group_list:
+
+    groups = group.split(',')
+
+    if group == "service,telegram":
+        pass
+
+    if any(element in group_list for element in groups):
         return True
     return False
 
