@@ -132,6 +132,14 @@ These options are common to all monitor types.
 
     comma-separated latitude and longitude of this monitor
 
+.. confval:: enabled
+
+    :type: boolean
+    :required: false
+    :default: true
+
+    Set to false to turn off the monitor
+
 
 .. _monitors-list:
 
