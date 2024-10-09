@@ -25,7 +25,7 @@ You will need to be registered at healthchecks.io_.
 
     Add create=1 param to support Auto provisioning - creating new checks for undeclared slugs
 
-.. warning:: You might need to adjust some settings_ for the newly created checks.
+.. warning:: You might need to adjust some settings_ for the automatically created checks.
 
 .. _settings: https://healthchecks.io/docs/autoprovisioning/
 
