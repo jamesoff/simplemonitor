@@ -52,7 +52,7 @@ class HealthchecksAlerter(Alerter):
         req = requests.post(
             url,
             data=body,
-            headers = self.hc_headers,
+            headers=self.hc_headers,
             timeout=self.timeout,
         )
         req.raise_for_status()
