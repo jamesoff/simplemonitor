@@ -95,15 +95,23 @@ class MonitorHTTP(Monitor):
                 self.monitor_logger.error(f"Parsing headers to JSON failed: {e}")
                 self.headers = None
 
-        self.data = config_options.get("data")
+        self.data = None
+        self.json = None
 
-        data_json = config_options.get("json")
-        if data_json:
-            try:
-                self.json = json.loads(data_json)
-            except json.JSONDecodeError as e:
-                self.monitor_logger.error(f"Parsing json to JSON failed: {e}")
-                self.json = None
+        if self.method == "POST":
+            data_json = config_options.get("json")
+            if data_json:
+                try:
+                    self.json = json.loads(data_json)
+                except json.JSONDecodeError as e:
+                    self.monitor_logger.error(f"Parsing json to JSON failed: {e}")
+                    self.json = None
+
+            self.data = config_options.get("data")
+
+        if self.json and self.data:
+            self.data = None
+            raise ValueError("Use only one option - either json OR data")
 
         self.verify_hostname = self.get_config_option(
             "verify_hostname", default=True, required_type="bool"
@@ -137,7 +145,6 @@ class MonitorHTTP(Monitor):
                 headers=self.headers,
                 allow_redirects=self.allow_redirects,
             )
-
             end_time = arrow.get()
             load_time = end_time - start_time
             if response.status_code not in self.allowed_codes:
