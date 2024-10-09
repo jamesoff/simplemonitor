@@ -107,6 +107,14 @@ These options are common to all alerter types.
     SNS alerter, which could be urgent if sending SMSes, but non-urgent if
     sending emails.
 
+.. confval:: enabled
+
+    :type: boolean
+    :required: false
+    :default: true
+
+    Set to false to turn off the alerter
+
 Time restrictions
 -----------------
 
