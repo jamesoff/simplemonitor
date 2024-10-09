@@ -35,6 +35,7 @@ class MonitorHTTP(Monitor):
     allow_redirects = True  # type: bool
 
     monitor_type = "http"
+    method = "GET"
 
     # optional - for HTTPS client authentication only
     certfile: Optional[str] = None
@@ -56,7 +57,7 @@ class MonitorHTTP(Monitor):
             else:
                 raise ValueError("unsupported HTTP method")
         else:
-            self.method = "GET"
+            self.method = self.method
 
         regexp = self.get_config_option("regexp")
         if regexp is not None:
@@ -136,14 +137,14 @@ class MonitorHTTP(Monitor):
             response = requests.request(
                 self.method,
                 self.url,
+                headers=self.headers,
                 timeout=self.request_timeout,
+                verify=self.verify_hostname,
+                allow_redirects=self.allow_redirects,
                 auth=self.auth,
                 cert=self.cert,
                 data=self.data,
                 json=self.json,
-                verify=self.verify_hostname,
-                headers=self.headers,
-                allow_redirects=self.allow_redirects,
             )
             end_time = arrow.get()
             load_time = end_time - start_time
