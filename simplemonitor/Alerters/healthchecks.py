@@ -27,7 +27,8 @@ class HealthchecksAlerter(Alerter):
         if hc_headers:
             try:
                 self.hc_headers = json.loads(hc_headers)
-            except:
+            except json.JSONDecodeError as e:
+                self.alerter_logger.error(f"Parsing headers to JSON failed: {e}")
                 self.hc_headers = None
         self.timeout = cast(
             int, self.get_config_option("timeout", required_type="int", default=5)
