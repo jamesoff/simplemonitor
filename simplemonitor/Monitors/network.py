@@ -92,8 +92,13 @@ class MonitorHTTP(Monitor):
             self.headers = json.loads(self.headers)
 
         self.data = config_options.get("data")
-        if self.data:
-            self.data = json.loads(self.data)
+
+        data_json = config_options.get("json")
+        if data_json:
+            try:
+                self.json = json.loads(data_json)
+            except:
+                self.json = None
 
         self.verify_hostname = self.get_config_option(
             "verify_hostname", default=True, required_type="bool"
@@ -122,6 +127,7 @@ class MonitorHTTP(Monitor):
                 auth=self.auth,
                 cert=self.cert,
                 data=self.data,
+                json=self.json,
                 verify=self.verify_hostname,
                 headers=self.headers,
                 allow_redirects=self.allow_redirects,
