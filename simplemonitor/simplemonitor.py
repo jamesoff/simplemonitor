@@ -113,8 +113,7 @@ class SimpleMonitor:
         monitors_headers = config.get("monitor", "monitors_headers", fallback=None)
         if monitors_headers:
             try:
-                monitors_headers_dict_check = json.loads(monitors_headers)
-                self.monitors_headers = monitors_headers
+                self.monitors_headers = json.loads(monitors_headers)
             except:
                 self.monitors_headers = None
 

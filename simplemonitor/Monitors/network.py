@@ -87,9 +87,12 @@ class MonitorHTTP(Monitor):
         else:
             self.cert = None
 
-        self.headers = config_options.get("headers")
-        if self.headers:
-            self.headers = json.loads(self.headers)
+        headers = config_options.get("headers")
+        if headers:
+            try:
+                self.headers = json.loads(headers)
+            except:
+                self.headers = None
 
         self.data = config_options.get("data")
 
