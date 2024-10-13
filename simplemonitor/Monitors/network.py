@@ -40,9 +40,12 @@ class MonitorHTTP(Monitor):
     # optional - for HTTPS client authentication only
     certfile: Optional[str] = None
     keyfile: Optional[str] = None
+    cert: Optional[tuple] = None
+
+    auth: Optional[HTTPBasicAuth] = None
 
     # optional - headers
-    headers: Optional[str] = None
+    headers: Optional[dict] = None
     data: Optional[str] = None
 
     def __init__(self, name: str, config_options: dict) -> None:
