@@ -445,7 +445,7 @@ class SimpleMonitor:
             for dependency in monitor.dependencies:
                 if dependency not in monitors:
                     module_logger.critical(
-                        "Configuration error: dependency %s of monitor %s is not defined!",
+                        "Configuration error: dependency %s of monitor %s is not defined or is not enabled!",
                         dependency,
                         key,
                     )
