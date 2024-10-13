@@ -232,13 +232,17 @@ class TestGroupMatch(unittest.TestCase):
         self.assertFalse(util.check_group_match("test3,test4", ["test", "test2"]))
 
     def test_list_2(self):
-        self.assertTrue(util.check_group_match(["test3", "test1"], ["test", "test1", "test2"]))
+        self.assertTrue(
+            util.check_group_match(["test3", "test1"], ["test", "test1", "test2"])
+        )
 
     def test_not_list(self):
         self.assertFalse(util.check_group_match("default", ["test1", "test2"]))
 
     def test_not_list_2(self):
-        self.assertFalse(util.check_group_match(["default", "test3"], ["test1", "test2"]))
+        self.assertFalse(
+            util.check_group_match(["default", "test3"], ["test1", "test2"])
+        )
 
     def test_all(self):
         self.assertTrue(util.check_group_match("test", ["_all"]))
