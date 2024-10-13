@@ -56,8 +56,6 @@ class MonitorHTTP(Monitor):
                 self.method = method
             else:
                 raise ValueError("unsupported HTTP method")
-        else:
-            self.method = self.method
 
         regexp = self.get_config_option("regexp")
         if regexp is not None:

@@ -17,30 +17,28 @@ class HealthchecksAlerter(Alerter):
     """Send push notification via Healthchecks."""
 
     alerter_type = "healthchecks"
-    default_headers = {"User-Agent": "SimpleMonitor"}
+    headers = {"User-Agent": "SimpleMonitor"}
 
     def __init__(self, config_options: dict) -> None:
         super().__init__(config_options)
-        self.hc_token = cast(
+        self.token = cast(
             str, self.get_config_option("token", required=True, allow_empty=False)
         )
-        self.hc_create = cast(str, self.get_config_option("create", required_type=bool))
+        self.create = cast(str, self.get_config_option("create", required_type="bool"))
         hc_headers = cast(str, self.get_config_option("headers"))
         if hc_headers:
             try:
-                self.hc_headers = json.loads(hc_headers)
+                self.headers = json.loads(hc_headers)
             except json.JSONDecodeError as e:
                 self.alerter_logger.error(f"Parsing headers to JSON failed: {e}")
-                self.hc_headers = self.default_headers
-        else:
-            self.hc_headers = self.default_headers
+
         self.timeout = cast(
             int, self.get_config_option("timeout", required_type="int", default=5)
         )
 
         self.support_catchup = True
 
-    def send_hc_notification(
+    def send_notification(
         self,
         subject: str,
         body: str,
@@ -50,10 +48,10 @@ class HealthchecksAlerter(Alerter):
         dry_run=False,
     ) -> None:
         """Send a push notification."""
-        url = "https://hc-ping.com/" + self.hc_token + "/" + slug
+        url = "https://hc-ping.com/" + self.token + "/" + slug
         if alert_type != "success":
             url += "/fail"
-        if self.hc_create:
+        if self.create:
             url += "?create=1"
         if dry_run:
             self.alerter_logger.info(
@@ -74,7 +72,7 @@ class HealthchecksAlerter(Alerter):
                 url,
                 data=data,
                 # json=data_json,
-                headers=self.hc_headers,
+                headers=self.headers,
                 timeout=self.timeout,
             )
             req.raise_for_status()
@@ -106,7 +104,7 @@ class HealthchecksAlerter(Alerter):
 
         if not self._dry_run:
             try:
-                self.send_hc_notification(
+                self.send_notification(
                     subject, body, alert_type.value, monitor.name, monitor.slug
                 )
             except Exception as e:
@@ -114,7 +112,7 @@ class HealthchecksAlerter(Alerter):
                     f"Notification failed: monitor: {monitor.name} | group: {monitor.group} | {e}"
                 )
         else:
-            self.send_hc_notification(
+            self.send_notification(
                 subject,
                 body,
                 alert_type.value,
