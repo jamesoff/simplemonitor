@@ -56,8 +56,11 @@ class TelegramAlerter(Alerter):
         if not self._dry_run:
             try:
                 self.send_telegram_notification(body)
-            except Exception:
-                self.alerter_logger.exception("Couldn't send push notification")
+                self.alerter_logger.info(
+                    f"monitor: {name} | alerter: {self.name} - sent"
+                )
+            except Exception as e:
+                self.alerter_logger.exception(f"Couldn't send push notification: {e}")
         else:
             self.alerter_logger.info("dry_run: would send push notification: %s", body)
 

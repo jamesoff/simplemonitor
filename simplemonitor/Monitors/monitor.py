@@ -73,7 +73,9 @@ class Monitor:
         self._notify = self.get_config_option(
             "notify", required_type="bool", default=True
         )
-        self.group = cast(str, self.get_config_option("group", default="default"))
+        self.group = "".join(
+            cast(str, self.get_config_option("group", default="default")).split()
+        ).split(",")
         self._tolerance = self.get_config_option(
             "tolerance", required_type="int", default=0, minimum=0
         )
@@ -101,6 +103,8 @@ class Monitor:
             ]  # type: Optional[List[float]]
         else:
             self.gps = None
+
+        self.slug = cast(Optional[str], self.get_config_option("slug"))
 
         self.running_on = short_hostname()
         self._state = MonitorState.UNKNOWN

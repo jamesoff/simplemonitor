@@ -56,7 +56,7 @@ Send alerts using the ntfy_ service.
 
     :type: bool
     :required: false
-    :default: ``false``
+    :default: false
 
     Prefix the subject line with an icon dependent on the result (failed/succeeded)
 
@@ -75,5 +75,3 @@ Send alerts using the ntfy_ service.
     :default: ``2705``
 
     Unicode code for the "succeeded" icon. The code is often provided as "U+<code>" (e.g. ``U+2705``). The default icon for the failed status is ✅.
-
-    

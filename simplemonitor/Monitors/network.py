@@ -35,17 +35,30 @@ class MonitorHTTP(Monitor):
     allow_redirects = True  # type: bool
 
     monitor_type = "http"
+    method = "GET"
 
     # optional - for HTTPS client authentication only
     certfile: Optional[str] = None
     keyfile: Optional[str] = None
+    cert: Optional[tuple] = None
+
+    auth: Optional[HTTPBasicAuth] = None
 
     # optional - headers
-    headers = None
+    headers: Optional[dict] = None
+    data: Optional[str] = None
 
     def __init__(self, name: str, config_options: dict) -> None:
         super().__init__(name, config_options)
         self.url = self.get_config_option("url", required=True)
+
+        method = self.get_config_option("method")
+        if method is not None:
+            method = method.strip().upper()
+            if method in ["GET", "POST", "HEAD"]:
+                self.method = method
+            else:
+                raise ValueError("unsupported HTTP method")
 
         regexp = self.get_config_option("regexp")
         if regexp is not None:
@@ -70,9 +83,37 @@ class MonitorHTTP(Monitor):
         if not self.certfile and self.keyfile:
             raise ValueError("config option keyfile is set but certfile is not")
 
-        self.headers = config_options.get("headers")
-        if self.headers:
-            self.headers = json.loads(self.headers)
+        if self.certfile is not None and self.keyfile is not None:
+            self.cert = (self.certfile, self.keyfile)
+            assert self.certfile is not None and self.keyfile is not None
+        else:
+            self.cert = None
+
+        headers = config_options.get("headers")
+        if headers:
+            try:
+                self.headers = json.loads(headers)
+            except json.JSONDecodeError as e:
+                self.monitor_logger.error(f"Parsing headers to JSON failed: {e}")
+                self.headers = None
+
+        self.data = None
+        self.json = None
+
+        if self.method == "POST":
+            data_json = config_options.get("json")
+            if data_json:
+                try:
+                    self.json = json.loads(data_json)
+                except json.JSONDecodeError as e:
+                    self.monitor_logger.error(f"Parsing json to JSON failed: {e}")
+                    self.json = None
+
+            self.data = config_options.get("data")
+
+        if self.json and self.data:
+            self.data = None
+            raise ValueError("Use only one option - either json OR data")
 
         self.verify_hostname = self.get_config_option(
             "verify_hostname", default=True, required_type="bool"
@@ -85,42 +126,27 @@ class MonitorHTTP(Monitor):
         self.username = cast(Optional[str], config_options.get("username"))
         self.password = cast(Optional[str], config_options.get("password"))
 
+        if self.username is not None and self.password is not None:
+            self.auth = HTTPBasicAuth(self.username, self.password)
+        else:
+            self.auth = None
+
     def run_test(self) -> bool:
         start_time = arrow.get()
         end_time = None
         try:
-            if self.certfile is None and self.username is None:
-                response = requests.get(
-                    self.url,
-                    timeout=self.request_timeout,
-                    verify=self.verify_hostname,
-                    headers=self.headers,
-                    allow_redirects=self.allow_redirects,
-                )
-            elif (
-                self.certfile is None
-                and self.username is not None
-                and self.password is not None
-            ):
-                response = requests.get(
-                    self.url,
-                    timeout=self.request_timeout,
-                    auth=HTTPBasicAuth(self.username, self.password),
-                    verify=self.verify_hostname,
-                    headers=self.headers,
-                    allow_redirects=self.allow_redirects,
-                )
-            else:
-                assert self.certfile is not None and self.keyfile is not None
-                response = requests.get(
-                    self.url,
-                    timeout=self.request_timeout,
-                    cert=(self.certfile, self.keyfile),
-                    verify=self.verify_hostname,
-                    headers=self.headers,
-                    allow_redirects=self.allow_redirects,
-                )
-
+            response = requests.request(
+                self.method,
+                self.url,
+                headers=self.headers,
+                timeout=self.request_timeout,
+                verify=self.verify_hostname,
+                allow_redirects=self.allow_redirects,
+                auth=self.auth,
+                cert=self.cert,
+                data=self.data,
+                json=self.json,
+            )
             end_time = arrow.get()
             load_time = end_time - start_time
             if response.status_code not in self.allowed_codes:

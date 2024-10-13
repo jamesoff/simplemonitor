@@ -49,6 +49,9 @@ class Logger:
                 default="timestamp",
             ),
         )
+        self.enabled = cast(
+            bool, self.get_config_option("enabled", required_type="bool", default=True)
+        )
 
         if self._global_info is None:
             self._global_info = {}

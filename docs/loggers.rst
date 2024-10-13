@@ -60,9 +60,17 @@ These options are common to all logger types.
 
     :type: bool
     :required: false
-    :default: ``false``
+    :default: false
 
     if set, the logger only logs for monitors which executed on an iteration. Intended to be combined with the :ref:`gap<gap>` property of a Monitor.
+
+.. confval:: enabled
+
+    :type: boolean
+    :required: false
+    :default: true
+
+    Set to false to turn off the logger
 
 .. _loggers-list:
 

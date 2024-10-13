@@ -20,24 +20,29 @@ class TestMonitorHTTP(unittest.TestCase):
                 "urgent": 0,
                 "tolerance": 1,
                 "remote_alert": 1,
-            }
+            },
         )
 
-        with patch("requests.get", return_value=response_mock) as mock:
+        with patch("requests.request", return_value=response_mock) as mock:
             monitor.run_test()
 
         result = monitor.get_result()
         state = monitor.state()
 
         mock.assert_called_once_with(
+            "GET",
             "http://example.com",
             headers=None,
             timeout=5,
             verify=True,
             allow_redirects=True,
+            auth=None,
+            cert=None,
+            data=None,
+            json=None,
         )
         self.assertEqual(state, MonitorState.OK)
-        self.assertIn('200', result)
+        self.assertIn("200", result)
 
     def test_get_ok_non_default_params(self):
         response_mock = Mock(spec=Response)
@@ -56,23 +61,27 @@ class TestMonitorHTTP(unittest.TestCase):
                 "password": "pass",
                 "headers": '{"test": "header"}',
                 "timeout": 10,
-            }
+            },
         )
 
-        with patch("requests.get", return_value=response_mock) as mock:
+        with patch("requests.request", return_value=response_mock) as mock:
             monitor.run_test()
 
         result = monitor.get_result()
         state = monitor.state()
 
         mock.assert_called_once_with(
+            "GET",
             "http://example.com",
             headers={"test": "header"},
             timeout=10,
             verify=False,
             allow_redirects=False,
-            auth=HTTPBasicAuth("test", "pass")
+            auth=HTTPBasicAuth("test", "pass"),
+            cert=None,
+            data=None,
+            json=None,
         )
         self.assertEqual(state, MonitorState.OK)
-        self.assertIn('200', result)
+        self.assertIn("200", result)
         pass

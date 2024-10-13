@@ -109,11 +109,11 @@ These options are common to all monitor types.
 
 .. confval:: group
 
-    :type: string
+    :type: comma-separated list of string
     :required: false
     :default: ``default``
 
-    the group the monitor belongs to. Alerters and Loggers will only fire for monitors which appear in their groups.
+    the group(s) the monitor belongs to. Alerters and Loggers will only fire for monitors which appear in their groups.
 
 .. confval:: failure_doc
 
@@ -131,6 +131,14 @@ These options are common to all monitor types.
     :required: no, unless you want to use the :ref:`html logger<logger-html>`'s map
 
     comma-separated latitude and longitude of this monitor
+
+.. confval:: enabled
+
+    :type: boolean
+    :required: false
+    :default: true
+
+    Set to false to turn off the monitor
 
 
 .. _monitors-list:
