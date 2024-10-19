@@ -1946,6 +1946,20 @@ pytz = "*"
 requests = ">=2.0.0"
 
 [[package]]
+name = "types-cffi"
+version = "1.16.0.20240331"
+description = "Typing stubs for cffi"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "types-cffi-1.16.0.20240331.tar.gz", hash = "sha256:b8b20d23a2b89cfed5f8c5bc53b0cb8677c3aac6d970dbc771e28b9c698f5dee"},
+    {file = "types_cffi-1.16.0.20240331-py3-none-any.whl", hash = "sha256:a363e5ea54a4eb6a4a105d800685fde596bc318089b025b27dee09849fe41ff0"},
+]
+
+[package.dependencies]
+types-setuptools = "*"
+
+[[package]]
 name = "types-paramiko"
 version = "3.4.0.20240103"
 description = "Typing stubs for paramiko"
@@ -1961,17 +1975,18 @@ cryptography = ">=37.0.0"
 
 [[package]]
 name = "types-pyopenssl"
-version = "23.3.0.0"
+version = "24.1.0.20240722"
 description = "Typing stubs for pyOpenSSL"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "types-pyOpenSSL-23.3.0.0.tar.gz", hash = "sha256:5ffb077fe70b699c88d5caab999ae80e192fe28bf6cda7989b7e79b1e4e2dcd3"},
-    {file = "types_pyOpenSSL-23.3.0.0-py3-none-any.whl", hash = "sha256:00171433653265843b7469ddb9f3c86d698668064cc33ef10537822156130ebf"},
+    {file = "types-pyOpenSSL-24.1.0.20240722.tar.gz", hash = "sha256:47913b4678a01d879f503a12044468221ed8576263c1540dcb0484ca21b08c39"},
+    {file = "types_pyOpenSSL-24.1.0.20240722-py3-none-any.whl", hash = "sha256:6a7a5d2ec042537934cfb4c9d4deb0e16c4c6250b09358df1f083682fe6fda54"},
 ]
 
 [package.dependencies]
 cryptography = ">=35.0.0"
+types-cffi = "*"
 
 [[package]]
 name = "types-python-dateutil"
@@ -2101,4 +2116,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8.0"
-content-hash = "b23d1fc97c47e09e10bdcafed59335c73f0dcae3ec7fd8058eb2c80290ca2557"
+content-hash = "803c42ca0ff47629f191f47dcdfdf2ee53dc522fa3467eef4d8d496b76bb8e62"
