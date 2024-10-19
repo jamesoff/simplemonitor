@@ -123,6 +123,7 @@ class SimpleMonitor:
         if monitors_dir:
             monitors_files.extend(list(sorted(Path(monitors_dir).glob("*.ini"))))
         self._load_monitors(monitors_files)
+
         count = self.count_monitors()
         if count == 0:
             module_logger.critical("No monitors loaded")
@@ -171,6 +172,7 @@ class SimpleMonitor:
 
         module_logger.info("=== Loading monitors")
         for this_monitor in monitors:
+
             if config.has_option(this_monitor, "runon"):
                 if myhostname != config.get(this_monitor, "runon").lower():
                     module_logger.warning(
@@ -179,7 +181,9 @@ class SimpleMonitor:
                         config.get(this_monitor, "runon"),
                     )
                     continue
+
             monitor_type = config.get(this_monitor, "type")
+
             new_monitor = None
             config_options = default_config.copy()
             config_options.update(get_config_dict(config, this_monitor))
@@ -211,10 +215,16 @@ class SimpleMonitor:
             new_monitor = cls(this_monitor, config_options)
             # new_monitor.set_mon_refs(m)
 
-            module_logger.info(
-                "Adding %s monitor %s: %s", monitor_type, this_monitor, new_monitor
-            )
-            self.add_monitor(this_monitor, new_monitor)
+            if new_monitor.enabled:
+                module_logger.info(
+                    "Adding %s monitor %s: %s", monitor_type, this_monitor, new_monitor
+                )
+                self.add_monitor(this_monitor, new_monitor)
+            else:
+                module_logger.info(
+                    "Skipping disabled %s monitor: %s", monitor_type, this_monitor
+                )
+            # del new_monitor  # ?
 
         for monitor in self.monitors.values():
             monitor.set_mon_refs(self.monitors)
@@ -263,10 +273,19 @@ class SimpleMonitor:
             new_logger.set_global_info(
                 {"interval": config.getint("monitor", "interval")}
             )
-            module_logger.info(
-                "Adding %s logger %s: %s", logger_type, config_logger, new_logger
-            )
-            self.add_logger(config_logger, new_logger)
+            if new_logger.enabled:
+                module_logger.info(
+                    "Adding %s logger %s: %s",
+                    logger_type,
+                    config_logger,
+                    new_logger.describe(),
+                )
+                self.add_logger(config_logger, new_logger)
+            else:
+                module_logger.info(
+                    "Skipping disabled %s logger: %s", logger_type, config_logger
+                )
+
             del new_logger
         self.prune_loggers(loggers)
         module_logger.info("--- Loaded %d loggers", len(self.loggers))
@@ -307,14 +326,21 @@ class SimpleMonitor:
                 )
                 continue
             new_alerter = alerter_cls(config_options)  # type: Alerter
-            module_logger.info(
-                "Adding %s alerter %s: %s",
-                alerter_type,
-                this_alerter,
-                new_alerter.describe(),
-            )
-            new_alerter.name = this_alerter
-            self.add_alerter(this_alerter, new_alerter)
+
+            if new_alerter.enabled:
+                module_logger.info(
+                    "Adding %s alerter %s: %s",
+                    alerter_type,
+                    this_alerter,
+                    new_alerter.describe(),
+                )
+                new_alerter.name = this_alerter
+                self.add_alerter(this_alerter, new_alerter)
+            else:
+                module_logger.info(
+                    "Skipping disabled %s alerter: %s", alerter_type, this_alerter
+                )
+
             del new_alerter
         self.prune_alerters(alerters)
         module_logger.info("--- Loaded %d alerters", len(self.alerters))
@@ -419,7 +445,7 @@ class SimpleMonitor:
             for dependency in monitor.dependencies:
                 if dependency not in monitors:
                     module_logger.critical(
-                        "Configuration error: dependency %s of monitor %s is not defined!",
+                        "Configuration error: dependency %s of monitor %s is not defined or is not enabled!",
                         dependency,
                         key,
                     )

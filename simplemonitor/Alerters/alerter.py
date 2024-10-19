@@ -170,6 +170,9 @@ class Alerter:
             bool,
             self.get_config_option("urgent", default=self.urgent, required_type="bool"),
         )
+        self.enabled = cast(
+            bool, self.get_config_option("enabled", required_type="bool", default=True)
+        )
 
         if self._ooh_failures is None:
             self._ooh_failures = []
