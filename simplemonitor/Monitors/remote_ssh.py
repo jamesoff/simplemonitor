@@ -1,19 +1,20 @@
 """
 Remote command via ssh to check for stuff without simplemonitor on the remote target
 
-Input: 
+Input:
  - command to execute
  - regex to extract the monitored value
  - expected value
  - logic to apply
 """
 
-from venv import logger
-from .monitor import Monitor, register
-from enum import Enum
-import paramiko
 import re
+from enum import Enum
 from typing import Tuple, cast
+
+import paramiko
+
+from .monitor import Monitor, register
 
 
 class Operator(Enum):
@@ -30,7 +31,6 @@ class OperatorType(Enum):
 
 @register
 class MonitorRemoteSSH(Monitor):
-
     monitor_type = "remote_ssh"
 
     def __init__(self, name: str, config_options: dict) -> None:
@@ -85,6 +85,7 @@ class MonitorRemoteSSH(Monitor):
                 allowed_values=[OperatorType.INTEGER.value, OperatorType.STRING.value],
             ),
         )
+        self.target_value: str | int
         match self.result_type:
             case OperatorType.INTEGER.value:
                 self.target_value = cast(
@@ -128,12 +129,18 @@ class MonitorRemoteSSH(Monitor):
                 return self.record_fail(
                     f"cannot decode the output of the ssh command: {e}"
                 )
-        actual_value = re.match(self.regex, command_result).groups()[0]
+        if matches := re.match(self.regex, command_result):
+            matched_value = matches.groups()[0]
+        else:
+            return self.record_fail("Failed to match regex to command output")
+        actual_value: str | int
         match self.result_type:
             case OperatorType.INTEGER.value:
-                actual_value = cast(int, actual_value)
+                actual_value = int(matched_value)
             case OperatorType.STRING.value:
-                actual_value = cast(str, actual_value)
+                actual_value = str(matched_value)
+            case _:
+                raise RuntimeError("misconfiguration for operator type")
 
         # assess the comparison logic.
         # str and int can be checked for equality,
@@ -144,14 +151,14 @@ class MonitorRemoteSSH(Monitor):
                 test_succeeded = actual_value == self.target_value
             case Operator.NOT_EQUALS.value:
                 test_succeeded = actual_value != self.target_value
-            case Operator.GREATER_THAN.value:
+            case Operator.GREATER_THAN.value if isinstance(
+                actual_value, int
+            ) and isinstance(self.target_value, int):
                 test_succeeded = actual_value > self.target_value
-            case Operator.LESS_THAN.value:
+            case Operator.LESS_THAN.value if isinstance(
+                actual_value, int
+            ) and isinstance(self.target_value, int):
                 test_succeeded = actual_value < self.target_value
-        if self.result_type == OperatorType.STRING.value and (
-            self.operator in [Operator.GREATER_THAN.value, Operator.LESS_THAN.value]
-        ):
-            logger.warning(f"strings compared with '{self.operator}'")
         if test_succeeded:
             return self.record_success(self.success_message.format(actual_value))
         else:
