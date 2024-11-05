@@ -120,7 +120,7 @@ class MonitorRemoteSSH(Monitor):
                     f"connection to {self.target_hostname} failed: {e}"
                 )
             else:
-                _, stdout, _ = client.exec_command(self.command)
+                _, stdout, _ = client.exec_command(self.command)  # nosec
             # extract and cast the actual value
             try:
                 # let's hope for the best
