@@ -9,6 +9,10 @@ It connects with ``ssh`` to run a remote command, then parses the reply and moni
 
     You should also consider the security risk of having an SSH private key on the monotoring machine. And while we are at the topic of cybersecurity, you should ensure that the SSH command is not injected (this is not liklely if you do not dynamically generate `monitors.ini`)
 
+
+.. tip::
+    This Monitor rejects connections to hosts with unknown keys; you should arrange for the host key to be known to the user Simplemonitor is running as in advance (e.g. by sshing to the target hosts once or placing the key in ``known_hosts`` directly).
+
 The sequence of this Monitor is to send to ``ssh_username@target_host:target_port`` the ``command`` via SSH, retrieve the output and parse it with ``regex`` to extract a value.
 
 This value is then compared with ``target_value`` with ``operator``. A failed comparison raises an alert.

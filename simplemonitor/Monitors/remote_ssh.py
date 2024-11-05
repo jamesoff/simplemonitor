@@ -99,7 +99,7 @@ class MonitorRemoteSSH(Monitor):
     def run_test(self) -> bool:
         # run remote command
         with paramiko.SSHClient() as client:
-            client.set_missing_host_key_policy(paramiko.AutoAddPolicy)
+            client.set_missing_host_key_policy(paramiko.RejectPolicy)
             try:
                 client.connect(
                     self.target_hostname,
