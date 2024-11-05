@@ -45,3 +45,4 @@ docs/_build
 .tox
 pyrightconfig.json
 simplemonitor/html/node_modules
+.venv

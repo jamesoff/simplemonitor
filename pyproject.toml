@@ -30,7 +30,7 @@ simplemonitor = "simplemonitor.monitor:main"
 winmonitor = "simplemonitor.winmonitor:main"
 
 [tool.poetry.dependencies]
-python = "^3.8.0"
+python = "^3.10.0"
 arrow = ">=0.17,<1.4"
 boto3 = "^1.15.16"
 colorlog = ">=4.4"
@@ -42,7 +42,7 @@ pync = {version = "^2.0.3", platform = "darwin"}
 pywin32 = {version = ">=228,<309", platform = "win32"}
 Jinja2 = ">=2.11.2,<4.0.0"
 twilio = "^7.16.4"
-ring-doorbell = ">=0.6.0"
+ring-doorbell = ">=0.6.0,<0.8.0"
 paramiko = ">=2.7.2,<4.0.0"
 importlib-metadata = "<8.6"
 pyaarlo = ">=0.7.1.3,<0.9.0.0"
