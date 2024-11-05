@@ -30,7 +30,7 @@ simplemonitor = "simplemonitor.monitor:main"
 winmonitor = "simplemonitor.winmonitor:main"
 
 [tool.poetry.dependencies]
-python = "^3.8.0"
+python = "^3.10.0"
 arrow = ">=0.17,<1.4"
 boto3 = "^1.15.16"
 colorlog = ">=4.4"
