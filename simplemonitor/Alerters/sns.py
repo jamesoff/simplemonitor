@@ -2,7 +2,7 @@
 SimpleMonitor alerts via Amazon SNS
 """
 
-from typing import Dict, Optional, cast
+from typing import Any, Optional, cast
 
 import boto3
 from botocore.exceptions import ClientError
@@ -32,7 +32,7 @@ class SNSAlerter(Alerter):
 
         self.support_catchup = True
 
-        self.sns_client_params = {}  # type: Dict[str, str]
+        self.sns_client_params: dict[str, Any] = {}
 
         aws_region = cast(str, self.get_config_option("aws_region", default=""))
         if aws_region:
@@ -47,6 +47,10 @@ class SNSAlerter(Alerter):
             self.sns_client_params["aws_access_key_id"] = aws_access_key
             self.sns_client_params["aws_secret_access_key"] = aws_secret_key
 
+        self.sender_id = cast(
+            str, self.get_config_option("sender_id", default="SmplMntr")
+        )
+
     def send_alert(self, name: str, monitor: Monitor) -> None:
         """Send the alert"""
 
@@ -54,7 +58,7 @@ class SNSAlerter(Alerter):
         if alert_type == AlertType.NONE:
             return
 
-        subject = None  # type: Optional[str]
+        subject: Optional[str] = None
         message = "Misconfiguration: could not build message"
         if self.topic:
             subject = self.build_message(AlertLength.NOTIFICATION, alert_type, monitor)
@@ -66,7 +70,16 @@ class SNSAlerter(Alerter):
             try:
                 client = boto3.client("sns", **self.sns_client_params)
                 if subject is None:
-                    client.publish(PhoneNumber=self.number, Message=message)
+                    client.publish(
+                        PhoneNumber=self.number,
+                        Message=message,
+                        MessageAttributes={
+                            "AWS.SNS.SMS.SenderID": {
+                                "DataType": "String",
+                                "StringValue": self.sender_id,
+                            }
+                        },
+                    )
                 else:
                     client.publish(
                         TopicArn=self.topic, Subject=subject, Message=message
