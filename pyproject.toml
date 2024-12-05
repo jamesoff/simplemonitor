@@ -70,7 +70,7 @@ types-pyOpenSSL = "^24.1.0"
 types-setuptools = "^75.4.0"
 
 [tool.poetry.group.dev.dependencies]
-ruff = ">=0.5.1,<0.7.4"
+ruff = ">=0.5.1,<0.8.3"
 boto3-stubs = {extras = ["sns"], version = "^1.35.63"}
 
 [build-system]
