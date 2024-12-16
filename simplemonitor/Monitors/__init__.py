@@ -39,7 +39,10 @@ from .service import (
 )
 from .unifi import MonitorUnifiFailover, MonitorUnifiFailoverWatchdog
 
+from .mqtt import MonitorMQTT
+
 __all__ = [
+    "MonitorMQTT",
     "CompoundMonitor",
     "MonitorApcupsd",
     "MonitorArloCamera",
@@ -71,4 +74,5 @@ __all__ = [
     "MonitorUnixService",
     "MonitorWindowsDHCPScope",
     "MonitorZap",
+    ""
 ]
