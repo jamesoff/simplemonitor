@@ -17,19 +17,25 @@ class MonitorMQTT(Monitor):
         client = mqtt.Client("simplemonitor"+''.join(random.choices(string.ascii_lowercase + string.digits, k=8)))       
         broker_address= "localhost"
         port = 1883
-        #self.topic = self.get_config_option("topic", required=True)
-        #self.success = self.get_config_option("success", required=True)
-        self.topic="topic/1"
-        self.payload = ""
-        self.success = "online"       
+        self.host = self.get_config_option("host", required=True,default="localhost")
+        self.port = self.get_config_option("port",required_type="int", required=False,default=1883)
+        self.username = self.get_config_option("username", required=False)
+        self.password = self.get_config_option("password", required=False)
+        self.tls = self.get_config_option("tls", required_type="bool", default=False)
+        self.topic = self.get_config_option("topic", required=True)
+        self.success = self.get_config_option("success", required=True)
+        self.payload = ""      
         client.on_connect= self.on_connect
         client.on_message= self.on_message
+        if self.tls:
+            client.tls_set()
+        #TODO: Credentials
         client.connect(broker_address, port=port)     
         client.loop_start()
 
     def on_connect(self,client, userdata, flags, rc):
         if rc == 0:
-            print("Connected to broker")
+            print(f"Connected to broker on topic {self.topic}")
             client.subscribe(self.topic)
 
         else:
