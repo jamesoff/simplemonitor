@@ -2,7 +2,7 @@
 SimpleMonitor alerts via Amazon SNS
 """
 
-from typing import Any, Optional, cast
+from typing import Any, Dict, Optional, cast
 
 import boto3
 from botocore.exceptions import ClientError
@@ -32,7 +32,7 @@ class SNSAlerter(Alerter):
 
         self.support_catchup = True
 
-        self.sns_client_params: dict[str, Any] = {}
+        self.sns_client_params: Dict[str, Any] = {}
 
         aws_region = cast(str, self.get_config_option("aws_region", default=""))
         if aws_region:

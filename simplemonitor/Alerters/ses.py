@@ -2,7 +2,7 @@
 SimpleMonitor alerts via Amazon Simple Email Service
 """
 
-from typing import Any, cast
+from typing import Any, Dict, cast
 
 import boto3
 from botocore.exceptions import ClientError
@@ -43,10 +43,10 @@ class SESAlerter(Alerter):
 
         alert_type = self.should_alert(monitor)
 
-        mail: dict[str, Any] = {}
+        mail: Dict[str, Any] = {}
         mail["Source"] = self.from_addr
         mail["Destination"] = {"ToAddresses": [self.to_addr]}
-        message: dict[str, Any] = {}
+        message: Dict[str, Any] = {}
 
         if alert_type == AlertType.NONE:
             return
