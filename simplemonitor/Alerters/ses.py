@@ -2,7 +2,6 @@
 SimpleMonitor alerts via Amazon Simple Email Service
 """
 
-import os
 from typing import Any, Dict, cast
 
 import boto3
@@ -26,11 +25,11 @@ class SESAlerter(Alerter):
 
         self.support_catchup = True
 
-        self.ses_client_params = {}  # type: Dict[str, str]
+        self.ses_client_params = {}
 
         aws_region = cast(str, self.get_config_option("aws_region"))
         if aws_region:
-            os.environ["AWS_DEFAULT_REGION"] = aws_region
+            self.ses_client_params["region_name"] = aws_region
 
         aws_access_key = cast(str, self.get_config_option("aws_access_key"))
         aws_secret_key = cast(str, self.get_config_option("aws_secret_access_key"))
@@ -44,10 +43,10 @@ class SESAlerter(Alerter):
 
         alert_type = self.should_alert(monitor)
 
-        mail = {}  # type: Dict[str, Any]
+        mail: Dict[str, Any] = {}
         mail["Source"] = self.from_addr
         mail["Destination"] = {"ToAddresses": [self.to_addr]}
-        message = {}  # type: Dict[str, Any]
+        message: Dict[str, Any] = {}
 
         if alert_type == AlertType.NONE:
             return
@@ -63,7 +62,7 @@ class SESAlerter(Alerter):
 
         if not self._dry_run:
             try:
-                client = boto3.client("ses", **self.ses_client_params)
+                client = boto3.client("ses", **self.ses_client_params)  # type: ignore
                 client.send_email(**mail)
             except ClientError:
                 self.alerter_logger.exception("couldn't send mail")
