@@ -18,6 +18,7 @@ from .host import (
     MonitorSwap,
     MonitorZap,
 )
+from .mqtt import MonitorMQTT
 from .network import (
     MonitorDNS,
     MonitorHost,
@@ -38,8 +39,6 @@ from .service import (
     MonitorWindowsDHCPScope,
 )
 from .unifi import MonitorUnifiFailover, MonitorUnifiFailoverWatchdog
-
-from .mqtt import MonitorMQTT
 
 __all__ = [
     "MonitorMQTT",
@@ -74,5 +73,5 @@ __all__ = [
     "MonitorUnixService",
     "MonitorWindowsDHCPScope",
     "MonitorZap",
-    ""
+    "",
 ]
