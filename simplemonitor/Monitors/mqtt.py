@@ -1,13 +1,18 @@
 import threading
+
 import paho.mqtt.client as mqtt
+
 from .monitor import Monitor, register
 
 
 class MQTTBrokerManager:
     """Manager for MQTT connections and subscriptions"""
+
     _managers = {}  # Shared dictionary of brokers: {(broker, port): MQTTBrokerManager}
 
-    def __new__(cls, broker, port, username=None, password=None, tls_enabled=False, ca_cert=None):
+    def __new__(
+        cls, broker, port, username=None, password=None, tls_enabled=False, ca_cert=None
+    ):
         key = (broker, port)  # Unique key based on broker and port
         if key not in cls._managers:
             # Create a new instance if it doesn't exist for this broker
@@ -98,6 +103,7 @@ class MQTTBrokerManager:
 @register
 class MonitorMQTT(Monitor):
     """Monitor for MQTT topics using shared or unique broker connections."""
+
     monitor_type = "mqtt_client"
 
     def __init__(self, name, config_options):
@@ -118,7 +124,9 @@ class MonitorMQTT(Monitor):
         ca_cert = self.get_config_option("ca_cert", required=False)
 
         # Get or create the MQTT broker manager
-        self.mqtt_manager = MQTTBrokerManager(broker, port, username, password, tls_enabled, ca_cert)
+        self.mqtt_manager = MQTTBrokerManager(
+            broker, port, username, password, tls_enabled, ca_cert
+        )
 
         # Subscribe to the topic with a callback
         self.mqtt_manager.subscribe(self.topic, self.on_message_received)
@@ -151,8 +159,12 @@ class MonitorMQTT(Monitor):
 
     def run_test(self):
         if self.status == "OK":
-            self.record_success(f"Payload '{self.last_payload}' matched condition '{self.success_state}'.")
-        elif self.status== "UNKNOWN":
+            self.record_success(
+                f"Payload '{self.last_payload}' matched condition '{self.success_state}'."
+            )
+        elif self.status == "UNKNOWN":
             self.record_skip(f"Topic '{self.topic}' did not received any messages yet.")
         else:
-            self.record_fail(f"Payload '{self.last_payload}' did not match condition '{self.success_state}'.")
+            self.record_fail(
+                f"Payload '{self.last_payload}' did not match condition '{self.success_state}'."
+            )
