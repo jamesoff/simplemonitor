@@ -8,7 +8,7 @@ import platform
 import re
 import subprocess
 import time
-from typing import Any, List, Optional, Tuple, cast
+from typing import Any, List, Optional, Tuple, Union, cast
 
 import psutil
 
@@ -218,11 +218,17 @@ class MonitorUnixService(Monitor):
             self._want_return_code = 0
         else:
             self._want_return_code = 1
+        self.jail = cast(Union[str, None], self.get_config_option("jail"))
 
     def run_test(self) -> bool:
         try:
             result = subprocess.run(
-                ["service", self.service_name, "status"],
+                [
+                    "service",
+                    *(["-j", self.jail] if self.jail else []),
+                    self.service_name,
+                    "status",
+                ],
                 check=False,
                 stderr=subprocess.PIPE,
                 stdout=subprocess.PIPE,
