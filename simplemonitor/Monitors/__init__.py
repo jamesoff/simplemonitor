@@ -3,7 +3,7 @@ Monitors for SimpleMonitor
 """
 
 from .arlo import MonitorArloCamera
-from .compound import CompoundMonitor
+from .compound import CompoundMonitor, RemoteHostsMonitor
 from .file import MonitorBackup
 from .hass import MonitorSensor
 from .host import (
@@ -71,4 +71,5 @@ __all__ = [
     "MonitorUnixService",
     "MonitorWindowsDHCPScope",
     "MonitorZap",
+    "RemoteHostsMonitor",
 ]

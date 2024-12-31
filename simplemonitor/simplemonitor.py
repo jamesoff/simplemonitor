@@ -228,6 +228,7 @@ class SimpleMonitor:
 
         for monitor in self.monitors.values():
             monitor.set_mon_refs(self.monitors)
+            monitor.set_sm_ref(self)
             monitor.post_config_setup()
         self.prune_monitors(monitors)
         module_logger.info("--- Loaded %d monitors", self.count_monitors())
