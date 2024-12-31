@@ -10,7 +10,7 @@ endif
 PIPENV := $(shell which poetry)
 
 flake8:
-	poetry run flake8 *.py simplemonitor/
+	poetry run ruff check monitor.py simplemonitor/
 
 integration-tests:
 	PATH="$(MOCKSPATH)$(PATH)" $(PIPENV) run coverage run monitor.py -1 -v -d -f $(INTEGRATION_CONFIG) -j 1
