@@ -71,7 +71,7 @@ class NetworkLogger(Logger):
                 if self.batch_data is not None:
                     self.batch_data[monitor.name] = data
                 else:
-                    self.batch_data = {monitor.name: data}  # type: Dict[str, dict]
+                    self.batch_data = {monitor.name: data}
         except Exception:  # pylint: disable=broad-except
             self.logger_logger.exception("Failed to serialize monitor %s", name)
 
