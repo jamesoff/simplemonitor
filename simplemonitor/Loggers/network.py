@@ -148,11 +148,15 @@ class Listener(Thread):
         When the main app kills us (with join()), socket.listen throws socket.error.
         """
         self.running = True
+        conn: Optional[socket.socket] = None
+        addr: Optional[socket._RetAddress] = None
         while self.running:
             try:
                 self.sock.listen(5)
                 conn, addr = self.sock.accept()
                 conn.settimeout(5.0)
+                assert conn is not None
+                assert addr is not None
                 self.logger.debug("Got connection from %s", addr[0])
                 serialized = bytearray()
                 while 1:
@@ -210,8 +214,10 @@ class Listener(Thread):
                         addr[0],
                     )
             except socket.timeout:
-                self.logger.warning("Timeout during recv from %s", addr[0])
-                conn.close()
+                if addr:
+                    self.logger.warning("Timeout during recv from %s", addr[0])
+                if conn:
+                    conn.close()
             except socket.error as exception:
                 if exception.errno == 4:
                     # Interrupted system call
