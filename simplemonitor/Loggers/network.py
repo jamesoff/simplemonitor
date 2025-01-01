@@ -2,17 +2,21 @@
 Network logging support for SimpleMonitor
 """
 
+import datetime
 import hmac
 import logging
 import socket
 import struct
 from threading import Thread
-from typing import Any, Dict, Optional, Union, cast
+from typing import TYPE_CHECKING, Dict, Optional, TypedDict, Union, cast
 
 from ..Monitors.monitor import Monitor
 from ..util import LoggerConfigurationError
 from ..util.json_encoding import json_dumps, json_loads
 from .logger import Logger, register
+
+if TYPE_CHECKING:
+    from ..simplemonitor import SimpleMonitor
 
 # From the docs:
 #  Threads interact strangely with interrupts: the KeyboardInterrupt exception
@@ -20,6 +24,11 @@ from .logger import Logger, register
 #  available, interrupts always go to the main thread.)
 
 _DIGEST_NAME = "md5"
+
+
+class RemoteHost(TypedDict):
+    last_seen: datetime.datetime
+    address: str
 
 
 @register
@@ -112,7 +121,7 @@ class Listener(Thread):
 
     def __init__(
         self,
-        simplemonitor: Any,
+        simplemonitor: "SimpleMonitor",
         port: int,
         key: Optional[str] = None,
         bind_host: str = "",
@@ -255,6 +264,9 @@ class Listener(Thread):
         elif isinstance(remote_monitors, dict):
             self.simplemonitor.update_remote_monitor(
                 remote_monitors, remote_instance_name
+            )
+            self.simplemonitor.upsert_remote_host(
+                remote_instance_name, datetime.datetime.now(), source
             )
         else:
             self.logger.error(
