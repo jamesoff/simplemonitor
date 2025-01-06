@@ -34,3 +34,10 @@ If you want the remote instance to handle alerting for this instance's monitors,
     :required: true
 
     the shared secret to validate communications
+
+.. confval:: client_name
+
+    :type: string
+    :required: false
+
+    the name to introduce ourselves as to the remote host as. If unset, it will know us by the IP it sees us connect from.

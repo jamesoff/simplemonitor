@@ -2,10 +2,14 @@
 Compound checks (logical and of failure of multiple probes) for SimpleMonitor
 """
 
-from typing import Dict, List, Optional, Tuple, cast
+import datetime
+from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, cast
 from weakref import WeakValueDictionary
 
 from .monitor import Monitor, register
+
+if TYPE_CHECKING:
+    from ..simplemonitor import SimpleMonitor
 
 
 @register
@@ -17,8 +21,8 @@ class CompoundMonitor(Monitor):
     """
 
     monitor_type = "compound"
-    m = None  # type: Optional[WeakValueDictionary[str, Monitor]]
-    mt = None  # type: Optional[WeakValueDictionary[str, Monitor]]
+    m: Optional[WeakValueDictionary[str, Monitor]] = None
+    mt: Optional[WeakValueDictionary[str, Monitor]] = None
 
     def __init__(self, name: str, config_options: dict) -> None:
         super().__init__(name, config_options)
@@ -95,3 +99,58 @@ class CompoundMonitor(Monitor):
             )
         else:
             return "All {0} services OK".format(monitorcount)
+
+
+@register
+class RemoteHostsMonitor(Monitor):
+    """A Monitor which checks for remote hosts sending us data."""
+
+    monitor_type = "remotehosts"
+    m = None  # type: Optional[WeakValueDictionary[str, Monitor]]
+    mt = None  # type: Optional[WeakValueDictionary[str, Monitor]]
+
+    def __init__(self, name: str, config_options: dict) -> None:
+        super().__init__(name, config_options)
+        self.hosts = cast(
+            List[str],
+            self.get_config_option(
+                "hosts", required_type="[str]", required=True, default=[]
+            ),
+        )
+        self.max_age = cast(
+            int,
+            self.get_config_option(
+                "max_age", required_type="int", default=300, minimum=0
+            ),
+        )
+        self._max_age = datetime.timedelta(seconds=self.max_age)
+
+    def set_sm_ref(self, sm: "SimpleMonitor") -> None:
+        self.simplemonitor = sm
+
+    def run_test(self) -> bool:
+        known_remotes = set(self.simplemonitor.remote_hosts.keys())
+        expected_remotes = set(self.hosts)
+        missing_remotes = expected_remotes - known_remotes
+        surprise_remotes = known_remotes - expected_remotes
+        old_remotes = [
+            host
+            for host, props in self.simplemonitor.remote_hosts.items()
+            if host in expected_remotes
+            and props["last_seen"] + self._max_age < datetime.datetime.now()
+        ]
+
+        errors = []
+        if len(old_remotes):
+            errors.append(f"out-of-date remotes: {', '.join(old_remotes)}")
+        if len(missing_remotes):
+            errors.append(f"missing remotes: {', '.join(missing_remotes)}")
+        if len(surprise_remotes):
+            errors.append(f"unexpected remotes: {', '.join(surprise_remotes)}")
+
+        if len(errors):
+            return self.record_fail("; ".join(errors))
+        return self.record_success(f"{len(expected_remotes)} remote hosts reporting")
+
+    def describe(self) -> str:
+        return f"checking for remotes: {', '.join(self.hosts)} with max age {self.max_age}s"

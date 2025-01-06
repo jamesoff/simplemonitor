@@ -8,6 +8,7 @@ import os
 import signal
 import sys
 import time
+from datetime import datetime
 from pathlib import Path
 from socket import gethostname
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union, cast
@@ -18,7 +19,7 @@ from .Alerters.alerter import get_class as get_alerter_class
 from .Loggers.logger import Logger
 from .Loggers.logger import all_types as all_logger_types
 from .Loggers.logger import get_class as get_logger_class
-from .Loggers.network import Listener
+from .Loggers.network import Listener, RemoteHost
 from .Monitors.compound import CompoundMonitor
 from .Monitors.monitor import Monitor, MonitorState
 from .Monitors.monitor import all_types as all_monitor_types
@@ -71,6 +72,7 @@ class SimpleMonitor:
         self.one_shot = one_shot
         self.pidfile = None  # type: Optional[str]
         self._max_workers = max_workers
+        self._remote_hosts: dict[str, RemoteHost] = {}
 
         self._setup_signals()
         self._load_config()
@@ -228,6 +230,7 @@ class SimpleMonitor:
 
         for monitor in self.monitors.values():
             monitor.set_mon_refs(self.monitors)
+            monitor.set_sm_ref(self)
             monitor.post_config_setup()
         self.prune_monitors(monitors)
         module_logger.info("--- Loaded %d monitors", self.count_monitors())
@@ -820,6 +823,13 @@ class SimpleMonitor:
                 forget_monitors.append(name)
         for name in forget_monitors:
             del self.remote_monitors[hostname][name]
+
+    @property
+    def remote_hosts(self) -> dict[str, RemoteHost]:
+        return self._remote_hosts
+
+    def upsert_remote_host(self, host: str, last_seen: datetime, address: str) -> None:
+        self._remote_hosts[host] = {"last_seen": last_seen, "address": address}
 
     def run_loop(self) -> None:
         """Run the complete monitor loop once."""
