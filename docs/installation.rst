@@ -11,9 +11,18 @@ SimpleMonitor is available via `PyPi <https://pypi.org/project/simplemonitor>`_:
    which automatically manages virtualenvs for command-line tools.
 
 Create the configuration files: ``monitor.ini`` and ``monitors.ini``. See
-Configuration.
+:ref:`Configuration`.
 
 .. warning:: I know the configuration file names are dumb, sorry.
+
+If you are using Debian 13 (Trixie) or newer, or Ubuntu 23.04 (Mantic Minotaur) or newer, SimpleMonitor is available in the official repositories and can be installed using::
+
+   sudo apt install simplemonitor
+
+If using Debian/Ubuntu packages the configuration is in
+``/etc/simplemonitor/`` and SimpleMonitor can be managed via systemd::
+
+  sudo systemctl {restart,start,stop,status} simplemonitor
 
 Running
 -------
