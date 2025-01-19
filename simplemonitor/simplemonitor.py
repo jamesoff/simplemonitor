@@ -68,6 +68,7 @@ class SimpleMonitor:
         self._no_network = no_network
         self._remote_listening_thread = None  # type: Optional[Listener]
         self._max_loops = max_loops
+        self.config_ok = False
         self.heartbeat = heartbeat
         self.one_shot = one_shot
         self.pidfile = None  # type: Optional[str]
@@ -80,6 +81,7 @@ class SimpleMonitor:
     def _load_config(self) -> None:
         """Load config, monitors, alerters and loggers."""
 
+        config_ok = True
         config = EnvironmentAwareConfigParser()
         if not self._config_file.exists():
             raise RuntimeError(
@@ -124,17 +126,18 @@ class SimpleMonitor:
             )
         if monitors_dir:
             monitors_files.extend(list(sorted(Path(monitors_dir).glob("*.ini"))))
-        self._load_monitors(monitors_files)
+        config_ok = self._load_monitors(monitors_files)
 
         count = self.count_monitors()
         if count == 0:
             module_logger.critical("No monitors loaded")
-        self._load_loggers(config)
-        self._load_alerters(config)
+        config_ok = config_ok & self._load_loggers(config)
+        config_ok = config_ok & self._load_alerters(config)
         if not self._verify_dependencies():
             raise RuntimeError("Broken dependency configuration")
         if not self.verify_alerting():
             module_logger.warning("No alerters defined and no remote logger found")
+        self.config_ok = config_ok
 
     def _start_network_thread(self) -> None:
         if self._remote_listening_thread:
@@ -154,9 +157,10 @@ class SimpleMonitor:
             )
             self._remote_listening_thread.start()
 
-    def _load_monitors(self, filenames: Sequence[Union[Path, str]]) -> None:
+    def _load_monitors(self, filenames: Sequence[Union[Path, str]]) -> bool:
         """Load all the monitors from the config file."""
 
+        all_good = True
         config = EnvironmentAwareConfigParser()
         config.read(filenames)
         module_logger.info(
@@ -203,6 +207,7 @@ class SimpleMonitor:
                         self.monitors[this_monitor].monitor_type,
                         config_options["type"],
                     )
+                    all_good = False
                 continue
 
             try:
@@ -213,6 +218,7 @@ class SimpleMonitor:
                     monitor_type,
                     ", ".join(all_monitor_types()),
                 )
+                all_good = False
                 continue
             new_monitor = cls(this_monitor, config_options)
             # new_monitor.set_mon_refs(m)
@@ -233,11 +239,18 @@ class SimpleMonitor:
             monitor.set_sm_ref(self)
             monitor.post_config_setup()
         self.prune_monitors(monitors)
+        if not all_good:
+            module_logger.warning(
+                "--- Loaded %d monitors but with errors", self.count_monitors()
+            )
+            return False
         module_logger.info("--- Loaded %d monitors", self.count_monitors())
+        return True
 
-    def _load_loggers(self, config: EnvironmentAwareConfigParser) -> None:
+    def _load_loggers(self, config: EnvironmentAwareConfigParser) -> bool:
         """Load the loggers listed in the config object."""
 
+        all_good = True
         if config.has_option("reporting", "loggers"):
             loggers = config.get("reporting", "loggers").split(",")
         else:
@@ -262,6 +275,7 @@ class SimpleMonitor:
                         self.loggers[config_logger].logger_type,
                         config_options["type"],
                     )
+                    all_good = False
                 continue
             try:
                 logger_cls = get_logger_class(logger_type)
@@ -271,6 +285,7 @@ class SimpleMonitor:
                     logger_type,
                     ", ".join(all_logger_types()),
                 )
+                all_good = False
                 continue
             new_logger = logger_cls(config_options)  # type: Logger
             new_logger.set_global_info(
@@ -291,10 +306,17 @@ class SimpleMonitor:
 
             del new_logger
         self.prune_loggers(loggers)
+        if not all_good:
+            module_logger.warning(
+                "--- Loaded %d loggers but with errors", len(self.loggers)
+            )
+            return False
         module_logger.info("--- Loaded %d loggers", len(self.loggers))
+        return True
 
-    def _load_alerters(self, config: EnvironmentAwareConfigParser) -> None:
+    def _load_alerters(self, config: EnvironmentAwareConfigParser) -> bool:
         """Load the alerters listed in the config object."""
+        all_good = True
         if config.has_option("reporting", "alerters"):
             alerters = config.get("reporting", "alerters").split(",")
         else:
@@ -318,6 +340,7 @@ class SimpleMonitor:
                         self.alerters[this_alerter].alerter_type,
                         config_options["type"],
                     )
+                    all_good = False
                 continue
             try:
                 alerter_cls = get_alerter_class(alerter_type)
@@ -327,6 +350,7 @@ class SimpleMonitor:
                     alerter_type,
                     ", ".join(all_alerter_types()),
                 )
+                all_good = False
                 continue
             new_alerter = alerter_cls(config_options)  # type: Alerter
 
@@ -346,7 +370,13 @@ class SimpleMonitor:
 
             del new_alerter
         self.prune_alerters(alerters)
+        if not all_good:
+            module_logger.info(
+                "--- Loaded %d alerters but with errors", len(self.alerters)
+            )
+            return False
         module_logger.info("--- Loaded %d alerters", len(self.alerters))
+        return True
 
     def _setup_signals(self) -> None:
         """Set up the SIGHUP handler."""

@@ -220,8 +220,12 @@ def main() -> None:
     )
 
     if options.test:
-        main_logger.warning("Config test complete. Exiting.")
-        sys.exit(0)
+        if m.config_ok:
+            main_logger.warning("Config test complete. Exiting.")
+            sys.exit(0)
+        else:
+            main_logger.error("Config test failed")
+            sys.exit(2)
 
     if options.one_shot:
         main_logger.warning(
