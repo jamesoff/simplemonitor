@@ -18,6 +18,7 @@ from .host import (
     MonitorSwap,
     MonitorZap,
 )
+from .mqtt import MonitorMQTT
 from .network import (
     MonitorDNS,
     MonitorHost,
@@ -40,6 +41,7 @@ from .service import (
 from .unifi import MonitorUnifiFailover, MonitorUnifiFailoverWatchdog
 
 __all__ = [
+    "MonitorMQTT",
     "CompoundMonitor",
     "MonitorApcupsd",
     "MonitorArloCamera",
