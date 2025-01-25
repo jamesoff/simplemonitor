@@ -671,12 +671,12 @@ class SimpleMonitor:
                     continue
                 logger.save_result2(key, monitor)
 
-            try:
-                # need to work on a copy here to prevent the dicts changing under us
-                # during the loop, as remote instances can connect and update our data
-                # unpredictably
-                for host_monitors in self.remote_monitors.copy().values():
-                    for name, monitor in host_monitors.copy().items():
+            # need to work on a copy here to prevent the dicts changing under us
+            # during the loop, as remote instances can connect and update our data
+            # unpredictably
+            for host_monitors in self.remote_monitors.copy().values():
+                for name, monitor in host_monitors.copy().items():
+                    try:
                         if check_group_match(monitor.group, logger.groups):
                             logger.save_result2(name, monitor)
                         else:
@@ -687,8 +687,11 @@ class SimpleMonitor:
                                 monitor.group,
                                 logger.groups,
                             )
-            except Exception:  # pragma: no cover
-                module_logger.exception("exception while logging remote monitors")
+                    except Exception:  # pragma: no cover
+                        module_logger.exception(
+                            "exception while logging remote monitors (offending monitor: %s)",
+                            name,
+                        )
 
     def do_alert(self, alerter: Alerter) -> None:
         """Use the given alerter object to send an alert, if needed."""
