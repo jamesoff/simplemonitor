@@ -3,24 +3,26 @@ import datetime
 import os
 import textwrap
 import unittest
+from unittest import mock
 
-import arrow
-import pytest
 from freezegun import freeze_time
 
 from simplemonitor import util
 from simplemonitor.Alerters import alerter, sns
 from simplemonitor.Monitors import monitor
 
+# Create a consistent "local" timezone and offset for the tests, for tests that
+# compare the offset between UTC and local time. For simplicity and
+# predictability, use a time zone that doesn't have daylight savings.
+TZ_LOCAL = "MST"
+TZ_LOCAL_OFFSET = -7
+TZ_UTC = "UTC"
 
+
+# Default to UTC, then override for tests where we need to have timezone
+# specific logic.
+@mock.patch.dict(os.environ, {"TZ": TZ_UTC}, clear=True)
 class TestAlerter(unittest.TestCase):
-    def setUp(self):
-        # Work around to fix the freezegun times later to our local TZ, else they're UTC
-        # and the time compared to is local (as it should be)
-        self.tz = os.environ.get("TZ", "local")
-        a = arrow.now()
-        self.utcoffset = a.utcoffset()
-
     def test_groups(self):
         config_options = {"groups": "a,b,c"}
         a = alerter.Alerter(config_options)
@@ -140,27 +142,31 @@ class TestAlerter(unittest.TestCase):
             m.run_test()
         self.assertEqual(a.should_alert(m), alerter.AlertType.NONE)
 
+    @freeze_time("2020-03-10 22:00")  # A Tuesday
     def test_not_allowed_today(self):
-        # a Tuesday
-        with freeze_time("2020-03-10", tz_offset=self.utcoffset):
-            a = alerter.Alerter({"days": "0,2,3,4,5,6"})
-            self.assertFalse(a._allowed_today())
+        a = alerter.Alerter({"days": "0,2,3,4,5,6"})
+        self.assertFalse(a._allowed_today())
 
-    @freeze_time(
-        "2020-03-09 22:00:00+00:00"
-    )  # a Monday, but the TZ will push to Tuesday
+    @freeze_time("2020-03-09 20:00")  # Monday UTC, but TZ will push to Tuesday
     def test_not_allowed_today_tz(self):
+        """
+        Test that we handle timezone conversion properly with disallowed days.
+        """
+        # Note: This doesn't map with either the regular "local" timezone _or_
+        # GMT; that's why we're explicitly setting times_tz offset to a
+        # positive value.
         a = alerter.Alerter({"days": "0,2,3,4,5,6", "times_tz": "+05:00"})
         self.assertFalse(a._allowed_today())
 
+    @freeze_time("2020-03-10 22:00")
     def test_allowed_today(self):
-        with freeze_time("2020-03-10", tz_offset=self.utcoffset):
-            a = alerter.Alerter({"days": "1"})
-            self.assertTrue(a._allowed_today())
+        """
+        Test that we handle timezone conversion properly with allowed days.
+        """
+        a = alerter.Alerter({"days": "1"})
+        self.assertTrue(a._allowed_today())
 
-    @freeze_time(
-        "2020-03-09 22:00:00+00:00"
-    )  # a Monday, but the TZ will push to Tuesday
+    @freeze_time("2020-03-09 20:00")  # Monday UTC, but TZ will push to Tuesday
     def test_allowed_today_tz(self):
         a = alerter.Alerter({"days": "1", "times_tz": "+05:00"})
         self.assertTrue(a._allowed_today())
@@ -176,28 +182,15 @@ class TestAlerter(unittest.TestCase):
         self.assertTrue(a._allowed_time())
 
     def test_allowed_only(self):
+        """
+        Test logic with the "only" schedule (only between lower and upper
+        bounds).
+        """
         a = alerter.Alerter(
             {
                 "times_type": "only",
                 "time_lower": "10:00",
                 "time_upper": "11:00",
-                "times_tz": "local",
-            }
-        )
-        with freeze_time("09:00", tz_offset=-self.utcoffset):
-            self.assertFalse(a._allowed_time())
-        with freeze_time("10:30", tz_offset=-self.utcoffset):
-            self.assertTrue(a._allowed_time())
-        with freeze_time("12:00", tz_offset=-self.utcoffset):
-            self.assertFalse(a._allowed_time())
-
-    def test_allowed_only_tz(self):
-        a = alerter.Alerter(
-            {
-                "times_type": "only",
-                "time_lower": "15:00",
-                "time_upper": "16:00",
-                "times_tz": "+05:00",
             }
         )
         with freeze_time("09:00"):
@@ -205,32 +198,34 @@ class TestAlerter(unittest.TestCase):
         with freeze_time("10:30"):
             self.assertTrue(a._allowed_time())
         with freeze_time("12:00"):
+            self.assertFalse(a._allowed_time())
+
+    # Influence time_tz indirectly, though we could also set it directly in
+    # alerter.Alerter() below.
+    @mock.patch.dict(os.environ, {"TZ": TZ_LOCAL}, clear=True)
+    def test_allowed_only_tz(self):
+        """Test `times_type=only` with the time in local time."""
+        a = alerter.Alerter(
+            {
+                "times_type": "only",
+                "time_lower": "09:00",  # 9:00 MST, 16:00 UTC
+                "time_upper": "10:00",  # 10:00 MST, 17:00 UTC
+            }
+        )
+        with freeze_time("15:00"):
+            self.assertFalse(a._allowed_time())
+        with freeze_time("16:30"):
+            self.assertTrue(a._allowed_time())
+        with freeze_time("18:00"):
             self.assertFalse(a._allowed_time())
 
     def test_allowed_not(self):
+        """Test when using `times_type=not`."""
         a = alerter.Alerter(
             {
                 "times_type": "not",
                 "time_lower": "10:00",
                 "time_upper": "11:00",
-                "times_tz": "local",
-            }
-        )
-        with freeze_time("09:00", tz_offset=-self.utcoffset):
-            self.assertTrue(a._allowed_time())
-        with freeze_time("10:30", tz_offset=-self.utcoffset):
-            print(arrow.get())
-            self.assertFalse(a._allowed_time())
-        with freeze_time("12:00", tz_offset=-self.utcoffset):
-            self.assertTrue(a._allowed_time())
-
-    def test_allowed_not_tz(self):
-        a = alerter.Alerter(
-            {
-                "times_type": "not",
-                "time_lower": "15:00",
-                "time_upper": "16:00",
-                "times_tz": "+05:00",
             }
         )
         with freeze_time("09:00"):
@@ -240,31 +235,58 @@ class TestAlerter(unittest.TestCase):
         with freeze_time("12:00"):
             self.assertTrue(a._allowed_time())
 
+    @mock.patch.dict(os.environ, {"TZ": TZ_LOCAL}, clear=True)
+    def test_allowed_not_tz(self):
+        """Test this variant for a specific timezone."""
+        a = alerter.Alerter(
+            {
+                "times_type": "not",
+                "time_lower": "09:00",  # 9:00 MST, 16:00 UTC
+                "time_upper": "10:00",  # 10:00 MST, 17:00 UTC
+            }
+        )
+        with freeze_time("15:55"):
+            self.assertTrue(a._allowed_time())
+        with freeze_time("16:30"):
+            self.assertFalse(a._allowed_time())
+        with freeze_time("17:00"):
+            self.assertTrue(a._allowed_time())
+
     def test_should_not_alert_ooh(self):
-        config = {"times_type": "only", "time_lower": "10:00", "time_upper": "11:00"}
+        """Make sure we don't alert outside of hours."""
+        config = {
+            "times_type": "only",
+            "time_lower": "10:00",
+            "time_upper": "11:00",
+        }
         a = alerter.Alerter(config)
         m = monitor.MonitorFail("fail", {})
         m.run_test()
         with freeze_time("2020-03-10 09:00"):
-            # out of hours on the right day; shouldn't alert
+            # Out of hours on the right day; shouldn't alert
             self.assertEqual(a.should_alert(m), alerter.AlertType.NONE)
             self.assertEqual(a._ooh_failures, ["fail"])
+
         a = alerter.Alerter(config)
         with freeze_time("2020-03-10 12:00"):
             self.assertEqual(a.should_alert(m), alerter.AlertType.NONE)
             self.assertEqual(a._ooh_failures, ["fail"])
 
-    @pytest.mark.skip("TZ test logic need fixing")
+    @freeze_time("2020-03-10 10:30")
     def test_should_alert_ooh(self):
-        config = {"times_type": "only", "time_lower": "10:00", "time_upper": "11:00"}
+        """Make sure we do alert within scheduled hours."""
+        config = {
+            "times_type": "only",
+            "time_lower": "10:00",
+            "time_upper": "11:00",
+        }
         a = alerter.Alerter(config)
         m = monitor.MonitorFail("fail", {})
         m.run_test()
-        with freeze_time("2020-03-10 10:30", tz_offset=self.utcoffset):
-            self.assertEqual(a.should_alert(m), alerter.AlertType.FAILURE)
-            self.assertEqual(a._ooh_failures, [])
+        self.assertEqual(a.should_alert(m), alerter.AlertType.FAILURE)
+        self.assertEqual(a._ooh_failures, [])
 
-    @pytest.mark.skip("TZ test logic need fixing")
+    @freeze_time("2020-03-10 10:30")
     def test_should_alert_limit(self):
         config = {
             "times_type": "only",
@@ -275,19 +297,19 @@ class TestAlerter(unittest.TestCase):
         a = alerter.Alerter(config)
         m = monitor.MonitorFail("fail", {})
         m.run_test()
-        with freeze_time("2020-03-10 10:30", tz_offset=self.utcoffset):
-            self.assertEqual(a.should_alert(m), alerter.AlertType.NONE)
-            self.assertEqual(a._ooh_failures, [])
+        self.assertEqual(a.should_alert(m), alerter.AlertType.NONE)
+        self.assertEqual(a._ooh_failures, [])
 
-            m.run_test()
-            self.assertEqual(a.should_alert(m), alerter.AlertType.FAILURE)
-            self.assertEqual(a._ooh_failures, [])
+        # It should only alert on the $limit attempt
+        m.run_test()
+        self.assertEqual(a.should_alert(m), alerter.AlertType.FAILURE)
+        self.assertEqual(a._ooh_failures, [])
 
-            m.run_test()
-            self.assertEqual(a.should_alert(m), alerter.AlertType.NONE)
-            self.assertEqual(a._ooh_failures, [])
+        m.run_test()
+        self.assertEqual(a.should_alert(m), alerter.AlertType.NONE)
+        self.assertEqual(a._ooh_failures, [])
 
-    @pytest.mark.skip("TZ test logic need fixing")
+    @freeze_time("2020-03-10 09:00")
     def test_should_alert_limit_ooh(self):
         config = {
             "times_type": "only",
@@ -298,22 +320,25 @@ class TestAlerter(unittest.TestCase):
         a = alerter.Alerter(config)
         m = monitor.MonitorFail("fail", {})
         m.run_test()
-        with freeze_time("2020-03-10 09:00", tz_offset=self.utcoffset):
-            self.assertEqual(a.should_alert(m), alerter.AlertType.NONE)
-            self.assertEqual(a._ooh_failures, [])
+        self.assertEqual(a.should_alert(m), alerter.AlertType.NONE)
+        self.assertEqual(a._ooh_failures, [])
 
-            a = alerter.Alerter(config)
-            m.run_test()
-            self.assertEqual(a.should_alert(m), alerter.AlertType.NONE)
-            self.assertEqual(a._ooh_failures, ["fail"])
+        a = alerter.Alerter(config)
+        m.run_test()
+        self.assertEqual(a.should_alert(m), alerter.AlertType.NONE)
+        self.assertEqual(a._ooh_failures, ["fail"])
 
-            a = alerter.Alerter(config)
-            m.run_test()
-            self.assertEqual(a.should_alert(m), alerter.AlertType.NONE)
-            self.assertEqual(a._ooh_failures, [])
+        a = alerter.Alerter(config)
+        m.run_test()
+        self.assertEqual(a.should_alert(m), alerter.AlertType.NONE)
+        self.assertEqual(a._ooh_failures, [])
 
-    @pytest.mark.skip("TZ test logic need fixing")
     def test_should_alert_catchup(self):
+        """
+        Test that, with `delay` 1 and `support_catchup` = `True`, an alert will
+        be sent if a failure from before the period in which notifications are
+        allowed, continues once we're within the notification window.
+        """
         config = {
             "delay": 1,
             "times_type": "only",
@@ -324,16 +349,18 @@ class TestAlerter(unittest.TestCase):
         a.support_catchup = True
         m = monitor.MonitorFail("fail", {})
         m.run_test()
-        with freeze_time("2020-03-10 09:00", tz_offset=self.utcoffset):
+        with freeze_time("2020-03-10 09:00"):
             self.assertEqual(a.should_alert(m), alerter.AlertType.NONE)
             self.assertEqual(a._ooh_failures, ["fail"])
-
-        with freeze_time("2020-03-10 10:30", tz_offset=self.utcoffset):
+        with freeze_time("2020-03-10 10:30"):
             self.assertEqual(a.should_alert(m), alerter.AlertType.CATCHUP)
             self.assertEqual(a._ooh_failures, [])
 
-    @pytest.mark.skip("TZ test logic need fixing")
     def test_should_alert_no_catchup(self):
+        """
+        Here, `support_catchup` is unset, so catchup notifications shouldn't be
+        sent.
+        """
         config = {
             "delay": 1,
             "times_type": "only",
@@ -343,11 +370,10 @@ class TestAlerter(unittest.TestCase):
         a = alerter.Alerter(config)
         m = monitor.MonitorFail("fail", {})
         m.run_test()
-        with freeze_time("2020-03-10 09:00", tz_offset=self.utcoffset):
+        with freeze_time("2020-03-10 09:00"):
             self.assertEqual(a.should_alert(m), alerter.AlertType.NONE)
             self.assertEqual(a._ooh_failures, ["fail"])
-
-        with freeze_time("2020-03-10 10:30", tz_offset=self.utcoffset):
+        with freeze_time("2020-03-10 10:30"):
             self.assertEqual(a.should_alert(m), alerter.AlertType.FAILURE)
             self.assertEqual(a._ooh_failures, [])
 
@@ -414,172 +440,166 @@ class TestAlerter(unittest.TestCase):
 
 class TestMessageBuilding(unittest.TestCase):
     def setUp(self):
-        self.test_alerter = alerter.Alerter()
-        self.freeze_time_value = "2020-03-10 09:00"
-        self.tz = os.environ.get("TZ", "local")
-        self.expected_time_string = (
-            arrow.get("2020-03-10 09:00:00+00:00").to(self.tz).format()
-        )
-        a = arrow.now()
-        self.utcoffset = a.utcoffset()
+        # Because we're instantiating the `alerter.Alerter()` object here, and
+        # because the decorator isn't consumed in the setUp routine, need to
+        # use `with` here instead for patching the time zone.
+        with mock.patch.dict(os.environ, {"TZ": TZ_UTC}, clear=True):
+            self.test_alerter = alerter.Alerter()
+            self.expected_time_string = "2020-03-10 09:00:00+00:00"
 
     def test_notification_format_failure(self):
         m = monitor.MonitorFail("test", {})
-        with freeze_time(self.freeze_time_value):
-            m.run_test()
-            self.assertEqual(
-                self.test_alerter.build_message(
-                    alerter.AlertLength.NOTIFICATION, alerter.AlertType.FAILURE, m
-                ),
-                "Monitor test on %s failed" % self.test_alerter.hostname,
-            )
+        m.run_test()
+        self.assertEqual(
+            self.test_alerter.build_message(
+                alerter.AlertLength.NOTIFICATION, alerter.AlertType.FAILURE, m
+            ),
+            "Monitor test on %s failed" % self.test_alerter.hostname,
+        )
 
     def test_notification_format_success(self):
         m = monitor.MonitorNull("winning", {})
-        with freeze_time(self.freeze_time_value):
-            for _ in range(0, 6):
-                m.run_test()
-            self.assertEqual(
-                self.test_alerter.build_message(
-                    alerter.AlertLength.NOTIFICATION, alerter.AlertType.SUCCESS, m
-                ),
-                "Monitor winning on %s succeeded" % self.test_alerter.hostname,
-            )
+        for _ in range(0, 6):
+            m.run_test()
+        self.assertEqual(
+            self.test_alerter.build_message(
+                alerter.AlertLength.NOTIFICATION, alerter.AlertType.SUCCESS, m
+            ),
+            "Monitor winning on %s succeeded" % self.test_alerter.hostname,
+        )
 
+    @freeze_time("2020-03-10 09:00")
     def test_oneline_format_failure(self):
         m = monitor.MonitorFail("test", {})
-        with freeze_time(self.freeze_time_value):
-            m.run_test()
-            self.assertEqual(
-                self.test_alerter.build_message(
-                    alerter.AlertLength.ONELINE, alerter.AlertType.FAILURE, m
-                ),
-                "failure: test on {hostname} failed at {expected_time} (0+00:00:00): This monitor always fails.".format(
-                    hostname=util.short_hostname(),
-                    expected_time=self.expected_time_string,
-                ),
-            )
+        m.run_test()
+        self.assertEqual(
+            self.test_alerter.build_message(
+                alerter.AlertLength.ONELINE, alerter.AlertType.FAILURE, m
+            ),
+            "failure: test on {hostname} failed at {expected_time} (0+00:00:00): This monitor always fails.".format(
+                hostname=util.short_hostname(),
+                expected_time=self.expected_time_string,
+            ),
+        )
 
     def test_oneline_format_success(self):
         m = monitor.MonitorNull("winning", {})
-        with freeze_time(self.freeze_time_value):
-            for _ in range(0, 6):
-                m.run_test()
-            m.last_result = "a " * 80
-            desired = (
-                "success: winning on {hostname} succeeded at  (0+00:00:00): ".format(
-                    hostname=util.short_hostname()
-                )
-                + "a " * 80
+        for _ in range(0, 6):
+            m.run_test()
+        m.last_result = "a " * 80
+        desired = (
+            "success: winning on {hostname} succeeded at  (0+00:00:00): ".format(
+                hostname=util.short_hostname()
             )
-            output = self.test_alerter.build_message(
-                alerter.AlertLength.ONELINE, alerter.AlertType.SUCCESS, m
-            )
-            self.assertEqual(desired, output)
+            + "a " * 80
+        )
+        output = self.test_alerter.build_message(
+            alerter.AlertLength.ONELINE, alerter.AlertType.SUCCESS, m
+        )
+        self.assertEqual(desired, output)
 
+    @freeze_time("2020-03-10 09:00")
     def test_sms_format_failure(self):
         m = monitor.MonitorFail("test", {})
-        with freeze_time(self.freeze_time_value):
-            m.run_test()
-            self.assertEqual(
-                self.test_alerter.build_message(
-                    alerter.AlertLength.SMS, alerter.AlertType.FAILURE, m
-                ),
-                "failure: test on {hostname} failed at {expected_time} (0+00:00:00): This monitor always fails.".format(
-                    hostname=util.short_hostname(),
-                    expected_time=self.expected_time_string,
-                ),
-            )
+        m.run_test()
+        self.assertEqual(
+            self.test_alerter.build_message(
+                alerter.AlertLength.SMS, alerter.AlertType.FAILURE, m
+            ),
+            "failure: test on {hostname} failed at {expected_time} (0+00:00:00): This monitor always fails.".format(
+                hostname=util.short_hostname(),
+                expected_time=self.expected_time_string,
+            ),
+        )
 
     def test_sms_format_success(self):
         m = monitor.MonitorNull("winning", {})
-        with freeze_time(self.freeze_time_value):
-            for _ in range(0, 6):
-                m.run_test()
-            m.last_result = "a " * 80
-            self.assertEqual(
-                self.test_alerter.build_message(
-                    alerter.AlertLength.SMS, alerter.AlertType.SUCCESS, m
+        for _ in range(0, 6):
+            m.run_test()
+        m.last_result = "a " * 80
+        self.assertEqual(
+            self.test_alerter.build_message(
+                alerter.AlertLength.SMS, alerter.AlertType.SUCCESS, m
+            ),
+            textwrap.shorten(
+                "success: winning on {hostname} succeeded at (0+00:00:00): {a}".format(
+                    hostname=util.short_hostname(), a=m.last_result
                 ),
-                textwrap.shorten(
-                    "success: winning on {hostname} succeeded at (0+00:00:00): {a}".format(
-                        hostname=util.short_hostname(), a=m.last_result
-                    ),
-                    width=160,
-                    placeholder="...",
-                ),
-            )
+                width=160,
+                placeholder="...",
+            ),
+        )
 
+    @freeze_time("2020-03-10 09:00")
     def test_full_format_failure(self):
         m = monitor.MonitorFail("test", {})
-        with freeze_time(self.freeze_time_value):
-            m.run_test()
-            self.assertEqual(
-                self.test_alerter.build_message(
-                    alerter.AlertLength.FULL, alerter.AlertType.FAILURE, m
-                ),
-                textwrap.dedent(
-                    """
-                    Monitor test on {hostname} failed!
-                    Failed at: {expected_time} (down 0+00:00:00)
-                    Virtual failure count: 1
-                    Additional info: This monitor always fails.
-                    Description: A monitor which always fails.
-                    """.format(
-                        expected_time=self.expected_time_string,
-                        hostname=self.test_alerter.hostname,
-                    )
-                ),
-            )
+        m.run_test()
+        self.assertEqual(
+            self.test_alerter.build_message(
+                alerter.AlertLength.FULL, alerter.AlertType.FAILURE, m
+            ),
+            textwrap.dedent(
+                """
+                Monitor test on {hostname} failed!
+                Failed at: {expected_time} (down 0+00:00:00)
+                Virtual failure count: 1
+                Additional info: This monitor always fails.
+                Description: A monitor which always fails.
+                """.format(
+                    expected_time=self.expected_time_string,
+                    hostname=self.test_alerter.hostname,
+                )
+            ),
+        )
 
+    @freeze_time("2020-03-10 09:00")
     def test_full_format_failure_docs(self):
         m = monitor.MonitorFail("test", {"failure_doc": "whoops"})
-        with freeze_time(self.freeze_time_value):
-            m.run_test()
-            self.assertEqual(
-                self.test_alerter.build_message(
-                    alerter.AlertLength.FULL, alerter.AlertType.FAILURE, m
-                ),
-                textwrap.dedent(
-                    """
-                    Monitor test on {host} failed!
-                    Failed at: {expected_time} (down 0+00:00:00)
-                    Virtual failure count: 1
-                    Additional info: This monitor always fails.
-                    Description: A monitor which always fails.
-                    Documentation: whoops
-                    """.format(
-                        expected_time=self.expected_time_string,
-                        host=self.test_alerter.hostname,
-                    )
-                ),
-            )
+        m.run_test()
+        self.assertEqual(
+            self.test_alerter.build_message(
+                alerter.AlertLength.FULL, alerter.AlertType.FAILURE, m
+            ),
+            textwrap.dedent(
+                """
+                Monitor test on {host} failed!
+                Failed at: {expected_time} (down 0+00:00:00)
+                Virtual failure count: 1
+                Additional info: This monitor always fails.
+                Description: A monitor which always fails.
+                Documentation: whoops
+                """.format(
+                    expected_time=self.expected_time_string,
+                    host=self.test_alerter.hostname,
+                )
+            ),
+        )
 
+    @freeze_time("2020-03-10 09:00")
     def test_full_format_success(self):
         m = monitor.MonitorNull("winning", {})
-        with freeze_time(self.freeze_time_value):
-            for _ in range(0, 6):
-                m.run_test()
-            self.assertEqual(
-                self.test_alerter.build_message(
-                    alerter.AlertLength.FULL, alerter.AlertType.SUCCESS, m
-                ),
-                textwrap.dedent(
-                    """
-                    Monitor winning on {host} succeeded!
-                    Recovered at: {expected_time} (was down for 0+00:00:00)
-                    Additional info: 
-                    Description: (Monitor did not write an auto-biography.)
-                    """.format(  # noqa: W291
-                        expected_time=self.expected_time_string,
-                        host=self.test_alerter.hostname,
-                    )
-                ),
-            )
+        for _ in range(0, 6):
+            m.run_test()
+        self.assertEqual(
+            self.test_alerter.build_message(
+                alerter.AlertLength.FULL, alerter.AlertType.SUCCESS, m
+            ),
+            textwrap.dedent(
+                """
+                Monitor winning on {host} succeeded!
+                Recovered at: {expected_time} (was down for 0+00:00:00)
+                Additional info: 
+                Description: (Monitor did not write an auto-biography.)
+                """.format(  # noqa: W291
+                    expected_time=self.expected_time_string,
+                    host=self.test_alerter.hostname,
+                )
+            ),
+        )
 
     def test_was_downtime(self):
         m = monitor.MonitorFail("test", {})
-        with freeze_time(self.freeze_time_value) as frozen_time:
+        with freeze_time("2020-03-10 09:00") as frozen_time:
             for _ in range(0, 6):
                 m.run_test()
                 frozen_time.tick(30)
@@ -609,10 +629,8 @@ class TestSNSAlerter(unittest.TestCase):
         self.assertEqual(a.urgent, False)
 
 
+@mock.patch.dict(os.environ, {"TZ": TZ_LOCAL}, clear=True)
 class TestDescription(unittest.TestCase):
-    def setUp(self) -> None:
-        self.tz = os.environ.get("TZ", "local")
-
     def test_times_always(self):
         a = alerter.Alerter({"times_type": "always"})
         self.assertEqual(a._describe_times(), "(always)")
@@ -622,7 +640,7 @@ class TestDescription(unittest.TestCase):
             {"times_type": "only", "time_lower": "09:00", "time_upper": "10:00"}
         )
         self.assertEqual(
-            a._describe_times(), f"only between 09:00 and 10:00 ({self.tz}) on any day"
+            a._describe_times(), f"only between 09:00 and 10:00 ({TZ_LOCAL}) on any day"
         )
 
     def test_times_only_days(self):
@@ -636,7 +654,7 @@ class TestDescription(unittest.TestCase):
         )
         self.assertEqual(
             a._describe_times(),
-            f"only between 09:00 and 10:00 ({self.tz}) on Mon, Tue, Wed",
+            f"only between 09:00 and 10:00 ({TZ_LOCAL}) on Mon, Tue, Wed",
         )
 
     def test_times_not_time(self):
@@ -645,7 +663,7 @@ class TestDescription(unittest.TestCase):
         )
         self.assertEqual(
             a._describe_times(),
-            f"any time except between 09:00 and 10:00 ({self.tz}) on any day",
+            f"any time except between 09:00 and 10:00 ({TZ_LOCAL}) on any day",
         )
 
     def test_times_not_days(self):
@@ -659,5 +677,5 @@ class TestDescription(unittest.TestCase):
         )
         self.assertEqual(
             a._describe_times(),
-            f"any time except between 09:00 and 10:00 ({self.tz}) on Thu, Fri, Sat, Sun",
+            f"any time except between 09:00 and 10:00 ({TZ_LOCAL}) on Thu, Fri, Sat, Sun",
         )
