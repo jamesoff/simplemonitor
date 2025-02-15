@@ -182,7 +182,7 @@ Don't trigger during the hours I'm in the office (8:30am to 5:30pm, Monday to Fr
    type=some-alerter-type
    times_type=not
    time_lower=08:30
-   time_upper_17:30
+   time_upper=17:30
    days=0,1,2,3,4
 
 Don't send at antisocial times, but let me know later if something broke and hasn't recovered yet:
