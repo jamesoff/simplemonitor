@@ -111,9 +111,7 @@ class Monitor:
         )
         _gps = cast(Optional[str], self.get_config_option("gps"))
         if _gps:
-            self.gps = [
-                float(x) for x in _gps.split(",")
-            ]  # type: Optional[List[float]]
+            self.gps = [float(x) for x in _gps.split(",")]  # type: Optional[List[float]]
         else:
             self.gps = None
 
