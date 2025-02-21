@@ -226,6 +226,16 @@ class HTMLLogger(Logger):
                 "copy_resources", required_type="bool", default=True
             ),
         )
+        self.navbar_title = cast(
+            str,
+            self.get_config_option(
+                "navbar_title", required=False, default="SimpleMonitor"
+            ),
+        )
+        self.visual_theme = cast(
+            str,
+            self.get_config_option("visual_theme", required=False, default="light"),
+        )
         self.upload_command = cast(
             str,
             self.get_config_option("upload_command", required=False, allow_empty=False),
@@ -403,6 +413,8 @@ class HTMLLogger(Logger):
             interval = 30
         file_handle.write(
             template.render(
+                navbar_title=self.navbar_title,
+                visual_theme=self.visual_theme,
                 status=self.status,
                 status_border=self.header_class,
                 host=socket.gethostname(),
