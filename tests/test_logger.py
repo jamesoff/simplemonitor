@@ -404,6 +404,13 @@ class TestHTMLLogger(unittest.TestCase):
         golden_file = "tests/html/map1.html"
         self._compare_files(test_file, golden_file)
 
+    def test_html_custom_appearance(self):
+        test_file = self._write_html(
+            {"navbar_title": "Custom NavBar Title", "visual_theme":"dark"}
+        )
+        golden_file = "tests/html/test3.html"
+        self._compare_files(test_file, golden_file)
+
     def test_config_start(self):
         with self.assertRaises(RuntimeError):
             _ = HTMLLogger({"map": "1", "filename": "something"})
