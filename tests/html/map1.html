@@ -11,19 +11,9 @@
 
     <script src="main.bundle.js"></script><script src="maps.bundle.js"></script>
     <meta http-equiv="refresh" content="30" />
-    <script language="javascript" type="text/javascript">
-      function check_age() {
-        var generated = 1587211200;
-        var now = Date.parse(new Date()) / 1000;
-        var diff = now - generated;
-        if (diff > (30 * 2)) {
-          too_old();
-        }
-      }
-      </script>
     </head>
 
-    <body onload="check_age();">
+    <body>
       <div
         class="navbar navbar-light border-bottom border-danger"
         id="summary"
@@ -85,23 +75,41 @@ L.marker([52.01,1.01], {
       </div>
     </div>
     <script language="javascript" type="text/javascript">
+
+      function check_age() {
+        const generated = 1587211200;
+        const now = Math.floor(Date.now() / 1000);
+        const diff = now - generated;
+        if (diff > (30 * 2)) {
+          too_old();
+        }
+      }
+
       $(function () {
-        var tooltipTriggerList = [].slice.call(
-          document.querySelectorAll('[data-toggle="tooltip"]')
-        );
-        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-          return new bootstrap.Tooltip(tooltipTriggerEl);
+        const tooltip_trigger_list = document.querySelectorAll('[data-toggle="tooltip"]');
+        tooltip_trigger_list.forEach(tooltip_trigger_el => {
+          new bootstrap.Tooltip(tooltip_trigger_el);
         });
-        check_age();
-        setTimeout(too_old, (30 * 2000));
-        update_props = {
-            timestamp: 1587211200,
-            host: "fake_hostname.local",
-            version: "__VERSION__",
-            updated: "2020-04-18 12:00:00+00:00",
+
+        const update_props = {
+          timestamp: 1587211200,
+          host: "fake_hostname.local",
+          version: "__VERSION__",
+          updated: "2020-04-18 12:00:00+00:00",
         };
+
+	if (document.readyState === "loading") {
+          document.addEventListener('DOMContentLoaded', (event) => {
+            check_age();
+            update_age(update_props);
+          });
+        } else {
+          check_age();
+          update_age(update_props);
+        }
+
+        setTimeout(too_old, (30 * 2000));
         setInterval(update_age, 5000, update_props);
-        update_age(update_props);
       });
     </script>
   </body>
