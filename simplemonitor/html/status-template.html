@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="{{visual_theme}}">
   <head>
     <meta charset="utf-8" />
     <meta
@@ -18,11 +18,11 @@
 
     <body>
       <div
-        class="navbar navbar-light bg-light border-bottom {{status_border}}"
+        class="navbar navbar-light border-bottom {{status_border}}"
         id="summary"
       >
       <div class="container-fluid">
-        <div class="navbar-brand">SimpleMonitor</div>
+        <div class="navbar-brand">{{navbar_title}}</div>
         <div class="navbar-text d-none d-lg-block" id="updated">
           Updated at {{now}} by {{host}} ({{version}})
         </div>
