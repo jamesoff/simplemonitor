@@ -1,9 +1,12 @@
-[tool.poetry]
+[project]
 name = "simplemonitor"
 version = "1.14.0"
 description = "A simple network and host monitor"
 license = "BSD-3-Clause"
-authors = ["James Seward <james@jamesoff.net>"]
+authors = [
+    {name = "James Seward", email = "james@jamesoff.net"},
+]
+requires-python = ">=3.10"
 readme = "README.md"
 homepage = "https://github.com/jamesoff/simplemonitor"
 repository = "https://github.com/jamesoff/simplemonitor"
@@ -25,12 +28,15 @@ include = [
 	"simplemonitor/html/status-template.html",
 ]
 
+[tool.poetry]
+requires-poetry = ">=2.0"
+
 [tool.poetry.scripts]
 simplemonitor = "simplemonitor.monitor:main"
 winmonitor = "simplemonitor.winmonitor:main"
 
 [tool.poetry.dependencies]
-python = "^3.9.0"
+python = "^3.10.0"
 arrow = ">=0.17,<1.4"
 boto3 = "^1.15.16"
 colorlog = ">=4.4"
