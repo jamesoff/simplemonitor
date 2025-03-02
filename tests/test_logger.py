@@ -406,7 +406,7 @@ class TestHTMLLogger(unittest.TestCase):
 
     def test_html_custom_appearance(self):
         test_file = self._write_html(
-            {"navbar_title": "Custom NavBar Title", "visual_theme":"dark"}
+            {"navbar_title": "Custom NavBar Title", "visual_theme": "dark"}
         )
         golden_file = "tests/html/test3.html"
         self._compare_files(test_file, golden_file)

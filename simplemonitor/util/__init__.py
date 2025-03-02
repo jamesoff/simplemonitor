@@ -213,7 +213,7 @@ def subclass_dict_handler(
     def _check_is_subclass(cls: Any) -> None:
         if not issubclass(cls, base_cls):
             raise TypeError(
-                ("%s.register may only be used on subclasses " "of %s.%s")
+                ("%s.register may only be used on subclasses of %s.%s")
                 % (mod, mod, base_cls.__name__)
             )
 

@@ -8,7 +8,6 @@ from simplemonitor import util
 
 
 class TestUtil(unittest.TestCase):
-
     one_KB = 1024
     one_MB = one_KB * 1024
     one_GB = one_MB * 1024

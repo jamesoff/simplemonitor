@@ -178,7 +178,6 @@ class SimpleMonitor:
 
         module_logger.info("=== Loading monitors")
         for this_monitor in monitors:
-
             if config.has_option(this_monitor, "runon"):
                 if myhostname != config.get(this_monitor, "runon").lower():
                     module_logger.warning(
