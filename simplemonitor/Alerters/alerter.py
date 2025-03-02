@@ -170,6 +170,9 @@ class Alerter:
             bool,
             self.get_config_option("urgent", default=self.urgent, required_type="bool"),
         )
+        self.enabled = cast(
+            bool, self.get_config_option("enabled", required_type="bool", default=True)
+        )
 
         if self._ooh_failures is None:
             self._ooh_failures = []
@@ -280,20 +283,18 @@ class Alerter:
         if virtual_failure_count:
             self.alerter_logger.debug("monitor %s has failed", monitor.name)
             # Monitor has failed (not just first time)
-            if self._delay_notification:
-                # Delayed (catch-up) notifications are enabled
-                if not out_of_hours:
-                    # Not out of hours
-                    try:
-                        self._ooh_failures.remove(monitor.name)
-                        # if it was in there and we support catchup alerts, do it
-                        if self.support_catchup:
-                            self.alerter_logger.debug(
-                                "alert for monitor %s is CATCHUP", monitor.name
-                            )
-                            return AlertType.CATCHUP
-                    except ValueError:
-                        pass
+            if self._delay_notification and not out_of_hours:
+                # Delayed (catch-up) notifications are enabled, and it's time to send the delayed notification
+                if monitor.name in self._ooh_failures:
+                    # The monitor had failed during ooh
+                    self._ooh_failures.remove(monitor.name)
+                    # if we support catchup alerts, do it
+                    if self.support_catchup:
+                        self.alerter_logger.debug(
+                            "alert for monitor %s is CATCHUP", monitor.name
+                        )
+                        return AlertType.CATCHUP
+                    # send failure if catchup wasn't supported
                     self.alerter_logger.debug(
                         "alert for monitor %s is FAILURE", monitor.name
                     )

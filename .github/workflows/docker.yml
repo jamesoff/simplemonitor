@@ -6,7 +6,7 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Prepare ini files
         run: cp tests/monitor-docker.ini monitor.ini; cp tests/monitors-docker.ini monitors.ini
       - name: Build standalone container
@@ -16,8 +16,8 @@ jobs:
   docker-compose:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Prepare ini files
         run: cp tests/monitor-docker.ini monitor.ini; cp tests/monitors-docker.ini monitors.ini
-      - name: Build docker-compose environment
-        run: docker-compose build
+      - name: Build docker compose environment
+        run: docker compose build

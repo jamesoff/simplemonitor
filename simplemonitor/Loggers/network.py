@@ -2,17 +2,21 @@
 Network logging support for SimpleMonitor
 """
 
+import datetime
 import hmac
 import logging
 import socket
 import struct
 from threading import Thread
-from typing import Any, Dict, Optional, Union, cast
+from typing import TYPE_CHECKING, Dict, Optional, TypedDict, Union, cast
 
 from ..Monitors.monitor import Monitor
 from ..util import LoggerConfigurationError
 from ..util.json_encoding import json_dumps, json_loads
 from .logger import Logger, register
+
+if TYPE_CHECKING:
+    from ..simplemonitor import SimpleMonitor
 
 # From the docs:
 #  Threads interact strangely with interrupts: the KeyboardInterrupt exception
@@ -20,6 +24,11 @@ from .logger import Logger, register
 #  available, interrupts always go to the main thread.)
 
 _DIGEST_NAME = "md5"
+
+
+class RemoteHost(TypedDict):
+    last_seen: datetime.datetime
+    address: str
 
 
 @register
@@ -71,7 +80,7 @@ class NetworkLogger(Logger):
                 if self.batch_data is not None:
                     self.batch_data[monitor.name] = data
                 else:
-                    self.batch_data = {monitor.name: data}  # type: Dict[str, dict]
+                    self.batch_data = {monitor.name: data}
         except Exception:  # pylint: disable=broad-except
             self.logger_logger.exception("Failed to serialize monitor %s", name)
 
@@ -112,7 +121,7 @@ class Listener(Thread):
 
     def __init__(
         self,
-        simplemonitor: Any,
+        simplemonitor: "SimpleMonitor",
         port: int,
         key: Optional[str] = None,
         bind_host: str = "",
@@ -148,11 +157,15 @@ class Listener(Thread):
         When the main app kills us (with join()), socket.listen throws socket.error.
         """
         self.running = True
+        conn: Optional[socket.socket] = None
+        addr: Optional[socket._RetAddress] = None
         while self.running:
             try:
                 self.sock.listen(5)
                 conn, addr = self.sock.accept()
                 conn.settimeout(5.0)
+                assert conn is not None
+                assert addr is not None
                 self.logger.debug("Got connection from %s", addr[0])
                 serialized = bytearray()
                 while 1:
@@ -210,8 +223,10 @@ class Listener(Thread):
                         addr[0],
                     )
             except socket.timeout:
-                self.logger.warning("Timeout during recv from %s", addr[0])
-                conn.close()
+                if addr:
+                    self.logger.warning("Timeout during recv from %s", addr[0])
+                if conn:
+                    conn.close()
             except socket.error as exception:
                 if exception.errno == 4:
                     # Interrupted system call
@@ -249,6 +264,9 @@ class Listener(Thread):
         elif isinstance(remote_monitors, dict):
             self.simplemonitor.update_remote_monitor(
                 remote_monitors, remote_instance_name
+            )
+            self.simplemonitor.upsert_remote_host(
+                remote_instance_name, datetime.datetime.now(), source
             )
         else:
             self.logger.error(

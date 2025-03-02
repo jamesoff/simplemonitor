@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="light">
+<html lang="en" data-bs-theme="dark">
   <head>
     <meta charset="utf-8" />
     <meta
@@ -10,7 +10,7 @@
 
     <title>FAIL@fake_hostname.local monitor</title>
 
-    <script src="main.bundle.js"></script><script src="maps.bundle.js"></script>
+    <script src="main.bundle.js"></script>
     <meta http-equiv="refresh" content="30" />
     </head>
 
@@ -20,7 +20,7 @@
         id="summary"
       >
       <div class="container-fluid">
-        <div class="navbar-brand">SimpleMonitor</div>
+        <div class="navbar-brand">Custom NavBar Title</div>
         <div class="navbar-text d-none d-lg-block" id="updated">
           Updated at 2020-04-18 12:00:00+00:00 by fake_hostname.local (__VERSION__)
         </div>
@@ -31,33 +31,100 @@
         </div>
         <div class="navbar-text"><span class="badge bg-success">1 OK</span>  <span class="badge bg-danger">1 FAIL</span>  <span class="badge bg-secondary">1 DISABLED</span>   </div>
         </div>
-      </div><div id="mapid" style="fill: 1440px; height: 960px;"></div>
-      <script>
-        var mymap = L.map('mapid', {
-          center: [52, 1],
-          zoom: 12
-        });
-        L.tileLayer(
-          'https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 18,
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          }).addTo(mymap);
-
-
-L.marker([52.02,1.02], {
-icon: markerIconDown,title: 'fail',
-        }).addTo(mymap).bindPopup("fail (FAIL) This monitor always fails.");
-
-L.marker([52.03,1.03], {
-
-            icon: markerIconUp,title: 'disabled',
-        }).addTo(mymap).bindPopup("disabled (DISABLED) ");
-
-L.marker([52.01,1.01], {
-
-            icon: markerIconUp,title: 'unnamed',
-        }).addTo(mymap).bindPopup("unnamed (OK) ");
-</script>
+      </div>
+      <table class="table table-borderless table-striped table-hover table-sm">
+        <tr>
+          <th scope="col">Monitor</th>
+          <th scope="col">Status</th>
+          <th scope="col">Host</th>
+          <th scope="col">Failed at</th>
+          <th scope="col">VFC</th>
+          <th scope="col">Up/downtime</th>
+          <th scope="col">Detail</th>
+          <th scope="col">Failures</th>
+          <th scope="col">Last Failure</th>
+          <th scope="col">Age</th>
+        </tr>
+<tr class="table-danger">
+          <td>
+            <span
+              data-toggle="tooltip"
+              data-placement="right"
+              title="A monitor which always fails."
+              >fail</span
+            >
+          </td>
+          <td>FAIL</td>
+          <td>fake_hostname</td>
+          <td>2020-04-18 12:00:00+00:00</td>
+          <td>1</td>
+          <td>0+00:00:00 (<span
+              data-toggle="tooltip"
+              data-placement="right"
+              title="0.00000%"
+              >0.00%</span
+            >)
+          </td>
+          <td>This monitor always fails.</td>
+          
+          <td>1</td>
+          <td>2020-04-18 12:00:00+00:00</td>
+          
+          <td></td>
+        </tr>
+<tr>
+          <td>
+            <span
+              data-toggle="tooltip"
+              data-placement="right"
+              title="A monitor which always fails."
+              >disabled</span
+            >
+          </td>
+          <td>DISABLED</td>
+          <td>fake_hostname</td>
+          <td></td>
+          <td></td>
+          <td>0+00:00:00 (<span
+              data-toggle="tooltip"
+              data-placement="right"
+              title="0.00000%"
+              >0.00%</span
+            >)
+          </td>
+          <td></td>
+          
+          <td></td><td></td>
+          
+          <td></td>
+        </tr>
+<tr>
+          <td>
+            <span
+              data-toggle="tooltip"
+              data-placement="right"
+              title="(Monitor did not write an auto-biography.)"
+              >unnamed</span
+            >
+          </td>
+          <td class="table-success">OK</td>
+          <td>fake_hostname</td>
+          <td></td>
+          <td></td>
+          <td>0+00:00:00 (<span
+              data-toggle="tooltip"
+              data-placement="right"
+              title="0.00000%"
+              >0.00%</span
+            >)
+          </td>
+          <td></td>
+          
+          <td></td><td></td>
+          
+          <td></td>
+        </tr>
+</table>
     <div class="navbar-text d-block d-lg-none" id="updatedfooter">
       Updated at 2020-04-18 12:00:00+00:00<br />by fake_hostname.local (__VERSION__)
     </div>

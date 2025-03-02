@@ -50,7 +50,7 @@ These options are common to all alerter types.
 
     :type: boolean
     :required: false
-    :default: ``false``
+    :default: false
 
     makes an alerter do everything except actually send the message, and instead will print some information about what it would do.
 
@@ -58,7 +58,7 @@ These options are common to all alerter types.
 
     :type: boolean
     :required: false
-    :default: ``false``
+    :default: false
 
     makes an alerter trigger its success action even if out of hours
 
@@ -74,7 +74,7 @@ These options are common to all alerter types.
 
     :type: boolean
     :required: false
-    :default: ``false``
+    :default: false
 
     if true, only send alerts for failures (or catchups)
 
@@ -92,7 +92,7 @@ These options are common to all alerter types.
 
     :type: boolean
     :required: false
-    :default: ``false``
+    :default: false
 
     fire this alerter (for a failed monitor) every iteration
 
@@ -106,6 +106,14 @@ These options are common to all alerter types.
     to urgent. You can use this option to override that in e.g. the case of the
     SNS alerter, which could be urgent if sending SMSes, but non-urgent if
     sending emails.
+
+.. confval:: enabled
+
+    :type: boolean
+    :required: false
+    :default: true
+
+    Set to false to turn off the alerter
 
 Time restrictions
 -----------------
@@ -156,7 +164,7 @@ Note that the :confval:`times_type` option sets the timezone all the values are 
 
     :type: boolean
     :required: false
-    :default: ``false``
+    :default: false
 
     set to true to have the alerter send a "catch-up" alert about a failed monitor if it failed during a time the alerter was not allowed to send, and is still failed as the alerter enters the time it is allowed to send. If the monitor fails and recovers during the not-allowed time, no alert is sent either way.
 
@@ -174,7 +182,7 @@ Don't trigger during the hours I'm in the office (8:30am to 5:30pm, Monday to Fr
    type=some-alerter-type
    times_type=not
    time_lower=08:30
-   time_upper_17:30
+   time_upper=17:30
    days=0,1,2,3,4
 
 Don't send at antisocial times, but let me know later if something broke and hasn't recovered yet:

@@ -1,10 +1,10 @@
 # type: ignore
 import datetime
-import os
 import platform
 import time
 import unittest
 from pathlib import Path
+from unittest import mock
 
 import arrow
 
@@ -364,24 +364,19 @@ class TestMonitor(unittest.TestCase):
             "compound monitor did not report failures properly",
         )
 
-    def test_recovery(self):
+    @mock.patch("subprocess.Popen")
+    def test_recovery(self, mock_popen):
         m = MonitorFail("fail1", {"recover_command": "touch did_recovery"})
-        try:
-            os.unlink("did_recovery")
-        except FileNotFoundError:
-            pass
         m.run_test()
         m.attempt_recover()
-        #  throws an exception if the file isn't there
-        os.stat("did_recovery")
+        # Make sure we called the fake command
+        mock_popen.assert_called_once_with(["touch", "did_recovery"])
 
-    def test_recovered(self):
+    @mock.patch("subprocess.Popen")
+    def test_recovered(self, mock_popen):
         m = MonitorFail("fail9", {"recovered_command": "touch did_recovered"})
-        try:
-            os.unlink("did_recovered")
-        except FileNotFoundError:
-            pass
-        for i in range(0, 6):
+        for _ in range(0, 6):
             m.run_test()
         m.run_recovered()
-        os.stat("did_recovered")
+        # Make sure we called the fake command
+        mock_popen.assert_called_once_with(["touch", "did_recovered"])

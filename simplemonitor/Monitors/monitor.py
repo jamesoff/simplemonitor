@@ -15,9 +15,22 @@ import logging
 import platform
 import subprocess  # nosec
 import time
-from typing import Any, List, NoReturn, Optional, Tuple, Union, cast
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    List,
+    NoReturn,
+    Optional,
+    Tuple,
+    Union,
+    cast,
+)
 
 import arrow
+
+if TYPE_CHECKING:
+    from ..simplemonitor import SimpleMonitor
 
 from ..util import (
     MonitorState,
@@ -73,7 +86,9 @@ class Monitor:
         self._notify = self.get_config_option(
             "notify", required_type="bool", default=True
         )
-        self.group = cast(str, self.get_config_option("group", default="default"))
+        self.group = "".join(
+            cast(str, self.get_config_option("group", default="default")).split()
+        ).split(",")
         self._tolerance = self.get_config_option(
             "tolerance", required_type="int", default=0, minimum=0
         )
@@ -101,6 +116,8 @@ class Monitor:
             ]  # type: Optional[List[float]]
         else:
             self.gps = None
+
+        self.slug = cast(Optional[str], self.get_config_option("slug"))
 
         self.running_on = short_hostname()
         self._state = MonitorState.UNKNOWN
@@ -211,9 +228,16 @@ class Monitor:
         """Override this method to return a list of parameters (for logging)"""
         raise NotImplementedError
 
-    def set_mon_refs(self, mmm: Any) -> None:
-        """Called with a reference to the list of all monitors.
+    def set_mon_refs(self, mmm: Dict[str, "Monitor"]) -> None:
+        """Save a weak reference to all Monitors.
+
         Only used by CompoundMonitor for now."""
+        pass
+
+    def set_sm_ref(self, sm: "SimpleMonitor") -> None:
+        """Save a weak reference to the SimpleMonitor instance.
+
+        Only used by RemoteHostsMonitors for now."""
         pass
 
     @property

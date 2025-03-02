@@ -3,8 +3,9 @@ Monitors for SimpleMonitor
 """
 
 from .arlo import MonitorArloCamera
-from .compound import CompoundMonitor
+from .compound import CompoundMonitor, RemoteHostsMonitor
 from .file import MonitorBackup
+from .gmirror import MonitorGmirrorStatus
 from .hass import MonitorSensor
 from .host import (
     MonitorApcupsd,
@@ -49,6 +50,7 @@ __all__ = [
     "MonitorDiskSpace",
     "MonitorEximQueue",
     "MonitorFileStat",
+    "MonitorGmirrorStatus",
     "MonitorHTTP",
     "MonitorHost",
     "MonitorLoadAvg",
@@ -71,4 +73,5 @@ __all__ = [
     "MonitorUnixService",
     "MonitorWindowsDHCPScope",
     "MonitorZap",
+    "RemoteHostsMonitor",
 ]
