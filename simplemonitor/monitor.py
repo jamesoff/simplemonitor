@@ -220,13 +220,13 @@ def main() -> None:
         max_workers=options.threads,
     )
 
-    if options.test:
-        if m.config_ok:
+    if m.config_ok:
+        if options.test:
             main_logger.warning("Config test complete. Exiting.")
             sys.exit(0)
-        else:
-            main_logger.error("Config test failed")
-            sys.exit(EXIT_CODE_CONFIG_FAILED)
+    else:
+        main_logger.error("Configuration not valid")
+        sys.exit(EXIT_CODE_CONFIG_FAILED)
 
     if options.one_shot:
         main_logger.warning(
