@@ -7,6 +7,7 @@ import logging
 import os
 import sys
 
+from .const import EXIT_CODE_CONFIG_FAILED
 from .simplemonitor import SimpleMonitor
 from .version import VERSION
 
@@ -219,9 +220,13 @@ def main() -> None:
         max_workers=options.threads,
     )
 
-    if options.test:
-        main_logger.warning("Config test complete. Exiting.")
-        sys.exit(0)
+    if m.config_ok:
+        if options.test:
+            main_logger.warning("Config test complete. Exiting.")
+            sys.exit(0)
+    else:
+        main_logger.error("Configuration not valid")
+        sys.exit(EXIT_CODE_CONFIG_FAILED)
 
     if options.one_shot:
         main_logger.warning(
