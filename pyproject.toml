@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "simplemonitor"
-version = "1.13.0"
+version = "1.14.0"
 description = "A simple network and host monitor"
 license = "BSD-3-Clause"
 authors = ["James Seward <james@jamesoff.net>"]
