@@ -2,14 +2,14 @@
 SimpleMonitor alerts via healthchecks
 """
 
+import json
 from typing import cast
 
-import json
 import requests
 
 from ..Monitors.monitor import Monitor
-from .alerter import Alerter, AlertLength, AlertType, register
 from ..util import check_group_match
+from .alerter import Alerter, AlertLength, AlertType, register
 
 
 @register
