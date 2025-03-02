@@ -7,6 +7,7 @@ import logging
 import os
 import sys
 
+from .const import EXIT_CODE_CONFIG_FAILED
 from .simplemonitor import SimpleMonitor
 from .version import VERSION
 
@@ -225,7 +226,7 @@ def main() -> None:
             sys.exit(0)
         else:
             main_logger.error("Config test failed")
-            sys.exit(2)
+            sys.exit(EXIT_CODE_CONFIG_FAILED)
 
     if options.one_shot:
         main_logger.warning(
