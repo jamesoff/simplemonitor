@@ -434,7 +434,7 @@ class Alerter:
             raise NotImplementedError
         elif length == AlertLength.FULL:
             if alert_type in [AlertType.CATCHUP, AlertType.FAILURE]:
-                message = """
+                message = """\
                 Monitor {monitor.name}{host} {alert_verb}!
                 Failed at: {failure_time} (down {downtime})
                 Virtual failure count: {vfc}
@@ -450,7 +450,7 @@ class Alerter:
                         monitor.failure_doc
                     )
             elif alert_type == AlertType.SUCCESS:
-                message = """
+                message = """\
                 Monitor {monitor.name}{host} {alert_verb}!
                 Recovered at: {recovered_time} (was down for {downtime})
                 Additional info: {result}

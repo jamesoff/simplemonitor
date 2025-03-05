@@ -539,7 +539,7 @@ class TestMessageBuilding(unittest.TestCase):
                 alerter.AlertLength.FULL, alerter.AlertType.FAILURE, m
             ),
             textwrap.dedent(
-                """
+                """\
                 Monitor test on {hostname} failed!
                 Failed at: {expected_time} (down 0+00:00:00)
                 Virtual failure count: 1
@@ -561,7 +561,7 @@ class TestMessageBuilding(unittest.TestCase):
                 alerter.AlertLength.FULL, alerter.AlertType.FAILURE, m
             ),
             textwrap.dedent(
-                """
+                """\
                 Monitor test on {host} failed!
                 Failed at: {expected_time} (down 0+00:00:00)
                 Virtual failure count: 1
@@ -585,7 +585,7 @@ class TestMessageBuilding(unittest.TestCase):
                 alerter.AlertLength.FULL, alerter.AlertType.SUCCESS, m
             ),
             textwrap.dedent(
-                """
+                """\
                 Monitor winning on {host} succeeded!
                 Recovered at: {expected_time} (was down for 0+00:00:00)
                 Additional info: 
