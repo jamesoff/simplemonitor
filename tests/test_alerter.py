@@ -14,7 +14,7 @@ from simplemonitor.Monitors import monitor
 # Create a consistent "local" timezone and offset for the tests, for tests that
 # compare the offset between UTC and local time. For simplicity and
 # predictability, use a time zone that doesn't have daylight savings.
-TZ_LOCAL = "MST"
+TZ_LOCAL = "America/Phoenix"
 TZ_LOCAL_OFFSET = -7
 TZ_UTC = "UTC"
 
@@ -208,8 +208,8 @@ class TestAlerter(unittest.TestCase):
         a = alerter.Alerter(
             {
                 "times_type": "only",
-                "time_lower": "09:00",  # 9:00 MST, 16:00 UTC
-                "time_upper": "10:00",  # 10:00 MST, 17:00 UTC
+                "time_lower": "09:00",  # 9:00 America/Phoenix, 16:00 UTC
+                "time_upper": "10:00",  # 10:00 America/Phoenix, 17:00 UTC
             }
         )
         with freeze_time("15:00"):
@@ -241,8 +241,8 @@ class TestAlerter(unittest.TestCase):
         a = alerter.Alerter(
             {
                 "times_type": "not",
-                "time_lower": "09:00",  # 9:00 MST, 16:00 UTC
-                "time_upper": "10:00",  # 10:00 MST, 17:00 UTC
+                "time_lower": "09:00",  # 9:00 America/Phoenix, 16:00 UTC
+                "time_upper": "10:00",  # 10:00 America/Phoenix, 17:00 UTC
             }
         )
         with freeze_time("15:55"):
