@@ -76,7 +76,7 @@ types-paramiko = "^3.5.0"
 types-python-dateutil = "^2.9.0"
 types-requests = "^2.31.0"
 types-pyOpenSSL = "^24.1.0"
-types-setuptools = "^75.6.0"
+types-setuptools = "^80.8.0"
 
 [tool.mypy]
 ignore_missing_imports = true
