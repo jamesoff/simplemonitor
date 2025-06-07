@@ -294,7 +294,9 @@ class MonitorPkgAudit(Monitor):
         if self.path == "":
             self.path = "/usr/local/sbin/pkg"
         try:
-            _output = subprocess.run([self.path, "audit", "--raw=json"])  # nosec
+            _output = subprocess.run(
+                [self.path, "audit", "--raw=json"], capture_output=True
+            )  # nosec
             output = json.loads(_output.stdout.decode("utf-8"))
         except json.JSONDecodeError as error:
             return self.record_fail(f"Failed to decode JSON output: {error}")
