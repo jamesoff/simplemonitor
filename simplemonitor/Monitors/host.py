@@ -312,8 +312,8 @@ class MonitorPkgAudit(Monitor):
         if count == 0:
             return self.record_success()
         if count == 1:
-            return self.record_fail("1 problem")
-        return self.record_fail("%d problems" % count)
+            return self.record_fail("1 problem found")
+        return self.record_fail("%d problems found" % count)
 
 
 @register
