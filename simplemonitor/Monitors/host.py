@@ -2,6 +2,7 @@
 Monitor things on a host for SimpleMonitor
 """
 
+import json
 import os
 import re
 import shlex
@@ -290,34 +291,27 @@ class MonitorPkgAudit(Monitor):
         return (self.path,)
 
     def run_test(self) -> bool:
+        if self.path == "":
+            self.path = "/usr/local/sbin/pkg"
         try:
-            if self.path == "":
-                self.path = "/usr/local/sbin/pkg"
-            try:
-                _output = subprocess.check_output([self.path, "audit"])  # nosec
-                output = _output.decode("utf-8")
-            except subprocess.CalledProcessError as error:
-                output = error.output.decode("utf-8")
-            except OSError as error:
-                return self.record_fail(
-                    "Failed to run %s audit: {0} {1}".format(self.path, error)
-                )
-            except Exception as error:
-                return self.record_fail("Error running pkg audit: {0}".format(error))
-
-            for line in output.splitlines():
-                matches = self.regexp.match(line)
-                if matches:
-                    count = int(matches.group(1))
-                    # sanity check
-                    if count == 0:
-                        return self.record_success()
-                    if count == 1:
-                        return self.record_fail("1 problem")
-                    return self.record_fail("%d problems" % count)
-            return self.record_success()
+            _output = subprocess.run([self.path, "audit", "--raw=json"])  # nosec
+            output = json.loads(_output.stdout.decode("utf-8"))
+        except json.JSONDecodeError as error:
+            return self.record_fail(f"Failed to decode JSON output: {error}")
+        except OSError as error:
+            return self.record_fail(f"Failed to run {self.path} audit: {error}")
         except Exception as error:
-            return self.record_fail("Could not run pkg: %s" % error)
+            return self.record_fail(f"Error running pkg audit: {error}")
+
+        try:
+            count = int(output["pkg_count"])
+        except KeyError:
+            return self.record_fail("Failed to find pkg_count in output")
+        if count == 0:
+            return self.record_success()
+        if count == 1:
+            return self.record_fail("1 problem")
+        return self.record_fail("%d problems" % count)
 
 
 @register
