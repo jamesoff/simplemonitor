@@ -140,6 +140,13 @@ These options are common to all monitor types.
 
     Set to false to turn off the monitor
 
+.. confval:: reminder
+
+    :type: int
+    :required: false
+    :default: none
+
+    Number of minutes between repeating alerts for this monitor (as though it had just failed). Note you will also need to enable :confval:`allow_reminders` on alerters for them to send reminders.
 
 .. _monitors-list:
 

@@ -94,7 +94,7 @@ These options are common to all alerter types.
     :required: false
     :default: false
 
-    fire this alerter (for a failed monitor) every iteration
+    fire this alerter (for a failed monitor) every iteration. See also :confval:`allow_reminders`.
 
 .. confval:: urgent
 
@@ -114,6 +114,14 @@ These options are common to all alerter types.
     :default: true
 
     Set to false to turn off the alerter
+
+.. confval:: allow_reminders
+
+    :type: boolean
+    :required: false
+    :default: false
+
+    Set to true to allow this alerter to send reminders, for monitors configured for them (see :confval:`reminder`)
 
 Time restrictions
 -----------------
