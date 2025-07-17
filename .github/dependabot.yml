@@ -30,9 +30,6 @@ updates:
   - dependency-name: flake8
     versions:
     - 3.9.0
-  - dependency-name: ping3
-    versions:
-    - 2.7.0
   - dependency-name: arrow
     versions:
     - 1.0.3
