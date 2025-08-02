@@ -140,7 +140,7 @@ These options are common to all monitor types.
 
     Set to false to turn off the monitor
 
-.. confval:: reminder
+.. confval:: remind
 
     :type: int
     :required: false
