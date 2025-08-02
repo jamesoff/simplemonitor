@@ -128,7 +128,7 @@ class Monitor:
         if remind_interval:
             self.remind_interval = datetime.timedelta(minutes=remind_interval)
         else:
-            remind_interval = None
+            self.remind_interval = None
 
     def get_config_option(
         self,
