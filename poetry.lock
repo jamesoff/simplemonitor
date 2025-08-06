@@ -3128,14 +3128,14 @@ types-setuptools = "*"
 
 [[package]]
 name = "types-paramiko"
-version = "3.5.0.20250801"
+version = "4.0.0.20250806"
 description = "Typing stubs for paramiko"
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
 files = [
-    {file = "types_paramiko-3.5.0.20250801-py3-none-any.whl", hash = "sha256:3e02a0fcf2b7e7b213e0cd569f7223ff9af417052a4d149d84172ebaa6fd742e"},
-    {file = "types_paramiko-3.5.0.20250801.tar.gz", hash = "sha256:e79ff84eaf44f2a5ad811743edef5d9c0cd6632a264a526f00405b87db1ec99b"},
+    {file = "types_paramiko-4.0.0.20250806-py3-none-any.whl", hash = "sha256:fe116e8e3391433eb0a7e33d79fbf0849c5755296f6da59834caa1878cf077fa"},
+    {file = "types_paramiko-4.0.0.20250806.tar.gz", hash = "sha256:786b3f49cf18b7f7ad0424e2b8ab25ada4f372e601888780fcf280b89d5afd2f"},
 ]
 
 [package.dependencies]
@@ -3450,4 +3450,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10.0"
-content-hash = "139b9ce8942219755c2cd92d48155d480524ec9f5182e1ffb81b37beeaba38b0"
+content-hash = "28f7487193d8cd77baec49f90611f4f420c8923fe1d404377a056f0039680771"
