@@ -364,34 +364,50 @@ def monitors():
 def add_monitor():
     """Add new monitor"""
     if request.method == 'POST':
-        name = request.form['name']
-        monitor_type = request.form['monitor_type']
-        sms_enabled = 'sms_enabled' in request.form
-        sms_phone = request.form.get('sms_phone', '')
-        
-        # Build config from form data
-        config = {}
-        for key, value in request.form.items():
-            if key.startswith('config_') and value:
-                config[key[7:]] = value  # Remove 'config_' prefix
-        
-        # Validate required fields
-        required_fields = MONITOR_TYPES[monitor_type]['fields']
-        for field in required_fields:
-            if field['required'] and field['name'] not in config:
-                flash(f"Field '{field['label']}' is required", 'error')
-                return render_template('add_monitor.html', monitor_types=MONITOR_TYPES, selected_type=monitor_type)
-        
-        # Create monitor
-        monitor = Monitor(
-            name=name,
-            monitor_type=monitor_type,
-            config=json.dumps(config),
-            sms_enabled=sms_enabled,
-            sms_phone=sms_phone
-        )
-        
         try:
+            # Debug: Print form data
+            print(f"Form data: {dict(request.form)}")
+            
+            name = request.form.get('name', '').strip()
+            monitor_type = request.form.get('monitor_type', '').strip()
+            
+            if not name:
+                flash('Monitor name is required', 'error')
+                return render_template('add_monitor.html', monitor_types=MONITOR_TYPES)
+            
+            if not monitor_type:
+                flash('Monitor type is required', 'error')
+                return render_template('add_monitor.html', monitor_types=MONITOR_TYPES)
+            
+            if monitor_type not in MONITOR_TYPES:
+                flash('Invalid monitor type', 'error')
+                return render_template('add_monitor.html', monitor_types=MONITOR_TYPES)
+            
+            sms_enabled = 'sms_enabled' in request.form
+            sms_phone = request.form.get('sms_phone', '').strip()
+            
+            # Build config from form data
+            config = {}
+            for key, value in request.form.items():
+                if key.startswith('config_') and value:
+                    config[key[7:]] = value  # Remove 'config_' prefix
+            
+            # Validate required fields
+            required_fields = MONITOR_TYPES[monitor_type]['fields']
+            for field in required_fields:
+                if field['required'] and field['name'] not in config:
+                    flash(f"Field '{field['label']}' is required", 'error')
+                    return render_template('add_monitor.html', monitor_types=MONITOR_TYPES, selected_type=monitor_type)
+            
+            # Create monitor
+            monitor = Monitor(
+                name=name,
+                monitor_type=monitor_type,
+                config=json.dumps(config),
+                sms_enabled=sms_enabled,
+                sms_phone=sms_phone
+            )
+            
             db.session.add(monitor)
             db.session.commit()
             flash('Monitor added successfully', 'success')
@@ -400,9 +416,12 @@ def add_monitor():
             reload_simplemonitor_config()
             
             return redirect(url_for('monitors'))
+            
         except Exception as e:
             db.session.rollback()
+            print(f"Error adding monitor: {str(e)}")
             flash(f'Error adding monitor: {str(e)}', 'error')
+            return render_template('add_monitor.html', monitor_types=MONITOR_TYPES)
     
     return render_template('add_monitor.html', monitor_types=MONITOR_TYPES)
 
@@ -747,6 +766,11 @@ def generate_monitors_ini():
     for monitor in Monitor.query.filter_by(enabled=True).all():
         monitor_config = json.loads(monitor.config)
         monitor_config['type'] = monitor.monitor_type
+        
+        # Remove runtime data that shouldn't be in config file
+        runtime_fields = ['host', 'detail', 'uptime', 'failures', 'last_failure', 'age', 'status', 'failed_at', 'vfc']
+        for field in runtime_fields:
+            monitor_config.pop(field, None)
         
         # Add SMS phone if enabled
         if monitor.sms_enabled and monitor.sms_phone:
