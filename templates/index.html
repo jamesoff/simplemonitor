@@ -1,0 +1,356 @@
+{% extends "base.html" %}
+
+{% block title %}SimpleMonitor - Professional Network Monitoring{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-4 fade-in">
+                    Professional Network Monitoring
+                    <span class="text-warning">Made Simple</span>
+                </h1>
+                <p class="lead mb-4 fade-in">
+                    Monitor your network infrastructure with ease. Get real-time alerts, 
+                    beautiful dashboards, and comprehensive reporting - all in one powerful platform.
+                </p>
+                <div class="d-flex gap-3 mb-4 fade-in">
+                    {% if not session.user_id %}
+                    <a href="{{ url_for('setup') }}" class="btn btn-warning btn-lg">
+                        <i class="fas fa-rocket me-2"></i> Get Started
+                    </a>
+                    <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-sign-in-alt me-2"></i> Login
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-warning btn-lg">
+                        <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                    </a>
+                    <a href="{{ url_for('realtime_dashboard') }}" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-chart-line me-2"></i> Real-time View
+                    </a>
+                    {% endif %}
+                </div>
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="h3 text-warning mb-1" id="uptime-stat">--</div>
+                        <div class="small">Uptime</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="h3 text-warning mb-1" id="monitors-stat">--</div>
+                        <div class="small">Monitors</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="h3 text-warning mb-1" id="alerts-stat">--</div>
+                        <div class="small">Alerts</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 text-center">
+                <div class="position-relative">
+                    <div class="bg-white rounded-4 p-4 shadow-lg">
+                        <div class="text-center">
+                            <i class="fas fa-chart-line fa-3x text-primary mb-3"></i>
+                            <h5 class="fw-bold">Live Monitoring</h5>
+                            <p class="text-muted mb-0">Real-time status updates</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="row g-4 mb-5">
+    <div class="col-lg-4 col-md-6">
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-eye"></i>
+            </div>
+            <h4 class="fw-bold mb-3">Real-time Monitoring</h4>
+            <p class="text-muted">
+                Monitor your network infrastructure in real-time with instant alerts 
+                and comprehensive status reporting.
+            </p>
+        </div>
+    </div>
+    <div class="col-lg-4 col-md-6">
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-mobile-alt"></i>
+            </div>
+            <h4 class="fw-bold mb-3">Mobile Alerts</h4>
+            <p class="text-muted">
+                Get instant SMS notifications when issues occur. Never miss a critical 
+                alert with our Twilio integration.
+            </p>
+        </div>
+    </div>
+    <div class="col-lg-4 col-md-6">
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-chart-bar"></i>
+            </div>
+            <h4 class="fw-bold mb-3">Beautiful Dashboards</h4>
+            <p class="text-muted">
+                Visualize your monitoring data with stunning charts and graphs. 
+                Get insights at a glance with our modern interface.
+            </p>
+        </div>
+    </div>
+    <div class="col-lg-4 col-md-6">
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-cogs"></i>
+            </div>
+            <h4 class="fw-bold mb-3">Easy Configuration</h4>
+            <p class="text-muted">
+                Set up monitors in minutes with our intuitive web interface. 
+                No complex configuration files needed.
+            </p>
+        </div>
+    </div>
+    <div class="col-lg-4 col-md-6">
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <h4 class="fw-bold mb-3">Secure & Reliable</h4>
+            <p class="text-muted">
+                Built with security in mind. User authentication, encrypted communications, 
+                and enterprise-grade reliability.
+            </p>
+        </div>
+    </div>
+    <div class="col-lg-4 col-md-6">
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-docker"></i>
+            </div>
+            <h4 class="fw-bold mb-3">Docker Ready</h4>
+            <p class="text-muted">
+                Deploy with Docker Compose in minutes. Pre-configured containers 
+                for easy setup and maintenance.
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Stats -->
+<div class="row g-4 mb-5">
+    <div class="col-lg-3 col-md-6">
+        <div class="stats-card">
+            <div class="stats-number" id="total-monitors">0</div>
+            <div class="stats-label">Active Monitors</div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stats-card">
+            <div class="stats-number" id="uptime-percentage">0%</div>
+            <div class="stats-label">System Uptime</div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stats-card">
+            <div class="stats-number" id="alerts-sent">0</div>
+            <div class="stats-label">Alerts Sent</div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stats-card">
+            <div class="stats-number" id="response-time">0ms</div>
+            <div class="stats-label">Avg Response</div>
+        </div>
+    </div>
+</div>
+
+<!-- Monitor Types -->
+<div class="card mb-5">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-list me-2"></i> Supported Monitor Types
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-lg-3 col-md-4 col-sm-6">
+                <div class="d-flex align-items-center p-3 border rounded-3">
+                    <i class="fas fa-globe text-primary me-3 fs-4"></i>
+                    <div>
+                        <div class="fw-bold">HTTP/HTTPS</div>
+                        <div class="text-muted small">Web services</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-4 col-sm-6">
+                <div class="d-flex align-items-center p-3 border rounded-3">
+                    <i class="fas fa-network-wired text-success me-3 fs-4"></i>
+                    <div>
+                        <div class="fw-bold">Ping</div>
+                        <div class="text-muted small">Network hosts</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-4 col-sm-6">
+                <div class="d-flex align-items-center p-3 border rounded-3">
+                    <i class="fas fa-server text-info me-3 fs-4"></i>
+                    <div>
+                        <div class="fw-bold">DNS</div>
+                        <div class="text-muted small">Domain resolution</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-4 col-sm-6">
+                <div class="d-flex align-items-center p-3 border rounded-3">
+                    <i class="fas fa-hdd text-warning me-3 fs-4"></i>
+                    <div>
+                        <div class="fw-bold">Disk Space</div>
+                        <div class="text-muted small">Storage monitoring</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-4 col-sm-6">
+                <div class="d-flex align-items-center p-3 border rounded-3">
+                    <i class="fas fa-memory text-danger me-3 fs-4"></i>
+                    <div>
+                        <div class="fw-bold">Memory</div>
+                        <div class="text-muted small">RAM usage</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-4 col-sm-6">
+                <div class="d-flex align-items-center p-3 border rounded-3">
+                    <i class="fas fa-terminal text-secondary me-3 fs-4"></i>
+                    <div>
+                        <div class="fw-bold">Process</div>
+                        <div class="text-muted small">Running services</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-4 col-sm-6">
+                <div class="d-flex align-items-center p-3 border rounded-3">
+                    <i class="fas fa-terminal text-dark me-3 fs-4"></i>
+                    <div>
+                        <div class="fw-bold">Command</div>
+                        <div class="text-muted small">Custom scripts</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-4 col-sm-6">
+                <div class="d-flex align-items-center p-3 border rounded-3">
+                    <i class="fas fa-plus text-primary me-3 fs-4"></i>
+                    <div>
+                        <div class="fw-bold">More...</div>
+                        <div class="text-muted small">Extensible</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Call to Action -->
+{% if not session.user_id %}
+<div class="card bg-gradient text-white" style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);">
+    <div class="card-body text-center py-5">
+        <h3 class="fw-bold mb-3">Ready to Get Started?</h3>
+        <p class="lead mb-4">Set up your monitoring in minutes with our easy-to-use interface.</p>
+        <a href="{{ url_for('setup') }}" class="btn btn-warning btn-lg">
+            <i class="fas fa-rocket me-2"></i> Create Admin Account
+        </a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Load real stats on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Load real monitoring data
+    loadRealStats();
+});
+
+function loadRealStats() {
+    // Try to load real stats from API
+    fetch('/api/status')
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                // Update stats with real data
+                const totalMonitors = data.summary.total || 0;
+                const healthyMonitors = data.summary.ok || 0;
+                const failedMonitors = data.summary.failed || 0;
+                
+                document.getElementById('total-monitors').textContent = totalMonitors;
+                document.getElementById('uptime-percentage').textContent = totalMonitors > 0 ? Math.round((healthyMonitors / totalMonitors) * 100) + '%' : '--';
+                document.getElementById('alerts-sent').textContent = '0'; // This would need to be tracked separately
+                document.getElementById('response-time').textContent = '--'; // This would need to be calculated
+            }
+        })
+        .catch(error => {
+            console.log('Could not load real stats, showing placeholders');
+            // Keep the placeholder values
+        });
+}
+
+function animateNumber(element, start, end, duration, suffix = '') {
+    const startTime = performance.now();
+    
+    function updateNumber(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        const current = start + (end - start) * easeOutCubic(progress);
+        element.textContent = Math.round(current) + suffix;
+        
+        if (progress < 1) {
+            requestAnimationFrame(updateNumber);
+        }
+    }
+    
+    requestAnimationFrame(updateNumber);
+}
+
+function easeOutCubic(t) {
+    return 1 - Math.pow(1 - t, 3);
+}
+
+// Add hover effects to feature cards
+document.addEventListener('DOMContentLoaded', function() {
+    const featureCards = document.querySelectorAll('.feature-card');
+    featureCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-10px) scale(1.02)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0) scale(1)';
+        });
+    });
+});
+
+// Add typing effect to hero title
+document.addEventListener('DOMContentLoaded', function() {
+    const titleElement = document.querySelector('.hero-section h1');
+    if (titleElement) {
+        const text = titleElement.innerHTML;
+        titleElement.innerHTML = '';
+        
+        let i = 0;
+        const typeWriter = () => {
+            if (i < text.length) {
+                titleElement.innerHTML += text.charAt(i);
+                i++;
+                setTimeout(typeWriter, 50);
+            }
+        };
+        
+        setTimeout(typeWriter, 500);
+    }
+});
+</script>
+{% endblock %}

@@ -1,125 +1,626 @@
 {% extends "base.html" %}
 
-{% block title %}Monitors{% endblock %}
+{% block title %}Monitors - SimpleMonitor{% endblock %}
 
 {% block content %}
-<div class="row">
+<!-- Header Section -->
+<div class="row mb-4">
     <div class="col-12">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2><i class="fas fa-list"></i> Monitors</h2>
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="fw-bold mb-2">
+                    <i class="fas fa-list me-2 text-primary"></i> Monitors
+                </h2>
+                <p class="text-muted mb-0">Manage and monitor your network infrastructure</p>
+            </div>
+            {% if session.is_admin %}
             <a href="{{ url_for('add_monitor') }}" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Add Monitor
+                <i class="fas fa-plus me-2"></i> Add Monitor
             </a>
+            {% endif %}
         </div>
     </div>
 </div>
 
-<div class="row">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-body">
-                {% if monitors %}
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Type</th>
-                                <th>Status</th>
-                                <th>SMS Alert</th>
-                                <th>Last Updated</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for monitor in monitors %}
-                            <tr>
-                                <td>
-                                    <a href="{{ url_for('view_monitor', monitor_id=monitor.id) }}" class="text-decoration-none">
-                                        <strong>{{ monitor.name }}</strong>
-                                    </a>
-                                    {% if not monitor.enabled %}
-                                    <span class="badge bg-secondary">Disabled</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <span class="badge bg-info">{{ monitor.monitor_type }}</span>
-                                </td>
-                                <td>
-                                    {% if monitor.status %}
-                                        {% if monitor.status == 'OK' %}
-                                        <span class="status-ok">
-                                            <i class="fas fa-check-circle"></i> OK
-                                        </span>
-                                        {% else %}
-                                        <span class="status-fail">
-                                            <i class="fas fa-times-circle"></i> {{ monitor.status }}
-                                        </span>
-                                        {% endif %}
-                                    {% else %}
-                                        {% if monitor.enabled %}
-                                        <span class="status-ok">
-                                            <i class="fas fa-check-circle"></i> OK
-                                        </span>
-                                        {% else %}
-                                        <span class="status-disabled">
-                                            <i class="fas fa-pause-circle"></i> Disabled
-                                        </span>
-                                        {% endif %}
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if monitor.sms_enabled %}
-                                    <span class="text-success">
-                                        <i class="fas fa-sms"></i> {{ monitor.sms_phone }}
-                                    </span>
-                                    {% else %}
-                                    <span class="text-muted">
-                                        <i class="fas fa-times"></i> No
-                                    </span>
-                                    {% endif %}
-                                </td>
-                                <td>{{ monitor.updated_at.strftime('%Y-%m-%d %H:%M') }}</td>
-                                <td>
-                                    <div class="btn-group btn-group-sm">
-                                        <a href="{{ url_for('view_monitor', monitor_id=monitor.id) }}" class="btn btn-outline-info" title="View Details">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        {% if session.is_admin %}
-                                        <a href="{{ url_for('edit_monitor', monitor_id=monitor.id) }}" class="btn btn-outline-primary" title="Edit Monitor">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <form method="POST" action="{{ url_for('toggle_monitor', monitor_id=monitor.id) }}" class="d-inline">
-                                            <button type="submit" class="btn btn-outline-{% if monitor.enabled %}warning{% else %}success{% endif %}" 
-                                                    title="{% if monitor.enabled %}Disable{% else %}Enable{% endif %} Monitor">
-                                                <i class="fas fa-{% if monitor.enabled %}pause{% else %}play{% endif %}"></i>
-                                            </button>
-                                        </form>
-                                        <form method="POST" action="{{ url_for('delete_monitor', monitor_id=monitor.id) }}" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this monitor?')">
-                                            <button type="submit" class="btn btn-outline-danger" title="Delete Monitor">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </form>
-                                        {% endif %}
-                                    </div>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+<!-- Filters and Search -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-lg-4 col-md-6">
+                <label for="searchInput" class="form-label">
+                    <i class="fas fa-search me-1"></i> Search Monitors
+                </label>
+                <input type="text" class="form-control" id="searchInput" placeholder="Search by name, type, or status...">
+            </div>
+            <div class="col-lg-2 col-md-6">
+                <label for="statusFilter" class="form-label">
+                    <i class="fas fa-filter me-1"></i> Status
+                </label>
+                <select class="form-select" id="statusFilter">
+                    <option value="">All Status</option>
+                    <option value="healthy">Healthy</option>
+                    <option value="failed">Failed</option>
+                    <option value="disabled">Disabled</option>
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-6">
+                <label for="typeFilter" class="form-label">
+                    <i class="fas fa-tag me-1"></i> Type
+                </label>
+                <select class="form-select" id="typeFilter">
+                    <option value="">All Types</option>
+                    <option value="http">HTTP</option>
+                    <option value="host">Host</option>
+                    <option value="dns">DNS</option>
+                    <option value="diskspace">Disk Space</option>
+                    <option value="memory">Memory</option>
+                    <option value="process">Process</option>
+                    <option value="command">Command</option>
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-6">
+                <label for="sortBy" class="form-label">
+                    <i class="fas fa-sort me-1"></i> Sort By
+                </label>
+                <select class="form-select" id="sortBy">
+                    <option value="name">Name</option>
+                    <option value="type">Type</option>
+                    <option value="status">Status</option>
+                    <option value="created">Created Date</option>
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-6">
+                <label class="form-label">&nbsp;</label>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-secondary" id="clearFilters">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <button class="btn btn-outline-primary" id="refreshData">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
                 </div>
-                {% else %}
-                <div class="text-center py-4">
-                    <i class="fas fa-list fa-3x text-muted mb-3"></i>
-                    <h5 class="text-muted">No monitors configured</h5>
-                    <p class="text-muted">Add your first monitor to get started</p>
-                    <a href="{{ url_for('add_monitor') }}" class="btn btn-primary">
-                        <i class="fas fa-plus"></i> Add Monitor
-                    </a>
-                </div>
-                {% endif %}
             </div>
         </div>
     </div>
 </div>
+
+<!-- Stats Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-3 col-md-6">
+        <div class="stats-card">
+            <div class="d-flex align-items-center">
+                <div class="flex-shrink-0">
+                    <div class="bg-primary rounded-circle p-3">
+                        <i class="fas fa-list text-white fs-4"></i>
+                    </div>
+                </div>
+                <div class="flex-grow-1 ms-3">
+                    <div class="stats-number" id="total-count">{{ monitors|length }}</div>
+                    <div class="stats-label">Total Monitors</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stats-card">
+            <div class="d-flex align-items-center">
+                <div class="flex-shrink-0">
+                    <div class="bg-success rounded-circle p-3">
+                        <i class="fas fa-check text-white fs-4"></i>
+                    </div>
+                </div>
+                <div class="flex-grow-1 ms-3">
+                    <div class="stats-number" id="healthy-count">{{ monitors|selectattr('enabled')|list|length }}</div>
+                    <div class="stats-label">Healthy</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stats-card">
+            <div class="d-flex align-items-center">
+                <div class="flex-shrink-0">
+                    <div class="bg-danger rounded-circle p-3">
+                        <i class="fas fa-times text-white fs-4"></i>
+                    </div>
+                </div>
+                <div class="flex-grow-1 ms-3">
+                    <div class="stats-number" id="failed-count">0</div>
+                    <div class="stats-label">Failed</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stats-card">
+            <div class="d-flex align-items-center">
+                <div class="flex-shrink-0">
+                    <div class="bg-warning rounded-circle p-3">
+                        <i class="fas fa-pause text-white fs-4"></i>
+                    </div>
+                </div>
+                <div class="flex-grow-1 ms-3">
+                    <div class="stats-number" id="disabled-count">{{ monitors|rejectattr('enabled')|list|length }}</div>
+                    <div class="stats-label">Disabled</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Monitors Table -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="fas fa-table me-2"></i> Monitors List
+        </h5>
+        <div class="d-flex align-items-center gap-2">
+            <span class="text-muted small" id="results-count">{{ monitors|length }} monitors</span>
+            <div class="btn-group btn-group-sm" role="group">
+                <input type="radio" class="btn-check" name="viewMode" id="gridView" autocomplete="off" checked>
+                <label class="btn btn-outline-secondary" for="gridView">
+                    <i class="fas fa-th"></i>
+                </label>
+                <input type="radio" class="btn-check" name="viewMode" id="tableView" autocomplete="off">
+                <label class="btn btn-outline-secondary" for="tableView">
+                    <i class="fas fa-list"></i>
+                </label>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <!-- Grid View -->
+        <div id="gridViewContent" class="p-4">
+            <div class="row g-3" id="monitorsGrid">
+                {% for monitor in monitors %}
+                <div class="col-lg-4 col-md-6 monitor-item" 
+                     data-name="{{ monitor.name|lower }}" 
+                     data-type="{{ monitor.monitor_type }}" 
+                     data-status="{{ 'healthy' if monitor.enabled else 'disabled' }}">
+                    <div class="monitor-card p-3 border rounded-3 h-100">
+                        <div class="d-flex align-items-start mb-3">
+                            <div class="flex-shrink-0">
+                                {% if monitor.monitor_type == 'http' %}
+                                <i class="fas fa-globe text-primary fs-3"></i>
+                                {% elif monitor.monitor_type == 'host' %}
+                                <i class="fas fa-network-wired text-success fs-3"></i>
+                                {% elif monitor.monitor_type == 'dns' %}
+                                <i class="fas fa-server text-info fs-3"></i>
+                                {% elif monitor.monitor_type == 'diskspace' %}
+                                <i class="fas fa-hdd text-warning fs-3"></i>
+                                {% elif monitor.monitor_type == 'memory' %}
+                                <i class="fas fa-memory text-danger fs-3"></i>
+                                {% elif monitor.monitor_type == 'process' %}
+                                <i class="fas fa-terminal text-secondary fs-3"></i>
+                                {% elif monitor.monitor_type == 'command' %}
+                                <i class="fas fa-terminal text-dark fs-3"></i>
+                                {% else %}
+                                <i class="fas fa-cog text-muted fs-3"></i>
+                                {% endif %}
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="fw-bold mb-1">{{ monitor.name }}</h6>
+                                <div class="d-flex align-items-center mb-2">
+                                    {% if monitor.enabled %}
+                                    <span class="badge bg-success me-2">Active</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary me-2">Disabled</span>
+                                    {% endif %}
+                                    <span class="badge bg-info">{{ monitor.monitor_type|title }}</span>
+                                </div>
+                                {% if monitor.sms_enabled %}
+                                <div class="d-flex align-items-center text-warning small">
+                                    <i class="fas fa-sms me-1"></i>
+                                    SMS Alerts Enabled
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="flex-shrink-0">
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item" href="{{ url_for('view_monitor', monitor_id=monitor.id) }}">
+                                            <i class="fas fa-eye me-2"></i> View Details
+                                        </a></li>
+                                        {% if session.is_admin %}
+                                        <li><a class="dropdown-item" href="{{ url_for('edit_monitor', monitor_id=monitor.id) }}">
+                                            <i class="fas fa-edit me-2"></i> Edit
+                                        </a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <form method="POST" action="{{ url_for('toggle_monitor', monitor_id=monitor.id) }}" class="d-inline">
+                                                <button type="submit" class="dropdown-item">
+                                                    <i class="fas fa-{% if monitor.enabled %}pause{% else %}play{% endif %} me-2"></i>
+                                                    {% if monitor.enabled %}Disable{% else %}Enable{% endif %}
+                                                </button>
+                                            </form>
+                                        </li>
+                                        <li>
+                                            <form method="POST" action="{{ url_for('delete_monitor', monitor_id=monitor.id) }}" 
+                                                  class="d-inline" onsubmit="return confirm('Are you sure you want to delete this monitor?')">
+                                                <button type="submit" class="dropdown-item text-danger">
+                                                    <i class="fas fa-trash me-2"></i> Delete
+                                                </button>
+                                            </form>
+                                        </li>
+                                        {% endif %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                <i class="fas fa-clock me-1"></i>
+                                {{ monitor.created_at.strftime('%Y-%m-%d') }}
+                            </small>
+                            <a href="{{ url_for('view_monitor', monitor_id=monitor.id) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Table View -->
+        <div id="tableViewContent" class="d-none">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>SMS</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="monitorsTable">
+                        {% for monitor in monitors %}
+                        <tr class="monitor-item" 
+                            data-name="{{ monitor.name|lower }}" 
+                            data-type="{{ monitor.monitor_type }}" 
+                            data-status="{{ 'healthy' if monitor.enabled else 'disabled' }}">
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if monitor.monitor_type == 'http' %}
+                                    <i class="fas fa-globe text-primary me-2"></i>
+                                    {% elif monitor.monitor_type == 'host' %}
+                                    <i class="fas fa-network-wired text-success me-2"></i>
+                                    {% elif monitor.monitor_type == 'dns' %}
+                                    <i class="fas fa-server text-info me-2"></i>
+                                    {% elif monitor.monitor_type == 'diskspace' %}
+                                    <i class="fas fa-hdd text-warning me-2"></i>
+                                    {% elif monitor.monitor_type == 'memory' %}
+                                    <i class="fas fa-memory text-danger me-2"></i>
+                                    {% elif monitor.monitor_type == 'process' %}
+                                    <i class="fas fa-terminal text-secondary me-2"></i>
+                                    {% elif monitor.monitor_type == 'command' %}
+                                    <i class="fas fa-terminal text-dark me-2"></i>
+                                    {% else %}
+                                    <i class="fas fa-cog text-muted me-2"></i>
+                                    {% endif %}
+                                    <div>
+                                        <div class="fw-bold">{{ monitor.name }}</div>
+                                        {% if monitor.sms_enabled %}
+                                        <small class="text-warning">
+                                            <i class="fas fa-sms me-1"></i>SMS Enabled
+                                        </small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-info">{{ monitor.monitor_type|title }}</span>
+                            </td>
+                            <td>
+                                {% if monitor.enabled %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Disabled</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <small class="text-muted">{{ monitor.created_at.strftime('%Y-%m-%d') }}</small>
+                            </td>
+                            <td>
+                                {% if monitor.sms_enabled %}
+                                <i class="fas fa-sms text-warning"></i>
+                                {% else %}
+                                <i class="fas fa-minus text-muted"></i>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('view_monitor', monitor_id=monitor.id) }}" class="btn btn-outline-info" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if session.is_admin %}
+                                    <a href="{{ url_for('edit_monitor', monitor_id=monitor.id) }}" class="btn btn-outline-primary" title="Edit Monitor">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <form method="POST" action="{{ url_for('toggle_monitor', monitor_id=monitor.id) }}" class="d-inline">
+                                        <button type="submit" class="btn btn-outline-{% if monitor.enabled %}warning{% else %}success{% endif %}" 
+                                                title="{% if monitor.enabled %}Disable{% else %}Enable{% endif %} Monitor">
+                                            <i class="fas fa-{% if monitor.enabled %}pause{% else %}play{% endif %}"></i>
+                                        </button>
+                                    </form>
+                                    <form method="POST" action="{{ url_for('delete_monitor', monitor_id=monitor.id) }}" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this monitor?')">
+                                        <button type="submit" class="btn btn-outline-danger" title="Delete Monitor">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Empty State -->
+<div id="emptyState" class="text-center py-5 d-none">
+    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+    <h5 class="text-muted">No Monitors Found</h5>
+    <p class="text-muted">Try adjusting your search or filter criteria</p>
+    <button class="btn btn-outline-primary" id="clearFiltersBtn">
+        <i class="fas fa-times me-2"></i> Clear Filters
+    </button>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize filters and search
+    initFilters();
+    initViewToggle();
+    initRefreshButton();
+    
+    // Add hover effects
+    addHoverEffects();
+});
+
+function initFilters() {
+    const searchInput = document.getElementById('searchInput');
+    const statusFilter = document.getElementById('statusFilter');
+    const typeFilter = document.getElementById('typeFilter');
+    const sortBy = document.getElementById('sortBy');
+    const clearFilters = document.getElementById('clearFilters');
+    
+    // Filter function
+    function filterMonitors() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const statusValue = statusFilter.value;
+        const typeValue = typeFilter.value;
+        const sortValue = sortBy.value;
+        
+        const monitorItems = document.querySelectorAll('.monitor-item');
+        let visibleCount = 0;
+        
+        // Convert to array for sorting
+        const itemsArray = Array.from(monitorItems);
+        
+        // Filter items
+        itemsArray.forEach(item => {
+            const name = item.dataset.name;
+            const type = item.dataset.type;
+            const status = item.dataset.status;
+            
+            const matchesSearch = name.includes(searchTerm);
+            const matchesStatus = !statusValue || status === statusValue;
+            const matchesType = !typeValue || type === typeValue;
+            
+            if (matchesSearch && matchesStatus && matchesType) {
+                item.style.display = '';
+                visibleCount++;
+            } else {
+                item.style.display = 'none';
+            }
+        });
+        
+        // Sort items
+        if (sortValue) {
+            sortItems(itemsArray, sortValue);
+        }
+        
+        // Update results count
+        document.getElementById('results-count').textContent = `${visibleCount} monitors`;
+        
+        // Show/hide empty state
+        const emptyState = document.getElementById('emptyState');
+        if (visibleCount === 0) {
+            emptyState.classList.remove('d-none');
+        } else {
+            emptyState.classList.add('d-none');
+        }
+    }
+    
+    // Sort function
+    function sortItems(items, sortBy) {
+        const container = document.querySelector('#monitorsGrid') || document.querySelector('#monitorsTable tbody');
+        
+        items.sort((a, b) => {
+            let aValue, bValue;
+            
+            switch (sortBy) {
+                case 'name':
+                    aValue = a.dataset.name;
+                    bValue = b.dataset.name;
+                    break;
+                case 'type':
+                    aValue = a.dataset.type;
+                    bValue = b.dataset.type;
+                    break;
+                case 'status':
+                    aValue = a.dataset.status;
+                    bValue = b.dataset.status;
+                    break;
+                case 'created':
+                    // This would need actual date sorting in a real implementation
+                    aValue = a.dataset.name;
+                    bValue = b.dataset.name;
+                    break;
+                default:
+                    return 0;
+            }
+            
+            return aValue.localeCompare(bValue);
+        });
+        
+        // Re-append sorted items
+        items.forEach(item => {
+            container.appendChild(item);
+        });
+    }
+    
+    // Event listeners
+    searchInput.addEventListener('input', filterMonitors);
+    statusFilter.addEventListener('change', filterMonitors);
+    typeFilter.addEventListener('change', filterMonitors);
+    sortBy.addEventListener('change', filterMonitors);
+    
+    clearFilters.addEventListener('click', function() {
+        searchInput.value = '';
+        statusFilter.value = '';
+        typeFilter.value = '';
+        sortBy.value = 'name';
+        filterMonitors();
+    });
+}
+
+function initViewToggle() {
+    const gridView = document.getElementById('gridView');
+    const tableView = document.getElementById('tableView');
+    const gridContent = document.getElementById('gridViewContent');
+    const tableContent = document.getElementById('tableViewContent');
+    
+    gridView.addEventListener('change', function() {
+        if (this.checked) {
+            gridContent.classList.remove('d-none');
+            tableContent.classList.add('d-none');
+        }
+    });
+    
+    tableView.addEventListener('change', function() {
+        if (this.checked) {
+            gridContent.classList.add('d-none');
+            tableContent.classList.remove('d-none');
+        }
+    });
+}
+
+function initRefreshButton() {
+    const refreshBtn = document.getElementById('refreshData');
+    
+    refreshBtn.addEventListener('click', function() {
+        this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        this.disabled = true;
+        
+        // Simulate refresh
+        setTimeout(() => {
+            this.innerHTML = '<i class="fas fa-sync-alt"></i>';
+            this.disabled = false;
+            location.reload();
+        }, 1000);
+    });
+}
+
+function addHoverEffects() {
+    const monitorCards = document.querySelectorAll('.monitor-card');
+    monitorCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px)';
+            this.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = 'none';
+        });
+    });
+}
+
+// Add smooth animations
+document.addEventListener('DOMContentLoaded', function() {
+    const monitorItems = document.querySelectorAll('.monitor-item');
+    monitorItems.forEach((item, index) => {
+        item.style.opacity = '0';
+        item.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            item.style.transition = 'all 0.3s ease-out';
+            item.style.opacity = '1';
+            item.style.transform = 'translateY(0)';
+        }, index * 50);
+    });
+});
+</script>
+
+<style>
+.monitor-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+    height: 100%;
+}
+
+.monitor-card:hover {
+    border-color: var(--primary-color) !important;
+}
+
+.stats-card {
+    transition: all 0.3s ease;
+}
+
+.stats-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--card-shadow-lg);
+}
+
+.btn-group .btn-check:checked + .btn {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+}
+
+.dropdown-menu {
+    border: none;
+    box-shadow: var(--card-shadow-lg);
+    border-radius: var(--border-radius);
+}
+
+.dropdown-item {
+    transition: all 0.2s ease;
+}
+
+.dropdown-item:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.table tbody tr {
+    transition: all 0.2s ease;
+}
+
+.table tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+#emptyState {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
 {% endblock %}

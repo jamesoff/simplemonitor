@@ -562,6 +562,33 @@ def api_status():
                 for row in rows:
                     cells = row.find_all('td')
                     if len(cells) >= 10:  # Ensure we have enough columns
+                        detail_text = cells[6].get_text(strip=True)
+                        
+                        # Extract response time from detail field
+                        response_time = None
+                        response_time_ms = None
+                        
+                        # Look for patterns like "200 in 0.19s", "0.19s", "123ms", etc.
+                        import re
+                        time_patterns = [
+                            r'(\d+(?:\.\d+)?)\s*s(?:econds?)?',  # "0.19s", "1.5s"
+                            r'(\d+(?:\.\d+)?)\s*ms',  # "123ms"
+                            r'in\s+(\d+(?:\.\d+)?)\s*s',  # "in 0.19s"
+                            r'in\s+(\d+(?:\.\d+)?)\s*ms'  # "in 123ms"
+                        ]
+                        
+                        for pattern in time_patterns:
+                            match = re.search(pattern, detail_text, re.IGNORECASE)
+                            if match:
+                                time_value = float(match.group(1))
+                                if 'ms' in pattern:
+                                    response_time_ms = int(time_value)
+                                    response_time = f"{response_time_ms}ms"
+                                else:
+                                    response_time_ms = int(time_value * 1000)
+                                    response_time = f"{response_time_ms}ms"
+                                break
+                        
                         monitor_data = {
                             'name': cells[0].get_text(strip=True),
                             'status': cells[1].get_text(strip=True),
@@ -569,7 +596,9 @@ def api_status():
                             'failed_at': cells[3].get_text(strip=True),
                             'vfc': cells[4].get_text(strip=True),
                             'uptime': cells[5].get_text(strip=True),
-                            'detail': cells[6].get_text(strip=True),
+                            'detail': detail_text,
+                            'response_time': response_time or 'N/A',
+                            'response_time_ms': response_time_ms,
                             'failures': cells[7].get_text(strip=True),
                             'last_failure': cells[8].get_text(strip=True),
                             'age': cells[9].get_text(strip=True)
