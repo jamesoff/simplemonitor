@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}Add Monitor{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2><i class="fas fa-plus"></i> Add Monitor</h2>
+        <p class="text-muted">Configure a new monitoring check</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Monitor Configuration</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="monitorForm">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Monitor Name</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                        <div class="form-text">A unique name for this monitor</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="monitor_type" class="form-label">Monitor Type</label>
+                        <select class="form-select" id="monitor_type" name="monitor_type" required onchange="updateFields()">
+                            <option value="">Select a monitor type...</option>
+                            {% for type_key, type_info in monitor_types.items() %}
+                            <option value="{{ type_key }}">{{ type_info.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div id="typeDescription" class="mb-3" style="display: none;">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <span id="typeDescriptionText"></span>
+                        </div>
+                    </div>
+                    
+                    <div id="configFields">
+                        <!-- Dynamic fields will be inserted here -->
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="sms_enabled" name="sms_enabled" onchange="toggleSmsFields()">
+                            <label class="form-check-label" for="sms_enabled">
+                                Enable SMS alerts on failure
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div id="smsFields" style="display: none;">
+                        <div class="mb-3">
+                            <label for="sms_phone" class="form-label">Phone Number</label>
+                            <input type="tel" class="form-control" id="sms_phone" name="sms_phone" placeholder="+1234567890">
+                            <div class="form-text">Include country code (e.g., +1 for US)</div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('monitors') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Monitor
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Monitor Types</h5>
+            </div>
+            <div class="card-body">
+                {% for type_key, type_info in monitor_types.items() %}
+                <div class="mb-3">
+                    <h6>{{ type_info.name }}</h6>
+                    <p class="text-muted small">{{ type_info.description }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const monitorTypes = {{ monitor_types | tojson }};
+
+function updateFields() {
+    const typeSelect = document.getElementById('monitor_type');
+    const selectedType = typeSelect.value;
+    const configFields = document.getElementById('configFields');
+    const typeDescription = document.getElementById('typeDescription');
+    const typeDescriptionText = document.getElementById('typeDescriptionText');
+    
+    if (selectedType && monitorTypes[selectedType]) {
+        const typeInfo = monitorTypes[selectedType];
+        
+        // Show description
+        typeDescriptionText.textContent = typeInfo.description;
+        typeDescription.style.display = 'block';
+        
+        // Generate fields
+        let fieldsHtml = '';
+        typeInfo.fields.forEach(field => {
+            fieldsHtml += generateFieldHtml(field);
+        });
+        configFields.innerHTML = fieldsHtml;
+    } else {
+        typeDescription.style.display = 'none';
+        configFields.innerHTML = '';
+    }
+}
+
+function generateFieldHtml(field) {
+    let html = `<div class="mb-3">`;
+    html += `<label for="config_${field.name}" class="form-label">${field.label}`;
+    if (field.required) {
+        html += ` <span class="text-danger">*</span>`;
+    }
+    html += `</label>`;
+    
+    if (field.type === 'select') {
+        html += `<select class="form-select" id="config_${field.name}" name="config_${field.name}"`;
+        if (field.required) html += ' required';
+        html += '>';
+        html += `<option value="">Select...</option>`;
+        field.options.forEach(option => {
+            html += `<option value="${option}"`;
+            if (field.default === option) html += ' selected';
+            html += `>${option}</option>`;
+        });
+        html += '</select>';
+    } else {
+        html += `<input type="${field.type}" class="form-control" id="config_${field.name}" name="config_${field.name}"`;
+        if (field.placeholder) html += ` placeholder="${field.placeholder}"`;
+        if (field.default) html += ` value="${field.default}"`;
+        if (field.required) html += ' required';
+        html += '>';
+    }
+    
+    html += '</div>';
+    return html;
+}
+
+function toggleSmsFields() {
+    const smsEnabled = document.getElementById('sms_enabled');
+    const smsFields = document.getElementById('smsFields');
+    const smsPhone = document.getElementById('sms_phone');
+    
+    if (smsEnabled.checked) {
+        smsFields.style.display = 'block';
+        smsPhone.required = true;
+    } else {
+        smsFields.style.display = 'none';
+        smsPhone.required = false;
+    }
+}
+</script>
+{% endblock %}

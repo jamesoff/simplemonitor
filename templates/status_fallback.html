@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}SimpleMonitor Status{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-heartbeat"></i> SimpleMonitor Status
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    SimpleMonitor is running. The web interface is available at 
+                    <a href="http://localhost:8000" target="_blank">http://localhost:8000</a>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6 class="card-title">Quick Actions</h6>
+                                <a href="{{ url_for('setup') }}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-cog"></i> Setup Admin Account
+                                </a>
+                                <a href="http://localhost:8000" target="_blank" class="btn btn-secondary btn-sm">
+                                    <i class="fas fa-external-link-alt"></i> View Status Page
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6 class="card-title">System Information</h6>
+                                <small class="text-muted">
+                                    Flask Web Interface: Running<br>
+                                    SimpleMonitor: Running<br>
+                                    Web Server: Running on port 8000
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2><i class="fas fa-tachometer-alt"></i> Dashboard</h2>
+                <p class="text-muted">Monitor status and system overview</p>
+            </div>
+            <div>
+                <a href="{{ url_for('realtime_dashboard') }}" class="btn btn-primary">
+                    <i class="fas fa-sync-alt"></i> Real-time View
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ monitors|length }}</h4>
+                        <p class="mb-0">Total Monitors</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-list fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ monitors|selectattr('enabled')|list|length }}</h4>
+                        <p class="mb-0">Active Monitors</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ monitors|selectattr('sms_enabled')|list|length }}</h4>
+                        <p class="mb-0">SMS Alerts</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-sms fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ monitors|selectattr('monitor_type', 'equalto', 'http')|list|length }}</h4>
+                        <p class="mb-0">HTTP Checks</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-globe fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-list"></i> Recent Monitors
+                </h5>
+                <a href="{{ url_for('monitors') }}" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-eye"></i> View All
+                </a>
+            </div>
+            <div class="card-body">
+                {% if monitors %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>SMS</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for monitor in monitors[:5] %}
+                            <tr>
+                                <td>
+                                    <strong>{{ monitor.name }}</strong>
+                                    {% if not monitor.enabled %}
+                                    <span class="badge bg-secondary">Disabled</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">{{ monitor.monitor_type }}</span>
+                                </td>
+                                <td>
+                                    <span class="status-ok">
+                                        <i class="fas fa-check-circle"></i> OK
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if monitor.sms_enabled %}
+                                    <span class="text-success">
+                                        <i class="fas fa-sms"></i> {{ monitor.sms_phone }}
+                                    </span>
+                                    {% else %}
+                                    <span class="text-muted">
+                                        <i class="fas fa-times"></i> No
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ monitor.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{{ url_for('edit_monitor', monitor_id=monitor.id) }}" class="btn btn-outline-primary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <form method="POST" action="{{ url_for('delete_monitor', monitor_id=monitor.id) }}" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this monitor?')">
+                                            <button type="submit" class="btn btn-outline-danger">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-list fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No monitors configured</h5>
+                    <p class="text-muted">Add your first monitor to get started</p>
+                    <a href="{{ url_for('add_monitor') }}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add Monitor
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

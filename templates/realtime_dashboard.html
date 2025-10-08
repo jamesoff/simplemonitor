@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+
+{% block title %}Real-time Dashboard{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-tachometer-alt"></i> Real-time Dashboard</h2>
+            <div class="btn-group">
+                <button id="refreshBtn" class="btn btn-outline-primary" onclick="refreshData()">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+                <button id="autoRefreshBtn" class="btn btn-outline-success" onclick="toggleAutoRefresh()">
+                    <i class="fas fa-play"></i> Auto Refresh
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Bar -->
+<div class="navbar navbar-light border-bottom mb-4" id="summary">
+    <div class="container-fluid">
+        <div class="navbar-brand">SimpleMonitor</div>
+        <div class="navbar-text d-none d-lg-block" id="updated">
+            Loading...
+        </div>
+        <div class="navbar-text" id="refresh_status">
+            <span class="badge bg-warning d-none" id="refresh_badge">OUT OF DATE</span>
+        </div>
+        <div class="navbar-text">
+            <span class="badge bg-success" id="ok_count">0 OK</span>
+            <span class="badge bg-danger d-none" id="fail_count">0 Failed</span>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Indicator -->
+<div id="loadingIndicator" class="text-center py-4">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-2">Loading monitoring data...</p>
+</div>
+
+<!-- Error Message -->
+<div id="errorMessage" class="alert alert-danger d-none" role="alert">
+    <i class="fas fa-exclamation-triangle"></i>
+    <span id="errorText">Failed to load monitoring data</span>
+</div>
+
+<!-- Monitors Table -->
+<div id="monitorsTable" class="d-none">
+    <div class="table-responsive">
+        <table class="table table-borderless table-striped table-hover table-sm">
+            <thead>
+                <tr>
+                    <th scope="col">Monitor</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Host</th>
+                    <th scope="col">Failed at</th>
+                    <th scope="col">VFC</th>
+                    <th scope="col">Up/downtime</th>
+                    <th scope="col">Detail</th>
+                    <th scope="col">Failures</th>
+                    <th scope="col">Last Failure</th>
+                    <th scope="col">Age</th>
+                </tr>
+            </thead>
+            <tbody id="monitorsTableBody">
+                <!-- Monitors will be populated by JavaScript -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Auto-refresh settings -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-cog"></i> Auto-refresh Settings</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <label for="refreshInterval" class="form-label">Refresh Interval (seconds)</label>
+                        <select class="form-select" id="refreshInterval" onchange="updateRefreshInterval()">
+                            <option value="10">10 seconds</option>
+                            <option value="30" selected>30 seconds</option>
+                            <option value="60">1 minute</option>
+                            <option value="300">5 minutes</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Status</label>
+                        <div>
+                            <span id="autoRefreshStatus" class="badge bg-secondary">Disabled</span>
+                            <span id="lastUpdate" class="text-muted ms-2"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let autoRefreshInterval = null;
+let refreshInterval = 30; // seconds
+let isAutoRefreshEnabled = false;
+
+function refreshData() {
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const errorMessage = document.getElementById('errorMessage');
+    const monitorsTable = document.getElementById('monitorsTable');
+    
+    // Show loading indicator
+    if (loadingIndicator) loadingIndicator.classList.remove('d-none');
+    if (errorMessage) errorMessage.classList.add('d-none');
+    if (monitorsTable) monitorsTable.classList.add('d-none');
+    
+    fetch('/api/status')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('API Response:', data); // Debug log
+            if (data.status === 'success') {
+                updateDashboard(data);
+                if (loadingIndicator) loadingIndicator.classList.add('d-none');
+                if (monitorsTable) monitorsTable.classList.remove('d-none');
+            } else {
+                throw new Error(data.message || 'Failed to load data');
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching status:', error);
+            if (loadingIndicator) loadingIndicator.classList.add('d-none');
+            if (errorMessage) errorMessage.classList.remove('d-none');
+            const errorText = document.getElementById('errorText');
+            if (errorText) errorText.textContent = error.message;
+        });
+}
+
+function updateDashboard(data) {
+    console.log('Updating dashboard with data:', data); // Debug log
+    
+    // Update summary
+    document.getElementById('ok_count').textContent = `${data.summary.ok} OK`;
+    
+    const failCount = document.getElementById('fail_count');
+    if (data.summary.failed > 0) {
+        failCount.textContent = `${data.summary.failed} Failed`;
+        failCount.classList.remove('d-none');
+    } else {
+        failCount.classList.add('d-none');
+    }
+    
+    // Update updated time
+    document.getElementById('updated').textContent = data.updated;
+    
+    // Update refresh status
+    const refreshBadge = document.getElementById('refresh_badge');
+    if (data.refresh_status && data.refresh_status.includes('OUT OF DATE')) {
+        refreshBadge.classList.remove('d-none');
+    } else {
+        refreshBadge.classList.add('d-none');
+    }
+    
+    // Update summary bar color
+    const summary = document.getElementById('summary');
+    summary.classList.remove('border-success', 'border-danger', 'border-warning');
+    if (data.summary.failed > 0) {
+        summary.classList.add('border-danger');
+    } else {
+        summary.classList.add('border-success');
+    }
+    
+    // Update monitors table
+    updateMonitorsTable(data.monitors);
+    
+    // Update last update time
+    const now = new Date();
+    document.getElementById('lastUpdate').textContent = `Last updated: ${now.toLocaleTimeString()}`;
+}
+
+function updateMonitorsTable(monitors) {
+    const tbody = document.getElementById('monitorsTableBody');
+    tbody.innerHTML = '';
+    
+    monitors.forEach(monitor => {
+        const row = document.createElement('tr');
+        
+        // Status badge
+        let statusBadge = '';
+        if (monitor.status === 'OK' || monitor.status.includes('OK')) {
+            statusBadge = '<span class="badge bg-success"><i class="fas fa-check-circle"></i> OK</span>';
+        } else if (monitor.status.includes('FAIL') || monitor.status.includes('ERROR')) {
+            statusBadge = '<span class="badge bg-danger"><i class="fas fa-times-circle"></i> FAIL</span>';
+        } else {
+            statusBadge = '<span class="badge bg-warning"><i class="fas fa-exclamation-triangle"></i> ' + monitor.status + '</span>';
+        }
+        
+        row.innerHTML = `
+            <td><strong>${monitor.name}</strong></td>
+            <td>${statusBadge}</td>
+            <td>${monitor.host}</td>
+            <td>${monitor.failed_at}</td>
+            <td>${monitor.vfc}</td>
+            <td>${monitor.uptime}</td>
+            <td>${monitor.detail}</td>
+            <td>${monitor.failures}</td>
+            <td>${monitor.last_failure}</td>
+            <td>${monitor.age}</td>
+        `;
+        
+        tbody.appendChild(row);
+    });
+}
+
+function toggleAutoRefresh() {
+    const btn = document.getElementById('autoRefreshBtn');
+    const status = document.getElementById('autoRefreshStatus');
+    
+    if (isAutoRefreshEnabled) {
+        // Disable auto-refresh
+        clearInterval(autoRefreshInterval);
+        autoRefreshInterval = null;
+        isAutoRefreshEnabled = false;
+        btn.innerHTML = '<i class="fas fa-play"></i> Auto Refresh';
+        btn.classList.remove('btn-success');
+        btn.classList.add('btn-outline-success');
+        status.textContent = 'Disabled';
+        status.className = 'badge bg-secondary';
+    } else {
+        // Enable auto-refresh
+        autoRefreshInterval = setInterval(refreshData, refreshInterval * 1000);
+        isAutoRefreshEnabled = true;
+        btn.innerHTML = '<i class="fas fa-pause"></i> Stop Auto Refresh';
+        btn.classList.remove('btn-outline-success');
+        btn.classList.add('btn-success');
+        status.textContent = 'Enabled';
+        status.className = 'badge bg-success';
+    }
+}
+
+function updateRefreshInterval() {
+    refreshInterval = parseInt(document.getElementById('refreshInterval').value);
+    if (isAutoRefreshEnabled) {
+        clearInterval(autoRefreshInterval);
+        autoRefreshInterval = setInterval(refreshData, refreshInterval * 1000);
+    }
+}
+
+// Initialize dashboard on page load
+document.addEventListener('DOMContentLoaded', function() {
+    refreshData();
+});
+
+// Refresh data every 30 seconds by default
+setInterval(refreshData, 30000);
+</script>
+{% endblock %}
