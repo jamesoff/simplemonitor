@@ -225,6 +225,70 @@ class MonitorApcupsd(Monitor):
 
 
 @register
+class MonitorNUT(Monitor):
+    """Check a NUT UPS"""
+
+    monitor_type = "nut"
+
+    def __init__(self, name: str, config_options: dict) -> None:
+        super().__init__(name, config_options)
+        self.ups = cast(
+            str, self.get_config_option("ups", required=True, allow_empty=False)
+        )
+
+    def run_test(self) -> bool:
+        info = {}
+        try:
+            _output = subprocess.check_output(["upsc", self.ups])  # nosec
+            output = _output.decode("utf-8")  # type: str
+        except subprocess.CalledProcessError as error:
+            output = error.output
+        except OSError as error:
+            return self.record_fail(f"Could not run upsc: {error}")
+        except Exception as error:
+            return self.record_fail(f"Error while getting UPS info: {error}")
+
+        for line in output.splitlines():
+            if line.find(":") > -1:
+                bits = line.split(":")
+                info[bits[0].strip()] = bits[1].strip()
+
+        try:
+            ups_status = cast(str, info["ups.status"])
+        except KeyError:
+            return self.record_fail("Could not get UPS status")
+
+        status_tokens = ups_status.split()
+        ok = True
+        message: list[str] = []
+        if "OB" in status_tokens:
+            message.append("UPS is on battery")
+            ok = False
+        if "OL" in status_tokens:
+            message.append("online")
+        if "RB" in status_tokens:
+            message.append("battery needs replacing!")
+            ok = False
+        if "ups.load" in info:
+            message.append(f"load: {info['ups.load']}%")
+        if "battery.charge" in info:
+            message.append(f"charge: {info['battery.charge']}")
+        if "battery.runtime" in info:
+            message.append(f"runtime: {info['battery.runtime']}")
+
+        message_str = "; ".join(message)
+        if ok:
+            return self.record_success(message_str)
+        return self.record_fail(message_str)
+
+    def describe(self) -> str:
+        return f"Monitoring UPS {self.ups} to make sure it's online"
+
+    def get_params(self) -> Tuple:
+        return (self.ups,)
+
+
+@register
 class MonitorPortAudit(Monitor):
     """Check a host doesn't have outstanding security issues."""
 
