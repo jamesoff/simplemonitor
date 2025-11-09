@@ -3,10 +3,25 @@
 # mock pkg (audit) for simplemonitor
 
 cat <<EOF
-python34-3.4.7 is vulnerable:
-python -- possible integer overflow vulnerability
-CVE: CVE-2017-1000158
-WWW: https://vuxml.FreeBSD.org/freebsd/0fe70bcd-2ce3-46c9-a64b-4a7da097db07.html
-
-4 problem(s) in the installed packages found.
+{
+    "pkg_count": 1,
+    "packages": {
+        "curl": {
+            "issue_count": 52,
+            "issues": [
+                {
+                    "Affected versions": [
+                        ">= 8.5.0 : < 8.14.0"
+                    ],
+                    "description": "curl -- Multiple vulnerabilities",
+                    "cve": [
+                        "CVE-2025-4947",
+                        "CVE-2025-5025"
+                    ],
+                    "url": "https://vuxml.FreeBSD.org/freebsd/533b4470-3f25-11f0-b440-f02f7432cf97.html"
+                },
+			]
+		}
+	}
+}
 EOF

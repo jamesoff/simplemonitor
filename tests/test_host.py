@@ -5,7 +5,6 @@ from simplemonitor.Monitors import host
 
 
 class TestHostMonitors(unittest.TestCase):
-
     safe_config = {"partition": "/", "limit": "10G"}
 
     one_KB = 1024

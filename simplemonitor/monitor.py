@@ -1,7 +1,6 @@
 # coding=utf-8
 """A (fairly) simple host/service monitor."""
 
-
 import argparse
 import logging
 import os

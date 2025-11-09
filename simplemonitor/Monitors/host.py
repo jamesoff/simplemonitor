@@ -2,6 +2,7 @@
 Monitor things on a host for SimpleMonitor
 """
 
+import json
 import os
 import re
 import shlex
@@ -224,6 +225,70 @@ class MonitorApcupsd(Monitor):
 
 
 @register
+class MonitorNUT(Monitor):
+    """Check a NUT UPS"""
+
+    monitor_type = "nut"
+
+    def __init__(self, name: str, config_options: dict) -> None:
+        super().__init__(name, config_options)
+        self.ups = cast(
+            str, self.get_config_option("ups", required=True, allow_empty=False)
+        )
+
+    def run_test(self) -> bool:
+        info = {}
+        try:
+            _output = subprocess.check_output(["upsc", self.ups])  # nosec
+            output = _output.decode("utf-8")  # type: str
+        except subprocess.CalledProcessError as error:
+            output = error.output
+        except OSError as error:
+            return self.record_fail(f"Could not run upsc: {error}")
+        except Exception as error:
+            return self.record_fail(f"Error while getting UPS info: {error}")
+
+        for line in output.splitlines():
+            if line.find(":") > -1:
+                bits = line.split(":")
+                info[bits[0].strip()] = bits[1].strip()
+
+        try:
+            ups_status = cast(str, info["ups.status"])
+        except KeyError:
+            return self.record_fail("Could not get UPS status")
+
+        status_tokens = ups_status.split()
+        ok = True
+        message: list[str] = []
+        if "OB" in status_tokens:
+            message.append("UPS is on battery")
+            ok = False
+        if "OL" in status_tokens:
+            message.append("online")
+        if "RB" in status_tokens:
+            message.append("battery needs replacing!")
+            ok = False
+        if "ups.load" in info:
+            message.append(f"load: {info['ups.load']}%")
+        if "battery.charge" in info:
+            message.append(f"charge: {info['battery.charge']}")
+        if "battery.runtime" in info:
+            message.append(f"runtime: {info['battery.runtime']}")
+
+        message_str = "; ".join(message)
+        if ok:
+            return self.record_success(message_str)
+        return self.record_fail(message_str)
+
+    def describe(self) -> str:
+        return f"Monitoring UPS {self.ups} to make sure it's online"
+
+    def get_params(self) -> Tuple:
+        return (self.ups,)
+
+
+@register
 class MonitorPortAudit(Monitor):
     """Check a host doesn't have outstanding security issues."""
 
@@ -290,34 +355,29 @@ class MonitorPkgAudit(Monitor):
         return (self.path,)
 
     def run_test(self) -> bool:
+        if self.path == "":
+            self.path = "/usr/local/sbin/pkg"
         try:
-            if self.path == "":
-                self.path = "/usr/local/sbin/pkg"
-            try:
-                _output = subprocess.check_output([self.path, "audit"])  # nosec
-                output = _output.decode("utf-8")
-            except subprocess.CalledProcessError as error:
-                output = error.output.decode("utf-8")
-            except OSError as error:
-                return self.record_fail(
-                    "Failed to run %s audit: {0} {1}".format(self.path, error)
-                )
-            except Exception as error:
-                return self.record_fail("Error running pkg audit: {0}".format(error))
-
-            for line in output.splitlines():
-                matches = self.regexp.match(line)
-                if matches:
-                    count = int(matches.group(1))
-                    # sanity check
-                    if count == 0:
-                        return self.record_success()
-                    if count == 1:
-                        return self.record_fail("1 problem")
-                    return self.record_fail("%d problems" % count)
-            return self.record_success()
+            _output = subprocess.run(
+                [self.path, "audit", "--raw=json"], capture_output=True
+            )  # nosec
+            output = json.loads(_output.stdout.decode("utf-8"))
+        except json.JSONDecodeError as error:
+            return self.record_fail(f"Failed to decode JSON output: {error}")
+        except OSError as error:
+            return self.record_fail(f"Failed to run {self.path} audit: {error}")
         except Exception as error:
-            return self.record_fail("Could not run pkg: %s" % error)
+            return self.record_fail(f"Error running pkg audit: {error}")
+
+        try:
+            count = int(output["pkg_count"])
+        except KeyError:
+            return self.record_fail("Failed to find pkg_count in output")
+        if count == 0:
+            return self.record_success()
+        if count == 1:
+            return self.record_fail("1 problem found")
+        return self.record_fail("%d problems found" % count)
 
 
 @register

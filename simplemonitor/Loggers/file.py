@@ -49,9 +49,7 @@ class FileLogger(Logger):
         self.filename = self.get_config_option(
             "filename", required=True, allow_empty=False
         )
-        self.file_handle = open(
-            self.filename, "a+"
-        )  # pylint: disable=consider-using-with
+        self.file_handle = open(self.filename, "a+")  # pylint: disable=consider-using-with
 
         self.only_failures = self.get_config_option(
             "only_failures", required_type="bool", default=False
@@ -103,9 +101,7 @@ class FileLogger(Logger):
         """Close and reopen log file."""
         try:
             self.file_handle.close()
-            self.file_handle = open(
-                self.filename, "a+"
-            )  # pylint: disable=consider-using-with
+            self.file_handle = open(self.filename, "a+")  # pylint: disable=consider-using-with
         except OSError:
             self.logger_logger.exception(
                 "Couldn't reopen log file %s after HUP", self.filename
