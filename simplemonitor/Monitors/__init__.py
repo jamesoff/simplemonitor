@@ -19,6 +19,7 @@ from .host import (
     MonitorPortAudit,
     MonitorSwap,
     MonitorZap,
+    MonitorZpool,
 )
 from .network import (
     MonitorDNS,
@@ -75,5 +76,6 @@ __all__ = [
     "MonitorUnixService",
     "MonitorWindowsDHCPScope",
     "MonitorZap",
+    "MonitorZpool",
     "RemoteHostsMonitor",
 ]
