@@ -611,15 +611,7 @@ class MonitorZpool(Monitor):
     def __init__(self, name: str, config_options: dict) -> None:
         super().__init__(name, config_options)
         self.pools = cast(
-            list[str],
-            list(
-                map(
-                    str.strip,
-                    self.get_config_option(
-                        "pools", required_type="str", default=""
-                    ).split(","),
-                )
-            ),
+            list[str], self.get_config_option("pools", required_type="[str]")
         )
         self.use_json = False
         try:
