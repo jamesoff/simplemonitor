@@ -612,11 +612,13 @@ class MonitorZpool(Monitor):
         super().__init__(name, config_options)
         self.pools = cast(
             list[str],
-            map(
-                str.strip,
-                self.get_config_option("pools", required_type="str", default="").split(
-                    ","
-                ),
+            list(
+                map(
+                    str.strip,
+                    self.get_config_option(
+                        "pools", required_type="str", default=""
+                    ).split(","),
+                )
             ),
         )
         self.use_json = False
