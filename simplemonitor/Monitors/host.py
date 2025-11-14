@@ -624,7 +624,7 @@ class MonitorZpool(Monitor):
             self.monitor_logger.warning(
                 "Failed to divine zpool version; using text parsing"
             )
-            self.use_json = False
+        self.use_json = False
 
     def describe(self) -> str:
         if not self.pools:
@@ -657,12 +657,45 @@ class MonitorZpool(Monitor):
             return None
         return ", ".join(messages)
 
+    def _run_test_text(self) -> Optional[str]:
+        """Return error information, or None if all ok."""
+        messages: list[str] = []
+        cmd = ["zpool", "status"]
+        if self.pools:
+            cmd.extend(self.pools)
+        try:
+            _output = subprocess.run(cmd, capture_output=True)
+        except subprocess.SubprocessError:
+            return "Failed to run zpool status"
+        zpool_info = _output.stdout.decode()
+        current_pool = None
+        for line in zpool_info.splitlines():
+            matches = re.match(r" *pool: (.+)", line)
+            if matches:
+                if current_pool:
+                    return "Failed to parse zpool status output"
+                current_pool = matches.group(1)
+                continue
+            matches = re.match(r" *state: ([A-Z_]+)", line)
+            if matches:
+                if not current_pool:
+                    return "Failed to parse zpool status output"
+                status = matches.group(1)
+                if status != "ONLINE":
+                    messages.append(f"pool {current_pool} is {matches.group(1)}")
+                current_pool = None
+        if current_pool:
+            messages.append(f"Failed to find status for pool {current_pool}")
+        if len(messages) == 0:
+            return None
+        return ", ".join(messages)
+
     def run_test(self) -> bool:
         if self.use_json:
             message = self._run_test_json()
-            if message:
-                return self.record_fail(message)
-            else:
-                return self.record_success("all pools ONLINE")
-
-        return self.record_fail("oops")
+        else:
+            message = self._run_test_text()
+        if message:
+            return self.record_fail(message)
+        else:
+            return self.record_success("all pools ONLINE")
