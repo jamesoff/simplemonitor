@@ -614,7 +614,9 @@ class MonitorZpool(Monitor):
             list[str],
             map(
                 str.strip,
-                self.get_config_option("pools", required_type="str").split(","),
+                self.get_config_option("pools", required_type="str", default="").split(
+                    ","
+                ),
             ),
         )
         self.use_json = False
