@@ -617,6 +617,7 @@ class MonitorZpool(Monitor):
                 self.get_config_option("pools", required_type="str").split(","),
             ),
         )
+        self.use_json = False
         try:
             zpool_output = subprocess.run(
                 ["zpool", "--version"], capture_output=True
@@ -628,7 +629,6 @@ class MonitorZpool(Monitor):
             self.monitor_logger.warning(
                 "Failed to divine zpool version; using text parsing"
             )
-            self.use_json = False
 
     def describe(self) -> str:
         if not self.pools:
