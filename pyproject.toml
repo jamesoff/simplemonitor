@@ -54,6 +54,7 @@ ring-doorbell = ">=0.6.0"
 paramiko = ">=2.7.2,<4.0.0"
 pyaarlo = ">=0.7.1.3,<0.9.0.0"
 icmplib = "^3.0.3"
+packaging = "^25.0"
 
 [tool.poetry.group.dev.dependencies]
 boto3-stubs = {extras = ["sns"], version = "^1.40.47"}
