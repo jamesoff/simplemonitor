@@ -8,9 +8,10 @@ import re
 import shlex
 import subprocess  # nosec
 import time
-from typing import Tuple, cast
+from typing import Optional, Tuple, cast
 
 from markupsafe import escape
+from packaging.version import parse
 
 from ..util import bytes_to_size_string, size_string_to_bytes
 from .monitor import Monitor, register
@@ -599,3 +600,69 @@ class MonitorCommand(Monitor):
             self.result_max,
             self.show_output,
         )
+
+
+@register
+class MonitorZpool(Monitor):
+    """Check zpool status is healthy"""
+
+    monitor_type = "zpool"
+
+    def __init__(self, name: str, config_options: dict) -> None:
+        super().__init__(name, config_options)
+        self.pools = cast(
+            list[str], self.get_config_option("pools", required_type="list[str]")
+        )
+        try:
+            zpool_output = subprocess.run(
+                ["zpool", "--version"], capture_output=True
+            ).stdout.decode()  # nosec
+            zpool_version = parse(zpool_output.splitlines()[0].split("-")[1])
+            if zpool_version >= parse("2.4.0"):
+                self.use_json = True
+        except Exception:
+            self.monitor_logger.warning(
+                "Failed to divine zpool version; using text parsing"
+            )
+            self.use_json = False
+
+    def describe(self) -> str:
+        if not self.pools:
+            pools = "all zpools"
+        else:
+            pools = "zpools: " + ", ".join(self.pools)
+        return f"Checking zpool status for {pools}"
+
+    def get_params(self) -> Tuple:
+        return (self.pools,)
+
+    def _run_test_json(self) -> Optional[str]:
+        """Return error information, or None if all ok."""
+        messages: list[str] = []
+        cmd = ["zpool", "status", "-j"]
+        if self.pools:
+            cmd.extend(self.pools)
+        try:
+            _output = subprocess.run(cmd, capture_output=True)
+        except subprocess.SubprocessError:
+            return "Failed to run zpool status"
+        try:
+            zpool_info = json.loads(_output.stdout.decode())
+        except Exception:
+            return "Failed to parse zpool JSON output"
+        for pool in zpool_info["pools"]:
+            if pool["state"] != "ONLINE":
+                messages.append(f"pool {pool['name']} is {pool['state']}")
+        if len(messages) == 0:
+            return None
+        return ", ".join(messages)
+
+    def run_test(self) -> bool:
+        if self.use_json:
+            message = self._run_test_json()
+            if message:
+                return self.record_fail(message)
+            else:
+                return self.record_success("all pools ONLINE")
+
+        return self.record_fail("oops")
