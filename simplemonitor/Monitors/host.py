@@ -650,7 +650,7 @@ class MonitorZpool(Monitor):
             zpool_info = json.loads(_output.stdout.decode())
         except Exception:
             return "Failed to parse zpool JSON output"
-        for pool in zpool_info["pools"]:
+        for pool in zpool_info["pools"].values():
             if pool["state"] != "ONLINE":
                 messages.append(f"pool {pool['name']} is {pool['state']}")
         if len(messages) == 0:
