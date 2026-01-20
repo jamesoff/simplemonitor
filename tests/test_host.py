@@ -1,5 +1,8 @@
 # type: ignore
+import json
+import subprocess
 import unittest
+from unittest.mock import patch
 
 from simplemonitor.Monitors import host
 
@@ -90,6 +93,60 @@ class TestHostMonitors(unittest.TestCase):
         config_options = {"command": "ls /", "result_max": "10", "show_output": True}
         m = host.MonitorCommand("test", config_options)
         self.assertTupleEqual(m.get_params(), (["ls", "/"], "", 10, True))
+
+    @patch("subprocess.run")
+    def test_pkgaudit_ignore(self, subprocess_run_fn):
+        config_options = {"ignore": "abc-123"}
+        mock_response = {
+            "pkg_count": 1,
+            "packages": {
+                "python311": {
+                    "issues": [{"url": "https//vuxml.freebsd.org/freebsd/abc-123.html"}]
+                }
+            },
+        }
+        subprocess_run_fn.return_value = subprocess.CompletedProcess(
+            ["pkg", "audit"], returncode=1, stdout=json.dumps(mock_response).encode()
+        )
+        m = host.MonitorPkgAudit("test", config_options)
+        m.run_test()
+        self.assertEqual(m.last_result, "(1 problem ignored)")
+
+    @patch("subprocess.run")
+    def test_pkgaudit_ignore_fail(self, subprocess_run_fn):
+        config_options = {"ignore": "abc-123"}
+        mock_response = {
+            "pkg_count": 1,
+            "packages": {
+                "python311": {
+                    "issues": [{"url": "https//vuxml.freebsd.org/freebsd/abc-456.html"}]
+                }
+            },
+        }
+        subprocess_run_fn.return_value = subprocess.CompletedProcess(
+            ["pkg", "audit"], returncode=1, stdout=json.dumps(mock_response).encode()
+        )
+        m = host.MonitorPkgAudit("test", config_options)
+        m.run_test()
+        self.assertEqual(m.last_result, "1 problem found")
+
+    @patch("subprocess.run")
+    def test_pkgaudit_noignore_fail(self, subprocess_run_fn):
+        config_options = {}
+        mock_response = {
+            "pkg_count": 1,
+            "packages": {
+                "python311": {
+                    "issues": [{"url": "https//vuxml.freebsd.org/freebsd/abc-456.html"}]
+                }
+            },
+        }
+        subprocess_run_fn.return_value = subprocess.CompletedProcess(
+            ["pkg", "audit"], returncode=1, stdout=json.dumps(mock_response).encode()
+        )
+        m = host.MonitorPkgAudit("test", config_options)
+        m.run_test()
+        self.assertEqual(m.last_result, "1 problem found")
 
 
 if __name__ == "__main__":

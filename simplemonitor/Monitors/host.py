@@ -4,11 +4,13 @@ Monitor things on a host for SimpleMonitor
 
 import json
 import os
+import os.path
 import re
 import shlex
 import subprocess  # nosec
 import time
 from typing import Optional, Tuple, cast
+from urllib.parse import urlsplit
 
 from markupsafe import escape
 from packaging.version import parse
@@ -339,15 +341,20 @@ class MonitorPortAudit(Monitor):
 
 @register
 class MonitorPkgAudit(Monitor):
-    """Check a host doesn't have outstanding security issues."""
+    """Check a host doesn't have outstanding security issues.
+
+    Allows overriding of entries by vuxml UUID
+    """
 
     monitor_type = "pkgaudit"
-    regexp = re.compile(r"(\d+) problem\(s\) in \w+ installed package(s|\(s\)) found")
     path = ""
 
     def __init__(self, name: str, config_options: dict) -> None:
         super().__init__(name, config_options)
         self.path = self.get_config_option("path", default="")
+        self.ignore_list = cast(
+            list[str], self.get_config_option("ignore", required_type="list[str]")
+        )
 
     def describe(self) -> str:
         return "Checking for insecure packages."
@@ -374,11 +381,26 @@ class MonitorPkgAudit(Monitor):
             count = int(output["pkg_count"])
         except KeyError:
             return self.record_fail("Failed to find pkg_count in output")
+        ignored = 0
+        if self.ignore_list:
+            for package in output.get("packages", {}).values():
+                for issue in package.get("issues", []):
+                    if url := issue.get("url"):
+                        url_info = urlsplit(url)
+                        filename = os.path.splitext(os.path.basename(url_info.path))[0]
+                        if filename in self.ignore_list:
+                            count -= 1
+                            ignored += 1
+                            break
+        if ignored:
+            ignore_text = f"({ignored} problem{'s' if ignored > 1 else ''} ignored)"
+        else:
+            ignore_text = ""
         if count == 0:
-            return self.record_success()
-        if count == 1:
-            return self.record_fail("1 problem found")
-        return self.record_fail("%d problems found" % count)
+            return self.record_success(ignore_text)
+        return self.record_fail(
+            f"{count} problem{'s' if count > 1 else ''} found {ignore_text}".strip()
+        )
 
 
 @register
