@@ -148,6 +148,20 @@ class TestHostMonitors(unittest.TestCase):
         m.run_test()
         self.assertEqual(m.last_result, "1 problem found")
 
+    @patch("subprocess.run")
+    def test_pkgaudit_ignore_empty(self, subprocess_run_fn):
+        config_options = {}
+        mock_response = {
+            "pkg_count": 0,
+            "packages": {},
+        }
+        subprocess_run_fn.return_value = subprocess.CompletedProcess(
+            ["pkg", "audit"], returncode=1, stdout=json.dumps(mock_response).encode()
+        )
+        m = host.MonitorPkgAudit("test", config_options)
+        m.run_test()
+        self.assertEqual(m.last_result, "")
+
 
 if __name__ == "__main__":
     unittest.main()
