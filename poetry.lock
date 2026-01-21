@@ -240,18 +240,18 @@ test = ["dateparser (==1.*)", "pre-commit", "pytest", "pytest-cov", "pytest-mock
 
 [[package]]
 name = "astroid"
-version = "3.3.8"
+version = "4.0.3"
 description = "An abstract syntax tree for Python with inference support."
 optional = false
-python-versions = ">=3.9.0"
+python-versions = ">=3.10.0"
 groups = ["dev"]
 files = [
-    {file = "astroid-3.3.8-py3-none-any.whl", hash = "sha256:187ccc0c248bfbba564826c26f070494f7bc964fd286b6d9fff4420e55de828c"},
-    {file = "astroid-3.3.8.tar.gz", hash = "sha256:a88c7994f914a4ea8572fac479459f4955eeccc877be3f2d959a33273b0cf40b"},
+    {file = "astroid-4.0.3-py3-none-any.whl", hash = "sha256:864a0a34af1bd70e1049ba1e61cee843a7252c826d97825fcee9b2fcbd9e1b14"},
+    {file = "astroid-4.0.3.tar.gz", hash = "sha256:08d1de40d251cc3dc4a7a12726721d475ac189e4e583d596ece7422bc176bda3"},
 ]
 
 [package.dependencies]
-typing-extensions = {version = ">=4.0.0", markers = "python_version < \"3.11\""}
+typing-extensions = {version = ">=4", markers = "python_version < \"3.11\""}
 
 [[package]]
 name = "async-timeout"
@@ -2372,25 +2372,25 @@ tests = ["coverage[toml] (==5.0.4)", "pytest (>=6.0.0,<7.0.0)"]
 
 [[package]]
 name = "pylint"
-version = "3.3.9"
+version = "4.0.4"
 description = "python code static checker"
 optional = false
-python-versions = ">=3.9.0"
+python-versions = ">=3.10.0"
 groups = ["dev"]
 files = [
-    {file = "pylint-3.3.9-py3-none-any.whl", hash = "sha256:01f9b0462c7730f94786c283f3e52a1fbdf0494bbe0971a78d7277ef46a751e7"},
-    {file = "pylint-3.3.9.tar.gz", hash = "sha256:d312737d7b25ccf6b01cc4ac629b5dcd14a0fcf3ec392735ac70f137a9d5f83a"},
+    {file = "pylint-4.0.4-py3-none-any.whl", hash = "sha256:63e06a37d5922555ee2c20963eb42559918c20bd2b21244e4ef426e7c43b92e0"},
+    {file = "pylint-4.0.4.tar.gz", hash = "sha256:d9b71674e19b1c36d79265b5887bf8e55278cbe236c9e95d22dc82cf044fdbd2"},
 ]
 
 [package.dependencies]
-astroid = ">=3.3.8,<=3.4.0.dev0"
+astroid = ">=4.0.2,<=4.1.dev0"
 colorama = {version = ">=0.4.5", markers = "sys_platform == \"win32\""}
 dill = [
     {version = ">=0.2", markers = "python_version < \"3.11\""},
     {version = ">=0.3.7", markers = "python_version >= \"3.12\""},
     {version = ">=0.3.6", markers = "python_version == \"3.11\""},
 ]
-isort = ">=4.2.5,<5.13 || >5.13,<7"
+isort = ">=5,<5.13 || >5.13,<8"
 mccabe = ">=0.6,<0.8"
 platformdirs = ">=2.2"
 tomli = {version = ">=1.1", markers = "python_version < \"3.11\""}
@@ -3281,25 +3281,11 @@ files = [
 
 [[package]]
 name = "typing-extensions"
-version = "4.12.2"
-description = "Backported and Experimental Type Hints for Python 3.8+"
-optional = false
-python-versions = ">=3.8"
-groups = ["main", "dev"]
-markers = "python_version >= \"3.11\""
-files = [
-    {file = "typing_extensions-4.12.2-py3-none-any.whl", hash = "sha256:04e5ca0351e0f3f85c6853954072df659d0d13fac324d0072316b67d7794700d"},
-    {file = "typing_extensions-4.12.2.tar.gz", hash = "sha256:1a7ead55c7e559dd4dee8856e3a88b41225abfe1ce8df57b7c13915fe121ffb8"},
-]
-
-[[package]]
-name = "typing-extensions"
 version = "4.15.0"
 description = "Backported and Experimental Type Hints for Python 3.9+"
 optional = false
 python-versions = ">=3.9"
 groups = ["main", "dev"]
-markers = "python_version < \"3.11\""
 files = [
     {file = "typing_extensions-4.15.0-py3-none-any.whl", hash = "sha256:f0fa19c6845758ab08074a0cfa8b7aecb71c999ca73d62883bc25cc018c4e548"},
     {file = "typing_extensions-4.15.0.tar.gz", hash = "sha256:0cea48d173cc12fa28ecabc3b837ea3cf6f38c6d1136f85cbaaf598984861466"},
@@ -3536,4 +3522,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10.0"
-content-hash = "1208a4c645e6a7bc403149454178b09b11dd96768eddf8c11f5b16cf2b25bc63"
+content-hash = "1647e2c11f941564e7f6d6a440ded150c7d6bedaadded7b35e8136bfacb25443"
