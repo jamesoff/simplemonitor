@@ -5,6 +5,7 @@ Monitors for SimpleMonitor
 from .arlo import MonitorArloCamera
 from .compound import CompoundMonitor, RemoteHostsMonitor
 from .file import MonitorBackup
+from .gmirror import MonitorGmirrorStatus
 from .hass import MonitorSensor
 from .host import (
     MonitorApcupsd,
@@ -13,10 +14,12 @@ from .host import (
     MonitorFileStat,
     MonitorLoadAvg,
     MonitorMemory,
+    MonitorNUT,
     MonitorPkgAudit,
     MonitorPortAudit,
     MonitorSwap,
     MonitorZap,
+    MonitorZpool,
 )
 from .mqtt import MonitorMQTT
 from .network import (
@@ -51,10 +54,12 @@ __all__ = [
     "MonitorDiskSpace",
     "MonitorEximQueue",
     "MonitorFileStat",
+    "MonitorGmirrorStatus",
     "MonitorHTTP",
     "MonitorHost",
     "MonitorLoadAvg",
     "MonitorMemory",
+    "MonitorNUT",
     "MonitorPing",
     "MonitorPkgAudit",
     "MonitorPortAudit",
@@ -73,5 +78,6 @@ __all__ = [
     "MonitorUnixService",
     "MonitorWindowsDHCPScope",
     "MonitorZap",
+    "MonitorZpool",
     "RemoteHostsMonitor",
 ]

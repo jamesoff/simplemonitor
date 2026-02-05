@@ -177,6 +177,11 @@ class Alerter:
         if self._ooh_failures is None:
             self._ooh_failures = []
 
+        self._alert_history: dict[str, datetime.datetime] = {}
+        self.allow_reminders = self.get_config_option(
+            "allow_reminders", required_type="bool"
+        )
+
     def get_config_option(
         self,
         key: str,
@@ -241,6 +246,38 @@ class Alerter:
                 return False
         return True
 
+    def record_alert(self, monitor: Monitor) -> None:
+        """Note the time we sent an alert for this monitor"""
+        self._alert_history[monitor.name] = datetime.datetime.now()
+
+    def remove_from_history(self, monitor: Monitor) -> None:
+        try:
+            del self._alert_history[monitor.name]
+        except KeyError:
+            pass
+
+    def should_remind(self, monitor: Monitor) -> bool:
+        """Check this monitor wants a reminder now"""
+        if not self.allow_reminders:
+            return False
+        try:
+            if (
+                monitor.remind_interval
+                and datetime.datetime.now()
+                > self._alert_history[monitor.name] + monitor.remind_interval
+            ):
+                self.alerter_logger.debug(
+                    "monitor %s needs a reminder alert", monitor.name
+                )
+                return True
+        except KeyError:
+            # probably didn't alert yet
+            pass
+        except AttributeError:
+            # probably older simplemonitor
+            pass
+        return False
+
     def should_alert(self, monitor: Monitor) -> AlertType:
         """Check if we should bother alerting, and what type."""
         out_of_hours = False
@@ -283,27 +320,27 @@ class Alerter:
         if virtual_failure_count:
             self.alerter_logger.debug("monitor %s has failed", monitor.name)
             # Monitor has failed (not just first time)
-            if self._delay_notification:
-                # Delayed (catch-up) notifications are enabled
-                if not out_of_hours:
-                    # Not out of hours
-                    try:
-                        self._ooh_failures.remove(monitor.name)
-                        # if it was in there and we support catchup alerts, do it
-                        if self.support_catchup:
-                            self.alerter_logger.debug(
-                                "alert for monitor %s is CATCHUP", monitor.name
-                            )
-                            return AlertType.CATCHUP
-                    except ValueError:
-                        pass
+            if self._delay_notification and not out_of_hours:
+                # Delayed (catch-up) notifications are enabled, and it's time to send the delayed notification
+                if monitor.name in self._ooh_failures:
+                    # The monitor had failed during ooh
+                    self._ooh_failures.remove(monitor.name)
+                    # if we support catchup alerts, do it
+                    if self.support_catchup:
+                        self.alerter_logger.debug(
+                            "alert for monitor %s is CATCHUP", monitor.name
+                        )
+                        return AlertType.CATCHUP
+                    # send failure if catchup wasn't supported
                     self.alerter_logger.debug(
                         "alert for monitor %s is FAILURE", monitor.name
                     )
                     return AlertType.FAILURE
             # Delayed notifications are not enabled (or are, and we didn't do anything above)
-            if virtual_failure_count == self._limit or (
-                self._repeat and (virtual_failure_count % self._limit == 0)
+            if (
+                virtual_failure_count == self._limit
+                or (self._repeat and (virtual_failure_count % self._limit == 0))
+                or self.should_remind(monitor)
             ):
                 # This is the first time or nth time we've failed
                 if out_of_hours:
@@ -314,6 +351,7 @@ class Alerter:
                 self.alerter_logger.debug(
                     "alert for monitor %s is FAILURE", monitor.name
                 )
+                self.record_alert(monitor)
                 return AlertType.FAILURE
             self.alerter_logger.debug(
                 "not alerting for monitor %s: not failed or repeated enough",
@@ -328,6 +366,7 @@ class Alerter:
         ):
             # was failed, and enough to have alerted
             self.alerter_logger.debug("monitor %s has recovered", monitor.name)
+            self.remove_from_history(monitor)
             try:
                 self._ooh_failures.remove(monitor.name)
             except ValueError:
@@ -436,7 +475,7 @@ class Alerter:
             raise NotImplementedError
         elif length == AlertLength.FULL:
             if alert_type in [AlertType.CATCHUP, AlertType.FAILURE]:
-                message = """
+                message = """\
                 Monitor {monitor.name}{host} {alert_verb}!
                 Failed at: {failure_time} (down {downtime})
                 Virtual failure count: {vfc}
@@ -452,7 +491,7 @@ class Alerter:
                         monitor.failure_doc
                     )
             elif alert_type == AlertType.SUCCESS:
-                message = """
+                message = """\
                 Monitor {monitor.name}{host} {alert_verb}!
                 Recovered at: {recovered_time} (was down for {downtime})
                 Additional info: {result}
@@ -523,3 +562,18 @@ class Alerter:
 (register, get_class, all_types) = subclass_dict_handler(
     "simplemonitor.Alerters.alerter", Alerter, "alerter_type"
 )
+
+
+@register
+class PrintAlerter(Alerter):
+    """A simple Alerter for debugging purposes"""
+
+    alerter_type = "print"
+
+    def send_alert(self, name: str, monitor: Any) -> Union[None, NoReturn]:
+        if self.should_alert(monitor) == AlertType.FAILURE:
+            print(f"alert: {monitor.name} failed")
+        return None
+
+    def _describe_action(self) -> str:
+        return "print!"

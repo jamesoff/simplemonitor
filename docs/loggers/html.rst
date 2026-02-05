@@ -48,6 +48,20 @@ You can use the ``upload_command`` setting to specify a command to push the gene
 
     if set, a command to execute each time the output is updated to e.g. upload the files to an external webserver
 
+.. confval:: navbar_title
+
+    :type: string
+    :required: false
+
+    if set, the title to show at the top of the page. The default is "SimpleMonitor"
+
+.. confval:: visual_theme
+
+    :type: string
+    :required: false
+
+    the visual theme for the HTML page. Set to "dark" for dark mode. The default is "light"
+
 .. confval:: map
 
     :type: boolean

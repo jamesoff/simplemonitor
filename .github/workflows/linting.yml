@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
+        python-version: ['3.10', '3.11', '3.12', '3.13']
     name: Python ${{ matrix.python-version }}
 
     steps:
@@ -26,10 +26,10 @@ jobs:
         run: pip install poetry
       - name: poetry install
         run: poetry install
-      - name: check code style with black
-        run: make black
-      - name: flake8 tests
-        run: make flake8
+      - name: check code style with ruff
+        run: make ruff-format-check
+      - name: ruff check
+        run: make ruff-check
       - name: bandit
         run: make bandit
       - name: mypy

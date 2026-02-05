@@ -69,6 +69,14 @@ class SlackAlerter(Alerter):
                 {"title": "Description", "value": monitor.describe()},
             ]
 
+            if monitor.failure_doc:
+                fields.append(
+                    {
+                        "title": "Documentation",
+                        "value": monitor.failure_doc,
+                    }
+                )
+
             try:
                 if monitor.recover_info != "":
                     fields.append(

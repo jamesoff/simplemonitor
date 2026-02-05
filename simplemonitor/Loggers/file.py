@@ -49,9 +49,7 @@ class FileLogger(Logger):
         self.filename = self.get_config_option(
             "filename", required=True, allow_empty=False
         )
-        self.file_handle = open(
-            self.filename, "a+"
-        )  # pylint: disable=consider-using-with
+        self.file_handle = open(self.filename, "a+")  # pylint: disable=consider-using-with
 
         self.only_failures = self.get_config_option(
             "only_failures", required_type="bool", default=False
@@ -103,9 +101,7 @@ class FileLogger(Logger):
         """Close and reopen log file."""
         try:
             self.file_handle.close()
-            self.file_handle = open(
-                self.filename, "a+"
-            )  # pylint: disable=consider-using-with
+            self.file_handle = open(self.filename, "a+")  # pylint: disable=consider-using-with
         except OSError:
             self.logger_logger.exception(
                 "Couldn't reopen log file %s after HUP", self.filename
@@ -225,6 +221,16 @@ class HTMLLogger(Logger):
             self.get_config_option(
                 "copy_resources", required_type="bool", default=True
             ),
+        )
+        self.navbar_title = cast(
+            str,
+            self.get_config_option(
+                "navbar_title", required=False, default="SimpleMonitor"
+            ),
+        )
+        self.visual_theme = cast(
+            str,
+            self.get_config_option("visual_theme", required=False, default="light"),
         )
         self.upload_command = cast(
             str,
@@ -403,6 +409,8 @@ class HTMLLogger(Logger):
             interval = 30
         file_handle.write(
             template.render(
+                navbar_title=self.navbar_title,
+                visual_theme=self.visual_theme,
                 status=self.status,
                 status_border=self.header_class,
                 host=socket.gethostname(),

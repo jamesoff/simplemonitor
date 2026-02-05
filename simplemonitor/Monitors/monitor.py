@@ -111,9 +111,7 @@ class Monitor:
         )
         _gps = cast(Optional[str], self.get_config_option("gps"))
         if _gps:
-            self.gps = [
-                float(x) for x in _gps.split(",")
-            ]  # type: Optional[List[float]]
+            self.gps = [float(x) for x in _gps.split(",")]  # type: Optional[List[float]]
         else:
             self.gps = None
 
@@ -125,6 +123,12 @@ class Monitor:
         if self._first_load is None:
             self._first_load = arrow.utcnow()
         self.ran_this_time = False
+        self.remind_interval: Optional[datetime.timedelta]
+        remind_interval = self.get_config_option("remind", required_type="int")
+        if remind_interval:
+            self.remind_interval = datetime.timedelta(minutes=remind_interval)
+        else:
+            self.remind_interval = None
 
     def get_config_option(
         self,

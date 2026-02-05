@@ -3,10 +3,25 @@
 # mock pkg (audit) for simplemonitor
 
 cat <<EOF
-libidn2-2.2.0 is vulnerable:
-libidn2 -- roundtrip check vulnerability
-CVE: CVE-2019-12290
-WWW: https://vuxml.FreeBSD.org/freebsd/f04f840d-0840-11ea-8d66-75d3253ef913.html
-
-1 problem(s) in 1 installed package(s) found.
+{
+    "pkg_count": 1,
+    "packages": {
+        "curl": {
+            "issue_count": 52,
+            "issues": [
+                {
+                    "Affected versions": [
+                        ">= 8.5.0 : < 8.14.0"
+                    ],
+                    "description": "curl -- Multiple vulnerabilities",
+                    "cve": [
+                        "CVE-2025-4947",
+                        "CVE-2025-5025"
+                    ],
+                    "url": "https://vuxml.FreeBSD.org/freebsd/533b4470-3f25-11f0-b440-f02f7432cf97.html"
+                },
+			]
+		}
+	}
+}
 EOF

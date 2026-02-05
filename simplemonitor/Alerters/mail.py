@@ -4,8 +4,7 @@ SimpleMonitor alerts via email/SMTP
 
 import email.utils
 import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
+from email.message import EmailMessage
 from typing import Optional, cast
 
 from ..Monitors.monitor import Monitor
@@ -49,7 +48,7 @@ class EMailAlerter(Alerter):
         if alert_type == AlertType.NONE:
             return
 
-        message = MIMEMultipart()
+        message = EmailMessage()
         message["From"] = self.from_addr
         message["To"] = self.to_addr.replace(";", ",")
         message["Date"] = email.utils.formatdate()
@@ -62,7 +61,7 @@ class EMailAlerter(Alerter):
             AlertLength.NOTIFICATION, alert_type, monitor
         )
         body = self.build_message(AlertLength.FULL, alert_type, monitor)
-        message.attach(MIMEText(body, "plain"))
+        message.set_content(body)
 
         if not self._dry_run:
             try:

@@ -1,8 +1,8 @@
 import unittest
+from unittest.mock import Mock, patch
 
 from requests import Response
 from requests.auth import HTTPBasicAuth
-from unittest.mock import patch, Mock
 
 from simplemonitor.Monitors import MonitorHTTP
 from simplemonitor.util import MonitorState

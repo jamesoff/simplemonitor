@@ -1,10 +1,10 @@
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from simplemonitor.Alerters import HealthchecksAlerter
 
 
 class TestHealthchecksAlerter(unittest.TestCase):
-
     @patch("requests.post")
     def test_send_notification(self, mock_post):
         """Test sending a notification successfully."""

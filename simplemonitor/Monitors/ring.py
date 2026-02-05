@@ -2,6 +2,9 @@
 Ring doorbell battery monitoring for SimpleMonitor
 """
 
+# mypy: ignore-errors
+# ^-- remove this once the ring-doorbell library issue is fixed
+
 import json
 from pathlib import Path
 from typing import Optional, cast
@@ -22,6 +25,9 @@ class MonitorRingDoorbell(Monitor):
     monitor_type = "ring_doorbell"
 
     def __init__(self, name: str, config_options: dict) -> None:
+        raise RuntimeError(
+            "RingDoorbell needs fixing; see https://github.com/jamesoff/simplemonitor/issues/1624"
+        )
         if "gap" not in config_options:
             config_options["gap"] = 21600  # 6 hours
         super().__init__(name, config_options)
