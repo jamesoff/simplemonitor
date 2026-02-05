@@ -8,7 +8,7 @@ from .monitor import Monitor, register
 class MQTTBrokerManager:
     """Manager for MQTT connections and subscriptions"""
 
-    _managers = {}  # Shared dictionary of brokers: {(broker, port): MQTTBrokerManager}
+    _managers: dict[tuple[str, int], "MQTTBrokerManager"] = {}  # Shared dictionary of brokers: {(broker, port): MQTTBrokerManager}
 
     def __new__(
         cls, broker, port, username=None, password=None, tls_enabled=False, ca_cert=None
