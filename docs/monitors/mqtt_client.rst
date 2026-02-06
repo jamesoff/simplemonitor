@@ -18,6 +18,22 @@ Subscipe to a MQTT topic and compare the payload with a success state
 
     The port of the broker
 
+.. confval:: username
+
+    :type: string
+    :required: false
+    :default: ````
+
+    The mqtt username
+
+.. confval:: password
+
+    :type: string
+    :required: false
+    :default: ````
+
+    The mqtt password
+
 .. confval:: tls
 
     :type: bool
