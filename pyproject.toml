@@ -45,7 +45,7 @@ boto3 = "^1.15.16"
 colorlog = ">=4.4"
 paho-mqtt = "^1.5.1"
 psutil = ">=5.7.2,<8.0.0"
-requests = "^2.32.5"
+requests = "^2.33.0"
 pync = {version = "^2.0.3", platform = "darwin"}
 pywin32 = {version = ">=228,<312", platform = "win32"}
 Jinja2 = ">=2.11.2,<4.0.0"
