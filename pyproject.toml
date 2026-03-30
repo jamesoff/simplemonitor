@@ -40,7 +40,7 @@ include = [
 
 [tool.poetry.dependencies]
 python = "^3.10.0"
-arrow = ">=0.17,<1.4"
+arrow = ">=0.17,<1.5"
 boto3 = "^1.15.16"
 colorlog = ">=4.4"
 paho-mqtt = "^1.5.1"
