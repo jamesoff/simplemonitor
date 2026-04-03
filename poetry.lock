@@ -2888,14 +2888,14 @@ jupyter = ["ipywidgets (>=7.5.1,<9)"]
 
 [[package]]
 name = "ring-doorbell"
-version = "0.9.13"
+version = "0.9.14"
 description = "A Python library to communicate with Ring Door Bell (https://ring.com/)"
 optional = false
 python-versions = ">=3.9.0"
 groups = ["main"]
 files = [
-    {file = "ring_doorbell-0.9.13-py3-none-any.whl", hash = "sha256:efe57e94666b671ca5eb2f46eeb4c94dbdea229761fb257f0c8f95d90e778551"},
-    {file = "ring_doorbell-0.9.13.tar.gz", hash = "sha256:33c9473831dd5972efac36d031e12019a40c6025e27074d0b5af978c9c524253"},
+    {file = "ring_doorbell-0.9.14-py3-none-any.whl", hash = "sha256:5b3b3ebffcdaa1bc50f137a09062f36da42e3e59a63fe134292e16275142d9ec"},
+    {file = "ring_doorbell-0.9.14.tar.gz", hash = "sha256:33df67c0cba8d0ece2b89a4dcee6602baf47b44fbfc1b3a085e8a3d54c016917"},
 ]
 
 [package.dependencies]
