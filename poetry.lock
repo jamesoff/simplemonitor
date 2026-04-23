@@ -429,14 +429,14 @@ crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
 
 [[package]]
 name = "boto3-stubs"
-version = "1.42.93"
-description = "Type annotations for boto3 1.42.93 generated with mypy-boto3-builder 8.12.0"
+version = "1.42.94"
+description = "Type annotations for boto3 1.42.94 generated with mypy-boto3-builder 8.12.0"
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
 files = [
-    {file = "boto3_stubs-1.42.93-py3-none-any.whl", hash = "sha256:09fb64b75f2ce3118702f9990b7bcc5dc1d8851562091cda720734a4dacd4530"},
-    {file = "boto3_stubs-1.42.93.tar.gz", hash = "sha256:c1f65773159d69938f6f181539046e60abbb0390488166bed99ef7025e99dbe6"},
+    {file = "boto3_stubs-1.42.94-py3-none-any.whl", hash = "sha256:855319e063d4b3d3f627a57a1819da4bbf3e4c621189fcb2f47465ecfec932da"},
+    {file = "boto3_stubs-1.42.94.tar.gz", hash = "sha256:63eb0a0487636fcc286ab9f3d7f41be30dec036bbd7ab89c3ccd29afe00bd9e7"},
 ]
 
 [package.dependencies]
@@ -498,7 +498,7 @@ bedrock-data-automation-runtime = ["mypy-boto3-bedrock-data-automation-runtime (
 bedrock-runtime = ["mypy-boto3-bedrock-runtime (>=1.42.0,<1.43.0)"]
 billing = ["mypy-boto3-billing (>=1.42.0,<1.43.0)"]
 billingconductor = ["mypy-boto3-billingconductor (>=1.42.0,<1.43.0)"]
-boto3 = ["boto3 (==1.42.93)"]
+boto3 = ["boto3 (==1.42.94)"]
 braket = ["mypy-boto3-braket (>=1.42.0,<1.43.0)"]
 budgets = ["mypy-boto3-budgets (>=1.42.0,<1.43.0)"]
 ce = ["mypy-boto3-ce (>=1.42.0,<1.43.0)"]
@@ -2475,7 +2475,7 @@ description = "C parser in Python"
 optional = false
 python-versions = ">=3.8"
 groups = ["main", "dev"]
-markers = "platform_python_implementation != \"PyPy\" and implementation_name != \"PyPy\""
+markers = "implementation_name != \"PyPy\" and platform_python_implementation != \"PyPy\""
 files = [
     {file = "pycparser-2.22-py3-none-any.whl", hash = "sha256:c3702b6d3dd8c7abc1afa565d7e63d53a1d0bd86cdc24edd75470f4de499cfcc"},
     {file = "pycparser-2.22.tar.gz", hash = "sha256:491c8be9c040f5390f5bf44a5b07752bd07f56edf992381b05c701439eec10f6"},
@@ -3719,4 +3719,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10.0"
-content-hash = "e51510510f5de9f1960f8b77543e719c8ebfaebfe917664e68d1bcf20365055a"
+content-hash = "e15575e993e6260d1f7f5b7b0eaa9dd1ac76ffac002455f291252e503eae1569"
