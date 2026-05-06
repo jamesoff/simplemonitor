@@ -57,7 +57,7 @@ icmplib = "^3.0.3"
 packaging = "^26.1"
 
 [tool.poetry.group.dev.dependencies]
-boto3-stubs = {extras = ["sns"], version = "^1.42.94"}
+boto3-stubs = {extras = ["sns"], version = "^1.43.4"}
 codecov = "*"
 coverage = "*"
 mypy = "*"
