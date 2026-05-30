@@ -14,7 +14,10 @@ import datetime
 import logging
 import platform
 import subprocess  # nosec
+import re
 import time
+from urllib.parse import urlparse
+
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -41,6 +44,7 @@ from ..util import (
     subclass_dict_handler,
 )
 
+module_logger = logging.getLogger("simplemonitor")
 
 class Monitor:
     """Simple monitor. This class is abstract."""
@@ -65,6 +69,20 @@ class Monitor:
 
     _first_load = None  # type: Optional[arrow.Arrow]
     unavailable_seconds = 0  # type: int
+
+    def navlink_validate(self, name: str, url: str) -> str:
+        try:
+            cleaned_url = re.sub(r'[^a-zA-Z0-9/:///%/.]', '', url)
+            checked_url = urlparse(cleaned_url)
+            valid_url =all([checked_url.scheme in ['http', 'https', 'mailto'], checked_url.netloc])
+            if valid_url:
+                return cleaned_url
+            else:
+                module_logger.warning(f"Host {name} has an invalid navlink - ignoring")
+                return None
+        except ValueError:
+            module_logger.warning(f"Host {name} navlink is corrupt - ignoring")
+            return None
 
     def __init__(
         self, name: str = "unnamed", config_options: Optional[dict] = None
@@ -115,6 +133,8 @@ class Monitor:
         else:
             self.gps = None
 
+        self.navlink = self.navlink_validate(self.name, self.get_config_option("navlink", default=None))
+        
         self.slug = cast(Optional[str], self.get_config_option("slug"))
 
         self.running_on = short_hostname()
