@@ -503,21 +503,26 @@ class MonitorTLSCert(Monitor):
                 expiry = datetime.datetime.strptime(not_after, r"%b %d %H:%M:%S %Y %Z")
                 delta = expiry - datetime.datetime.utcnow()
                 days_left = delta.days
+                sni = (
+                    self.sni + " "
+                    if (self.sni and self.sni.casefold() != self.host.casefold())
+                    else ""
+                )
                 if days_left < self.min_days:
                     if days_left < 0:
                         return self.record_fail(
-                            "Certificate at {}:{} expired {} days ago".format(
-                                self.host, self.port, abs(days_left)
+                            "Certificate {}at {}:{} expired {} days ago".format(
+                                sni, self.host, self.port, abs(days_left)
                             )
                         )
                     return self.record_fail(
-                        "Certificate at {}:{} expires in {} days".format(
-                            self.host, self.port, days_left
+                        "Certificate {}at {}:{} expires in {} days".format(
+                            sni, self.host, self.port, days_left
                         )
                     )
                 return self.record_success(
-                    "Certificate at {}:{} has {} days left to expiry".format(
-                        self.host, self.port, days_left
+                    "Certificate {}at {}:{} has {} days left to expiry".format(
+                        sni, self.host, self.port, days_left
                     )
                 )
 
