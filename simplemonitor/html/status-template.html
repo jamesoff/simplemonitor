@@ -88,7 +88,7 @@
               data-placement="right"
               title="{{entry.description|e}}">
               {% if entry.monitor_url %}<a href="{{entry.monitor_url}}" target="_blank">{{entry.monitor_name}}</a>{% else %}{{entry.monitor_name}}{% endif %}
-              </span>
+            </span>
           </td>
           <td{% if entry.cell_class %} class="{{entry.cell_class}}"{% endif %}>{{entry.status_text}}</td>
           <td>{{entry.host}}</td>

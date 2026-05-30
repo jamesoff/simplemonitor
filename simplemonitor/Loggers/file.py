@@ -325,7 +325,7 @@ class HTMLLogger(Logger):
         else:
             status_text = "FAIL"
             row_class = "table-danger"
-        
+
         data_line = {
             "monitor_name": monitor.name,
             "monitor_url": monitor.navlink,
