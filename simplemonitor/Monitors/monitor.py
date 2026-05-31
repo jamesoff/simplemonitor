@@ -70,11 +70,11 @@ class Monitor:
     _first_load = None  # type: Optional[arrow.Arrow]
     unavailable_seconds = 0  # type: int
 
-    def navlink_validate(self, name: str, url: str) -> str:
+    def _navlink_validate(self, name: str, url: str) -> str:
         if not url:
             return ""
         try:
-            cleaned_url = re.sub(r"[^a-zA-Z0-9/:///%/.]", "", url)
+            cleaned_url = re.sub(r"[^a-zA-Z0-9\/:\\\%\.\-\_]", "", url)
             checked_url = urlparse(cleaned_url)
             valid_url = all(
                 [checked_url.scheme in ["http", "https", "mailto"], checked_url.netloc]
@@ -137,7 +137,7 @@ class Monitor:
         else:
             self.gps = None
 
-        self.navlink = self.navlink_validate(
+        self.navlink = self._navlink_validate(
             self.name, self.get_config_option("navlink", default=None)
         )
 
