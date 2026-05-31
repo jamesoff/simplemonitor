@@ -45,7 +45,7 @@ from .service import (
 from .unifi import MonitorUnifiFailover, MonitorUnifiFailoverWatchdog
 
 __all__ = [
-    "MonitorAPCUPSNMP",
+    "MonitorAPCUPSSNMP",
     "MonitorMQTT",
     "CompoundMonitor",
     "MonitorApcupsd",
