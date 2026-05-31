@@ -13,6 +13,7 @@ import copy
 import datetime
 import logging
 import platform
+import re
 import subprocess  # nosec
 import time
 from typing import (
@@ -26,6 +27,7 @@ from typing import (
     Union,
     cast,
 )
+from urllib.parse import urlparse
 
 import arrow
 
@@ -40,6 +42,8 @@ from ..util import (
     short_hostname,
     subclass_dict_handler,
 )
+
+module_logger = logging.getLogger("simplemonitor")
 
 
 class Monitor:
@@ -65,6 +69,24 @@ class Monitor:
 
     _first_load = None  # type: Optional[arrow.Arrow]
     unavailable_seconds = 0  # type: int
+
+    def _navlink_validate(self, name: str, url: str) -> str:
+        if not url:
+            return ""
+        try:
+            cleaned_url = re.sub(r"[^a-zA-Z0-9\/:\\\%\.\-\_]", "", url)
+            checked_url = urlparse(cleaned_url)
+            valid_url = all(
+                [checked_url.scheme in ["http", "https", "mailto"], checked_url.netloc]
+            )
+            if valid_url:
+                return cleaned_url
+            else:
+                module_logger.warning(f"Host {name} has an invalid navlink - ignoring")
+                return ""
+        except ValueError:
+            module_logger.warning(f"Host {name} navlink is corrupt - ignoring")
+            return ""
 
     def __init__(
         self, name: str = "unnamed", config_options: Optional[dict] = None
@@ -114,6 +136,10 @@ class Monitor:
             self.gps = [float(x) for x in _gps.split(",")]  # type: Optional[List[float]]
         else:
             self.gps = None
+
+        self.navlink = self._navlink_validate(
+            self.name, self.get_config_option("navlink", default=None)
+        )
 
         self.slug = cast(Optional[str], self.get_config_option("slug"))
 

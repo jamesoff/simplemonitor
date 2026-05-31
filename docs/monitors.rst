@@ -148,6 +148,14 @@ These options are common to all monitor types.
 
     Number of minutes between repeating alerts for this monitor (as though it had just failed). Note you will also need to enable :confval:`allow_reminders` on alerters for them to send reminders.
 
+.. confval:: navlink
+
+    :type: string
+    :required: false
+    :default: none
+
+    A clickable URL of type http, https or mailto that will be added to the monitor name in the HTML view
+
 .. _monitors-list:
 
 Monitors

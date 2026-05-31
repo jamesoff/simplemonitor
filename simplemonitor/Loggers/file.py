@@ -328,6 +328,7 @@ class HTMLLogger(Logger):
 
         data_line = {
             "monitor_name": monitor.name,
+            "monitor_url": monitor.navlink,
             "status": status,
             "status_text": status_text,
             "row_class": row_class,
