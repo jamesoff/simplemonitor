@@ -1179,11 +1179,11 @@ description = "Cross-platform colored terminal text."
 optional = false
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*,>=2.7"
 groups = ["main", "dev"]
-markers = "sys_platform == \"win32\" or platform_system == \"Windows\""
 files = [
     {file = "colorama-0.4.6-py2.py3-none-any.whl", hash = "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6"},
     {file = "colorama-0.4.6.tar.gz", hash = "sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44"},
 ]
+markers = {main = "sys_platform == \"win32\" or platform_system == \"Windows\"", dev = "platform_system == \"Windows\" or sys_platform == \"win32\""}
 
 [[package]]
 name = "colorlog"
@@ -3016,6 +3016,20 @@ files = [
 ]
 
 [[package]]
+name = "snmp"
+version = "1.2.1"
+description = "A user-friendly SNMP library"
+optional = false
+python-versions = ">=3.6"
+groups = ["main"]
+files = [
+    {file = "snmp-1.2.1.tar.gz", hash = "sha256:b958d73d92ff003346ce3419447eb7413d8927a4862f25eae6b909cbec2d6dd3"},
+]
+
+[package.dependencies]
+pycryptodome = ">=3.4,<4.0"
+
+[[package]]
 name = "snowballstemmer"
 version = "2.2.0"
 description = "This package provides 29 stemmers for 28 languages generated from Snowball algorithms."
@@ -3719,4 +3733,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10.0"
-content-hash = "4ec306478a471b8c6e80282f1d715d5c1f578eade33d57fd54c94fff3d4e8e53"
+content-hash = "c14a63cde05fcbf70ef435ba4c3d8d4b83ec19b8ad68d826afae51cf608aa637"

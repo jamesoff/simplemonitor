@@ -2,6 +2,7 @@
 Monitors for SimpleMonitor
 """
 
+from .apcupssnmp import MonitorAPCUPSSNMP
 from .arlo import MonitorArloCamera
 from .compound import CompoundMonitor, RemoteHostsMonitor
 from .file import MonitorBackup
@@ -44,6 +45,7 @@ from .service import (
 from .unifi import MonitorUnifiFailover, MonitorUnifiFailoverWatchdog
 
 __all__ = [
+    "MonitorAPCUPSSNMP",
     "MonitorMQTT",
     "CompoundMonitor",
     "MonitorApcupsd",
