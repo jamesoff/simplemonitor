@@ -458,7 +458,6 @@ class MonitorTLSCert(Monitor):
     def __init__(self, name: str, config_options: Optional[dict]) -> None:
         if config_options is None:
             config_options = {}
-        self.minimum_gap = 43200  # 12 hours
         super().__init__(name=name, config_options=config_options)
         self.host = cast(str, self.get_config_option("host", required=True))
         self.port = cast(
@@ -467,6 +466,9 @@ class MonitorTLSCert(Monitor):
         self.min_days = cast(
             int, self.get_config_option("min_days", required_type="int", default=7)
         )
+        self.minimum_gap = cast(
+            int, self.get_config_option("gap", required_type="int", default=43200)
+        )  # 12 hours
         if self.min_days < 0:
             raise ValueError("min_days must be 0 or greater")
         self.sni = cast(Optional[str], self.get_config_option("sni", required=False))
