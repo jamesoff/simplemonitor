@@ -130,7 +130,7 @@ All alerters accept time period configuration. By default, an alerter is active 
 
 Note that the :confval:`times_type` option sets the timezone all the values are interpreted as. The default is the local timezone of the host evaluating the logic.
 
-.. confval:: day
+.. confval:: days
 
     :type: comma-separated list of integer
     :required: false
