@@ -108,7 +108,7 @@
           <td>{{entry.failures}}</td>
           <td>{{entry.last_failure}}</td>
           {% endif %}
-          <td>{% if not entry.my_host %}{{entry.age}}{% endif %}</td>
+          <td>{% if not entry.my_host or entry.status_text == "OLD" %}{{entry.age}}{% endif %}</td>
         </tr>
 {%- endmacro -%}
 {% for entry in fail_entries -%}
