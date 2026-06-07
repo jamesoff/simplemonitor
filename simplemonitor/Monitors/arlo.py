@@ -4,7 +4,12 @@ Arlo monitoring for SimpleMonitor
 
 from typing import Optional, cast
 
-import pyaarlo
+try:
+    import pyaarlo
+
+    pyarlo_available = True
+except ImportError:
+    pyarlo_available = False
 
 from ..Monitors.monitor import Monitor, register
 
@@ -16,6 +21,8 @@ class MonitorArloCamera(Monitor):
     monitor_type = "arlo_camera"
 
     def __init__(self, name: str, config_options: dict) -> None:
+        if not pyarlo_available:
+            raise RuntimeError("pyarlo library is not installed")
         if "gap" not in config_options:
             config_options["gap"] = 21600  # 6 hours
         super().__init__(name, config_options)
