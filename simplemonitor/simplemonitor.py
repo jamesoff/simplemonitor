@@ -52,7 +52,7 @@ class SimpleMonitor:
         else:
             raise ValueError("config_file must be str or Path")
 
-        self.monitors = {}  # type: Dict[str, Monitor]
+        self.monitors: dict[str, Monitor] = {}
         self.failed = []  # type: List[str]
         self.still_failing = []  # type: List[str]
         self.skipped = []  # type: List[str]
@@ -469,6 +469,27 @@ class SimpleMonitor:
             self.monitors[key].reset_dependencies()
             self.monitors[key].ran_this_time = False
 
+    def _verify_dep_chain(self, monitor: str, chain: list[str] | None = None) -> bool:
+        """Check for a loop in a dependency chain"""
+        if chain is None:
+            chain = []
+        if len(self.monitors[monitor].dependencies) == 0:
+            return True
+        if monitor in chain:
+            module_logger.critical(
+                "Configuration error: dependency loop: %s which depends on %s",
+                " depends on ".join(chain),
+                monitor,
+            )
+            return False
+        chain.append(monitor)
+        return all(
+            [
+                self._verify_dep_chain(m, chain)
+                for m in self.monitors[monitor].dependencies
+            ]
+        )
+
     def _verify_dependencies(self) -> bool:
         """Check if all monitors have valid dependencies."""
         ok = True
@@ -482,6 +503,10 @@ class SimpleMonitor:
                         key,
                     )
                     ok = False
+        for key in self.monitors.keys():
+            if not self._verify_dep_chain(key):
+                ok = False
+                break
         return ok
 
     def verify_alerting(self) -> bool:
