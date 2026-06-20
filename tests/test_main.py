@@ -156,3 +156,19 @@ class TestFailedLogic(unittest.TestCase):
         m1.run_test()
         failed = s._failed_monitors()
         self.assertListEqual([], failed)
+
+
+class TestDependencyLoop(unittest.TestCase):
+    def test_loop(self):
+        s = simplemonitor.SimpleMonitor("tests/monitor-empty.ini")
+        s.add_monitor("a", MonitorNull("a", config_options={"depend": "b"}))
+        s.add_monitor("b", MonitorNull("b", config_options={"depend": "a"}))
+        self.assertFalse(s._verify_dep_chain("a"))
+        self.assertFalse(s._verify_dep_chain("b"))
+
+    def test_no_loop(self):
+        s = simplemonitor.SimpleMonitor("tests/monitor-empty.ini")
+        s.add_monitor("a", MonitorNull("a", config_options={"depend": "b"}))
+        s.add_monitor("b", MonitorNull("b", config_options={}))
+        self.assertTrue(s._verify_dep_chain("a"))
+        self.assertTrue(s._verify_dep_chain("b"))
