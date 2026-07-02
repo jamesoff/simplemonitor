@@ -3,10 +3,12 @@
 Alerting for SimpleMonitor
 """
 
+import calendar
 import datetime
 import logging
 import os
 import textwrap
+import time
 from enum import Enum
 from socket import gethostname
 from typing import Any, List, NoReturn, Optional, Tuple, Union, cast
@@ -130,15 +132,28 @@ class Alerter:
                 self._time_info = (time_info[0], time_info[1])
             except Exception as error:
                 raise RuntimeError("error processing time limit definition") from error
+        # Validate Days Information- convert all to int day of week
+        _valid_days = list(  # Input: 0-6, Monday-Sunday, Mon-Sun - output 0-6 only
+            list(range(0, 7)) + list(calendar.day_name) + list(calendar.day_abbr)
+        )
         self._days = cast(
             List[int],
             self.get_config_option(
                 "days",
                 required_type="[int]",
-                allowed_values=list(range(0, 7)),
+                allowed_values=_valid_days,
                 default=list(range(0, 7)),
             ),
         )
+        for dowindex, dowval in enumerate(self._days):
+            if not isinstance(dowval, int):
+                try:
+                    if len(dowval) > 3:  # Long Day name
+                        self._days[dowindex] = time.strptime(dowval, "%A").tm_wday
+                    elif len(dowval) > 1:  # Short Day name
+                        self._days[dowindex] = time.strptime(dowval, "%a").tm_wday
+                except Exception as error:
+                    raise RuntimeError("Invalid day of week specified") from error
         self._delay_notification = self.get_config_option(
             "delay", required_type="bool", default=False
         )
