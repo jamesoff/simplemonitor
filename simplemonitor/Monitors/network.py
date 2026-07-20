@@ -472,6 +472,9 @@ class MonitorTLSCert(Monitor):
         if self.min_days < 0:
             raise ValueError("min_days must be 0 or greater")
         self.sni = cast(Optional[str], self.get_config_option("sni", required=False))
+        self.timeout = cast(
+            int, self.get_config_option("timeout", required_type="int", default=5)
+        )
 
     def run_test(self) -> bool:
         ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
@@ -480,6 +483,7 @@ class MonitorTLSCert(Monitor):
         ssl_context.load_default_certs()
 
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.settimeout(self.timeout)
             with ssl_context.wrap_socket(
                 sock, server_hostname=self.sni if self.sni else None
             ) as ssl_sock:
