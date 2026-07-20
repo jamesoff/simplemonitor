@@ -492,6 +492,9 @@ class MonitorTLSCert(Monitor):
                 except socket.gaierror as error:
                     self.monitor_logger.exception("Failed to connect socket")
                     return self.record_fail("Failed to connect: {}".format(error))
+                except socket.timeout:
+                    self.monitor_logger.exception("Timeout during connect")
+                    return self.record_fail("Connection timed out")
                 except ssl.CertificateError as error:
                     self.monitor_logger.exception(
                         "SSL certification validation error: %s", error.verify_message
