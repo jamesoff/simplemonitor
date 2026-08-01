@@ -421,12 +421,25 @@ class MonitorPing(Monitor):
             int,
             self.get_config_option("count", required_type="int", default=1, minimum=1),
         )
+        self.family = cast(
+            Optional[int],
+            self.get_config_option(
+                "family",
+                required_type="int",
+                # None is here so the default is allowed
+                allowed_values=[None, 4, 6],
+                required=False,
+                default=None,
+            ),
+        )
 
     def run_test(self) -> bool:
         if "icmplib" not in sys.modules:
             return self.record_fail("Missing required icmplib module")
         try:
-            result = ping(self.host, count=self.count, timeout=self.timeout)
+            result = ping(
+                self.host, count=self.count, timeout=self.timeout, family=self.family
+            )
             if result.is_alive:
                 return self.record_success(
                     "RTT for {}: {:0.3f}ms".format(result.address, result.avg_rtt)
@@ -444,8 +457,12 @@ class MonitorPing(Monitor):
         return (self.host, self.timeout, self.count)
 
     def describe(self) -> str:
-        return "Checking {} pings within {} seconds ({} attempt(s))".format(
-            self.host, self.timeout, self.count
+        return "Checking {} pings within {} seconds ({} attempt{}{})".format(
+            self.host,
+            self.timeout,
+            self.count,
+            "s" if self.count > 1 else "",
+            f", IPv{self.family}" if self.family else "",
         )
 
 

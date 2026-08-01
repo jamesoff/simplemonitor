@@ -27,3 +27,10 @@ Pings a host to make sure it’s up. Uses a Python ping module instead of callin
     :default: ``1``
 
     the number of pings to send
+
+.. confval:: family
+
+    :type: int
+    :required: false
+
+    the ip family to use: ``4`` or ``6``. The default is no particular family.
