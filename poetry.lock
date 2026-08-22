@@ -3388,14 +3388,14 @@ types-setuptools = "*"
 
 [[package]]
 name = "types-paramiko"
-version = "4.0.0.20260508"
+version = "4.0.0.20260518"
 description = "Typing stubs for paramiko"
 optional = false
 python-versions = ">=3.10"
 groups = ["dev"]
 files = [
-    {file = "types_paramiko-4.0.0.20260508-py3-none-any.whl", hash = "sha256:a4389857b497b8eef8159cbf21dbd76c471c8d388acb2bca376c5ff023daa306"},
-    {file = "types_paramiko-4.0.0.20260508.tar.gz", hash = "sha256:3a00f0847fc4097ec99cfa53dca566169a50baefc93e2cace624642edec32bc1"},
+    {file = "types_paramiko-4.0.0.20260518-py3-none-any.whl", hash = "sha256:0ffaf1a6eb796833a49653cba4c7be13af51c8269d75234972d6239763dda270"},
+    {file = "types_paramiko-4.0.0.20260518.tar.gz", hash = "sha256:286f6830945cba63797eedf375ed87138d93198121253afe66c5d6dbcf91318d"},
 ]
 
 [package.dependencies]
