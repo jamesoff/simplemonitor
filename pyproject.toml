@@ -58,7 +58,7 @@ packaging = "^26.2"
 snmp = "^1.2.1"
 
 [tool.poetry.group.dev.dependencies]
-boto3-stubs = {extras = ["sns"], version = "^1.43.10"}
+boto3-stubs = {extras = ["sns"], version = "^1.43.18"}
 codecov = "*"
 coverage = "*"
 mypy = "*"
