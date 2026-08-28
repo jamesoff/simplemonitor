@@ -53,7 +53,7 @@ echo "VOLUME_MONITOR_EXPORT     "$VOLUME_MONITOR_EXPORT
 # exec entrypoint.py
 # == == == == == == == == == == == == == == ==
 cd /code
-simplemonitor
+python start_monitor_with_watcher.py
 
 # exec some other commands
 # == == == == == == == == == == == == == == ==

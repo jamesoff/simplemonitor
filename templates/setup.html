@@ -1,0 +1,375 @@
+{% extends "base.html" %}
+
+{% block title %}Setup - SimpleMonitor{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6 col-md-8 col-sm-10">
+        <div class="card shadow-lg border-0">
+            <div class="card-body p-5">
+                <!-- Header -->
+                <div class="text-center mb-4">
+                    <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                         style="width: 60px; height: 60px;">
+                        <i class="fas fa-rocket text-white fs-3"></i>
+                    </div>
+                    <h3 class="fw-bold text-primary mb-2">Setup SimpleMonitor</h3>
+                    <p class="text-muted">Create your admin account to get started</p>
+                </div>
+
+                <!-- Setup Form -->
+                <form method="POST" id="setupForm" novalidate>
+                    <div class="mb-4">
+                        <label for="username" class="form-label">
+                            <i class="fas fa-user me-2"></i>Admin Username
+                        </label>
+                        <input type="text" class="form-control form-control-lg" id="username" name="username" 
+                               placeholder="Enter admin username" required autofocus>
+                        <div class="invalid-feedback">
+                            Please provide a valid username.
+                        </div>
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Choose a secure username for your admin account
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="password" class="form-label">
+                            <i class="fas fa-lock me-2"></i>Password
+                        </label>
+                        <div class="input-group">
+                            <input type="password" class="form-control form-control-lg" id="password" name="password" 
+                                   placeholder="Enter admin password" required>
+                            <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <div class="invalid-feedback">
+                            Please provide a valid password.
+                        </div>
+                        <div class="form-text">
+                            <i class="fas fa-shield-alt me-1"></i>
+                            Use a strong password with at least 8 characters
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="confirmPassword" class="form-label">
+                            <i class="fas fa-lock me-2"></i>Confirm Password
+                        </label>
+                        <div class="input-group">
+                            <input type="password" class="form-control form-control-lg" id="confirmPassword" 
+                                   placeholder="Confirm your password" required>
+                            <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPassword">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <div class="invalid-feedback">
+                            Passwords do not match.
+                        </div>
+                    </div>
+
+                    <!-- Password Strength Indicator -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="form-label mb-0">Password Strength</span>
+                            <span id="passwordStrength" class="badge bg-secondary">Weak</span>
+                        </div>
+                        <div class="progress" style="height: 4px;">
+                            <div class="progress-bar" id="passwordStrengthBar" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid mb-4">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-rocket me-2"></i>Create Admin Account
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Security Notice -->
+                <div class="alert alert-info border-0">
+                    <div class="d-flex align-items-start">
+                        <i class="fas fa-info-circle me-3 mt-1"></i>
+                        <div>
+                            <h6 class="alert-heading mb-2">Security Notice</h6>
+                            <p class="mb-0 small">
+                                This will create the first admin account for your SimpleMonitor instance. 
+                                Make sure to use a strong password and keep your credentials secure.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Features Preview -->
+                <div class="row g-3 mt-4">
+                    <div class="col-4">
+                        <div class="text-center">
+                            <div class="bg-success rounded-circle d-inline-flex align-items-center justify-content-center mb-2" 
+                                 style="width: 40px; height: 40px;">
+                                <i class="fas fa-eye text-white"></i>
+                            </div>
+                            <div class="small text-muted">Real-time Monitoring</div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="text-center">
+                            <div class="bg-warning rounded-circle d-inline-flex align-items-center justify-content-center mb-2" 
+                                 style="width: 40px; height: 40px;">
+                                <i class="fas fa-sms text-white"></i>
+                            </div>
+                            <div class="small text-muted">SMS Alerts</div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="text-center">
+                            <div class="bg-info rounded-circle d-inline-flex align-items-center justify-content-center mb-2" 
+                                 style="width: 40px; height: 40px;">
+                                <i class="fas fa-chart-line text-white"></i>
+                            </div>
+                            <div class="small text-muted">Analytics</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize form
+    initForm();
+    
+    // Add animations
+    addAnimations();
+});
+
+function initForm() {
+    const form = document.getElementById('setupForm');
+    const passwordInput = document.getElementById('password');
+    const confirmPasswordInput = document.getElementById('confirmPassword');
+    const togglePassword = document.getElementById('togglePassword');
+    const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
+    
+    // Password toggles
+    togglePassword.addEventListener('click', function() {
+        togglePasswordVisibility(passwordInput, this);
+    });
+    
+    toggleConfirmPassword.addEventListener('click', function() {
+        togglePasswordVisibility(confirmPasswordInput, this);
+    });
+    
+    // Password strength checker
+    passwordInput.addEventListener('input', function() {
+        checkPasswordStrength(this.value);
+        validatePasswordMatch();
+    });
+    
+    confirmPasswordInput.addEventListener('input', function() {
+        validatePasswordMatch();
+    });
+    
+    // Form validation
+    form.addEventListener('submit', function(event) {
+        if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        
+        form.classList.add('was-validated');
+    });
+    
+    // Real-time validation
+    const inputs = form.querySelectorAll('input');
+    inputs.forEach(input => {
+        input.addEventListener('blur', function() {
+            validateField(this);
+        });
+        
+        input.addEventListener('input', function() {
+            if (this.classList.contains('is-invalid')) {
+                validateField(this);
+            }
+        });
+    });
+}
+
+function togglePasswordVisibility(input, button) {
+    const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+    input.setAttribute('type', type);
+    
+    const icon = button.querySelector('i');
+    icon.classList.toggle('fa-eye');
+    icon.classList.toggle('fa-eye-slash');
+}
+
+function checkPasswordStrength(password) {
+    const strengthBar = document.getElementById('passwordStrengthBar');
+    const strengthText = document.getElementById('passwordStrength');
+    
+    let strength = 0;
+    let strengthLabel = 'Weak';
+    let strengthClass = 'bg-danger';
+    
+    // Length check
+    if (password.length >= 8) strength += 20;
+    if (password.length >= 12) strength += 10;
+    
+    // Character variety checks
+    if (/[a-z]/.test(password)) strength += 10;
+    if (/[A-Z]/.test(password)) strength += 10;
+    if (/[0-9]/.test(password)) strength += 10;
+    if (/[^A-Za-z0-9]/.test(password)) strength += 10;
+    
+    // Pattern checks
+    if (password.length >= 8 && /[a-z]/.test(password) && /[A-Z]/.test(password)) strength += 10;
+    if (password.length >= 8 && /[0-9]/.test(password) && /[^A-Za-z0-9]/.test(password)) strength += 10;
+    
+    // Determine strength level
+    if (strength >= 70) {
+        strengthLabel = 'Strong';
+        strengthClass = 'bg-success';
+    } else if (strength >= 40) {
+        strengthLabel = 'Medium';
+        strengthClass = 'bg-warning';
+    } else {
+        strengthLabel = 'Weak';
+        strengthClass = 'bg-danger';
+    }
+    
+    // Update UI
+    strengthBar.style.width = strength + '%';
+    strengthBar.className = 'progress-bar ' + strengthClass;
+    strengthText.textContent = strengthLabel;
+    strengthText.className = 'badge ' + strengthClass;
+}
+
+function validatePasswordMatch() {
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    const confirmPasswordInput = document.getElementById('confirmPassword');
+    
+    if (confirmPassword && password !== confirmPassword) {
+        confirmPasswordInput.setCustomValidity('Passwords do not match');
+        confirmPasswordInput.classList.add('is-invalid');
+        confirmPasswordInput.classList.remove('is-valid');
+    } else if (confirmPassword && password === confirmPassword) {
+        confirmPasswordInput.setCustomValidity('');
+        confirmPasswordInput.classList.remove('is-invalid');
+        confirmPasswordInput.classList.add('is-valid');
+    }
+}
+
+function validateField(field) {
+    if (field.checkValidity()) {
+        field.classList.remove('is-invalid');
+        field.classList.add('is-valid');
+    } else {
+        field.classList.remove('is-valid');
+        field.classList.add('is-invalid');
+    }
+}
+
+function addAnimations() {
+    // Animate card entrance
+    const card = document.querySelector('.card');
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(30px)';
+    
+    setTimeout(() => {
+        card.style.transition = 'all 0.6s ease-out';
+        card.style.opacity = '1';
+        card.style.transform = 'translateY(0)';
+    }, 100);
+    
+    // Animate feature icons
+    const featureIcons = document.querySelectorAll('.bg-success, .bg-warning, .bg-info');
+    featureIcons.forEach((icon, index) => {
+        icon.style.opacity = '0';
+        icon.style.transform = 'scale(0.5)';
+        
+        setTimeout(() => {
+            icon.style.transition = 'all 0.4s ease-out';
+            icon.style.opacity = '1';
+            icon.style.transform = 'scale(1)';
+        }, 300 + (index * 100));
+    });
+    
+    // Animate progress bar
+    const progressBar = document.getElementById('passwordStrengthBar');
+    progressBar.style.transition = 'width 0.3s ease-out';
+}
+</script>
+
+<style>
+.card {
+    border-radius: 1rem;
+}
+
+.form-control-lg {
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+}
+
+.btn-lg {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.input-group .btn {
+    border-left: none;
+}
+
+.input-group .form-control:focus {
+    border-right: none;
+}
+
+.input-group .form-control:focus + .btn {
+    border-color: var(--primary-color);
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25);
+}
+
+.was-validated .form-control:valid {
+    border-color: var(--success-color);
+}
+
+.was-validated .form-control:invalid {
+    border-color: var(--danger-color);
+}
+
+.progress {
+    border-radius: 2px;
+}
+
+.progress-bar {
+    transition: width 0.3s ease-out;
+}
+
+.bg-primary, .bg-success, .bg-warning, .bg-info {
+    transition: all 0.3s ease;
+}
+
+.bg-primary:hover, .bg-success:hover, .bg-warning:hover, .bg-info:hover {
+    transform: scale(1.1);
+}
+
+.alert {
+    border-radius: 0.5rem;
+}
+
+.alert-heading {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+</style>
+{% endblock %}

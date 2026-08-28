@@ -1,0 +1,438 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - SimpleMonitor{% endblock %}
+
+{% block content %}
+<!-- Header Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="fw-bold mb-2">
+                    <i class="fas fa-tachometer-alt me-2 text-primary"></i> Dashboard
+                </h2>
+                <p class="text-muted mb-0">Monitor your network infrastructure at a glance</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('realtime_dashboard') }}" class="btn btn-primary">
+                    <i class="fas fa-chart-line me-2"></i> Real-time View
+                </a>
+                {% if session.is_admin %}
+                <a href="{{ url_for('add_monitor') }}" class="btn btn-success">
+                    <i class="fas fa-plus me-2"></i> Add Monitor
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Stats -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-3 col-md-6">
+        <div class="stats-card">
+            <div class="d-flex align-items-center">
+                <div class="flex-shrink-0">
+                    <div class="bg-primary rounded-circle p-3">
+                        <i class="fas fa-list text-white fs-4"></i>
+                    </div>
+                </div>
+                <div class="flex-grow-1 ms-3">
+                    <div class="stats-number" id="total-monitors">{{ monitors|length }}</div>
+                    <div class="stats-label">Total Monitors</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stats-card">
+            <div class="d-flex align-items-center">
+                <div class="flex-shrink-0">
+                    <div class="bg-success rounded-circle p-3">
+                        <i class="fas fa-check text-white fs-4"></i>
+                    </div>
+                </div>
+                <div class="flex-grow-1 ms-3">
+                    <div class="stats-number" id="healthy-monitors">{{ monitors|selectattr('enabled')|list|length }}</div>
+                    <div class="stats-label">Healthy</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stats-card">
+            <div class="d-flex align-items-center">
+                <div class="flex-shrink-0">
+                    <div class="bg-danger rounded-circle p-3">
+                        <i class="fas fa-times text-white fs-4"></i>
+                    </div>
+                </div>
+                <div class="flex-grow-1 ms-3">
+                    <div class="stats-number" id="failed-monitors">0</div>
+                    <div class="stats-label">Failed</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stats-card">
+            <div class="d-flex align-items-center">
+                <div class="flex-shrink-0">
+                    <div class="bg-warning rounded-circle p-3">
+                        <i class="fas fa-pause text-white fs-4"></i>
+                    </div>
+                </div>
+                <div class="flex-grow-1 ms-3">
+                    <div class="stats-number" id="disabled-monitors">{{ monitors|rejectattr('enabled')|list|length }}</div>
+                    <div class="stats-label">Disabled</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-area me-2"></i> Monitor Status Overview
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="statusChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie me-2"></i> Status Distribution
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="pieChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-history me-2"></i> Recent Activity
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="timeline" id="activityTimeline">
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-history fa-2x mb-3"></i>
+                        <p>No recent activity to display</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-bell me-2"></i> Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    {% if session.is_admin %}
+                    <a href="{{ url_for('add_monitor') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i> Add New Monitor
+                    </a>
+                    <a href="{{ url_for('settings') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-cog me-2"></i> Settings
+                    </a>
+                    {% endif %}
+                    <a href="{{ url_for('realtime_dashboard') }}" class="btn btn-outline-success">
+                        <i class="fas fa-chart-line me-2"></i> Real-time View
+                    </a>
+                    <a href="{{ url_for('monitors') }}" class="btn btn-outline-info">
+                        <i class="fas fa-list me-2"></i> All Monitors
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Monitors Grid -->
+<div class="row g-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-list me-2"></i> Monitors Overview
+                </h5>
+                <a href="{{ url_for('monitors') }}" class="btn btn-sm btn-outline-primary">
+                    View All <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+            <div class="card-body">
+                {% if monitors %}
+                <div class="row g-3">
+                    {% for monitor in monitors[:6] %}
+                    <div class="col-lg-4 col-md-6">
+                        <div class="monitor-card p-3 border rounded-3">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="flex-shrink-0">
+                                    {% if monitor.monitor_type == 'http' %}
+                                    <i class="fas fa-globe text-primary fs-4"></i>
+                                    {% elif monitor.monitor_type == 'host' %}
+                                    <i class="fas fa-network-wired text-success fs-4"></i>
+                                    {% elif monitor.monitor_type == 'dns' %}
+                                    <i class="fas fa-server text-info fs-4"></i>
+                                    {% elif monitor.monitor_type == 'diskspace' %}
+                                    <i class="fas fa-hdd text-warning fs-4"></i>
+                                    {% elif monitor.monitor_type == 'memory' %}
+                                    <i class="fas fa-memory text-danger fs-4"></i>
+                                    {% elif monitor.monitor_type == 'process' %}
+                                    <i class="fas fa-terminal text-secondary fs-4"></i>
+                                    {% else %}
+                                    <i class="fas fa-cog text-muted fs-4"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="fw-bold mb-1">{{ monitor.name }}</h6>
+                                    <div class="d-flex align-items-center">
+                                        {% if monitor.enabled %}
+                                        <span class="badge bg-success me-2">Active</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary me-2">Disabled</span>
+                                        {% endif %}
+                                        <span class="badge bg-info">{{ monitor.monitor_type|title }}</span>
+                                    </div>
+                                </div>
+                                <div class="flex-shrink-0">
+                                    {% if monitor.sms_enabled %}
+                                    <i class="fas fa-sms text-warning" title="SMS Alerts Enabled"></i>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    <i class="fas fa-clock me-1"></i>
+                                    {{ monitor.created_at.strftime('%Y-%m-%d') }}
+                                </small>
+                                <a href="{{ url_for('view_monitor', monitor_id=monitor.id) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-list fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No Monitors Configured</h5>
+                    <p class="text-muted">Get started by adding your first monitor</p>
+                    {% if session.is_admin %}
+                    <a href="{{ url_for('add_monitor') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i> Add Monitor
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize charts
+    initStatusChart();
+    initPieChart();
+    
+    // Update stats with animation
+    animateStats();
+});
+
+function initStatusChart() {
+    const ctx = document.getElementById('statusChart').getContext('2d');
+    
+    // Initialize with empty data - will be populated with real data
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Healthy',
+                data: [],
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                tension: 0.4,
+                fill: true
+            }, {
+                label: 'Failed',
+                data: [],
+                borderColor: '#ef4444',
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+}
+
+function initPieChart() {
+    const ctx = document.getElementById('pieChart').getContext('2d');
+    
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Healthy', 'Failed', 'Disabled'],
+            datasets: [{
+                data: [{{ monitors|selectattr('enabled')|list|length }}, 0, {{ monitors|rejectattr('enabled')|list|length }}],
+                backgroundColor: [
+                    '#10b981',
+                    '#ef4444',
+                    '#6b7280'
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                }
+            }
+        }
+    });
+}
+
+function animateStats() {
+    const stats = [
+        { id: 'total-monitors', value: {{ monitors|length }} },
+        { id: 'healthy-monitors', value: {{ monitors|selectattr('enabled')|list|length }} },
+        { id: 'failed-monitors', value: 0 },
+        { id: 'disabled-monitors', value: {{ monitors|rejectattr('enabled')|list|length }} }
+    ];
+    
+    stats.forEach(stat => {
+        const element = document.getElementById(stat.id);
+        if (element) {
+            animateNumber(element, 0, stat.value, 1500);
+        }
+    });
+}
+
+function animateNumber(element, start, end, duration) {
+    const startTime = performance.now();
+    
+    function updateNumber(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        const current = start + (end - start) * easeOutCubic(progress);
+        element.textContent = Math.round(current);
+        
+        if (progress < 1) {
+            requestAnimationFrame(updateNumber);
+        }
+    }
+    
+    requestAnimationFrame(updateNumber);
+}
+
+function easeOutCubic(t) {
+    return 1 - Math.pow(1 - t, 3);
+}
+
+// Add hover effects to monitor cards
+document.addEventListener('DOMContentLoaded', function() {
+    const monitorCards = document.querySelectorAll('.monitor-card');
+    monitorCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px)';
+            this.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = 'none';
+        });
+    });
+});
+</script>
+
+<style>
+.timeline {
+    position: relative;
+    padding-left: 2rem;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 0.75rem;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #e5e7eb;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -2rem;
+    top: 0.25rem;
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 0 0 2px #e5e7eb;
+}
+
+.timeline-content {
+    padding-left: 1rem;
+}
+
+.monitor-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.monitor-card:hover {
+    border-color: var(--primary-color) !important;
+}
+</style>
+{% endblock %}

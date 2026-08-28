@@ -4,7 +4,7 @@
 FROM python:3.12-alpine
 
 # >> meta :: labels
-LABEL   version_dockerfile="21-01-2024:prod" \
+LABEL   version_dockerfile="21-01-2024:webapp" \
         version_image="python:3.12-alpine"
 
 # >> package :: install (Layer 1: System packages - rarely change)
@@ -21,21 +21,18 @@ RUN     apk --no-cache add --update \
             openssl-dev \
             libffi-dev \
             rust \
-            cargo
+            cargo \
+            # __ install :: docker
+            docker-cli
 
 # >> env :: web/docker paths (Layer 2: Environment variables)
 ENV     DOCKER_ROOT=/code \
-        DOCKER_HTML_ROOT=/code/html \
-        DOCKER_HTML_BACKUP=/code/html-backup \
-        DOCKER_ENTRYPOINT_BINARY=/bin/monitor.entrypoint.sh \
-        DOCKER_ENTRYPOINT_ORIGIN=/code/docker/monitor.entrypoint.sh
+        DOCKER_WEBAPP_ROOT=/code/webapp \
+        DOCKER_ENTRYPOINT_BINARY=/bin/webapp.entrypoint.sh \
+        DOCKER_ENTRYPOINT_ORIGIN=/code/docker/webapp.entrypoint.sh
 
 # >> env :: source/host paths
 ENV     SOURCE_ROOT=./
-
-# >> env :: volumes
-ENV     VOLUME_UNIVERSAL_HTML=$DOCKER_HTML_ROOT \
-        VOLUME_MONITOR_EXPORT=/code/monitor-export
 
 # >> env :: user/groups
 ENV     MAIN_USER=simplemonitor \
@@ -51,23 +48,14 @@ WORKDIR $DOCKER_ROOT
 RUN     pip install --upgrade pip
 
 # >> copy requirements first for better caching (Layer 5: Dependencies)
-COPY    pyproject.toml poetry.lock README.md ./
+COPY    requirements-webapp.txt ./
+RUN     pip install --no-cache-dir -r requirements-webapp.txt
 
 # >> copy source code (Layer 6: Application code - changes frequently)
 COPY    . .
 
-# >> install package (Layer 7: Install SimpleMonitor)
-RUN     pip install --no-cache-dir .
-
-# >> install config watcher dependencies (Layer 8: Additional Python packages)
-RUN     pip install --no-cache-dir requests
-
-# >> prepare :: volumes
-RUN     mkdir -p $VOLUME_MONITOR_EXPORT $DOCKER_HTML_ROOT
-
-# >> setup :: volumes
-VOLUME  $VOLUME_UNIVERSAL_HTML \
-        $VOLUME_MONITOR_EXPORT
+# >> prepare :: webapp directory
+RUN     mkdir -p $DOCKER_WEBAPP_ROOT
 
 # >> add :: user, group, project-directory-rights
 RUN     addgroup -g $MAIN_GROUP_ID $MAIN_GROUP \
@@ -78,5 +66,8 @@ RUN     addgroup -g $MAIN_GROUP_ID $MAIN_GROUP \
 RUN     cp $DOCKER_ENTRYPOINT_ORIGIN $DOCKER_ENTRYPOINT_BINARY \
         && chmod +x $DOCKER_ENTRYPOINT_BINARY
 
-# Start the monitor
-CMD     ["/bin/monitor.entrypoint.sh"]
+# >> expose :: port
+EXPOSE  5000
+
+# Start the webapp
+CMD     ["/bin/webapp.entrypoint.sh"]
