@@ -136,7 +136,7 @@ Note that the :confval:`times_type` option sets the timezone all the values are 
     :required: false
     :default: all days
 
-    which days an alerter can operate on. ``0`` is Monday, ``6`` is Sunday.
+    which days an alerter can operate on. ``0`` is Monday, ``6`` is Sunday. Mon or Sunday are also valid values.
 
 .. confval:: times_type
 

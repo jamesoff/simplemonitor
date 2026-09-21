@@ -1,6 +1,6 @@
 [project]
 name = "simplemonitor"
-version = "1.15.0"
+version = "1.15.1"
 description = "A simple network and host monitor"
 license = "BSD-3-Clause"
 authors = [

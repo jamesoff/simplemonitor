@@ -5,6 +5,7 @@ from typing import Any
 
 import arrow
 
+from ..Monitors.monitor import MonitorTimeFilter
 from . import MonitorState
 
 DATETIME_MAGIC_TOKEN = "__simplemonitor_datetime"  # nosec
@@ -23,6 +24,8 @@ class JSONEncoder(json.JSONEncoder):
             return "<removed compiled regexp object>"
         if isinstance(o, MonitorState):
             return {MONITORSTATE_MAGIC_TOKEN: o.name}
+        if isinstance(o, MonitorTimeFilter):
+            return str(o.name)
         if isinstance(o, arrow.Arrow):
             return {ARROW_MAGIC_TOKEN: o.for_json()}
         return super(JSONEncoder, self).default(o)

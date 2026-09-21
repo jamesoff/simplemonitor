@@ -35,6 +35,7 @@ class MonitorState(Enum):
     SKIPPED = 1  # monitor was skipped
     OK = 2  # monitor is ok
     FAILED = 3  # monitor has failed
+    MAINTENANCE = 4  # Monitor is in Maintenance mode
 
 
 class UpDownTime:
