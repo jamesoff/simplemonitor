@@ -1,7 +1,7 @@
 # -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 # >> python @ alpine
 # -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
-FROM python:3.12-alpine
+FROM python:3.13.0a4-alpine
 
 # >> meta :: labels
 LABEL   version_dockerfile="21-01-2024:prod" \
