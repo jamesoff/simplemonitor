@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Settings{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2><i class="fas fa-cog"></i> Settings</h2>
+        <p class="text-muted">Configure system settings and API keys</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-key"></i> API Configuration
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-4">
+                        <h6 class="text-primary">
+                            <i class="fas fa-sms"></i> Twilio SMS Configuration
+                        </h6>
+                        <p class="text-muted">Configure Twilio for SMS alerts when monitors fail</p>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="twilio_sid" class="form-label">Account SID</label>
+                                    <input type="text" class="form-control" id="twilio_sid" name="twilio_sid" 
+                                           value="{{ settings.twilio_sid or '' }}" placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+                                    <div class="form-text">Your Twilio Account SID</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="twilio_token" class="form-label">Auth Token</label>
+                                    <input type="password" class="form-control" id="twilio_token" name="twilio_token" 
+                                           value="{{ settings.twilio_token or '' }}" placeholder="Your auth token">
+                                    <div class="form-text">Your Twilio Auth Token</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="twilio_from" class="form-label">From Phone Number</label>
+                            <input type="tel" class="form-control" id="twilio_from" name="twilio_from" 
+                                   value="{{ settings.twilio_from or '' }}" placeholder="+1234567890">
+                            <div class="form-text">Your Twilio phone number (include country code)</div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Dashboard
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Settings
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-info-circle"></i> Setup Instructions
+                </h5>
+            </div>
+            <div class="card-body">
+                <h6>Twilio Setup:</h6>
+                <ol class="small">
+                    <li>Sign up for a <a href="https://www.twilio.com" target="_blank">Twilio account</a></li>
+                    <li>Get your Account SID and Auth Token from the console</li>
+                    <li>Purchase a phone number for sending SMS</li>
+                    <li>Enter the credentials above</li>
+                </ol>
+                
+                <hr>
+                
+                <h6>Monitor Configuration:</h6>
+                <ul class="small">
+                    <li>Add monitors through the "Add Monitor" page</li>
+                    <li>Enable SMS alerts for individual monitors</li>
+                    <li>Configuration is automatically reloaded</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-cogs"></i> System Status
+                </h5>
+            </div>
+            <div class="card-body">
+                <dl class="row small">
+                    <dt class="col-6">Flask App:</dt>
+                    <dd class="col-6"><span class="badge bg-success">Running</span></dd>
+                    
+                    <dt class="col-6">SimpleMonitor:</dt>
+                    <dd class="col-6"><span class="badge bg-success">Running</span></dd>
+                    
+                    <dt class="col-6">Web Server:</dt>
+                    <dd class="col-6"><span class="badge bg-success">Running</span></dd>
+                    
+                    <dt class="col-6">Database:</dt>
+                    <dd class="col-6"><span class="badge bg-success">Connected</span></dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,615 @@
+{% extends "base.html" %}
+
+{% block title %}Add Monitor - SimpleMonitor{% endblock %}
+
+{% block content %}
+<!-- Header Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="fw-bold mb-2">
+                    <i class="fas fa-plus me-2 text-primary"></i> Add New Monitor
+                </h2>
+                <p class="text-muted mb-0">Configure a new monitoring target for your network infrastructure</p>
+            </div>
+            <a href="{{ url_for('monitors') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i> Back to Monitors
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Monitor Type Selection -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-cog me-2"></i> Select Monitor Type
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3" id="monitorTypeGrid">
+                    {% for type_key, type_info in monitor_types.items() %}
+                    <div class="col-lg-3 col-md-4 col-sm-6">
+                        <div class="monitor-type-card" data-type="{{ type_key }}">
+                            <div class="card h-100 border-2">
+                                <div class="card-body text-center">
+                                    <div class="monitor-type-icon mb-3">
+                                        {% if type_key == 'http' %}
+                                        <i class="fas fa-globe text-primary"></i>
+                                        {% elif type_key == 'host' %}
+                                        <i class="fas fa-network-wired text-success"></i>
+                                        {% elif type_key == 'dns' %}
+                                        <i class="fas fa-server text-info"></i>
+                                        {% elif type_key == 'diskspace' %}
+                                        <i class="fas fa-hdd text-warning"></i>
+                                        {% elif type_key == 'memory' %}
+                                        <i class="fas fa-memory text-danger"></i>
+                                        {% elif type_key == 'process' %}
+                                        <i class="fas fa-terminal text-secondary"></i>
+                                        {% elif type_key == 'command' %}
+                                        <i class="fas fa-terminal text-dark"></i>
+                                        {% else %}
+                                        <i class="fas fa-cog text-muted"></i>
+                                        {% endif %}
+                                    </div>
+                                    <h6 class="fw-bold mb-2">{{ type_info.name }}</h6>
+                                    <p class="text-muted small mb-3">{{ type_info.description }}</p>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="monitor_type" 
+                                               value="{{ type_key }}" id="type_{{ type_key }}">
+                                        <label class="form-check-label" for="type_{{ type_key }}">
+                                            Select
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Monitor Configuration Form -->
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-edit me-2"></i> Monitor Configuration
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="monitorForm" novalidate>
+                    <!-- Basic Information -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="fw-bold mb-3 text-primary">
+                                <i class="fas fa-info-circle me-2"></i> Basic Information
+                            </h6>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="name" class="form-label">
+                                Monitor Name <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="name" name="name" required
+                                   placeholder="Enter a descriptive name for this monitor">
+                            <div class="invalid-feedback">
+                                Please provide a valid monitor name.
+                            </div>
+                            <div class="form-text">Choose a name that clearly identifies what this monitor checks.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Monitor Type</label>
+                            <div class="form-control-plaintext" id="selectedType">
+                                <span class="text-muted">Select a monitor type above</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Configuration Fields -->
+                    <div id="configFields" class="mb-4" style="display: none;">
+                        <h6 class="fw-bold mb-3 text-primary">
+                            <i class="fas fa-cogs me-2"></i> Configuration
+                        </h6>
+                        <div id="dynamicFields">
+                            <!-- Dynamic fields will be inserted here -->
+                        </div>
+                    </div>
+
+                    <!-- SMS Alert Configuration -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="fw-bold mb-3 text-primary">
+                                <i class="fas fa-sms me-2"></i> SMS Alert Configuration
+                            </h6>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="sms_enabled" name="sms_enabled">
+                                <label class="form-check-label" for="sms_enabled">
+                                    <strong>Enable SMS Alerts</strong>
+                                    <div class="form-text">Receive SMS notifications when this monitor fails</div>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-6" id="smsPhoneField" style="display: none;">
+                            <label for="sms_phone" class="form-label">Phone Number</label>
+                            <input type="tel" class="form-control" id="sms_phone" name="sms_phone"
+                                   placeholder="+1234567890">
+                            <div class="form-text">Enter phone number in international format (e.g., +1234567890)</div>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i> Create Monitor
+                        </button>
+                        <a href="{{ url_for('monitors') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-2"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Panel -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-question-circle me-2"></i> Help & Tips
+                </h6>
+            </div>
+            <div class="card-body">
+                <div id="helpContent">
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-lightbulb fa-2x mb-3"></i>
+                        <p>Select a monitor type to see configuration help and examples.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monitor Types Reference -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-list me-2"></i> Monitor Types
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item d-flex align-items-center px-0">
+                        <i class="fas fa-globe text-primary me-3"></i>
+                        <div>
+                            <div class="fw-bold small">HTTP/HTTPS</div>
+                            <div class="text-muted small">Web services and APIs</div>
+                        </div>
+                    </div>
+                    <div class="list-group-item d-flex align-items-center px-0">
+                        <i class="fas fa-network-wired text-success me-3"></i>
+                        <div>
+                            <div class="fw-bold small">Host Ping</div>
+                            <div class="text-muted small">Network connectivity</div>
+                        </div>
+                    </div>
+                    <div class="list-group-item d-flex align-items-center px-0">
+                        <i class="fas fa-server text-info me-3"></i>
+                        <div>
+                            <div class="fw-bold small">DNS</div>
+                            <div class="text-muted small">Domain resolution</div>
+                        </div>
+                    </div>
+                    <div class="list-group-item d-flex align-items-center px-0">
+                        <i class="fas fa-hdd text-warning me-3"></i>
+                        <div>
+                            <div class="fw-bold small">Disk Space</div>
+                            <div class="text-muted small">Storage monitoring</div>
+                        </div>
+                    </div>
+                    <div class="list-group-item d-flex align-items-center px-0">
+                        <i class="fas fa-memory text-danger me-3"></i>
+                        <div>
+                            <div class="fw-bold small">Memory</div>
+                            <div class="text-muted small">RAM usage</div>
+                        </div>
+                    </div>
+                    <div class="list-group-item d-flex align-items-center px-0">
+                        <i class="fas fa-terminal text-secondary me-3"></i>
+                        <div>
+                            <div class="fw-bold small">Process</div>
+                            <div class="text-muted small">Running services</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize form
+    initForm();
+    
+    // Add hover effects to monitor type cards
+    addHoverEffects();
+    
+    // Setup form validation
+    setupValidation();
+});
+
+function initForm() {
+    const monitorTypeRadios = document.querySelectorAll('input[name="monitor_type"]');
+    const configFields = document.getElementById('configFields');
+    const dynamicFields = document.getElementById('dynamicFields');
+    const selectedType = document.getElementById('selectedType');
+    const helpContent = document.getElementById('helpContent');
+    const smsEnabled = document.getElementById('sms_enabled');
+    const smsPhoneField = document.getElementById('smsPhoneField');
+    
+    // Monitor type selection
+    monitorTypeRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.checked) {
+                const typeKey = this.value;
+                const typeInfo = getMonitorTypeInfo(typeKey);
+                
+                // Update selected type display
+                selectedType.innerHTML = `
+                    <span class="badge bg-primary fs-6">
+                        <i class="fas fa-${getMonitorIcon(typeKey)} me-1"></i>
+                        ${typeInfo.name}
+                    </span>
+                `;
+                
+                // Show configuration fields
+                configFields.style.display = 'block';
+                generateDynamicFields(typeKey, typeInfo, dynamicFields);
+                updateHelpContent(typeKey, typeInfo, helpContent);
+                
+                // Update form action
+                document.getElementById('monitorForm').action = '{{ url_for("add_monitor") }}';
+            }
+        });
+    });
+    
+    // SMS toggle
+    smsEnabled.addEventListener('change', function() {
+        if (this.checked) {
+            smsPhoneField.style.display = 'block';
+            document.getElementById('sms_phone').required = true;
+        } else {
+            smsPhoneField.style.display = 'none';
+            document.getElementById('sms_phone').required = false;
+        }
+    });
+}
+
+function getMonitorTypeInfo(typeKey) {
+    const types = {
+        'http': {
+            name: 'HTTP Check',
+            description: 'Check if a URL returns HTTP 200',
+            fields: [
+                {name: 'url', type: 'url', label: 'URL', required: true, placeholder: 'https://example.com'},
+                {name: 'tolerance', type: 'number', label: 'Tolerance', required: false, default: '1'},
+                {name: 'timeout', type: 'number', label: 'Timeout (seconds)', required: false, default: '5'},
+            ]
+        },
+        'host': {
+            name: 'Host Ping',
+            description: 'Check if a host is pingable',
+            fields: [
+                {name: 'host', type: 'text', label: 'Host/IP', required: true, placeholder: '8.8.8.8'},
+                {name: 'tolerance', type: 'number', label: 'Tolerance', required: false, default: '2'},
+            ]
+        },
+        'dns': {
+            name: 'DNS Check',
+            description: 'Check if a DNS record is resolvable',
+            fields: [
+                {name: 'record', type: 'text', label: 'DNS Record', required: true, placeholder: 'google.com'},
+                {name: 'record_type', type: 'select', label: 'Record Type', required: false, options: ['A', 'AAAA', 'MX', 'CNAME'], default: 'A'},
+            ]
+        },
+        'diskspace': {
+            name: 'Disk Space',
+            description: 'Check available disk space on a mounted volume',
+            fields: [
+                {name: 'path', type: 'text', label: 'Path', required: true, placeholder: '/'},
+                {name: 'threshold', type: 'number', label: 'Threshold (GB)', required: true, default: '10'},
+            ]
+        },
+        'memory': {
+            name: 'Memory Usage',
+            description: 'Check system memory usage',
+            fields: [
+                {name: 'threshold', type: 'number', label: 'Threshold (%)', required: true, default: '90'},
+            ]
+        },
+        'process': {
+            name: 'Process Check',
+            description: 'Check if a process is running',
+            fields: [
+                {name: 'name', type: 'text', label: 'Process Name', required: true, placeholder: 'nginx'},
+            ]
+        },
+        'command': {
+            name: 'Command Output',
+            description: 'Run a command and check its output',
+            fields: [
+                {name: 'command', type: 'text', label: 'Command', required: true, placeholder: 'echo hello'},
+                {name: 'expected_output', type: 'text', label: 'Expected Output', required: false},
+            ]
+        }
+    };
+    
+    return types[typeKey] || {name: 'Unknown', description: '', fields: []};
+}
+
+function generateDynamicFields(typeKey, typeInfo, container) {
+    container.innerHTML = '';
+    
+    typeInfo.fields.forEach(field => {
+        const fieldDiv = document.createElement('div');
+        fieldDiv.className = 'mb-3';
+        
+        const label = document.createElement('label');
+        label.className = 'form-label';
+        label.htmlFor = field.name;
+        label.innerHTML = `${field.label} ${field.required ? '<span class="text-danger">*</span>' : ''}`;
+        
+        let input;
+        if (field.type === 'select') {
+            input = document.createElement('select');
+            input.className = 'form-select';
+            input.name = field.name;
+            input.id = field.name;
+            if (field.required) input.required = true;
+            
+            field.options.forEach(option => {
+                const optionElement = document.createElement('option');
+                optionElement.value = option;
+                optionElement.textContent = option;
+                if (option === field.default) optionElement.selected = true;
+                input.appendChild(optionElement);
+            });
+        } else {
+            input = document.createElement('input');
+            input.type = field.type;
+            input.className = 'form-control';
+            input.name = field.name;
+            input.id = field.name;
+            input.placeholder = field.placeholder || '';
+            if (field.required) input.required = true;
+            if (field.default) input.value = field.default;
+        }
+        
+        const helpText = document.createElement('div');
+        helpText.className = 'form-text';
+        helpText.textContent = getFieldHelpText(typeKey, field.name);
+        
+        fieldDiv.appendChild(label);
+        fieldDiv.appendChild(input);
+        fieldDiv.appendChild(helpText);
+        container.appendChild(fieldDiv);
+    });
+}
+
+function getFieldHelpText(typeKey, fieldName) {
+    const helpTexts = {
+        'http': {
+            'url': 'Enter the full URL including protocol (http:// or https://)',
+            'tolerance': 'Number of consecutive failures before alerting (default: 1)',
+            'timeout': 'Request timeout in seconds (default: 5)'
+        },
+        'host': {
+            'host': 'Enter IP address or hostname to ping',
+            'tolerance': 'Number of consecutive failures before alerting (default: 2)'
+        },
+        'dns': {
+            'record': 'Enter the domain name to resolve',
+            'record_type': 'Type of DNS record to check (default: A)'
+        },
+        'diskspace': {
+            'path': 'Enter the mount point or directory path',
+            'threshold': 'Alert when free space drops below this value in GB'
+        },
+        'memory': {
+            'threshold': 'Alert when memory usage exceeds this percentage'
+        },
+        'process': {
+            'name': 'Enter the process name to check (e.g., nginx, apache2)'
+        },
+        'command': {
+            'command': 'Enter the command to execute',
+            'expected_output': 'Optional: expected output to match against'
+        }
+    };
+    
+    return helpTexts[typeKey]?.[fieldName] || '';
+}
+
+function updateHelpContent(typeKey, typeInfo, container) {
+    const helpExamples = {
+        'http': {
+            title: 'HTTP Monitor Examples',
+            examples: [
+                'https://api.example.com/health',
+                'https://www.google.com',
+                'https://status.github.com/api/status.json'
+            ]
+        },
+        'host': {
+            title: 'Host Ping Examples',
+            examples: [
+                '8.8.8.8 (Google DNS)',
+                '1.1.1.1 (Cloudflare DNS)',
+                'server.example.com'
+            ]
+        },
+        'dns': {
+            title: 'DNS Monitor Examples',
+            examples: [
+                'google.com (A record)',
+                'example.com (MX record)',
+                'subdomain.example.com (CNAME)'
+            ]
+        },
+        'diskspace': {
+            title: 'Disk Space Examples',
+            examples: [
+                '/ (root filesystem)',
+                '/var (log directory)',
+                '/home (user data)'
+            ]
+        },
+        'memory': {
+            title: 'Memory Monitor Tips',
+            examples: [
+                'Set threshold to 90% for critical servers',
+                'Set threshold to 95% for non-critical systems',
+                'Consider swap usage in calculations'
+            ]
+        },
+        'process': {
+            title: 'Process Monitor Examples',
+            examples: [
+                'nginx (web server)',
+                'mysql (database)',
+                'apache2 (web server)'
+            ]
+        },
+        'command': {
+            title: 'Command Monitor Examples',
+            examples: [
+                'df -h | grep / | awk \'{print $5}\'',
+                'systemctl is-active nginx',
+                'curl -s -o /dev/null -w "%{http_code}" https://example.com'
+            ]
+        }
+    };
+    
+    const help = helpExamples[typeKey] || {title: 'Help', examples: []};
+    
+    container.innerHTML = `
+        <h6 class="fw-bold mb-3">${help.title}</h6>
+        <div class="list-group list-group-flush">
+            ${help.examples.map(example => `
+                <div class="list-group-item px-0 py-2">
+                    <code class="small">${example}</code>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+function getMonitorIcon(typeKey) {
+    const icons = {
+        'http': 'globe',
+        'host': 'network-wired',
+        'dns': 'server',
+        'diskspace': 'hdd',
+        'memory': 'memory',
+        'process': 'terminal',
+        'command': 'terminal'
+    };
+    return icons[typeKey] || 'cog';
+}
+
+function addHoverEffects() {
+    const monitorTypeCards = document.querySelectorAll('.monitor-type-card');
+    monitorTypeCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.querySelector('.card').classList.add('border-primary');
+            this.querySelector('.card').style.transform = 'translateY(-2px)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.querySelector('.card').classList.remove('border-primary');
+            this.querySelector('.card').style.transform = 'translateY(0)';
+        });
+    });
+}
+
+function setupValidation() {
+    const form = document.getElementById('monitorForm');
+    
+    form.addEventListener('submit', function(event) {
+        if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        
+        form.classList.add('was-validated');
+    });
+    
+    // Real-time validation
+    const inputs = form.querySelectorAll('input, select');
+    inputs.forEach(input => {
+        input.addEventListener('blur', function() {
+            if (this.checkValidity()) {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            } else {
+                this.classList.remove('is-valid');
+                this.classList.add('is-invalid');
+            }
+        });
+    });
+}
+</script>
+
+<style>
+.monitor-type-card .card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.monitor-type-card .card:hover {
+    box-shadow: var(--card-shadow-lg);
+}
+
+.monitor-type-icon {
+    font-size: 2rem;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25);
+}
+
+.was-validated .form-control:valid,
+.was-validated .form-select:valid {
+    border-color: var(--success-color);
+}
+
+.was-validated .form-control:invalid,
+.was-validated .form-select:invalid {
+    border-color: var(--danger-color);
+}
+
+.list-group-item {
+    border: none;
+    padding: 0.5rem 0;
+}
+
+code {
+    background: #f8f9fa;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+}
+</style>
+{% endblock %}
