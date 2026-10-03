@@ -1,5 +1,4 @@
-import unittest
-from unittest import mock
+from unittest import TestCase, mock
 
 from simplemonitor.Alerters import nc
 from simplemonitor.Monitors import monitor
@@ -7,7 +6,7 @@ from simplemonitor.Monitors import monitor
 
 @mock.patch.object(nc, "PYMACOS_AVAILABLE", True)
 @mock.patch("platform.system", return_value="Darwin")
-class TestNotificationCenterAlerter(unittest.TestCase):
+class TestNotificationCenterAlerter(TestCase):
     def failed_monitor(self):
         m = monitor.MonitorFail("fail", {})
         m.run_test()
