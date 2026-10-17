@@ -5,11 +5,11 @@ SimpleMonitor alerts via macOS Notification Center
 import platform
 
 try:
-    import pync
+    import macos
 
-    PYNC_AVAILABLE = True
+    PYMACOS_AVAILABLE = True
 except ImportError:
-    PYNC_AVAILABLE = False
+    PYMACOS_AVAILABLE = False
 
 from ..Monitors.monitor import Monitor
 from .alerter import Alerter, AlertLength, AlertType, register
@@ -23,7 +23,7 @@ class NotificationCenterAlerter(Alerter):
 
     def __init__(self, config_options: dict) -> None:
         super().__init__(config_options)
-        if platform.system() != "Darwin" or not PYNC_AVAILABLE:
+        if platform.system() != "Darwin" or not PYMACOS_AVAILABLE:
             self.alerter_logger.critical(
                 "This alerter (currently) only works on Mac OS X!"
             )
@@ -31,8 +31,8 @@ class NotificationCenterAlerter(Alerter):
 
     def send_alert(self, name: str, monitor: Monitor) -> None:
         """Send the message"""
-        if not PYNC_AVAILABLE:
-            self.alerter_logger.critical("Missing pync package")
+        if not PYMACOS_AVAILABLE:
+            self.alerter_logger.critical("Missing pymacos package")
             return
         alert_type = self.should_alert(monitor)
         message = ""
@@ -42,7 +42,12 @@ class NotificationCenterAlerter(Alerter):
         message = self.build_message(AlertLength.NOTIFICATION, alert_type, monitor)
 
         if not self._dry_run:
-            pync.notify(message=message, title="SimpleMonitor")
+            try:
+                macos.notify(message, title="SimpleMonitor")
+            except Exception:
+                # Includes notifications being turned off, which macOS would
+                # otherwise drop without a word.
+                self.alerter_logger.exception("Couldn't send notification")
         else:
             self.alerter_logger.info("dry_run: would send message: %s", message)
 
