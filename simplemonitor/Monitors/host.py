@@ -355,9 +355,10 @@ class MonitorPkgAudit(Monitor):
         self.ignore_list = cast(
             list[str], self.get_config_option("ignore", required_type="list[str]")
         )
+        self.jail = cast(Optional[str], self.get_config_option("jail"))
 
     def describe(self) -> str:
-        return "Checking for insecure packages."
+        return f"Checking for insecure packages{' in jail {self.jail}' if self.jail else ''}"
 
     def get_params(self) -> Tuple:
         return (self.path,)
@@ -366,9 +367,12 @@ class MonitorPkgAudit(Monitor):
         if self.path == "":
             self.path = "/usr/local/sbin/pkg"
         try:
-            _output = subprocess.run(
-                [self.path, "audit", "--raw=json"], capture_output=True
-            )  # nosec
+            cmd = []
+            cmd.append(self.path)
+            if self.jail:
+                cmd.extend(["-j", self.jail])
+            cmd.extend(["audit", "--raw=json"])
+            _output = subprocess.run(cmd, capture_output=True)  # nosec
             output = json.loads(_output.stdout.decode("utf-8"))
         except json.JSONDecodeError as error:
             return self.record_fail(f"Failed to decode JSON output: {error}")

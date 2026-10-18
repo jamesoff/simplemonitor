@@ -19,3 +19,10 @@ Fails if ``pkg audit`` reports any vulnerable packages installed.
     a list of VuXML identifiers to ignore. These should be the
     GUID-style identifiers (they appear in the URL), for
     example ``613d0f9e-d477-11f0-9e85-03ddfea11990``.
+
+.. confval:: jail
+
+    :type: str
+    :required: false
+
+    the name of the jail to run ``pkg audit`` in
