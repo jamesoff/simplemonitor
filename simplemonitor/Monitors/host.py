@@ -376,10 +376,6 @@ class MonitorPkgAudit(Monitor):
                 cmd.extend(["-j", self.jail])
             cmd.extend(["audit", "--raw=json"])
             _output = subprocess.run(cmd, capture_output=True)  # nosec
-            if _output.returncode > 0:
-                return self.record_fail(
-                    f"pkg audit error: {_output.stderr.decode('utf-8')}"
-                )
             output = json.loads(_output.stdout.decode("utf-8"))
         except json.JSONDecodeError as error:
             self.monitor_logger.exception(error)
