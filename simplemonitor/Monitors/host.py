@@ -116,22 +116,20 @@ class MonitorFileStat(Monitor):
         try:
             statinfo = os.stat(self.filename)
         except FileNotFoundError:
-            return self.record_fail("File %s does not exist" % self.filename)
+            return self.record_fail(f"File {self.filename} does not exist")
         except Exception as error:
-            return self.record_fail("Unable to check file: %s" % error)
+            return self.record_fail(f"Unable to check file: {error}")
 
         if self.minsize:
             if statinfo.st_size < self.minsize:
                 return self.record_fail(
-                    "Size is %d, should be >= %d bytes"
-                    % (statinfo.st_size, self.minsize)
+                    f"Size is {statinfo.st_size}, should be >= {self.minsize} bytes"
                 )
 
         if self.maxsize:
             if statinfo.st_size > self.maxsize:
                 return self.record_fail(
-                    "Size is %d, should be <= %d bytes"
-                    % (statinfo.st_size, self.maxsize)
+                    f"Size is {statinfo.st_size}, should be <= {self.maxsize} bytes"
                 )
 
         now = time.time()
@@ -139,22 +137,20 @@ class MonitorFileStat(Monitor):
         if self.maxage:
             if diff > self.maxage:
                 return self.record_fail(
-                    "Age is %d, should be < %d seconds" % (diff, self.maxage)
+                    f"Age is {diff}, should be < {self.maxage} seconds"
                 )
 
         return self.record_success(
-            "File {} exists (age: {}, size: {})".format(
-                self.filename, int(diff), statinfo.st_size
-            )
+            f"File {self.filename} exists (age: {int(diff)}, size: {statinfo.st_size})"
         )
 
     def describe(self) -> str:
         """Explains what we do"""
-        desc = "Checking %s exists" % self.filename
+        desc = f"Checking {self.filename} exists"
         if self.maxage:
-            desc = desc + " and is not older than %d seconds" % self.maxage
+            desc = desc + f" and is not older than {self.maxage} seconds"
         if self.minsize:
-            desc = desc + " and is not smaller than %d bytes" % self.minsize
+            desc = desc + f" and is not smaller than {self.minsize} bytes"
         return desc
 
     def get_params(self) -> Tuple:
