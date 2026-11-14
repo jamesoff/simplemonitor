@@ -1,5 +1,6 @@
 # type: ignore
 import datetime
+import os
 import platform
 import time
 import unittest
@@ -7,11 +8,19 @@ from pathlib import Path
 from unittest import mock
 
 import arrow
+from freezegun import freeze_time
 
 from simplemonitor.Monitors.compound import CompoundMonitor
 from simplemonitor.Monitors.monitor import Monitor, MonitorFail, MonitorNull
 from simplemonitor.simplemonitor import SimpleMonitor
 from simplemonitor.util import MonitorState, UpDownTime
+
+# Create a consistent "local" timezone and offset for the tests, for tests that
+# compare the offset between UTC and local time. For simplicity and
+# predictability, use a time zone that doesn't have daylight savings.
+TZ_LOCAL = "America/Phoenix"
+TZ_LOCAL_OFFSET = -7
+TZ_UTC = "UTC"
 
 
 class TestMonitor(unittest.TestCase):
@@ -264,6 +273,122 @@ class TestMonitor(unittest.TestCase):
         self.assertEqual(
             m.should_run(), False, "monitor did should_run when it shouldn't have"
         )
+
+    @freeze_time("2020-03-10 22:00")  # A Tuesday
+    def test_maintenance_not_allowed_today(self):
+        m = Monitor(
+            config_options={
+                "days": "0,2,3,4,5,6",
+            }
+        )
+        self.assertEqual(m.allowed_day(), False, "Maintenance Day not allowed")
+
+    @freeze_time("2020-03-09 20:00")  # Monday UTC, but TZ will push to Tuesday
+    def test_maintenance_not_allowed_today_tz(self):
+        """
+        Test that we handle timezone conversion properly with disallowed days.
+        """
+        # Note: This doesn't map with either the regular "local" timezone _or_
+        # GMT; that's why we're explicitly setting times_tz offset to a
+        # positive value.
+        m = Monitor(config_options={"days": "0,2,3,4,5,6", "times_tz": "+05:00"})
+        self.assertEqual(
+            m.allowed_day(), False, "Maintenance Day not allowed due to TZ"
+        )
+
+    @freeze_time("2020-03-10 22:00")
+    def test_maintenance_allowed_today(self):
+        """
+        Test that we handle timezone conversion properly with allowed days.
+        """
+        m = Monitor(config_options={"days": "1"})
+        self.assertEqual(m.allowed_day(), True, "Maintenance Day should be allowed")
+
+    @freeze_time("2020-03-09 20:00")  # Monday UTC, but TZ will push to Tuesday
+    def test_maintenance_allowed_today_tz(self):
+        m = Monitor(config_options={"days": "1", "times_tz": "+05:00"})
+        self.assertEqual(m.allowed_day(), True, "Maintenance Day should be allowed")
+
+    @freeze_time("2020-03-10")
+    def test_maintenance_allowed_default(self):
+        m = Monitor()
+        self.assertEqual(m.allowed_day(), True, "Days should be always be allowed")
+
+    @freeze_time("10:00")
+    def test_maintenance_allowed_always(self):
+        m = Monitor()
+        self.assertEqual(m.allowed_time(), True, "Time should be always be allowed")
+
+    def test_maintenance_allowed_only(self):
+        """
+        Test logic with the "only" schedule (only between lower and upper
+        bounds).
+        """
+        m = Monitor(
+            config_options={
+                "times_type": "only",
+                "time_lower": "10:00",
+                "time_upper": "11:00",
+            }
+        )
+        with freeze_time("09:00"):
+            self.assertEqual(m.allowed_time(), False)
+        with freeze_time("10:30"):
+            self.assertEqual(m.allowed_time(), True)
+        with freeze_time("12:00"):
+            self.assertEqual(m.allowed_time(), False)
+
+    # Influence time_tz indirectly, though we could also set it directly in
+    # alerter.Alerter() below.
+    @mock.patch.dict(os.environ, {"TZ": TZ_LOCAL}, clear=True)
+    def test_maintenance_allowed_only_tz(self):
+        """Test `times_type=only` with the time in local time."""
+        m = Monitor(
+            config_options={
+                "times_type": "only",
+                "time_lower": "09:00",  # 9:00 America/Phoenix, 16:00 UTC
+                "time_upper": "10:00",  # 10:00 America/Phoenix, 17:00 UTC
+            }
+        )
+        with freeze_time("15:00"):
+            self.assertEqual(m.allowed_time(), False)
+        with freeze_time("16:30"):
+            self.assertEqual(m.allowed_time(), True)
+        with freeze_time("18:00"):
+            self.assertEqual(m.allowed_time(), False)
+
+    def test_maintenance_allowed_not(self):
+        """Test when using `times_type=not`."""
+        m = Monitor(
+            config_options={
+                "times_type": "not",
+                "time_lower": "10:00",
+                "time_upper": "11:00",
+            }
+        )
+        with freeze_time("09:00"):
+            self.assertEqual(m.allowed_time(), True)
+        with freeze_time("10:30"):
+            self.assertEqual(m.allowed_time(), False)
+        with freeze_time("12:00"):
+            self.assertEqual(m.allowed_time(), True)
+
+    @mock.patch.dict(os.environ, {"TZ": TZ_LOCAL}, clear=True)
+    def test_maintenance_allowed_not_tz(self):
+        """Test this variant for a specific timezone."""
+        m = Monitor(
+            config_options={
+                "times_type": "not",
+                "time_lower": "09:00",  # 9:00 America/Phoenix, 16:00 UTC
+                "time_upper": "10:00",  # 10:00 America/Phoenix, 17:00 UTC
+            }
+        )
+        with freeze_time("15:55"):
+            self.assertEqual(m.allowed_time(), True)
+        with freeze_time("16:30"):
+            self.assertEqual(m.allowed_time(), False)
+        with freeze_time("17:00"):
+            self.assertEqual(m.allowed_time(), True)
 
     def test_compound_partial_fail(self):
         m = MonitorNull()
