@@ -51,5 +51,5 @@ Currently only supports SNMP v1
     :required: false
     :default: ``,``
 
-    The text to use to seperate each item in the Details when returned from the test. Defaults to using a comma ','.
+    The text to use to separate each item in the Details when returned from the test. Defaults to using a comma ','.
     Useful if you want to use this text in another system, or make it easier to read
