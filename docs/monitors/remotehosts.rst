@@ -10,7 +10,7 @@ This monitor inspects the state of the local simplemonitor instance to check exp
     :type: comma-separated list of string
     :required: true
 
-    the remote hosts to expect. This will need to be a list of IPs as simplemontitor doesn't reverse-lookup connections. However, if you want to give names to your remotes, you can use the ``custom_name`` property of the network logger and then specify that here.
+    the remote hosts to expect. This will need to be a list of IPs as simplemontitor doesn't reverse-lookup connections. However, if you want to give names to your remotes, you can use the ``client_name`` property of the network logger and then specify that here.
 
 .. confval:: max_age
 
