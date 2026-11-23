@@ -33,7 +33,7 @@
           >
         </div>
         <div class="navbar-text">
-          {%- if ok_count %}<span class="badge bg-success">{{ok_count}} OK</span>  {% endif %}{%- if fail_count %}<span class="badge bg-danger">{{fail_count}} FAIL</span>  {% endif %}{%- if disabled_count %}<span class="badge bg-secondary">{{disabled_count}} DISABLED</span>  {% endif %}{%- if old_count %}<span class="badge bg-warning">{{old_count}} OLD</span>  {% endif %}{%- if remote_count %}<span class="badge bg-info">{{remote_count}} remote</span>  {% endif %} </div>
+          {%- if ok_count %}<span class="badge bg-success">{{ok_count}} OK</span>  {% endif %}{%- if maint_count %}<span class="badge bg-primary">{{maint_count}} MAINTENANCE</span>  {% endif %}{%- if fail_count %}<span class="badge bg-danger">{{fail_count}} FAIL</span>  {% endif %}{%- if disabled_count %}<span class="badge bg-secondary">{{disabled_count}} DISABLED</span>  {% endif %}{%- if old_count %}<span class="badge bg-warning">{{old_count}} OLD</span>  {% endif %}{%- if remote_count %}<span class="badge bg-info">{{remote_count}} remote</span>  {% endif %} </div>
         </div>
       </div>
 {%- if map -%}

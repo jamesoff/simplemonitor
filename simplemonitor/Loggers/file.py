@@ -316,6 +316,9 @@ class HTMLLogger(Logger):
         cell_class = ""
         if not monitor.enabled:
             status_text = "DISABLED"
+        elif monitor.maintenance:
+            status_text = "MAINT"
+            row_class = "table-primary"
         elif age_seconds > gap + 60:
             status_text = "OLD"
             cell_class = "table-warning"
@@ -340,6 +343,7 @@ class HTMLLogger(Logger):
             "age": age_seconds,
             "update": update,
             "host": monitor.running_on,
+            "maintenance": monitor.maintenance,
             "failures": failures,
             "last_failure": last_failure,
             "gap": gap,
@@ -357,6 +361,7 @@ class HTMLLogger(Logger):
         ok_count = 0
         fail_count = 0
         old_count = 0
+        maint_count = 0
         remote_count = 0
         disabled_count = 0
 
@@ -380,7 +385,9 @@ class HTMLLogger(Logger):
         for entry in keys:
             this_entry = self.batch_data[entry]
             this_list = ok_entries
-            if not this_entry["enabled"]:
+            if this_entry["maintenance"]:
+                maint_count += 1
+            elif not this_entry["enabled"]:
                 disabled_count += 1
             elif this_entry["age"] > this_entry["gap"] + 60:
                 old_count += 1
@@ -423,6 +430,7 @@ class HTMLLogger(Logger):
                 fail_count=fail_count,
                 disabled_count=disabled_count,
                 old_count=old_count,
+                maint_count=maint_count,
                 remote_count=remote_count,
                 fail_entries=fail_entries,
                 ok_entries=ok_entries,

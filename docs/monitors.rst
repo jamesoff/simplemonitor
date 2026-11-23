@@ -158,6 +158,81 @@ These options are common to all monitor types.
 
 .. _monitors-list:
 
+Time restrictions
+-----------------
+
+All Monitors accept time period configuration. By default, monitors are active at all times. To set limits on when an monitor is run, use the configuration values below.
+
+Note that the :confval:`times_type` option sets the timezone all the values are interpreted as. The default is the local timezone of the host evaluating the logic.
+
+.. confval:: days
+
+    :type: comma-separated list of integer, short day of week or Long day of week
+    :required: false
+    :default: all days
+
+    which days an alerter can operate on. ``0`` is Monday, ``6`` is Sunday. Mon or Sunday are also valid values.
+
+.. confval:: times_type
+
+    :type: string
+    :required: false
+    :default: ``always``
+
+    one of ``always``, ``only``, or ``not``. ``only`` means that the limits specify the period the monitor is allowed to operate in. ``not`` means the specify the period it isn't, and outside of that time it is allowed.
+
+.. confval:: time_lower
+
+    :type: string
+    :required: when :confval:`times_type` is not ``always``
+
+    the lower end of the time range. Must be lower than :confval:`time_upper`. The format is ``HH:mm`` in 24-hour clock.
+
+.. confval:: time_upper
+
+    :type: string
+    :required: when :confval:`times_type` is not ``always``
+
+    the upper end of the time range. Must be lower than :confval:`time_lower`. The format is ``HH:mm`` in 24-hour clock.
+
+.. confval:: times_tz
+
+    :type: string
+    :required: false
+    :default: the host's local time
+
+    the timezone for :confval:`day`, :confval:`time_lower` and :confval:`time_upper` to be interpreted in.
+
+
+Time examples
+^^^^^^^^^^^^^
+
+These snippets omit the monitor-specific configuration values.
+
+Only Monitor outside of Typical Business hours (8:30am to 5:30pm, Monday to Friday):
+
+.. code-block:: ini
+
+   [myserver]
+   type=host
+   times_type=not
+   time_lower=08:30
+   time_upper=17:30
+   days=Mon,Tue,Wed,Thu,Fri
+
+Don't send at antisocial times, but let me know later if something broke and hasn't recovered yet:
+
+.. code-block:: ini
+
+   [polite_alerter]
+   type=some-alerter-type
+   times_type=only
+   time_lower=07:30
+   time_upper=22:00
+   delay=1
+
+.. _monitors-list:
+
 Monitors
 --------
 
