@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+
+{% block title %}Login - SimpleMonitor{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-5 col-md-7 col-sm-9">
+        <div class="card shadow-lg border-0">
+            <div class="card-body p-5">
+                <!-- Header -->
+                <div class="text-center mb-4">
+                    <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                         style="width: 60px; height: 60px;">
+                        <i class="fas fa-heartbeat text-white fs-3"></i>
+                    </div>
+                    <h3 class="fw-bold text-primary mb-2">Welcome Back</h3>
+                    <p class="text-muted">Sign in to your SimpleMonitor account</p>
+                </div>
+
+                <!-- Login Form -->
+                <form method="POST" id="loginForm" novalidate>
+                    <div class="mb-4">
+                        <label for="username" class="form-label">
+                            <i class="fas fa-user me-2"></i>Username
+                        </label>
+                        <input type="text" class="form-control form-control-lg" id="username" name="username" 
+                               placeholder="Enter your username" required autofocus>
+                        <div class="invalid-feedback">
+                            Please provide a valid username.
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="password" class="form-label">
+                            <i class="fas fa-lock me-2"></i>Password
+                        </label>
+                        <div class="input-group">
+                            <input type="password" class="form-control form-control-lg" id="password" name="password" 
+                                   placeholder="Enter your password" required>
+                            <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <div class="invalid-feedback">
+                            Please provide a valid password.
+                        </div>
+                    </div>
+
+                    <div class="d-grid mb-4">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-sign-in-alt me-2"></i>Sign In
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Additional Links -->
+                <div class="text-center">
+                    <p class="text-muted mb-0">
+                        Don't have an account? 
+                        <a href="{{ url_for('setup') }}" class="text-primary text-decoration-none fw-bold">
+                            Create Admin Account
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features Preview -->
+        <div class="row mt-4 g-3">
+            <div class="col-4">
+                <div class="text-center">
+                    <div class="bg-success rounded-circle d-inline-flex align-items-center justify-content-center mb-2" 
+                         style="width: 40px; height: 40px;">
+                        <i class="fas fa-eye text-white"></i>
+                    </div>
+                    <div class="small text-muted">Real-time Monitoring</div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="text-center">
+                    <div class="bg-warning rounded-circle d-inline-flex align-items-center justify-content-center mb-2" 
+                         style="width: 40px; height: 40px;">
+                        <i class="fas fa-bell text-white"></i>
+                    </div>
+                    <div class="small text-muted">Instant Alerts</div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="text-center">
+                    <div class="bg-info rounded-circle d-inline-flex align-items-center justify-content-center mb-2" 
+                         style="width: 40px; height: 40px;">
+                        <i class="fas fa-chart-line text-white"></i>
+                    </div>
+                    <div class="small text-muted">Analytics</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize form
+    initForm();
+    
+    // Add animations
+    addAnimations();
+});
+
+function initForm() {
+    const form = document.getElementById('loginForm');
+    const togglePassword = document.getElementById('togglePassword');
+    const passwordInput = document.getElementById('password');
+    
+    // Password toggle
+    togglePassword.addEventListener('click', function() {
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+        
+        const icon = this.querySelector('i');
+        icon.classList.toggle('fa-eye');
+        icon.classList.toggle('fa-eye-slash');
+    });
+    
+    // Form validation
+    form.addEventListener('submit', function(event) {
+        if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        
+        form.classList.add('was-validated');
+    });
+    
+    // Real-time validation
+    const inputs = form.querySelectorAll('input');
+    inputs.forEach(input => {
+        input.addEventListener('blur', function() {
+            validateField(this);
+        });
+        
+        input.addEventListener('input', function() {
+            if (this.classList.contains('is-invalid')) {
+                validateField(this);
+            }
+        });
+    });
+}
+
+function validateField(field) {
+    if (field.checkValidity()) {
+        field.classList.remove('is-invalid');
+        field.classList.add('is-valid');
+    } else {
+        field.classList.remove('is-valid');
+        field.classList.add('is-invalid');
+    }
+}
+
+function addAnimations() {
+    // Animate card entrance
+    const card = document.querySelector('.card');
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(30px)';
+    
+    setTimeout(() => {
+        card.style.transition = 'all 0.6s ease-out';
+        card.style.opacity = '1';
+        card.style.transform = 'translateY(0)';
+    }, 100);
+    
+    // Animate feature icons
+    const featureIcons = document.querySelectorAll('.bg-success, .bg-warning, .bg-info');
+    featureIcons.forEach((icon, index) => {
+        icon.style.opacity = '0';
+        icon.style.transform = 'scale(0.5)';
+        
+        setTimeout(() => {
+            icon.style.transition = 'all 0.4s ease-out';
+            icon.style.opacity = '1';
+            icon.style.transform = 'scale(1)';
+        }, 300 + (index * 100));
+    });
+}
+</script>
+
+<style>
+.card {
+    border-radius: 1rem;
+}
+
+.form-control-lg {
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+}
+
+.btn-lg {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.input-group .btn {
+    border-left: none;
+}
+
+.input-group .form-control:focus {
+    border-right: none;
+}
+
+.input-group .form-control:focus + .btn {
+    border-color: var(--primary-color);
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25);
+}
+
+.was-validated .form-control:valid {
+    border-color: var(--success-color);
+}
+
+.was-validated .form-control:invalid {
+    border-color: var(--danger-color);
+}
+
+.bg-primary, .bg-success, .bg-warning, .bg-info {
+    transition: all 0.3s ease;
+}
+
+.bg-primary:hover, .bg-success:hover, .bg-warning:hover, .bg-info:hover {
+    transform: scale(1.1);
+}
+</style>
+{% endblock %}

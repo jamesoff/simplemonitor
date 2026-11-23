@@ -7,7 +7,7 @@ FROM python:3.12-alpine
 LABEL   version_dockerfile="21-01-2024:prod" \
         version_image="python:3.12-alpine"
 
-# >> package :: install
+# >> package :: install (Layer 1: System packages - rarely change)
 RUN     apk --no-cache add --update \
             # __ install :: basics
             build-base \
@@ -23,7 +23,7 @@ RUN     apk --no-cache add --update \
             rust \
             cargo
 
-# >> env :: web/docker paths
+# >> env :: web/docker paths (Layer 2: Environment variables)
 ENV     DOCKER_ROOT=/code \
         DOCKER_HTML_ROOT=/code/html \
         DOCKER_HTML_BACKUP=/code/html-backup \
@@ -43,15 +43,24 @@ ENV     MAIN_USER=simplemonitor \
         MAIN_GROUP=simplemonitor \
         MAIN_GROUP_ID=1500
 
-# >> setup :: root-directory
+# >> setup :: root-directory (Layer 3: Directory structure)
 RUN     mkdir -p $DOCKER_ROOT
-COPY    $SOURCE_ROOT $DOCKER_ROOT
 WORKDIR $DOCKER_ROOT
 
+# >> upgrade pip (Layer 4: Python package manager)
 RUN     pip install --upgrade pip
 
-# >> install :: py-requirements
-RUN     pip install --no-cache-dir "$DOCKER_ROOT"
+# >> copy requirements first for better caching (Layer 5: Dependencies)
+COPY    pyproject.toml poetry.lock README.md ./
+
+# >> copy source code (Layer 6: Application code - changes frequently)
+COPY    . .
+
+# >> install package (Layer 7: Install SimpleMonitor)
+RUN     pip install --no-cache-dir .
+
+# >> install config watcher dependencies (Layer 8: Additional Python packages)
+RUN     pip install --no-cache-dir requests
 
 # >> prepare :: volumes
 RUN     mkdir -p $VOLUME_MONITOR_EXPORT $DOCKER_HTML_ROOT

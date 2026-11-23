@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}{{ monitor.name }} - Monitor Details{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-eye"></i> {{ monitor.name }}</h2>
+            <div class="btn-group">
+                {% if session.is_admin %}
+                <a href="{{ url_for('edit_monitor', monitor_id=monitor.id) }}" class="btn btn-primary">
+                    <i class="fas fa-edit"></i> Edit
+                </a>
+                {% endif %}
+                <a href="{{ url_for('monitors') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Monitors
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Monitor Configuration</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-3">Name:</dt>
+                    <dd class="col-sm-9">
+                        <strong>{{ monitor.name }}</strong>
+                        {% if not monitor.enabled %}
+                        <span class="badge bg-secondary ms-2">Disabled</span>
+                        {% endif %}
+                    </dd>
+                    
+                    <dt class="col-sm-3">Type:</dt>
+                    <dd class="col-sm-9">
+                        <span class="badge bg-info">{{ monitor.monitor_type }}</span>
+                    </dd>
+                    
+                    <dt class="col-sm-3">Status:</dt>
+                    <dd class="col-sm-9">
+                        {% if monitor.enabled %}
+                        <span class="status-ok">
+                            <i class="fas fa-check-circle"></i> Enabled
+                        </span>
+                        {% else %}
+                        <span class="status-disabled">
+                            <i class="fas fa-pause-circle"></i> Disabled
+                        </span>
+                        {% endif %}
+                    </dd>
+                    
+                    <dt class="col-sm-3">SMS Alerts:</dt>
+                    <dd class="col-sm-9">
+                        {% if monitor.sms_enabled %}
+                        <span class="text-success">
+                            <i class="fas fa-sms"></i> {{ monitor.sms_phone }}
+                        </span>
+                        {% else %}
+                        <span class="text-muted">
+                            <i class="fas fa-times"></i> Not configured
+                        </span>
+                        {% endif %}
+                    </dd>
+                </dl>
+                
+                {% if config %}
+                <hr>
+                <h6>Configuration Details:</h6>
+                <dl class="row">
+                    {% for key, value in config.items() %}
+                    <dt class="col-sm-3">{{ key|title|replace('_', ' ') }}:</dt>
+                    <dd class="col-sm-9">
+                        <code>{{ value }}</code>
+                    </dd>
+                    {% endfor %}
+                </dl>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Monitor Information</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-5">Created:</dt>
+                    <dd class="col-sm-7">{{ monitor.created_at.strftime('%Y-%m-%d %H:%M') }}</dd>
+                    
+                    <dt class="col-sm-5">Last Updated:</dt>
+                    <dd class="col-sm-7">{{ monitor.updated_at.strftime('%Y-%m-%d %H:%M') }}</dd>
+                    
+                    <dt class="col-sm-5">Monitor ID:</dt>
+                    <dd class="col-sm-7"><code>{{ monitor.id }}</code></dd>
+                </dl>
+            </div>
+        </div>
+        
+        {% if session.is_admin %}
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <form method="POST" action="{{ url_for('toggle_monitor', monitor_id=monitor.id) }}">
+                        <button type="submit" class="btn btn-{% if monitor.enabled %}warning{% else %}success{% endif %} w-100">
+                            <i class="fas fa-{% if monitor.enabled %}pause{% else %}play{% endif %}"></i>
+                            {% if monitor.enabled %}Disable{% else %}Enable{% endif %} Monitor
+                        </button>
+                    </form>
+                    
+                    <form method="POST" action="{{ url_for('delete_monitor', monitor_id=monitor.id) }}" 
+                          onsubmit="return confirm('Are you sure you want to delete this monitor? This action cannot be undone.')">
+                        <button type="submit" class="btn btn-outline-danger w-100">
+                            <i class="fas fa-trash"></i> Delete Monitor
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -7,7 +7,7 @@ FROM nginx:1.15.1-alpine
 LABEL   version_dockerfile="10-07-2018:prod" \
         version_image="nginx:1.15.1-alpine"
 
-# >> package :: install
+# >> package :: install (Layer 1: System packages - rarely change)
 RUN     apk --no-cache add --update \
             # __ install :: basics
             build-base \

@@ -13,6 +13,8 @@ Welcome to SimpleMonitor
 
    installation
    configuration
+   docker-deployment
+   web-interface
 
 .. toctree::
    :maxdepth: 2
@@ -43,7 +45,9 @@ send their results back to a central location.
 
 SimpleMonitor supports Python 3.6.2 and higher on Windows, Linux and FreeBSD.
 
-To get started, see :ref:`Installation`.
+**New in this version**: Docker deployment with a comprehensive web interface for easy management and real-time monitoring.
+
+To get started, see :ref:`Installation` or jump straight to :ref:`Docker Deployment<docker-deployment>` for the quickest setup.
 
 Features
 ========
@@ -87,10 +91,21 @@ Some of the options include (for the complete list, see :ref:`Loggers<loggers-li
 * Writing an entry to the syslog (non-Windows only)
 * Executing arbitrary commands on monitor failure and recovery
 
+Web Interface Features
+-----------------------
+
+* **Modern Web Interface**: Flask-based web application with Bootstrap UI
+* **Real-time Dashboard**: Live monitoring with auto-refresh capabilities
+* **Monitor Management**: Add, edit, delete, and toggle monitors through the web interface
+* **User Authentication**: Secure admin account management
+* **SMS Integration**: Twilio SMS alerting configuration
+* **Dynamic Configuration**: Monitors added through web interface are automatically configured
+* **Responsive Design**: Mobile-friendly interface that works on all devices
+
 Other features
 --------------
 
-* Simple configuration file format: it’s a standard INI file for the overall configuration and another for the monitor definitions
+* Simple configuration file format: it's a standard INI file for the overall configuration and another for the monitor definitions
 * Remote monitors: An instance running on a remote machine can send its results back to a central instance for central logging and alerting
 * Dependencies: Monitors can be declared as depending on the success of others. If a monitor fails, its dependencies will be skipped until it succeeds
 * Tolerance: Monitors checking things the other side of unreliable links or which have many transient failures can be configured to require their test to fail a number of times in a row before they report a problem
@@ -100,7 +115,7 @@ Other features
 * Groups: Configure some Alerters to only react to some monitors
 * Monitor gaps: By default every monitor polls every interval (e.g. 60 seconds). Monitors can be given a gap between polls so that they only poll once a day (for example)
 * Alert periods: Alerters can be configured to only alert during certain times and/or on certain days
-* Alert catchup: ...and also to alert you to a monitor which failed when they were unable to tell you. (For example, I don’t want to be woken up overnight by an SMS, but if something’s still broken I’d like an SMS at 7am as I’m getting up.)
+* Alert catchup: ...and also to alert you to a monitor which failed when they were unable to tell you. (For example, I don't want to be woken up overnight by an SMS, but if something's still broken I'd like an SMS at 7am as I'm getting up.)
 
 Contributing
 ============

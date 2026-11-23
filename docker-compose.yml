@@ -8,6 +8,8 @@ services:
     volumes:
       - http-content:/code/html
       - ./_monitor-export:/code/monitor-export
+    environment:
+      - WEBAPP_URL=http://webapp:5000
     restart: always
     depends_on:
       - webserver
@@ -21,6 +23,22 @@ services:
     volumes:
       - http-content:/usr/share/nginx/html
     restart: always
+
+  webapp:
+    build:
+      context: ./
+      dockerfile: ./docker/webapp.Dockerfile
+    ports:
+      - "5001:5000"
+    volumes:
+      - ./monitor.ini:/code/monitor.ini
+      - ./monitors.ini:/code/monitors.ini
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - SECRET_KEY=your-secret-key-change-in-production
+    restart: always
+    depends_on:
+      - monitor
 
 volumes:
   http-content:

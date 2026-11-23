@@ -1,0 +1,671 @@
+{% extends "base.html" %}
+
+{% block title %}Real-time Dashboard - SimpleMonitor{% endblock %}
+
+{% block content %}
+<!-- Header Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="fw-bold mb-2">
+                    <i class="fas fa-chart-line me-2 text-primary"></i> Real-time Dashboard
+                </h2>
+                <p class="text-muted mb-0">Live monitoring with instant updates and alerts</p>
+            </div>
+            <div class="d-flex gap-2">
+                <button id="refreshBtn" class="btn btn-primary">
+                    <i class="fas fa-sync-alt me-2"></i> Refresh
+                </button>
+                <button id="autoRefreshBtn" class="btn btn-outline-success">
+                    <i class="fas fa-play me-2"></i> Auto Refresh
+                </button>
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-cog me-2"></i> Settings
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#" onclick="setRefreshInterval(10)">
+                            <i class="fas fa-clock me-2"></i> 10 seconds
+                        </a></li>
+                        <li><a class="dropdown-item" href="#" onclick="setRefreshInterval(30)">
+                            <i class="fas fa-clock me-2"></i> 30 seconds
+                        </a></li>
+                        <li><a class="dropdown-item" href="#" onclick="setRefreshInterval(60)">
+                            <i class="fas fa-clock me-2"></i> 1 minute
+                        </a></li>
+                        <li><a class="dropdown-item" href="#" onclick="setRefreshInterval(300)">
+                            <i class="fas fa-clock me-2"></i> 5 minutes
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Status Summary Bar -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <div class="d-flex align-items-center">
+                    <div class="me-4">
+                        <div class="h2 mb-0 text-success" id="ok_count">0</div>
+                        <div class="text-muted small">Healthy</div>
+                    </div>
+                    <div class="me-4">
+                        <div class="h2 mb-0 text-danger" id="fail_count">0</div>
+                        <div class="text-muted small">Failed</div>
+                    </div>
+                    <div class="me-4">
+                        <div class="h2 mb-0 text-warning" id="total_count">0</div>
+                        <div class="text-muted small">Total</div>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-success" id="health_progress" style="width: 100%"></div>
+                        </div>
+                        <div class="text-muted small mt-1" id="health_percentage">100% Healthy</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 text-end">
+                <div class="text-muted small">
+                    <i class="fas fa-clock me-1"></i>
+                    Last updated: <span id="last_updated">Never</span>
+                </div>
+                <div class="text-muted small">
+                    <i class="fas fa-sync-alt me-1"></i>
+                    Auto-refresh: <span id="auto_refresh_status">Disabled</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-area me-2"></i> Monitor Status Over Time
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="statusChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie me-2"></i> Status Distribution
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="pieChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Response Time Chart -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-tachometer-alt me-2"></i> Average Response Time
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="responseTimeChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i> Alert History
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="alertChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Monitors Table -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="fas fa-table me-2"></i> Live Monitor Status
+        </h5>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-primary" id="live_indicator">
+                <i class="fas fa-circle me-1"></i> Live
+            </span>
+            <span class="text-muted small" id="table_last_updated">Never updated</span>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <!-- Loading Indicator -->
+        <div id="loadingIndicator" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3 text-muted">Loading monitoring data...</p>
+        </div>
+
+        <!-- Error Message -->
+        <div id="errorMessage" class="alert alert-danger d-none mx-4 mt-4" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <span id="errorText">Failed to load monitoring data</span>
+        </div>
+
+        <!-- Monitors Table -->
+        <div id="monitorsTable" class="d-none">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Monitor</th>
+                            <th>Status</th>
+                            <th>Host</th>
+                            <th>Response Time</th>
+                            <th>Uptime</th>
+                            <th>Failures</th>
+                            <th>Last Failure</th>
+                            <th>Age</th>
+                        </tr>
+                    </thead>
+                    <tbody id="monitorsTableBody">
+                        <!-- Dynamic content will be inserted here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Auto-refresh Settings -->
+<div class="card mt-4">
+    <div class="card-header">
+        <h6 class="mb-0">
+            <i class="fas fa-cog me-2"></i> Auto-refresh Settings
+        </h6>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <label for="refreshInterval" class="form-label">Refresh Interval</label>
+                <select class="form-select" id="refreshInterval" onchange="updateRefreshInterval()">
+                    <option value="10">10 seconds</option>
+                    <option value="30" selected>30 seconds</option>
+                    <option value="60">1 minute</option>
+                    <option value="300">5 minutes</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Status</label>
+                <div>
+                    <span id="autoRefreshStatus" class="badge bg-secondary">Disabled</span>
+                    <span id="lastUpdate" class="text-muted ms-2"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let autoRefreshInterval = null;
+let refreshInterval = 30; // seconds
+let isAutoRefreshEnabled = false;
+let statusChart = null;
+let pieChart = null;
+let responseTimeChart = null;
+let alertChart = null;
+
+// Chart data storage
+let chartData = {
+    status: { labels: [], healthy: [], failed: [] },
+    responseTime: { labels: [], values: [] },
+    alerts: { labels: [], values: [] }
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize charts
+    initCharts();
+    
+    // Load initial data
+    refreshData();
+    
+    // Set up event listeners
+    setupEventListeners();
+});
+
+function initCharts() {
+    // Status Chart
+    const statusCtx = document.getElementById('statusChart').getContext('2d');
+    statusChart = new Chart(statusCtx, {
+        type: 'line',
+        data: {
+            labels: chartData.status.labels,
+            datasets: [{
+                label: 'Healthy',
+                data: chartData.status.healthy,
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                tension: 0.4,
+                fill: true
+            }, {
+                label: 'Failed',
+                data: chartData.status.failed,
+                borderColor: '#ef4444',
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+
+    // Pie Chart
+    const pieCtx = document.getElementById('pieChart').getContext('2d');
+    pieChart = new Chart(pieCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Healthy', 'Failed', 'Disabled'],
+            datasets: [{
+                data: [0, 0, 0],
+                backgroundColor: ['#10b981', '#ef4444', '#6b7280'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                }
+            }
+        }
+    });
+
+    // Response Time Chart
+    const responseCtx = document.getElementById('responseTimeChart').getContext('2d');
+    responseTimeChart = new Chart(responseCtx, {
+        type: 'line',
+        data: {
+            labels: chartData.responseTime.labels,
+            datasets: [{
+                label: 'Response Time (ms)',
+                data: chartData.responseTime.values,
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Alert Chart
+    const alertCtx = document.getElementById('alertChart').getContext('2d');
+    alertChart = new Chart(alertCtx, {
+        type: 'bar',
+        data: {
+            labels: chartData.alerts.labels,
+            datasets: [{
+                label: 'Alerts',
+                data: chartData.alerts.values,
+                backgroundColor: '#f59e0b',
+                borderColor: '#d97706',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+}
+
+function setupEventListeners() {
+    document.getElementById('refreshBtn').addEventListener('click', refreshData);
+    document.getElementById('autoRefreshBtn').addEventListener('click', toggleAutoRefresh);
+}
+
+function refreshData() {
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const errorMessage = document.getElementById('errorMessage');
+    const monitorsTable = document.getElementById('monitorsTable');
+    
+    // Show loading indicator
+    if (loadingIndicator) loadingIndicator.classList.remove('d-none');
+    if (errorMessage) errorMessage.classList.add('d-none');
+    if (monitorsTable) monitorsTable.classList.add('d-none');
+    
+    fetch('/api/status')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('API Response:', data);
+            if (data.status === 'success') {
+                updateDashboard(data);
+                if (loadingIndicator) loadingIndicator.classList.add('d-none');
+                if (monitorsTable) monitorsTable.classList.remove('d-none');
+            } else {
+                throw new Error(data.message || 'Failed to load data');
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching status:', error);
+            if (loadingIndicator) loadingIndicator.classList.add('d-none');
+            if (errorMessage) errorMessage.classList.remove('d-none');
+            const errorText = document.getElementById('errorText');
+            if (errorText) errorText.textContent = error.message;
+        });
+}
+
+function updateDashboard(data) {
+    console.log('Updating dashboard with data:', data);
+    
+    // Update summary stats
+    const okCount = data.summary.ok || 0;
+    const failCount = data.summary.failed || 0;
+    const totalCount = data.summary.total || 0;
+    
+    document.getElementById('ok_count').textContent = okCount;
+    document.getElementById('fail_count').textContent = failCount;
+    document.getElementById('total_count').textContent = totalCount;
+    
+    // Update health percentage and progress bar
+    const healthPercentage = totalCount > 0 ? Math.round((okCount / totalCount) * 100) : 100;
+    document.getElementById('health_percentage').textContent = `${healthPercentage}% Healthy`;
+    document.getElementById('health_progress').style.width = `${healthPercentage}%`;
+    
+    // Update progress bar color
+    const progressBar = document.getElementById('health_progress');
+    progressBar.classList.remove('bg-success', 'bg-warning', 'bg-danger');
+    if (healthPercentage >= 90) {
+        progressBar.classList.add('bg-success');
+    } else if (healthPercentage >= 70) {
+        progressBar.classList.add('bg-warning');
+    } else {
+        progressBar.classList.add('bg-danger');
+    }
+    
+    // Update last updated time
+    const now = new Date();
+    document.getElementById('last_updated').textContent = now.toLocaleTimeString();
+    document.getElementById('table_last_updated').textContent = `Updated ${now.toLocaleTimeString()}`;
+    
+    // Update pie chart
+    if (pieChart) {
+        pieChart.data.datasets[0].data = [okCount, failCount, totalCount - okCount - failCount];
+        pieChart.update();
+    }
+    
+    // Update status chart with new data point
+    updateStatusChart(okCount, failCount);
+    
+    // Update response time chart
+    updateResponseTimeChart(data.monitors);
+    
+    // Update alert chart
+    updateAlertChart();
+    
+    // Update monitors table
+    updateMonitorsTable(data.monitors);
+    
+    // Update last update time
+    document.getElementById('lastUpdate').textContent = `Last updated: ${now.toLocaleTimeString()}`;
+}
+
+function updateStatusChart(healthy, failed) {
+    const now = new Date();
+    const timeLabel = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    
+    // Add new data point
+    chartData.status.labels.push(timeLabel);
+    chartData.status.healthy.push(healthy);
+    chartData.status.failed.push(failed);
+    
+    // Keep only last 20 data points
+    if (chartData.status.labels.length > 20) {
+        chartData.status.labels.shift();
+        chartData.status.healthy.shift();
+        chartData.status.failed.shift();
+    }
+    
+    // Update chart
+    if (statusChart) {
+        statusChart.data.labels = chartData.status.labels;
+        statusChart.data.datasets[0].data = chartData.status.healthy;
+        statusChart.data.datasets[1].data = chartData.status.failed;
+        statusChart.update('none');
+    }
+}
+
+function updateResponseTimeChart(monitors) {
+    const now = new Date();
+    const timeLabel = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    
+    // Calculate average response time from real monitor data
+    let totalResponseTime = 0;
+    let responseCount = 0;
+    
+    monitors.forEach(monitor => {
+        if (monitor.response_time_ms && monitor.response_time_ms > 0) {
+            totalResponseTime += monitor.response_time_ms;
+            responseCount++;
+        }
+    });
+    
+    const avgResponseTime = responseCount > 0 ? totalResponseTime / responseCount : 0;
+    
+    // Only add data point if we have actual response time data
+    if (avgResponseTime > 0) {
+        chartData.responseTime.labels.push(timeLabel);
+        chartData.responseTime.values.push(Math.round(avgResponseTime));
+        
+        // Keep only last 20 data points
+        if (chartData.responseTime.labels.length > 20) {
+            chartData.responseTime.labels.shift();
+            chartData.responseTime.values.shift();
+        }
+        
+        // Update chart
+        if (responseTimeChart) {
+            responseTimeChart.data.labels = chartData.responseTime.labels;
+            responseTimeChart.data.datasets[0].data = chartData.responseTime.values;
+            responseTimeChart.update('none');
+        }
+    }
+}
+
+function updateAlertChart() {
+    // Alert chart will be populated with real alert data when available
+    // For now, keep it empty until we have actual alert tracking
+    if (alertChart) {
+        alertChart.data.labels = [];
+        alertChart.data.datasets[0].data = [];
+        alertChart.update('none');
+    }
+}
+
+function updateMonitorsTable(monitors) {
+    const tbody = document.getElementById('monitorsTableBody');
+    tbody.innerHTML = '';
+    
+    monitors.forEach(monitor => {
+        const row = document.createElement('tr');
+        row.classList.add('fade-in');
+        
+        // Status badge
+        let statusBadge = '';
+        if (monitor.status === 'OK' || monitor.status.includes('OK')) {
+            statusBadge = '<span class="badge bg-success"><i class="fas fa-check-circle me-1"></i> OK</span>';
+        } else if (monitor.status.includes('FAIL') || monitor.status.includes('ERROR')) {
+            statusBadge = '<span class="badge bg-danger"><i class="fas fa-times-circle me-1"></i> FAIL</span>';
+        } else {
+            statusBadge = '<span class="badge bg-warning"><i class="fas fa-exclamation-triangle me-1"></i> ' + monitor.status + '</span>';
+        }
+        
+        // Use the parsed response time from the API
+        const responseTime = monitor.response_time || 'N/A';
+        
+        row.innerHTML = `
+            <td>
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-${getMonitorIcon(monitor.name)} text-primary me-2"></i>
+                    <div>
+                        <div class="fw-bold">${monitor.name}</div>
+                        <small class="text-muted">${monitor.host || 'N/A'}</small>
+                    </div>
+                </div>
+            </td>
+            <td>${statusBadge}</td>
+            <td>${monitor.host || 'N/A'}</td>
+            <td>
+                <span class="badge bg-info">${responseTime}ms</span>
+            </td>
+            <td>${monitor.uptime || 'N/A'}</td>
+            <td>
+                <span class="badge ${monitor.failures > 0 ? 'bg-danger' : 'bg-success'}">${monitor.failures || '0'}</span>
+            </td>
+            <td>${monitor.last_failure || 'Never'}</td>
+            <td>${monitor.age || 'N/A'}</td>
+        `;
+        
+        tbody.appendChild(row);
+    });
+}
+
+function getMonitorIcon(monitorName) {
+    const name = monitorName.toLowerCase();
+    if (name.includes('http') || name.includes('web')) return 'globe';
+    if (name.includes('ping') || name.includes('host')) return 'network-wired';
+    if (name.includes('dns')) return 'server';
+    if (name.includes('disk')) return 'hdd';
+    if (name.includes('memory')) return 'memory';
+    if (name.includes('process')) return 'terminal';
+    return 'cog';
+}
+
+function toggleAutoRefresh() {
+    const btn = document.getElementById('autoRefreshBtn');
+    const status = document.getElementById('autoRefreshStatus');
+    
+    if (isAutoRefreshEnabled) {
+        clearInterval(autoRefreshInterval);
+        btn.innerHTML = '<i class="fas fa-play me-2"></i> Auto Refresh';
+        btn.classList.remove('btn-success');
+        btn.classList.add('btn-outline-success');
+        status.textContent = 'Disabled';
+        status.className = 'badge bg-secondary';
+        isAutoRefreshEnabled = false;
+    } else {
+        autoRefreshInterval = setInterval(refreshData, refreshInterval * 1000);
+        btn.innerHTML = '<i class="fas fa-pause me-2"></i> Stop Auto';
+        btn.classList.remove('btn-outline-success');
+        btn.classList.add('btn-success');
+        status.textContent = 'Enabled';
+        status.className = 'badge bg-success';
+        isAutoRefreshEnabled = true;
+    }
+}
+
+function updateRefreshInterval() {
+    refreshInterval = parseInt(document.getElementById('refreshInterval').value);
+    if (isAutoRefreshEnabled) {
+        clearInterval(autoRefreshInterval);
+        autoRefreshInterval = setInterval(refreshData, refreshInterval * 1000);
+    }
+}
+
+function setRefreshInterval(seconds) {
+    document.getElementById('refreshInterval').value = seconds;
+    updateRefreshInterval();
+}
+
+// Add pulse animation to live indicator
+document.addEventListener('DOMContentLoaded', function() {
+    const liveIndicator = document.getElementById('live_indicator');
+    if (liveIndicator) {
+        setInterval(() => {
+            liveIndicator.classList.toggle('pulse');
+        }, 1000);
+    }
+});
+
+// Add fade-in animation to table rows
+const style = document.createElement('style');
+style.textContent = `
+    .fade-in {
+        animation: fadeIn 0.5s ease-in-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}
