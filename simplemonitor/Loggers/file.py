@@ -305,7 +305,7 @@ class HTMLLogger(Logger):
         try:
             if monitor.last_update is not None:
                 age = arrow.utcnow() - monitor.last_update  # type: datetime.timedelta
-                age_seconds = age.days * 3600 + age.seconds
+                age_seconds = int(age.total_seconds())
                 update = str(monitor.last_update)
             else:
                 raise ValueError

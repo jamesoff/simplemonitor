@@ -2,6 +2,8 @@
 import os
 import unittest
 
+import arrow
+
 from simplemonitor.Loggers.file import HTMLLogger
 from simplemonitor.Monitors.monitor import MonitorNull
 
@@ -36,6 +38,19 @@ class TestHTMLLogger(unittest.TestCase):
             os.path.exists(os.path.join("test_html", "main.bundle.js")),
             "main.bundle.js was not copied",
         )
+
+    def test_old_monitor(self):
+        test_logger = HTMLLogger({"folder": "test_html", "filename": "status.html"})
+        monitor = MonitorNull(config_options={"gap": 12 * 3600})
+        monitor.run_test()
+        test_logger.start_batch()
+        for hours, status in ((11, "OK"), (13, "OLD"), (25, "OLD"), (72, "OLD")):
+            with self.subTest(hours=hours):
+                monitor.last_update = arrow.utcnow().shift(hours=-hours)
+                test_logger.save_result2("test", monitor)
+                data_line = test_logger.batch_data[monitor.name]
+                self.assertEqual(data_line["status_text"], status)
+                self.assertAlmostEqual(data_line["age"], hours * 3600, delta=60)
 
     def tearDown(self):
         if os.path.isdir(self._test_path):
